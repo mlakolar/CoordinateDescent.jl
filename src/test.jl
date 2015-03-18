@@ -39,3 +39,53 @@ maximum(abs(solShoot - theta.value))
 dot(vec(X[:,3]), Y) / norm(X[:, 3])^2 - lambda / norm(X[:, 3])^2 * n
 dot(vec(X[:,3]), Y)
 
+a = [1,2,3]
+b = [1, 0, 0]
+a += b
+
+a = {[1:3],[1:10],[1:4]}
+maximum(map(length, a))
+
+F(i,j) = (i-1)*3+j
+A = [ F(i,1) for i=1:3]
+
+
+a = [1:10]
+b = [1:3]
+b[1:3] = a[5:7]
+b[1] = 0
+a
+
+## test group lasso
+using Convex
+using Mosek
+import HD
+reload("HD")
+
+n = 100
+p = 10
+X = randn(n, p)
+Y = X * ones(p) + 0.1 * randn(n)
+
+solver = MosekSolver(LOG=1)
+set_default_solver(solver);
+lambda = 0.3
+theta = Variable(p);
+prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda * norm(theta, 2))
+@time solve!(prob)
+mBeta = theta.value
+
+
+beta = zeros(p)
+XtX = X' * X / n
+S0 = - At_mul_B(X, Y) / n
+@time HD.updateOneGroup!(beta, XtX, S0, [1:10], lambda)
+@time HD.updateOneGroupSimple!(beta, X, Y, lambda)
+@time beta
+
+XtX*mBeta + S0 - lambda .* mBeta ./ norm(mBeta, 2)
+
+(norm(Y-X*mBeta)^2 / (2*n) + lambda * norm(mBeta, 2)) - (norm(Y-X*beta)^2 / (2*n) + lambda * norm(beta, 2))
+norm(Y-X*mBeta)^2 / (2*n) + lambda * norm(mBeta, 2)
+norm([1,2])^2
+
