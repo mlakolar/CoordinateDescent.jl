@@ -1,5 +1,6 @@
 module HD
 
+export SoftThreshold, lasso
 
 # soft-thersholding operator
 # sign(z)(|z|-λ)_+
@@ -76,14 +77,18 @@ function addActiveSet!(active_set, beta, XtX, Xy, lambda)
   return ind
 end
 
-function LassoActiveShooting(X, y, lambda;
-                             maxIter=2000, maxInnerIter=1000,
-                             optTol=1e-7, beta=[],
-                             XtX=[], Xy = [])
-  n, p = size(X)
+function lasso(X, y, lambda;
+               maxIter=2000, maxInnerIter=1000,
+               optTol=1e-7, beta=[],
+               XtX=[], Xy = [])
+
   if isempty(XtX) && isempty(Xy)
-    XtX = (X'*X) .* 2 / n
-    Xy = (X'*y) .* 2 / n
+    n, p = size(X)
+
+    XtX = (X'*X) ./ n
+    Xy = (X'*y) ./ n
+  else
+    p = size(XtX, 2)
   end
 
   if isempty(beta)
@@ -95,6 +100,7 @@ function LassoActiveShooting(X, y, lambda;
     end
   else
     active_set = find(beta)
+    beta = sparse(beta)
   end
 
   iter = 1;
@@ -115,4 +121,91 @@ function LassoActiveShooting(X, y, lambda;
 end
 
 
+######################################################################
+#
+#  Group Lasso Functions
+#
+######################################################################
+
+function findNonZeroGroups(beta, groups)
+  active_set = []
+  for gInd = 1 : length(groups)
+    if norm(beta[groups[gInd]]) > 0
+      push!(active_set, gInd)
+    end
+  end
+  return active_set
 end
+
+function addGroupActiveSet!(active_set, beta, XtX, Xy, groups, lambda)
+
+  numGroups = length(groups)
+
+  val = 0
+  ind = 0
+  for j = setdiff([1:numGroups], active_set)
+    S0 = -Xy[j]
+    for k = 1:length(rowval)
+      S0 += XtX[rowval[k], j]*nzval[k]
+    end
+    if abs(S0) > lambda[j]
+      if abs(S0) > val
+        val = abs(S0);
+        ind = j;
+      end
+    end
+  end
+  if ind != 0
+    push!(active_set, ind)
+    beta[ind] = eps()
+  end
+  return ind
+
+end
+
+function group_lasso(X, y, groups, lambda;
+                     maxIter=2000, maxInnerIter=1000,
+                     optTol=1e-7, beta=[],
+                     XtX=[], Xy = [])
+
+  if isempty(XtX) && isempty(Xy)
+    (n, p) = size(X)
+    XtX = (X'*X) ./ n
+    Xy = (X'*y) ./ n
+  else
+    p = size(XtX)
+  end
+
+  if isempty(beta)
+    beta = zeros(p)
+    active_set = Array(Integer, 0)
+    ind = addGroupActiveSet!(active_set, beta, XtX, Xy, groups, lambda)
+    if ind == 0
+      return beta
+    end
+  else
+    active_set = findNonZeroGroups(beta, groups)
+  end
+
+  iter = 1;
+  while iter < maxIter
+
+    old_active_set = copy(active_set)
+    updateGroupBeta!(beta, XtX, Xy, groups, lambda; maxIter=maxInnerIter, optTol=optTol)
+    active_set = findNonZeroGroups(beta)
+    addGroupActiveSet!(active_set, beta, XtX, Xy, groups, lambda)
+
+    iter = iter + 1;
+    if old_active_set == active_set
+      break
+    end
+  end
+
+  sparse(beta)
+end
+
+
+
+end
+
+
