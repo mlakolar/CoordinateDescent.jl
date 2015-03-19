@@ -1,11 +1,11 @@
 module HD
 
-export SoftThreshold, lasso
+export SoftThreshold, lasso, prox_l2!
 
 # soft-thersholding operator
 # sign(z)(|z|-λ)_+
-function SoftThreshold(z, lambda)
-    abs(z) < lambda ? zero(z) : z > 0 ? z - lambda : z + lambda
+function SoftThreshold(z::Float64, lambda::Float64)
+    abs(z) < lambda ? zero(z) : z > 0. ? z - lambda : z + lambda
 end
 
 ######################################################################
@@ -17,7 +17,7 @@ end
 # iterates over the active set
 #
 # TODO: add logging capabilities
-function updateBeta!(beta, XtX, Xy, lambda; maxIter=1000, optTol=1e-7)
+function updateBeta!(beta, XX, Xy, lambda; maxIter=1000, optTol=1e-7)
 
   nzval = beta.nzval
   rowval = beta.rowval
@@ -30,11 +30,11 @@ function updateBeta!(beta, XtX, Xy, lambda; maxIter=1000, optTol=1e-7)
       # Compute the Shoot and Update the variable
       S0 = 0
       for k=1:length(rowval)
-        S0 += XtX[rowval[k],ci] * nzval[k]
+        S0 += XX[rowval[k],ci] * nzval[k]
       end
-      S0 = S0 - XtX[ci,ci]*nzval[j] - Xy[ci]
+      S0 = S0 - XX[ci,ci]*nzval[j] - Xy[ci]
       oldVal = nzval[j]
-      nzval[j] = SoftThreshold(-S0 / XtX[ci,ci], lambda[ci] / XtX[ci,ci])
+      nzval[j] = SoftThreshold(-S0 / XX[ci,ci], lambda[ci] / XX[ci,ci])
       if abs(oldVal - nzval[j]) > optTol
         fDone = false
       end
@@ -50,8 +50,8 @@ function updateBeta!(beta, XtX, Xy, lambda; maxIter=1000, optTol=1e-7)
 end
 
 # finds index to add to the active_set
-function addActiveSet!(active_set, beta, XtX, Xy, lambda)
-  p = size(XtX, 1)
+function addActiveSet!(active_set, beta, XX, Xy, lambda)
+  p = size(XX, 1)
   nzval = beta.nzval
   rowval = beta.rowval
 
@@ -60,7 +60,7 @@ function addActiveSet!(active_set, beta, XtX, Xy, lambda)
   for j = setdiff([1:p], active_set)
     S0 = -Xy[j]
     for k = 1:length(rowval)
-      S0 += XtX[rowval[k], j]*nzval[k]
+      S0 += XX[rowval[k], j]*nzval[k]
     end
     if abs(S0) > lambda[j]
       if abs(S0) > val
@@ -79,21 +79,21 @@ end
 function lasso(X, y, lambda;
                maxIter=2000, maxInnerIter=1000,
                optTol=1e-7, beta=[],
-               XtX=[], Xy = [])
+               XX=[], Xy = [])
 
-  if isempty(XtX) && isempty(Xy)
+  if isempty(XX) && isempty(Xy)
     n, p = size(X)
 
-    XtX = (X'*X) ./ n
+    XX = (X'*X) ./ n
     Xy = (X'*y) ./ n
   else
-    p = size(XtX, 2)
+    p = size(XX, 2)
   end
 
   if isempty(beta)
     beta = sparsevec(zeros(p))
     active_set = Array(Integer, 0)
-    ind = addActiveSet!(active_set, beta, XtX, Xy, lambda)
+    ind = addActiveSet!(active_set, beta, XX, Xy, lambda)
     if ind == 0
       return beta
     end
@@ -106,9 +106,9 @@ function lasso(X, y, lambda;
   while iter < maxIter
 
     old_active_set = copy(active_set)
-    updateBeta!(beta, XtX, Xy, lambda; maxIter=maxInnerIter, optTol=optTol)
+    updateBeta!(beta, XX, Xy, lambda; maxIter=maxInnerIter, optTol=optTol)
     active_set = find(beta)
-    addActiveSet!(active_set, beta, XtX, Xy, lambda)
+    addActiveSet!(active_set, beta, XX, Xy, lambda)
 
     iter = iter + 1;
     if old_active_set == active_set
@@ -136,7 +136,7 @@ function findNonZeroGroups(beta, groups)
   return active_set
 end
 
-function addGroupActiveSet!(active_set, beta, XtX, Xy, groups, lambda)
+function addGroupActiveSet!(active_set, beta, XX, Xy, groups, lambda)
 
   numGroups = length(groups)
   largestG = maximum(map(length, groups))
@@ -153,7 +153,7 @@ function addGroupActiveSet!(active_set, beta, XtX, Xy, groups, lambda)
       cG = groups[k]
       for ii=1:length(rG)
         for jj=1:length(cG)
-          S0[ii] += XtX[rG[ii], cG[jj]]*beta[cG[jj]]
+          S0[ii] += XX[rG[ii], cG[jj]]*beta[cG[jj]]
         end
       end
     end
@@ -177,7 +177,7 @@ function addGroupActiveSet!(active_set, beta, XtX, Xy, groups, lambda)
   return ind
 end
 
-# computes argmin lambda * |hat_x\|_2 + |x-hat_x|^2 / 2
+# computes argmin lambda * |hat_x|_2 + |x-hat_x|^2 / 2
 function prox_l2!(hat_x, x, lambda)
   tmp = max(1. - lambda / norm(x), 0)
   for i=1:length(x)
@@ -189,22 +189,23 @@ end
 #TODO: implementing line search could be better
 #TODO: acceleration could improve this
 # computes argmin lambda * |beta|_2 + |y-X*beta|^2 / (2*n)
-function minimize_one_group!(beta, X, y, lambda;
-                              maxIter=100, optTol = 1e-7,
-                              XtX=[], Xy = [])
+function minimize_one_group!(beta::Array{Float64, 1},
+                             XX::Array{Float64, 2}, Xy::Array{Float64, 1},
+                             lambda::Float64;
+                             maxIter::Integer=1000, optTol::Float64 = 1e-7)
 
-  if isempty(XtX)
+  if isempty(XX)
     n = size(X, 1)
-    XtX = X' * X / n
+    XX = X' * X / n
     Xy = X' * y / n
   end
   z = copy(beta)
   new_beta = copy(beta)
 
-  t = 1. / eigmax(XtX)
+  t = 1. / eigmax(XX)
   iter = 1.
   while iter < maxIter
-    A_mul_B!(z, XtX, beta)
+    A_mul_B!(z, XX, beta)
     for i=1:length(beta)
       z[i]= beta[i] - t*(z[i]-Xy[i])
     end
@@ -224,70 +225,84 @@ function minimize_one_group!(beta, X, y, lambda;
   nothing
 end
 
+function minimize_one_group_raw!(beta::Array{Float64, 1},
+                             X::Array{Float64, 2}, Y::Array{Float64, 1},
+                             lambda::Float64;
+                             maxIter::Integer=1000, optTol::Float64 = 1e-7)
+  n = size(X, 1)
+  XX = X' * X / n
+  Xy = X' * Y / n
+  minimize_one_group!(beta, XX, Xy, lambda; maxIter=maxIter, optTol=optTol)
+  nothing
+end
+
+
+
+
+# computes sum_{j in active_set} (X^T)_j X_k beta_k - (X^T)_k Y
+function compute_group_residual!(res, XX, Xy, beta, groups, active_set, k)
+
+  kGroup = groups[k]
+  lenK = length(kGroup)
+  for i=1:lenK
+    res[i] = - Xy[kGroup[i]]
+    for j=1:length(groups)
+      if j == k
+        continue
+      end
+      jGroup = groups[j]
+      for l=1:length(jGroup)
+        res[i] += XX[kGroup[i], jGroup[l]] * beta[jGroup[l]]
+      end
+    end
+  end
+  nothing
+end
 
 
 # helper function for Active Shooting implementation of Group Lasso
 # iterates over the active set
 #
 # TODO: add logging capabilities
-function updateGroupBeta!(beta, XtX, Xy, groups, active_set, lambda; maxIter=1000, optTol=1e-7)
+function minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda; maxIter=1000, optTol=1e-7)
 
   numGroups = length(groups)
   largestG = maximum(map(length, groups))
-  S0 = zeros(largestG)
+  Xr = zeros(largestG)
   old_beta = zeros(largestG)
   tmp_beta = zeros(largestG)
 
   iter = 1
   while iter <= maxIter
     fDone = true
-    for j = active_set
-      rG = groups[j]
-      sizeG = length(rG)
+    for k=active_set
+      kGroup = groups[k]
+      lenK = length(kGroup)
       # Compute the Shoot and Update the variable
 
-      # obtain the residual vector
-      for ii = 1:length(rG)
-        S0[ii] = -Xy[rG[ii]]
-      end
-      for k=active_set
-        if j == k
-          continue
-        end
-        cG = groups[k]
-        for ii=1:sizeG
-          for jj=1:sizeG
-            S0[ii] += XtX[rG[ii], cG[jj]]*beta[cG[jj]]
-          end
-        end
-      end
+      compute_group_residual!(Xr, XX, Xy, beta, groups, active_set, k)
 
       # store old value of beta
-      for ii=1:sizeG
-        old_beta[ii] = beta[rG[ii]]
+      for i=1:lenK
+        old_beta[i] = beta[kGroup[i]]
       end
 
       # check if group is zero
-      normG = 0
-      for ii=1:sizeG
-        normG += S0[ii]^2
-      end
-      normG = sqrt(normG)
-      if normG < lambda[j]
+      normG = norm(Xr[1:lenK])
+      if normG < lambda[k]
         fill!(tmp_beta, 0.)
       else
         # update group
-        minimize_one_group!(sub(tmp_beta, 1:length(rG)), [], [], lambda[j]; maxIter=200, optTol=optTol,
-                          XtX=sub(XtX, rG[1]:rG[end], rG[1]:rG[end]), Xy=sub(S0, 1:length(rG)))
+        copy!(tmp_beta, beta[kGroup])
+        minimize_one_group!(tmp_beta, XX[kGroup, kGroup], Xy[kGroup], lambda[k]; maxIter=200, optTol=optTol)
       end
-      for ii=1:length(rG)
-        beta[rG[ii]] = tmp_beta[ii]
-        if abs(old_beta[ii] - beta[rG[ii]]) > optTol
+      for i=1:lenK
+        beta[kGroup[i]] = tmp_beta[i]
+        if abs(old_beta[i] - beta[kGroup[i]]) > optTol
           fDone = false
         end
       end
     end
-
     iter = iter + 1
     if fDone
       break
@@ -299,20 +314,20 @@ end
 function group_lasso(X, y, groups, lambda;
                      maxIter=2000, maxInnerIter=1000,
                      optTol=1e-7, beta=[],
-                     XtX=[], Xy = [])
+                     XX=[], Xy = [])
 
-  if isempty(XtX) && isempty(Xy)
+  if isempty(XX) && isempty(Xy)
     (n, p) = size(X)
-    XtX = (X'*X) ./ n
+    XX = (X'*X) ./ n
     Xy = (X'*y) ./ n
   else
-    p = size(XtX)
+    p = size(XX)
   end
 
   if isempty(beta)
     beta = zeros(p)
     active_set = Array(Integer, 0)
-    ind = addGroupActiveSet!(active_set, beta, XtX, Xy, groups, lambda)
+    ind = addGroupActiveSet!(active_set, beta, XX, Xy, groups, lambda)
     if ind == 0
       return beta
     end
@@ -324,9 +339,9 @@ function group_lasso(X, y, groups, lambda;
   while iter < maxIter
 
     old_active_set = copy(active_set)
-    updateGroupBeta!(beta, XtX, Xy, groups, active_set, lambda; maxIter=maxInnerIter, optTol=optTol)
+    updateGroupBeta!(beta, XX, Xy, groups, active_set, lambda; maxIter=maxInnerIter, optTol=optTol)
     active_set = findNonZeroGroups(beta)
-    addGroupActiveSet!(active_set, beta, XtX, Xy, groups, lambda)
+    addGroupActiveSet!(active_set, beta, XX, Xy, groups, lambda)
 
     iter = iter + 1;
     if old_active_set == active_set
@@ -342,3 +357,4 @@ end
 end
 
 
+<
