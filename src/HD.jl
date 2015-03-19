@@ -297,21 +297,24 @@ function minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda; maxIt
   nothing
 end
 
-function group_lasso(X, y, groups, lambda;
-                     maxIter=2000, maxInnerIter=1000,
-                     optTol=1e-7, beta=[],
-                     XX=[], Xy = [])
 
-  if isempty(XX) && isempty(Xy)
-    (n, p) = size(X)
-    XX = (X'*X) ./ n
-    Xy = (X'*y) ./ n
-  else
-    p = size(XX)
-  end
+function group_lasso_raw!(beta, X, y, groups, lambda;
+                          maxIter=2000, maxInnerIter=1000, optTol=1e-7)
 
-  if isempty(beta)
-    beta = zeros(p)
+  n = size(X, 1)
+  XX = (X'*X) ./ n
+  Xy = (X'*y) ./ n
+
+  group_lasso!(beta, XX, Xy, groups, lambda)
+  nothing
+end
+
+function group_lasso!(beta, XX, Xy, groups, lambda;
+                     maxIter=2000, maxInnerIter=1000, optTol=1e-7)
+
+  p = size(XX, 1)
+
+  if isapprox(beta, zeros(p))
     active_set = Array(Integer, 0)
     ind = addGroupActiveSet!(active_set, beta, XX, Xy, groups, lambda)
     if ind == 0

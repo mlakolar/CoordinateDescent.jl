@@ -232,6 +232,9 @@ facts("minimize_active_groups") do
   end
 end
 
+facts("group lasso") do
+end
+
 ##############################################
 #
 #  Other
