@@ -177,117 +177,54 @@ function addGroupActiveSet!(active_set, beta, XtX, Xy, groups, lambda)
   return ind
 end
 
-function computeU!(new_theta, old_beta, grad, t, lambda)
-  normG = 0
-  new_theta[:] = old_beta - t .* grad
-  normG = norm(new_theta, 2)
-  tmp = max(1.-(t*lambda)/normG, 0.)
-  new_theta *= tmp
+# computes argmin lambda * |hat_x\|_2 + |x-hat_x|^2 / 2
+function prox_l2!(hat_x, x, lambda)
+  tmp = max(1. - lambda / norm(x), 0)
+  for i=1:length(x)
+    hat_x[i] = tmp * x[i]
+  end
+  nothing
 end
 
-function updateOneGroupSimple!(beta, X, Y, lambda; maxIter=1000, optTol=1e-7)
-  n, sizeG = size(X)
+#TODO: implementing line search could be better
+#TODO: acceleration could improve this
+# computes argmin lambda * |beta|_2 + |y-X*beta|^2 / (2*n)
+function minimize_one_group!(beta, X, y, lambda;
+                              maxIter=100, optTol = 1e-7,
+                              XtX=[], Xy = [])
 
-  new_beta = beta[:]
-  old_beta = beta[:]
-  new_theta = beta[:]
-  old_theta = beta[:]
+  if isempty(XtX)
+    n = size(X, 1)
+    XtX = X' * X / n
+    Xy = X' * y / n
+  end
+  z = copy(beta)
+  new_beta = copy(beta)
 
-  sXtX = X' * X / n
-  sS0 = -X' * Y / n
-
-  grad = zeros(Float64, sizeG)
-  delta = zeros(Float64, sizeG)
-  t = 1.
+  t = 1. / eigmax(XtX)
   iter = 1.
   while iter < maxIter
-    if mod(iter, 1) == 0
-      @show iter
+    A_mul_B!(z, XtX, beta)
+    for i=1:length(beta)
+      z[i]= beta[i] - t*(z[i]-Xy[i])
     end
-    old_beta[:] = new_beta[:]
-    old_theta[:] = new_theta[:]
-    # compute gradient
-    grad[:] = sXtX * old_beta + sS0
-    while true
-      # computeU
-      computeU!(new_theta, old_beta, grad, t, lambda)
-      delta[:] = new_theta[:] - old_beta[:]
-      @show normD = norm(delta)^2
-
-      # computeLoss
-      @show lNew = dot(new_theta, sXtX * new_theta) / 2. + dot(sS0, new_theta) + lambda * norm(new_theta)
-      @show lOld = dot(old_beta, sXtX * old_beta) / 2. + dot(sS0, old_beta) + lambda * norm(old_beta)
-
-      if lOld < lNew
-        @show t = 0.8 * t
-      else
-        break
+    prox_l2!(new_beta, z, t * lambda)
+    fDone = true
+    for i=1:length(beta)
+      if abs(new_beta[i]-beta[i]) > optTol
+        fDone = false
       end
+      beta[i] = new_beta[i]
     end
-
-    new_beta[:] = old_theta[:] + iter / (iter + 3.) .* (new_theta[:] - old_theta[:])
-
-    iter = iter + 1
-    @show maximum(abs(new_beta - old_beta))
-    if maximum(abs(new_beta - old_beta)) < optTol
+    if fDone
       break
     end
+    iter = iter + 1
   end
-
-  beta[:] = new_beta[:]
+  nothing
 end
 
 
-function updateOneGroup!(beta, XtX, S0, rG, lambda; maxIter=1000, optTol=1e-7)
-  sizeG = length(rG)
-
-  new_beta = beta[rG]
-  old_beta = beta[rG]
-  new_theta = beta[rG]
-  old_theta = beta[rG]
-
-  sXtX = XtX[rG, rG]
-  sS0 = S0[rG]
-
-  grad = zeros(Float64, sizeG)
-  delta = zeros(Float64, sizeG)
-  t = 1.
-  iter = 1.
-  while iter < maxIter
-    if mod(iter, 1) == 0
-      @show iter
-    end
-    old_beta[:] = new_beta[:]
-    old_theta[:] = new_theta[:]
-    # compute gradient
-    grad[:] = sXtX * old_beta + sS0
-    while true
-      # computeU
-      computeU!(new_theta, old_beta, grad, t, lambda)
-      delta[:] = new_theta[:] - old_beta[:]
-      normD = norm(delta)^2
-
-      # computeLoss
-      lNew = dot(new_theta, sXtX * new_theta) / 2. + dot(sS0, new_theta)
-      lOld = dot(old_beta, sXtX * old_beta) / 2. + dot(sS0, old_beta) + dot(grad, delta) + normD / (2. * t)
-
-      if lOld < lNew
-        t = 0.8 * t
-      else
-        break
-      end
-    end
-
-    new_beta[:] = old_theta[:] + iter / (iter + 3.) .* (new_theta[:] - old_theta[:])
-
-    iter = iter + 1
-    if maximum(abs(new_beta - old_beta)) < optTol
-      break
-    end
-  end
-
-  beta[rG] = new_beta[:]
-end
 
 # helper function for Active Shooting implementation of Group Lasso
 # iterates over the active set
@@ -299,12 +236,14 @@ function updateGroupBeta!(beta, XtX, Xy, groups, active_set, lambda; maxIter=100
   largestG = maximum(map(length, groups))
   S0 = zeros(largestG)
   old_beta = zeros(largestG)
+  tmp_beta = zeros(largestG)
 
   iter = 1
   while iter <= maxIter
     fDone = true
     for j = active_set
       rG = groups[j]
+      sizeG = length(rG)
       # Compute the Shoot and Update the variable
 
       # obtain the residual vector
@@ -316,36 +255,36 @@ function updateGroupBeta!(beta, XtX, Xy, groups, active_set, lambda; maxIter=100
           continue
         end
         cG = groups[k]
-        for ii=1:length(rG)
-          for jj=1:length(cG)
+        for ii=1:sizeG
+          for jj=1:sizeG
             S0[ii] += XtX[rG[ii], cG[jj]]*beta[cG[jj]]
           end
         end
       end
 
       # store old value of beta
-      for ii=1:length(rG)
+      for ii=1:sizeG
         old_beta[ii] = beta[rG[ii]]
       end
 
       # check if group is zero
       normG = 0
-      for ii=1:length(rG)
+      for ii=1:sizeG
         normG += S0[ii]^2
       end
       normG = sqrt(normG)
       if normG < lambda[j]
-        for ii=1:length(rG)
-          beta[rG[ii]] = 0
-        end
+        fill!(tmp_beta, 0.)
+      else
+        # update group
+        minimize_one_group!(sub(tmp_beta, 1:length(rG)), [], [], lambda[j]; maxIter=200, optTol=optTol,
+                          XtX=sub(XtX, rG[1]:rG[end], rG[1]:rG[end]), Xy=sub(S0, 1:length(rG)))
       end
-
-      # update group
-      updateOneGroup!(beta, XtX, S0, rG, lambda; maxIter=50, optTol=optTol)
-
-      # if change is big, we are not done
-      if abs(oldVal - nzval[j]) > optTol
-        fDone = false
+      for ii=1:length(rG)
+        beta[rG[ii]] = tmp_beta[ii]
+        if abs(old_beta[ii] - beta[rG[ii]]) > optTol
+          fDone = false
+        end
       end
     end
 
@@ -354,8 +293,7 @@ function updateGroupBeta!(beta, XtX, Xy, groups, active_set, lambda; maxIter=100
       break
     end
   end
-
-  sparse(beta)
+  nothing
 end
 
 function group_lasso(X, y, groups, lambda;

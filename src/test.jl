@@ -62,12 +62,12 @@ using Mosek
 import HD
 reload("HD")
 
-n = 100
-p = 10
+n = 1000
+p = 100
 X = randn(n, p)
 Y = X * ones(p) + 0.1 * randn(n)
 
-solver = MosekSolver(LOG=1)
+solver = MosekSolver(LOG=0)
 set_default_solver(solver);
 lambda = 0.3
 theta = Variable(p);
@@ -76,16 +76,42 @@ prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda * norm(theta, 2))
 mBeta = theta.value
 
 
-beta = zeros(p)
 XtX = X' * X / n
 S0 = - At_mul_B(X, Y) / n
-@time HD.updateOneGroup!(beta, XtX, S0, [1:10], lambda)
-@time HD.updateOneGroupSimple!(beta, X, Y, lambda)
-@time beta
+beta = zeros(p)
+@time for rep=1:1000
+  fill!(beta, 0.)
+  HD.minimize_one_group_1!(beta, X, Y, lambda)
+end
+beta = zeros(p)
+@time for rep=1:1000
+  fill!(beta, 0.)
+  HD.minimize_one_group!(beta, X, Y, lambda)
+end
 
-XtX*mBeta + S0 - lambda .* mBeta ./ norm(mBeta, 2)
+@show maximum(abs(beta-mBeta))
 
-(norm(Y-X*mBeta)^2 / (2*n) + lambda * norm(mBeta, 2)) - (norm(Y-X*beta)^2 / (2*n) + lambda * norm(beta, 2))
-norm(Y-X*mBeta)^2 / (2*n) + lambda * norm(mBeta, 2)
-norm([1,2])^2
+## two groups
+n = 100
+p = 20
+X = randn(n, p)
+Y = X * ones(p) + 0.1 * randn(n)
+
+lambda = 0.3
+theta = Variable(p);
+prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda * norm(theta[1:10], 2) + lambda * norm(theta[11:20], 2))
+@time solve!(prob)
+mBeta = theta.value
+
+
+#function updateGroupBeta!(beta, XtX, Xy, groups, active_set, lambda; maxIter=1000, optTol=1e-7)
+XtX = X' * X / n
+Xy = X' * Y / n
+beta = zeros(p)
+groups = {[1:10],[11:20]}
+active_set = [1,2]
+lambdaG = [lambda, lambda]
+HD.updateGroupBeta!(beta, XtX, Xy, groups, active_set, lambdaG)
+
+maximum(abs(beta - mBeta))
 
