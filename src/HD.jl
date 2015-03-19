@@ -194,11 +194,6 @@ function minimize_one_group!(beta::Array{Float64, 1},
                              lambda::Float64;
                              maxIter::Integer=1000, optTol::Float64 = 1e-7)
 
-  if isempty(XX)
-    n = size(X, 1)
-    XX = X' * X / n
-    Xy = X' * y / n
-  end
   z = copy(beta)
   new_beta = copy(beta)
 
@@ -239,20 +234,20 @@ end
 
 
 
-# computes sum_{j in active_set} (X^T)_j X_k beta_k - (X^T)_k Y
+# computes  (X^T)_k Y - sum_{j in active_set} (X^T)_j X_k beta_k
 function compute_group_residual!(res, XX, Xy, beta, groups, active_set, k)
 
   kGroup = groups[k]
   lenK = length(kGroup)
   for i=1:lenK
-    res[i] = - Xy[kGroup[i]]
-    for j=1:length(groups)
+    res[i] = Xy[kGroup[i]]
+    for j=active_set
       if j == k
         continue
       end
       jGroup = groups[j]
       for l=1:length(jGroup)
-        res[i] += XX[kGroup[i], jGroup[l]] * beta[jGroup[l]]
+        res[i] -= XX[kGroup[i], jGroup[l]] * beta[jGroup[l]]
       end
     end
   end
@@ -269,8 +264,6 @@ function minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda; maxIt
   numGroups = length(groups)
   largestG = maximum(map(length, groups))
   Xr = zeros(largestG)
-  old_beta = zeros(largestG)
-  tmp_beta = zeros(largestG)
 
   iter = 1
   while iter <= maxIter
@@ -282,26 +275,19 @@ function minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda; maxIt
 
       compute_group_residual!(Xr, XX, Xy, beta, groups, active_set, k)
 
-      # store old value of beta
-      for i=1:lenK
-        old_beta[i] = beta[kGroup[i]]
-      end
-
       # check if group is zero
       normG = norm(Xr[1:lenK])
       if normG < lambda[k]
-        fill!(tmp_beta, 0.)
+        tmp_beta = zeros(lenK)
       else
         # update group
-        copy!(tmp_beta, beta[kGroup])
-        minimize_one_group!(tmp_beta, XX[kGroup, kGroup], Xy[kGroup], lambda[k]; maxIter=200, optTol=optTol)
+        tmp_beta = beta[kGroup]
+        minimize_one_group!(tmp_beta, XX[kGroup, kGroup], Xr, lambda[k]; maxIter=maxIter, optTol=optTol)
       end
-      for i=1:lenK
-        beta[kGroup[i]] = tmp_beta[i]
-        if abs(old_beta[i] - beta[kGroup[i]]) > optTol
-          fDone = false
-        end
+      if maximum(abs(beta[kGroup] - tmp_beta)) > optTol
+        fDone = false
       end
+      beta[kGroup] = tmp_beta
     end
     iter = iter + 1
     if fDone
@@ -356,5 +342,3 @@ end
 
 end
 
-
-<
