@@ -126,8 +126,8 @@ end
 #
 ######################################################################
 
-function findNonZeroGroups(beta, groups)
-  active_set = []
+function findNonZeroGroups(beta::Array{Float64, 1}, groups::Array{Array{Int64, 1}, 1})
+  active_set = Array(Int64, 0)
   for gInd = 1 : length(groups)
     if norm(beta[groups[gInd]]) > 0
       push!(active_set, gInd)
@@ -136,7 +136,9 @@ function findNonZeroGroups(beta, groups)
   return active_set
 end
 
-function addGroupActiveSet!(active_set, beta, XX, Xy, groups, lambda)
+function addGroupActiveSet!(active_set::Array{Int64, 1},
+                            XX::Array{Float64, 2}, Xy::Array{Float64, 1}, beta::Array{Float64, 1},
+                            groups::Array{Array{Int64, 1}, 1}, lambda::Array{Float64, 1})
 
   numGroups = length(groups)
   largestG = maximum(map(length, groups))
@@ -144,34 +146,20 @@ function addGroupActiveSet!(active_set, beta, XX, Xy, groups, lambda)
 
   val = 0
   ind = 0
-  for j = setdiff([1:numGroups], active_set)
-    rG = groups[j]
-    for ii = 1:length(rG)
-      S0[ii] = -Xy[rG[ii]]
-    end
-    for k=active_set
-      cG = groups[k]
-      for ii=1:length(rG)
-        for jj=1:length(cG)
-          S0[ii] += XX[rG[ii], cG[jj]]*beta[cG[jj]]
-        end
-      end
-    end
-    normG = norm(S0[1:length(rG)])
-    if normG > lambda[j]
+  for k = setdiff([1:numGroups], active_set)
+    kGroup = groups[k]
+    compute_group_residual!(S0, XX, Xy, beta, groups, active_set, k)
+    normG = norm(S0[1:length(kGroup)])
+    if normG > lambda[k]
       if normG > val
         val = normG
-        ind = j
+        ind = k
       end
     end
   end
 
   if ind != 0
-    push!(active_set, ind)
-    rG = groups[ind]
-    for ii = 1:length(rG)
-      beta[rG[ii]] = eps()
-    end
+    push!(active_set, ind::Int64)
   end
 
   return ind
@@ -235,7 +223,9 @@ end
 
 
 # computes  (X^T)_k Y - sum_{j in active_set} (X^T)_j X_k beta_k
-function compute_group_residual!(res, XX, Xy, beta, groups, active_set, k)
+function compute_group_residual!(res::Array{Float64, 1},
+                                 XX::Array{Float64, 2}, Xy::Array{Float64, 1}, beta::Array{Float64, 1},
+                                 groups::Array{Array{Int64, 1}, 1}, active_set::Array{Int64, 1}, k::Int64)
 
   kGroup = groups[k]
   lenK = length(kGroup)
@@ -259,7 +249,10 @@ end
 # iterates over the active set
 #
 # TODO: add logging capabilities
-function minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda; maxIter=1000, optTol=1e-7)
+function minimize_active_groups!(beta::Array{Float64, 1},
+                                 XX::Array{Float64, 2}, Xy::Array{Float64, 1},
+                                 groups::Array{Array{Int64, 1}, 1}, active_set::Array{Int64, 1}, lambda::Array{Float64, 1};
+                                 maxIter::Integer=1000, optTol::Float64=1e-7)
 
   numGroups = length(groups)
   largestG = maximum(map(length, groups))
@@ -305,7 +298,8 @@ function group_lasso_raw!(beta, X, y, groups, lambda;
   XX = (X'*X) ./ n
   Xy = (X'*y) ./ n
 
-  group_lasso!(beta, XX, Xy, groups, lambda)
+  group_lasso!(beta, XX, Xy, groups, lambda;
+               maxIter=maxIter, maxInnerIter=maxInnerIter, optTol=optTol)
   nothing
 end
 
@@ -314,11 +308,12 @@ function group_lasso!(beta, XX, Xy, groups, lambda;
 
   p = size(XX, 1)
 
-  if isapprox(beta, zeros(p))
-    active_set = Array(Integer, 0)
-    ind = addGroupActiveSet!(active_set, beta, XX, Xy, groups, lambda)
+  if maximum(abs(beta - zeros(Float64, p))) < optTol
+    active_set = Array(Int64, 0)
+    ind = addGroupActiveSet!(active_set, XX, Xy, beta, groups, lambda)
     if ind == 0
-      return beta
+      fill!(beta, 0.)
+      return
     end
   else
     active_set = findNonZeroGroups(beta, groups)
@@ -328,9 +323,10 @@ function group_lasso!(beta, XX, Xy, groups, lambda;
   while iter < maxIter
 
     old_active_set = copy(active_set)
-    updateGroupBeta!(beta, XX, Xy, groups, active_set, lambda; maxIter=maxInnerIter, optTol=optTol)
-    active_set = findNonZeroGroups(beta)
-    addGroupActiveSet!(active_set, beta, XX, Xy, groups, lambda)
+    minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda;
+                            maxIter=maxInnerIter, optTol=optTol)
+    active_set = findNonZeroGroups(beta, groups)
+    addGroupActiveSet!(active_set, XX, Xy, beta, groups, lambda)
 
     iter = iter + 1;
     if old_active_set == active_set
@@ -338,7 +334,7 @@ function group_lasso!(beta, XX, Xy, groups, lambda;
     end
   end
 
-  sparse(beta)
+  nothing
 end
 
 

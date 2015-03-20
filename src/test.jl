@@ -1,9 +1,10 @@
+using Convex
+using Mosek
+using HD
+reload("HD")
+
+
 # ## compare to mosek
-# using Convex
-# using Mosek
-# using HD
-# push!(LOAD_PATH, "/home/mkolar/projects/juliaPkg")
-# reload("HD")
 
 # solver = MosekSolver(LOG=1)
 # set_default_solver(solver);
@@ -47,11 +48,12 @@ mBeta = theta.value
 XtX = X' * X / n
 Xy = X' * Y / n
 beta = zeros(p)
-groups = {[1:10],[11:20]}
-active_set = [1,2]
+groups = Array(Array{Int64, 1}, 2)
+groups[1] = [1:10]
+groups[2] = [11:20]
+groups
 lambdaG = [lambda, lambda]
-HD.minimize_active_groups!(beta, XtX, Xy, groups, active_set, lambdaG)
+@time HD.group_lasso!(beta, XtX, Xy, groups, lambdaG)
 
-reload("FactCheck")
-
+@show maximum(abs(beta-mBeta))
 
