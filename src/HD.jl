@@ -1,5 +1,8 @@
 module HD
 
+import Mosek
+import JuMP
+
 export
   SoftThreshold,
   prox_l2!,
@@ -12,6 +15,7 @@ export
 
 ######################################################################
 #
+#  Utilities
 #
 ######################################################################
 
@@ -366,6 +370,45 @@ function group_lasso!(beta::Array{Float64, 1},
   nothing
 end
 
+
+
+######################################################################
+#
+#  Penalized QR
+#
+######################################################################
+
+
+
+
+function qr(X, Y, lambda, tau)
+
+    tau = 0.5
+    solverJ = JuMP.Model(solver=Mosek.MosekSolver(LOG=0))
+
+    oneN = ones(n)
+    oneP = ones(p)
+    @JuMP.defVar(solverJ, z[1:p])
+    @JuMP.defVar(solverJ, t1[1:p])
+    @JuMP.defVar(solverJ, t2[1:p])
+    @JuMP.defVar(solverJ, u[1:n])
+    @JuMP.defVar(solverJ, v[1:n])
+    @JuMP.setObjective(solverJ, Min, (tau*dot(oneN, u) + (1-tau)*dot(oneN, v)) / n + lambda * (dot(oneP, t1) + dot(oneP, t2)))
+    for i=1:n
+        @JuMP.addConstraint(solverJ, Y[i] - dot(vec(X[i,:]), z) == u[i] - v[i])
+        @JuMP.addConstraint(solverJ, u[i] >= 0)
+        @JuMP.addConstraint(solverJ, v[i] >= 0)
+    end
+    for i=1:p
+        @JuMP.addConstraint(solverJ, z[i] == t1[i] - t2[i])
+        @JuMP.addConstraint(solverJ, t1[i] >= 0)
+        @JuMP.addConstraint(solverJ, t2[i] >= 0)
+    end
+
+    JuMP.solve(solverJ)
+
+    JuMP.getValue(z)
+end
 
 
 end
