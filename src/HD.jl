@@ -1,6 +1,19 @@
 module HD
 
-export SoftThreshold, lasso, prox_l2!
+export
+  SoftThreshold,
+  prox_l2!,
+  group_lasso_raw!,
+  group_lasso_raw!,
+  lasso!,
+  lasso_raw!
+
+
+
+######################################################################
+#
+#
+######################################################################
 
 # soft-thersholding operator
 # sign(z)(|z|-λ)_+
@@ -8,16 +21,24 @@ function SoftThreshold(z::Float64, lambda::Float64)
     abs(z) < lambda ? zero(z) : z > 0. ? z - lambda : z + lambda
 end
 
+
 ######################################################################
 #
+#   Lasso
 #
 ######################################################################
 
 # helper function for Active Shooting implementation of Lasso
 # iterates over the active set
 #
+# beta is a sparse vector that contains information about the active set
+# when adding an element to the active set, we set that element of beta to eps()
+#
 # TODO: add logging capabilities
-function updateBeta!(beta, XX, Xy, lambda; maxIter=1000, optTol=1e-7)
+function minimize_active_set!(beta::SparseMatrixCSC{Float64, Int64},
+                     XX::Array{Float64, 2}, Xy::Array{Float64, 1},
+                     lambda::Array{Float64, 1};
+                     maxIter::Int64=2000, optTol::Float64=1e-7)
 
   nzval = beta.nzval
   rowval = beta.rowval
@@ -28,11 +49,7 @@ function updateBeta!(beta, XX, Xy, lambda; maxIter=1000, optTol=1e-7)
     for j = 1:length(rowval)
       ci = rowval[j]
       # Compute the Shoot and Update the variable
-      S0 = 0
-      for k=1:length(rowval)
-        S0 += XX[rowval[k],ci] * nzval[k]
-      end
-      S0 = S0 - XX[ci,ci]*nzval[j] - Xy[ci]
+      S0 = compute_residual(XX, Xy, beta, ci) - XX[ci,ci]*nzval[j]
       oldVal = nzval[j]
       nzval[j] = SoftThreshold(-S0 / XX[ci,ci], lambda[ci] / XX[ci,ci])
       if abs(oldVal - nzval[j]) > optTol
@@ -45,80 +62,86 @@ function updateBeta!(beta, XX, Xy, lambda; maxIter=1000, optTol=1e-7)
       break
     end
   end
-
-  sparse(beta)
+  beta = sparse(beta)
+  nothing
 end
 
+# computes  (X^T)_k Y - sum_{j in active_set} (X^T)_j X_k beta_k
+function compute_residual(XX::Array{Float64, 2}, Xy::Array{Float64, 1}, beta::SparseMatrixCSC{Float64, Int64}, k::Int64)
+  nzval = beta.nzval
+  rowval = beta.rowval
+
+  S0 = -Xy[k]
+  for rInd=1:length(rowval)
+    S0 += XX[rowval[rInd],k] * nzval[rInd]
+  end
+  return S0
+end
+
+
 # finds index to add to the active_set
-function addActiveSet!(active_set, beta, XX, Xy, lambda)
+function add_violating_index!(beta::SparseMatrixCSC{Float64, Int64},
+                              XX::Array{Float64, 2}, Xy::Array{Float64, 1}, lambda::Array{Float64, 1})
   p = size(XX, 1)
   nzval = beta.nzval
   rowval = beta.rowval
 
   val = 0
   ind = 0
-  for j = setdiff([1:p], active_set)
-    S0 = -Xy[j]
-    for k = 1:length(rowval)
-      S0 += XX[rowval[k], j]*nzval[k]
-    end
-    if abs(S0) > lambda[j]
-      if abs(S0) > val
-        val = abs(S0);
+  for j = setdiff([1:p], rowval)
+    S0 = abs(compute_residual(XX, Xy, beta, j))
+    if S0 > lambda[j]
+      if S0 > val
+        val = S0;
         ind = j;
       end
     end
   end
   if ind != 0
-    push!(active_set, ind)
     beta[ind] = eps()
   end
   return ind
 end
 
-function lasso(X, y, lambda;
-               maxIter=2000, maxInnerIter=1000,
-               optTol=1e-7, beta=[],
-               XX=[], Xy = [])
+function lasso_raw!(beta::SparseMatrixCSC{Float64, Int64},
+                    X::Array{Float64, 2}, y::Array{Float64, 1}, lambda::Array{Float64, 1};
+                    maxIter::Int64=2000, maxInnerIter::Int64=1000, optTol::Float64=1e-7)
 
-  if isempty(XX) && isempty(Xy)
-    n, p = size(X)
+  n = size(X, 1)
+  XX = (X'*X) / n
+  Xy = (X'*y) / n
 
-    XX = (X'*X) ./ n
-    Xy = (X'*y) ./ n
-  else
-    p = size(XX, 2)
-  end
+  lasso!(beta, XX, Xy, lambda; maxIter=maxIter, maxInnerIter=maxInnerIter, optTol=optTol)
 
-  if isempty(beta)
-    beta = sparsevec(zeros(p))
-    active_set = Array(Integer, 0)
-    ind = addActiveSet!(active_set, beta, XX, Xy, lambda)
+  nothing
+end
+
+function lasso!(beta::SparseMatrixCSC{Float64, Int64},
+                XX::Array{Float64, 2}, Xy::Array{Float64, 1}, lambda::Array{Float64, 1};
+                maxIter::Int64=2000, maxInnerIter::Int64=1000, optTol::Float64=1e-7)
+
+  p = size(XX, 2)
+
+  if length(beta.nzval) == 0
+    ind = add_violating_index!(beta, XX, Xy, lambda)
     if ind == 0
-      return beta
+      return
     end
-  else
-    active_set = find(beta)
-    beta = sparse(beta)
   end
 
-  iter = 1;
+  iter = 1
   while iter < maxIter
-
-    old_active_set = copy(active_set)
-    updateBeta!(beta, XX, Xy, lambda; maxIter=maxInnerIter, optTol=optTol)
-    active_set = find(beta)
-    addActiveSet!(active_set, beta, XX, Xy, lambda)
+    minimize_active_set!(beta, XX, Xy, lambda; maxIter=maxInnerIter, optTol=optTol)
+    ind = add_violating_index!(beta, XX, Xy, lambda)
 
     iter = iter + 1;
-    if old_active_set == active_set
+    if ind == 0
       break
     end
   end
 
-  sparse(beta)
+  nothing
 end
-
 
 ######################################################################
 #
@@ -126,7 +149,7 @@ end
 #
 ######################################################################
 
-function findNonZeroGroups(beta::Array{Float64, 1}, groups::Array{Array{Int64, 1}, 1})
+function find_groups(beta::Array{Float64, 1}, groups::Array{Array{Int64, 1}, 1})
   active_set = Array(Int64, 0)
   for gInd = 1 : length(groups)
     if norm(beta[groups[gInd]]) > 0
@@ -136,7 +159,9 @@ function findNonZeroGroups(beta::Array{Float64, 1}, groups::Array{Array{Int64, 1
   return active_set
 end
 
-function addGroupActiveSet!(active_set::Array{Int64, 1},
+
+# find the group that violates the KKT conditions the most
+function add_violating_group!(active_set::Array{Int64, 1},
                             XX::Array{Float64, 2}, Xy::Array{Float64, 1}, beta::Array{Float64, 1},
                             groups::Array{Array{Int64, 1}, 1}, lambda::Array{Float64, 1})
 
@@ -175,7 +200,7 @@ function prox_l2!(hat_x, x, lambda)
 end
 
 #TODO: implementing line search could be better
-#TODO: acceleration could improve this
+#TODO: Nesterov's acceleration could improve this
 # computes argmin lambda * |beta|_2 + |y-X*beta|^2 / (2*n)
 function minimize_one_group!(beta::Array{Float64, 1},
                              XX::Array{Float64, 2}, Xy::Array{Float64, 1},
@@ -291,32 +316,36 @@ function minimize_active_groups!(beta::Array{Float64, 1},
 end
 
 
-function group_lasso_raw!(beta, X, y, groups, lambda;
-                          maxIter=2000, maxInnerIter=1000, optTol=1e-7)
+function group_lasso_raw!(beta::Array{Float64, 1},
+                          X::Array{Float64, 2}, y::Array{Float64, 1},
+                          groups::Array{Array{Int64, 1}, 1}, lambda::Array{Float64, 1};
+                          maxIter::Int64=2000, maxInnerIter::Int64=1000, optTol::Float64=1e-7)
 
   n = size(X, 1)
-  XX = (X'*X) ./ n
-  Xy = (X'*y) ./ n
+  XX = (X'*X) / n
+  Xy = (X'*y) / n
 
   group_lasso!(beta, XX, Xy, groups, lambda;
                maxIter=maxIter, maxInnerIter=maxInnerIter, optTol=optTol)
   nothing
 end
 
-function group_lasso!(beta, XX, Xy, groups, lambda;
-                     maxIter=2000, maxInnerIter=1000, optTol=1e-7)
+function group_lasso!(beta::Array{Float64, 1},
+                      XX::Array{Float64, 2}, Xy::Array{Float64, 1},
+                      groups::Array{Array{Int64, 1}, 1}, lambda::Array{Float64, 1};
+                      maxIter::Int64=2000, maxInnerIter::Int64=1000, optTol::Float64=1e-7)
 
   p = size(XX, 1)
 
   if maximum(abs(beta - zeros(Float64, p))) < optTol
     active_set = Array(Int64, 0)
-    ind = addGroupActiveSet!(active_set, XX, Xy, beta, groups, lambda)
+    ind = add_violating_group!(active_set, XX, Xy, beta, groups, lambda)
     if ind == 0
       fill!(beta, 0.)
       return
     end
   else
-    active_set = findNonZeroGroups(beta, groups)
+    active_set = find_groups(beta, groups)
   end
 
   iter = 1;
@@ -325,8 +354,8 @@ function group_lasso!(beta, XX, Xy, groups, lambda;
     old_active_set = copy(active_set)
     minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda;
                             maxIter=maxInnerIter, optTol=optTol)
-    active_set = findNonZeroGroups(beta, groups)
-    addGroupActiveSet!(active_set, XX, Xy, beta, groups, lambda)
+    active_set = find_groups(beta, groups)
+    add_violating_group!(active_set, XX, Xy, beta, groups, lambda)
 
     iter = iter + 1;
     if old_active_set == active_set

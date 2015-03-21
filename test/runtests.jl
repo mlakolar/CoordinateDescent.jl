@@ -8,6 +8,138 @@ set_default_solver(solver)
 
 ##############################################
 #
+#  Lasso
+#
+##############################################
+
+facts("minimize_active_set") do
+
+  context("one coordinate") do
+    n = 100
+    p = 1
+    X = randn(n, p)
+    Y = X * ones(p) + 0.1 * randn(n)
+    XX = X'*X / n
+    Xy = X'*Y / n
+
+    lambda = [maximum(abs(Xy)) + 0.1]
+
+    beta = sparsevec([1], [eps()], 1)
+    HD.minimize_active_set!(beta, XX, Xy, lambda)
+    @fact beta[1] => 0.
+
+    beta = sparsevec([1], [1.], 1)
+    HD.minimize_active_set!(beta, XX, Xy, lambda)
+    @fact beta[1] => 0.
+
+    lambda = [0.2]
+    beta = sparsevec([1], [eps()], 1)
+    HD.minimize_active_set!(beta, XX, Xy, lambda)
+    @fact beta[1] => roughly(SoftThreshold(Xy[1]/XX[1,1], lambda[1]/XX[1,1]))
+
+    lambda = [0.2]
+    HD.minimize_active_set!(beta, XX, Xy, lambda)
+    @fact beta[1] => roughly(SoftThreshold(Xy[1]/XX[1,1], lambda[1]/XX[1,1]))
+  end
+
+  context("more coordinates") do
+    n = 100
+    p = 10
+    X = randn(n, p)
+    Y = X * ones(p) + 0.1 * randn(n)
+    XX = X'*X / n
+    Xy = X'*Y / n
+
+    lambda = fill(maximum(abs(Xy)) + 0.1, p)
+    beta = sparsevec([1:10], fill(1., 10), 10)
+    HD.minimize_active_set!(beta, XX, Xy, lambda)
+    @fact vec(full(beta)) => roughly(zeros(Float64, p))
+
+    lambda = fill(0.3, p)
+    beta = sparsevec([1:10], fill(eps(), p), p)
+    HD.minimize_active_set!(beta, XX, Xy, lambda)
+
+    theta = Variable(p)
+    prob = minimize(sum_squares(Y-X*theta) / (2*n) + dot(lambda, abs(theta)))
+    solve!(prob)
+    @fact maximum(abs(vec(beta) - vec(theta.value))) => roughly(0; atol=5e-4)
+  end
+end
+
+facts("add_violating_index") do
+  n = 100
+  p = 10
+  X = randn(n, p)
+  Y = X * ones(p) + 0.1 * randn(n)
+  XX = X'*X / n
+  Xy = X'*Y / n
+
+  beta = spzeros(Float64, p, 1)
+  lambda = fill(maximum(abs(Xy)) + 0.1, p)
+  ind = HD.add_violating_index!(beta, XX, Xy, lambda)
+
+  @fact ind => 0
+  @fact length(beta.rowval) => 0
+
+  beta = spzeros(Float64, p, 1)
+  lambda = fill(0.1, p)
+  ind = HD.add_violating_index!(beta, XX, Xy, lambda)
+
+  @fact ind => indmax(abs(Xy))
+  @fact length(beta.rowval) => 1
+  @fact beta[ind] => roughly(eps())
+
+end
+
+
+facts("lasso") do
+
+  context("zero") do
+    n = 100
+    p = 10
+
+    X = randn(n, p)
+    Y = X * ones(p) + 0.1 * randn(n)
+    XX = X' * X / n
+    Xy = X' * Y / n
+
+    beta = spzeros(p, 1)
+    lambda = fill(maximum(abs(Xy)) + 0.1, p)
+    HD.lasso_raw!(beta, X, Y, lambda)
+    @fact beta => spzeros(p, 1)
+
+
+    beta = sparsevec([1:5], randn(5), p)
+    HD.lasso_raw!(beta, X, Y, lambda)
+    @fact beta => spzeros(p, 1)
+  end
+
+  context("non-zero") do
+    n = 100
+    p = 10
+    s = 5
+
+    X = randn(n, p)
+    Y = X[:,1:s] * ones(s) + 0.1 * randn(n)
+    XX = X' * X / n
+    Xy = X' * Y / n
+
+    beta = spzeros(p, 1)
+    lambda = fill(0.3, p)
+    HD.lasso_raw!(beta, X, Y, lambda)
+
+    theta = Variable(p)
+    prob = minimize(sum_squares(Y-X*theta) / (2*n) + dot(lambda, abs(theta)))
+    solve!(prob)
+    @fact maximum(abs(vec(beta) - vec(theta.value))) => roughly(0; atol=5e-4)
+
+  end
+
+end
+
+
+##############################################
+#
 #  Group Lasso Functionallity
 #
 ##############################################
@@ -136,7 +268,6 @@ facts("compute_group_residual") do
 end
 
 
-# function minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda; maxIter=1000, optTol=1e-7)
 facts("minimize_active_groups") do
   n = 100
   p = 10
@@ -166,7 +297,7 @@ facts("minimize_active_groups") do
     prob = minimize(sum_squares(Y-X[:,1:5]*theta) / (2*n) + lambda[1] * norm(theta, 2))
     solve!(prob)
 
-    @fact beta[1:5] - vec(theta.value) => roughly(zeros(Float64, 5), 5e-4)
+    @fact beta[1:5] - vec(theta.value) => roughly(zeros(Float64, 5), 1e-3)
 
     active_set = [2]
     beta = zeros(p)
@@ -177,7 +308,7 @@ facts("minimize_active_groups") do
     prob = minimize(sum_squares(Y-X[:,6:10]*theta) / (2*n) + lambda[2] * norm(theta, 2))
     solve!(prob)
 
-    @fact beta[6:10] - vec(theta.value) => roughly(zeros(Float64, 5), 5e-4)
+    @fact beta[6:10] - vec(theta.value) => roughly(zeros(Float64, 5), 1e-3)
   end
 
   context("two active sets") do
@@ -201,7 +332,7 @@ facts("minimize_active_groups") do
     prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda[1] * norm(theta[1:5], 2) + lambda[2] * norm(theta[6:10], 2))
     solve!(prob)
 
-    @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 5e-4)
+    @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 1e-3)
 
     lambda = [lambda_max, 0.6]
     beta = zeros(p)
@@ -212,7 +343,7 @@ facts("minimize_active_groups") do
     prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda[1] * norm(theta[1:5], 2) + lambda[2] * norm(theta[6:10], 2))
     solve!(prob)
 
-    @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 5e-4)
+    @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 1e-3)
 
     lambda = [0.3, 0.6]
     beta = zeros(p)
@@ -223,7 +354,7 @@ facts("minimize_active_groups") do
     prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda[1] * norm(theta[1:5], 2) + lambda[2] * norm(theta[6:10], 2))
     solve!(prob)
 
-    @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 5e-4)
+    @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 1e-3)
 
     active_set = [2]
     beta = zeros(p)
@@ -234,19 +365,20 @@ facts("minimize_active_groups") do
     prob = minimize(sum_squares(Y-X[:,6:10]*theta) / (2*n) + lambda[2] * norm(theta, 2))
     solve!(prob)
 
-    @fact beta[6:10] - vec(theta.value) => roughly(zeros(Float64, 5), 5e-4)
+    @fact beta[6:10] - vec(theta.value) => roughly(zeros(Float64, 5), 1e-3)
   end
 end
 
 facts("group lasso") do
-  n = 100
-  p = 10
-  X = randn(n, p)
-  Y = X * ones(p) + 0.1 * randn(n)
-  XX = X' * X / n
-  Xy = X' * Y / n
 
   context("two groups") do
+    n = 100
+    p = 10
+    X = randn(n, p)
+    Y = X * ones(p) + 0.1 * randn(n)
+    XX = X' * X / n
+    Xy = X' * Y / n
+
     groups=Array(Array{Int64, 1}, 2)
     groups[1] = [1:5]
     groups[2] = [6:10]
@@ -257,51 +389,73 @@ facts("group lasso") do
     HD.group_lasso!(beta, XX, Xy, groups, lambda)
     @fact beta => zeros(p)
 
-#     lambda = [0.3, lambda_max]
-#     beta = zeros(p)
-#     HD.minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda)
+    lambda = [0.3, lambda_max]
+    beta = zeros(p)
+    HD.group_lasso!(beta, XX, Xy, groups, lambda)
 
-#     # compare to Mosek
-#     theta = Variable(10)
-#     prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda[1] * norm(theta[1:5], 2) + lambda[2] * norm(theta[6:10], 2))
-#     solve!(prob)
+    # compare to Mosek
+    theta = Variable(10)
+    prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda[1] * norm(theta[1:5], 2) + lambda[2] * norm(theta[6:10], 2))
+    solve!(prob)
 
-#     @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 5e-4)
+    @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 1e-3)
 
-#     lambda = [lambda_max, 0.6]
-#     beta = zeros(p)
-#     HD.minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda)
+    lambda = [lambda_max, 0.6]
+    beta = zeros(p)
+    HD.group_lasso!(beta, XX, Xy, groups, lambda)
 
-#     # compare to Mosek
-#     theta = Variable(10)
-#     prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda[1] * norm(theta[1:5], 2) + lambda[2] * norm(theta[6:10], 2))
-#     solve!(prob)
+    # compare to Mosek
+    theta = Variable(10)
+    prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda[1] * norm(theta[1:5], 2) + lambda[2] * norm(theta[6:10], 2))
+    solve!(prob)
 
-#     @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 5e-4)
+    @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 1e-3)
 
-#     lambda = [0.3, 0.6]
-#     beta = zeros(p)
-#     HD.minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda)
+    lambda = [0.3, 0.6]
+    beta = zeros(p)
+    HD.group_lasso!(beta, XX, Xy, groups, lambda)
 
-#     # compare to Mosek
-#     theta = Variable(10)
-#     prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda[1] * norm(theta[1:5], 2) + lambda[2] * norm(theta[6:10], 2))
-#     solve!(prob)
+    # compare to Mosek
+    theta = Variable(10)
+    prob = minimize(sum_squares(Y-X*theta) / (2*n) + lambda[1] * norm(theta[1:5], 2) + lambda[2] * norm(theta[6:10], 2))
+    solve!(prob)
 
-#     @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 5e-4)
-
-#     active_set = [2]
-#     beta = zeros(p)
-#     HD.minimize_active_groups!(beta, XX, Xy, groups, active_set, lambda)
-
-#     # compare to Mosek
-#     theta = Variable(5)
-#     prob = minimize(sum_squares(Y-X[:,6:10]*theta) / (2*n) + lambda[2] * norm(theta, 2))
-#     solve!(prob)
-
-#     @fact beta[6:10] - vec(theta.value) => roughly(zeros(Float64, 5), 5e-4)
+    @fact beta - vec(theta.value) => roughly(zeros(Float64, 10), 1e-3)
   end
 
+  context("more groups") do
+    n = 400
+    p = 1000
+    X = randn(n, p)
+    Y = X[:,1:50] * ones(50) + 0.1 * randn(n)
+    XX = X' * X / n
+    Xy = X' * Y / n
+
+    numG = div(p, 5)
+    groups=Array(Array{Int64, 1}, numG)
+    for i=1:numG
+      groups[i] = [(i-1)*5+1:i*5]
+    end
+    lambda = 0.4 .* ones(numG)
+
+    beta = zeros(p)
+    HD.group_lasso!(beta, XX, Xy, groups, lambda)
+
+    theta = Variable(p)
+    normT = norm(theta[1:5])
+    for i=2:numG
+      normT = normT + norm(theta[(i-1)*5+1:i*5])
+    end
+    normT = 0.4 * normT
+
+    prob = minimize(sum_squares(Y-X*theta) / (2*n) + normT)
+    solve!(prob)
+    @fact beta - vec(theta.value) => roughly(zeros(Float64, p), 1e-3)
+
+    beta = zeros(p)
+    HD.group_lasso_raw!(beta, X, Y, groups, lambda)
+    @fact beta - vec(theta.value) => roughly(zeros(Float64, p), 1e-3)
+  end
 end
 
 ##############################################
@@ -318,6 +472,5 @@ facts("SoftThreshold") do
   @fact SoftThreshold(-1.,0.9) => roughly(-0.1, 1e-5)
 
 end
-
 
 FactCheck.exitstatus()
