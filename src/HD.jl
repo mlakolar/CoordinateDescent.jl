@@ -9,8 +9,9 @@ export
   group_lasso_raw!,
   group_lasso_raw!,
   lasso!,
-  lasso_raw!
-
+  lasso_raw!,
+  QR,
+  solve
 
 
 ######################################################################
@@ -378,36 +379,46 @@ end
 #
 ######################################################################
 
+type QR
+  problem::JuMP.Model
+  beta
+  t         # p variables -- penalty
+  up        # n variables
+  un        # n variables
+  xi_dual   #
+  n::Int64
+  p::Int64
 
+  function QR(solver, X, Y, simplex=true)
+    n, p = size(X)
+    problem = JuMP.Model(solver=solver)
 
-
-function qr(X, Y, lambda, tau)
-
-    tau = 0.5
-    solverJ = JuMP.Model(solver=Mosek.MosekSolver(LOG=0))
-
-    oneN = ones(n)
-    oneP = ones(p)
-    @JuMP.defVar(solverJ, z[1:p])
-    @JuMP.defVar(solverJ, t1[1:p])
-    @JuMP.defVar(solverJ, t2[1:p])
-    @JuMP.defVar(solverJ, u[1:n])
-    @JuMP.defVar(solverJ, v[1:n])
-    @JuMP.setObjective(solverJ, Min, (tau*dot(oneN, u) + (1-tau)*dot(oneN, v)) / n + lambda * (dot(oneP, t1) + dot(oneP, t2)))
+    @JuMP.defVar(problem, beta[1:p])
+    @JuMP.defVar(problem, tp[1:p])
+    @JuMP.defVar(problem, tn[1:p])
+    @JuMP.defVar(problem, up[1:n])
+    @JuMP.defVar(problem, un[1:n])
+    @JuMP.addConstraint(problem, xi_dual[i=1:n], Y[i] - dot(vec(X[i,:]), beta) == up[i] - un[i])
     for i=1:n
-        @JuMP.addConstraint(solverJ, Y[i] - dot(vec(X[i,:]), z) == u[i] - v[i])
-        @JuMP.addConstraint(solverJ, u[i] >= 0)
-        @JuMP.addConstraint(solverJ, v[i] >= 0)
+        @JuMP.addConstraint(problem, up[i] >= 0)
+        @JuMP.addConstraint(problem, un[i] >= 0)
     end
     for i=1:p
-        @JuMP.addConstraint(solverJ, z[i] == t1[i] - t2[i])
-        @JuMP.addConstraint(solverJ, t1[i] >= 0)
-        @JuMP.addConstraint(solverJ, t2[i] >= 0)
+        @JuMP.addConstraint(problem, -beta[i] <= t[i])
+        @JuMP.addConstraint(problem, beta[i] <= t[i])
     end
 
-    JuMP.solve(solverJ)
+    new(problem, beta, tp, tn, up, un, xi_dual, n, p)
+  end
 
-    JuMP.getValue(z)
+end
+
+function solve!(qr_problem::QR, lambda::Array{Float64, 1}, tau::Float64)
+  oneN = ones(qr_problem.n)
+  @JuMP.setObjective(qr_problem.problem, Min, (tau*dot(oneN, qr_problem.up) + (1-tau)*dot(oneN, qr_problem.un)) / qr_problem.n + dot(lambda, qr_problem.t))
+
+  JuMP.solve(qr_problem.problem)
+  JuMP.getValue(qr_problem.beta), JuMP.getDual(qr_problem.xi_dual)
 end
 
 
