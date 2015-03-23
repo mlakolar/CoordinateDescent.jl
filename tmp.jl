@@ -18,5 +18,8 @@ lambda = vcat(fill(0., p+1))
 @time hBeta, hXi = HD.solve!(qr_problem, lambda, 0.5)
 
 
+for k = hBeta
+  @show "$(k[1]) -> $(k[2])"
+end
 
 

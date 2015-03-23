@@ -1,17 +1,12 @@
 module HD
 
-import Mosek
-import JuMP
-
 export
   SoftThreshold,
   prox_l2!,
   group_lasso_raw!,
   group_lasso_raw!,
   lasso!,
-  lasso_raw!,
-  QR,
-  solve
+  lasso_raw!
 
 
 ######################################################################
@@ -371,55 +366,6 @@ function group_lasso!(beta::Array{Float64, 1},
   nothing
 end
 
-
-
-######################################################################
-#
-#  Penalized QR
-#
-######################################################################
-
-type QR
-  problem::JuMP.Model
-  beta
-  t         # p variables -- penalty
-  up        # n variables
-  un        # n variables
-  xi_dual   #
-  n::Int64
-  p::Int64
-
-  function QR(solver, X, Y, simplex=true)
-    n, p = size(X)
-    problem = JuMP.Model(solver=solver)
-
-    @JuMP.defVar(problem, beta[1:p])
-    @JuMP.defVar(problem, tp[1:p])
-    @JuMP.defVar(problem, tn[1:p])
-    @JuMP.defVar(problem, up[1:n])
-    @JuMP.defVar(problem, un[1:n])
-    @JuMP.addConstraint(problem, xi_dual[i=1:n], Y[i] - dot(vec(X[i,:]), beta) == up[i] - un[i])
-    for i=1:n
-        @JuMP.addConstraint(problem, up[i] >= 0)
-        @JuMP.addConstraint(problem, un[i] >= 0)
-    end
-    for i=1:p
-        @JuMP.addConstraint(problem, -beta[i] <= t[i])
-        @JuMP.addConstraint(problem, beta[i] <= t[i])
-    end
-
-    new(problem, beta, tp, tn, up, un, xi_dual, n, p)
-  end
-
-end
-
-function solve!(qr_problem::QR, lambda::Array{Float64, 1}, tau::Float64)
-  oneN = ones(qr_problem.n)
-  @JuMP.setObjective(qr_problem.problem, Min, (tau*dot(oneN, qr_problem.up) + (1-tau)*dot(oneN, qr_problem.un)) / qr_problem.n + dot(lambda, qr_problem.t))
-
-  JuMP.solve(qr_problem.problem)
-  JuMP.getValue(qr_problem.beta), JuMP.getDual(qr_problem.xi_dual)
-end
 
 
 end
