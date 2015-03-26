@@ -6,7 +6,9 @@ export
   group_lasso_raw!,
   group_lasso_raw!,
   lasso!,
-  lasso_raw!
+  lasso_raw!,
+  compute_lasso_path,
+  compute_lasso_path_refit
 
 
 ######################################################################
@@ -27,6 +29,55 @@ end
 #   Lasso
 #
 ######################################################################
+
+type LassoPath
+  lambdaArr
+  beta
+end
+
+function compute_lasso_path_refit(lasso_path::LassoPath, XX::Array{Float64, 2}, Xy::Array{Float64, 1})
+  lambdaArr = lasso_path.lambdaArr
+
+  tmpDict = Dict()
+  for i=1:length(lambdaArr)
+    support_nz = find(lasso_path.beta[i])
+    if haskey(tmpDict, support_nz)
+      continue
+    end
+    tmpDict[support_nz] = XX[support_nz, support_nz] \ Xy[support_nz]
+  end
+  tmpDict
+end
+
+
+# assumes that the first row of X corresponds to ones -- intercept
+# lambdaArr is in decreasing order
+function compute_lasso_path(XX::Array{Float64, 2}, Xy::Array{Float64, 1},
+                            lambdaArr::Array{Float64, 1}; max_hat_s=Inf, zero_thr=1e-4)
+
+  p = size(XX, 1)
+  loadingX = sqrt(diag(XX))
+  loadingX[1] = 0.
+
+  curBeta = spzeros(p, 1)
+
+  _lambdaArr = copy(lambdaArr)
+  numLambda  = length(lambdaArr)
+  hBeta = cell(numLambda)
+
+  for indLambda=1:numLambda
+    lasso!(curBeta, XX, Xy, lambdaArr[indLambda] * loadingX)
+    hBeta[indLambda] = copy(curBeta)
+    if nnz(curBeta) > max_hat_s
+      _lambdaArr = lambdaArr[1:indLambda-1]
+      hBeta = hBeta[1:indLambda-1]
+      break
+    end
+  end
+
+  LassoPath(_lambdaArr, hBeta)
+end
+
 
 # helper function for Active Shooting implementation of Lasso
 # iterates over the active set
