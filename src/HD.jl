@@ -50,14 +50,16 @@ function compute_lasso_path_refit(lasso_path::LassoPath, XX::Array{Float64, 2}, 
 end
 
 
-# assumes that the first row of X corresponds to ones -- intercept
 # lambdaArr is in decreasing order
 function compute_lasso_path(XX::Array{Float64, 2}, Xy::Array{Float64, 1},
-                            lambdaArr::Array{Float64, 1}; max_hat_s=Inf, zero_thr=1e-4)
+                            lambdaArr::Array{Float64, 1}; 
+			    max_hat_s=Inf, zero_thr=1e-4, intercept=false)
 
   p = size(XX, 1)
   loadingX = sqrt(diag(XX))
-  loadingX[1] = 0.
+  if intercept
+    loadingX[1] = 0.
+  end
 
   curBeta = spzeros(p, 1)
 
