@@ -4,7 +4,7 @@ export
   SoftThreshold,
   prox_l2!,
   group_lasso_raw!,
-  group_lasso_raw!,
+  group_lasso!,
   lasso!,
   lasso_raw!,
   compute_lasso_path,
@@ -52,7 +52,7 @@ end
 
 # lambdaArr is in decreasing order
 function compute_lasso_path(XX::Array{Float64, 2}, Xy::Array{Float64, 1},
-                            lambdaArr::Array{Float64, 1}; 
+                            lambdaArr::Array{Float64, 1};
 			    max_hat_s=Inf, zero_thr=1e-4, intercept=false)
 
   p = size(XX, 1)
@@ -215,7 +215,7 @@ end
 
 # find the group that violates the KKT conditions the most
 function add_violating_group!(active_set::Array{Int64, 1},
-                            XX::Array{Float64, 2}, Xy::Array{Float64, 1}, beta::Array{Float64, 1},
+                            XX, Xy, beta::Array{Float64, 1},
                             groups::Array{Array{Int64, 1}, 1}, lambda::Array{Float64, 1})
 
   numGroups = length(groups)
@@ -256,14 +256,19 @@ end
 #TODO: Nesterov's acceleration could improve this
 # computes argmin lambda * |beta|_2 + |y-X*beta|^2 / (2*n)
 function minimize_one_group!(beta::Array{Float64, 1},
-                             XX::Array{Float64, 2}, Xy::Array{Float64, 1},
+                             XX, Xy,
                              lambda::Float64;
                              maxIter::Integer=1000, optTol::Float64 = 1e-7)
 
   z = copy(beta)
   new_beta = copy(beta)
 
-  t = 1. / eigmax(XX)
+  ## TODO: this may be quite slow
+  if issparse(XX)
+    t = 1. / eigmax(full(XX))
+  else
+    t = 1. / eigmax(full(XX))
+  end
   iter = 1.
   while iter < maxIter
     A_mul_B!(z, XX, beta)
@@ -302,7 +307,7 @@ end
 
 # computes  (X^T)_k Y - sum_{j in active_set} (X^T)_j X_k beta_k
 function compute_group_residual!(res::Array{Float64, 1},
-                                 XX::Array{Float64, 2}, Xy::Array{Float64, 1}, beta::Array{Float64, 1},
+                                 XX, Xy, beta::Array{Float64, 1},
                                  groups::Array{Array{Int64, 1}, 1}, active_set::Array{Int64, 1}, k::Int64)
 
   kGroup = groups[k]
@@ -328,7 +333,7 @@ end
 #
 # TODO: add logging capabilities
 function minimize_active_groups!(beta::Array{Float64, 1},
-                                 XX::Array{Float64, 2}, Xy::Array{Float64, 1},
+                                 XX, Xy,
                                  groups::Array{Array{Int64, 1}, 1}, active_set::Array{Int64, 1}, lambda::Array{Float64, 1};
                                  maxIter::Integer=1000, optTol::Float64=1e-7)
 
@@ -383,8 +388,9 @@ function group_lasso_raw!(beta::Array{Float64, 1},
   nothing
 end
 
+### XX::Array{Float64, 2}, Xy::Array{Float64, 1},
 function group_lasso!(beta::Array{Float64, 1},
-                      XX::Array{Float64, 2}, Xy::Array{Float64, 1},
+                      XX, Xy,
                       groups::Array{Array{Int64, 1}, 1}, lambda::Array{Float64, 1};
                       maxIter::Int64=2000, maxInnerIter::Int64=1000, optTol::Float64=1e-7)
 
