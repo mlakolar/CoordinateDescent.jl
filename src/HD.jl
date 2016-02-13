@@ -141,7 +141,7 @@ function add_violating_index!(beta::SparseMatrixCSC{Float64, Int64},
 
   val = 0
   ind = 0
-  for j = setdiff([1:p], rowval)
+  for j = setdiff(1:p, rowval)
     S0 = abs(compute_residual(XX, Xy, beta, j))
     if S0 > lambda[j]
       if S0 > val
@@ -224,7 +224,7 @@ function add_violating_group!(active_set::Array{Int64, 1},
 
   val = 0
   ind = 0
-  for k = setdiff([1:numGroups], active_set)
+  for k = setdiff(1:numGroups, active_set)
     kGroup = groups[k]
     compute_group_residual!(S0, XX, Xy, beta, groups, active_set, k)
     normG = norm(S0[1:length(kGroup)])
