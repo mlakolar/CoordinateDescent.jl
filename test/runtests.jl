@@ -22,22 +22,22 @@ facts("minimize_active_set") do
     XX = X'*X / n
     Xy = X'*Y / n
 
-    lambda = collect(maximum(abs(Xy)) + 0.1)
+    lambda = [maximum(abs(Xy)) + 0.1]
 
-    beta = sparsevec(collect(1), collect(eps()), 1)
+    beta = sparsevec([1], [eps()], 1)
     HD.minimize_active_set!(beta, XX, Xy, lambda)
     @fact beta[1] --> 0.
 
-    beta = sparsevec(collect(1), collect(1.), 1)
+    beta = sparsevec([1], [1.], 1)
     HD.minimize_active_set!(beta, XX, Xy, lambda)
     @fact beta[1] --> 0.
 
-    lambda = collect(0.2)
-    beta = sparsevec(collect(1), collect(eps()), 1)
+    lambda = [0.2]
+    beta = sparsevec([1], [eps()], 1)
     HD.minimize_active_set!(beta, XX, Xy, lambda)
     @fact beta[1] --> roughly(SoftThreshold(Xy[1]/XX[1,1], lambda[1]/XX[1,1]))
 
-    lambda = collect(0.2)
+    lambda = [0.2]
     HD.minimize_active_set!(beta, XX, Xy, lambda)
     @fact beta[1] --> roughly(SoftThreshold(Xy[1]/XX[1,1], lambda[1]/XX[1,1]))
   end
@@ -74,19 +74,19 @@ facts("add_violating_index") do
   XX = X'*X / n
   Xy = X'*Y / n
 
-  beta = spzeros(Float64, p, 1)
+  beta = spzeros(Float64, p)
   lambda = fill(maximum(abs(Xy)) + 0.1, p)
   ind = HD.add_violating_index!(beta, XX, Xy, lambda)
 
   @fact ind --> 0
-  @fact length(beta.rowval) --> 0
+  @fact length(beta.nzval) --> 0
 
-  beta = spzeros(Float64, p, 1)
+  beta = spzeros(Float64, p)
   lambda = fill(0.1, p)
   ind = HD.add_violating_index!(beta, XX, Xy, lambda)
 
   @fact ind --> indmax(abs(Xy))
-  @fact length(beta.rowval) --> 1
+  @fact length(beta.nzval) --> 1
   @fact beta[ind] --> roughly(eps())
 
 end
@@ -103,15 +103,15 @@ facts("lasso") do
     XX = X' * X / n
     Xy = X' * Y / n
 
-    beta = spzeros(p, 1)
+    beta = spzeros(p)
     lambda = fill(maximum(abs(Xy)) + 0.1, p)
     HD.lasso_raw!(beta, X, Y, lambda)
-    @fact beta --> spzeros(p, 1)
+    @fact beta --> spzeros(p)
 
 
     beta = sparsevec(collect(1:5), randn(5), p)
     HD.lasso_raw!(beta, X, Y, lambda)
-    @fact beta --> spzeros(p, 1)
+    @fact beta --> spzeros(p)
   end
 
   context("non-zero") do
@@ -124,7 +124,7 @@ facts("lasso") do
     XX = X' * X / n
     Xy = X' * Y / n
 
-    beta = spzeros(p, 1)
+    beta = spzeros(p)
     lambda = fill(0.3, p)
     HD.lasso_raw!(beta, X, Y, lambda)
 
@@ -243,25 +243,25 @@ facts("compute_group_residual") do
   @fact res --> roughly(Xy[groups[k]])
 
   res = zeros(Float64, 5)
-  beta = [ones(5), zeros(5)]
+  beta = [ones(5); zeros(5)]
   k = 1
   HD.compute_group_residual!(res, XX, Xy, beta, groups, active_set, k)
   @fact res --> roughly(Xy[groups[k]])
 
   res = zeros(Float64, 5)
-  beta = [ones(5), zeros(5)]
+  beta = [ones(5); zeros(5)]
   k = 2
   HD.compute_group_residual!(res, XX, Xy, beta, groups, active_set, k)
   @fact res --> roughly(-XX[groups[k],groups[1]]*beta[groups[1]]+Xy[groups[k]])
 
   res = zeros(Float64, 5)
-  beta = [ones(5), ones(5)]
+  beta = [ones(5); ones(5)]
   k = 2
   HD.compute_group_residual!(res, XX, Xy, beta, groups, active_set, k)
   @fact res --> roughly(-XX[groups[k],groups[1]]*beta[groups[1]]+Xy[groups[k]])
 
   res = zeros(Float64, 5)
-  beta = [zeros(5), ones(5)]
+  beta = [zeros(5); ones(5)]
   k = 1
   HD.compute_group_residual!(res, XX, Xy, beta, groups, active_set, k)
   @fact res --> roughly(-XX[groups[k],groups[2]]*beta[groups[2]]+Xy[groups[k]])
@@ -278,8 +278,8 @@ facts("minimize_active_groups") do
 
   context("one active set") do
     groups=Array(Array{Int64, 1}, 2)
-    groups[1] = [1:5]
-    groups[2] = [6:10]
+    groups[1] = collect(1:5)
+    groups[2] = collect(6:10)
     active_set=[1]
 
     lambda = maximum(map((x)->norm(Xy[x]), groups)) + 0.1
@@ -313,8 +313,8 @@ facts("minimize_active_groups") do
 
   context("two active sets") do
     groups=Array(Array{Int64, 1}, 2)
-    groups[1] = [1:5]
-    groups[2] = [6:10]
+    groups[1] = collect(1:5)
+    groups[2] = collect(6:10)
     active_set=[1, 2]
 
     lambda_max = maximum(map((x)->norm(Xy[x]), groups)) + 0.1
@@ -380,8 +380,8 @@ facts("group lasso") do
     Xy = X' * Y / n
 
     groups=Array(Array{Int64, 1}, 2)
-    groups[1] = [1:5]
-    groups[2] = [6:10]
+    groups[1] = collect(1:5)
+    groups[2] = collect(6:10)
 
     lambda_max = maximum(map((x)->norm(Xy[x]), groups)) + 0.1
     lambda = [lambda_max, lambda_max]

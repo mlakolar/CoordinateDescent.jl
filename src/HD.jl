@@ -88,13 +88,13 @@ end
 # when adding an element to the active set, we set that element of beta to eps()
 #
 # TODO: add logging capabilities
-function minimize_active_set!(beta::SparseMatrixCSC{Float64, Int64},
+function minimize_active_set!(beta::SparseVector{Float64, Int64},
                      XX::Array{Float64, 2}, Xy::Array{Float64, 1},
                      lambda::Array{Float64, 1};
                      maxIter::Int64=2000, optTol::Float64=1e-7)
 
   nzval = beta.nzval
-  rowval = beta.rowval
+  rowval = beta.nzind
 
   iter = 1
   while iter <= maxIter
@@ -120,9 +120,9 @@ function minimize_active_set!(beta::SparseMatrixCSC{Float64, Int64},
 end
 
 # computes  (X^T)_k Y - sum_{j in active_set} (X^T)_j X_k beta_k
-function compute_residual(XX::Array{Float64, 2}, Xy::Array{Float64, 1}, beta::SparseMatrixCSC{Float64, Int64}, k::Int64)
+function compute_residual(XX::Array{Float64, 2}, Xy::Array{Float64, 1}, beta::SparseVector{Float64, Int64}, k::Int64)
   nzval = beta.nzval
-  rowval = beta.rowval
+  rowval = beta.nzind
 
   S0 = -Xy[k]
   for rInd=1:length(rowval)
@@ -133,11 +133,11 @@ end
 
 
 # finds index to add to the active_set
-function add_violating_index!(beta::SparseMatrixCSC{Float64, Int64},
+function add_violating_index!(beta::SparseVector{Float64, Int64},
                               XX::Array{Float64, 2}, Xy::Array{Float64, 1}, lambda::Array{Float64, 1})
   p = size(XX, 1)
   nzval = beta.nzval
-  rowval = beta.rowval
+  rowval = beta.nzind
 
   val = 0
   ind = 0
@@ -156,7 +156,7 @@ function add_violating_index!(beta::SparseMatrixCSC{Float64, Int64},
   return ind
 end
 
-function lasso_raw!(beta::SparseMatrixCSC{Float64, Int64},
+function lasso_raw!(beta::SparseVector{Float64, Int64},
                     X::Array{Float64, 2}, y::Array{Float64, 1}, lambda::Array{Float64, 1};
                     maxIter::Int64=2000, maxInnerIter::Int64=1000, optTol::Float64=1e-7)
 
@@ -169,7 +169,7 @@ function lasso_raw!(beta::SparseMatrixCSC{Float64, Int64},
   nothing
 end
 
-function lasso!(beta::SparseMatrixCSC{Float64, Int64},
+function lasso!(beta::SparseVector{Float64, Int64},
                 XX::Array{Float64, 2}, Xy::Array{Float64, 1}, lambda::Array{Float64, 1};
                 maxIter::Int64=2000, maxInnerIter::Int64=1000, optTol::Float64=1e-7)
 
@@ -428,4 +428,3 @@ end
 
 
 end
-
