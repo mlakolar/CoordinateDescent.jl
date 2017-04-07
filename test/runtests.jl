@@ -1,9 +1,13 @@
 using FactCheck
 
 using HD
-using Convex, Mosek
+using Convex
+using Mosek
+# using GLPKMathProgInterface
+# using SCS
 
 solver = MosekSolver(LOG=0)
+#solver = SCSSolver(verbose=0)
 set_default_solver(solver)
 
 ##############################################
