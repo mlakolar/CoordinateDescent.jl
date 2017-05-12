@@ -1,7 +1,9 @@
 module HD
 
+import ProximalBase: shrink
+
+
 export
-  SoftThreshold,
   prox_l2!,
   group_lasso_raw!,
   group_lasso!,
@@ -11,190 +13,11 @@ export
   compute_lasso_path_refit
 
 
-######################################################################
-#
-#  Utilities
-#
-######################################################################
-
-# soft-thersholding operator
-# sign(z)(|z|-λ)_+
-function SoftThreshold(z::Float64, lambda::Float64)
-    abs(z) < lambda ? zero(z) : z > 0. ? z - lambda : z + lambda
-end
 
 
-######################################################################
-#
-#   Lasso
-#
-######################################################################
-
-type LassoPath
-  lambdaArr
-  beta
-end
-
-function compute_lasso_path_refit(lasso_path::LassoPath, XX::Array{Float64, 2}, Xy::Array{Float64, 1})
-  lambdaArr = lasso_path.lambdaArr
-
-  tmpDict = Dict()
-  for i=1:length(lambdaArr)
-    support_nz = find(lasso_path.beta[i])
-    if haskey(tmpDict, support_nz)
-      continue
-    end
-    tmpDict[support_nz] = XX[support_nz, support_nz] \ Xy[support_nz]
-  end
-  tmpDict
-end
 
 
-# lambdaArr is in decreasing order
-function compute_lasso_path(XX::Array{Float64, 2}, Xy::Array{Float64, 1},
-                            lambdaArr::Array{Float64, 1};
-			    max_hat_s=Inf, zero_thr=1e-4, intercept=false)
-
-  p = size(XX, 1)
-  loadingX = sqrt(diag(XX))
-  if intercept
-    loadingX[1] = 0.
-  end
-
-  curBeta = spzeros(p, 1)
-
-  _lambdaArr = copy(lambdaArr)
-  numLambda  = length(lambdaArr)
-  hBeta = cell(numLambda)
-
-  for indLambda=1:numLambda
-    lasso!(curBeta, XX, Xy, lambdaArr[indLambda] * loadingX)
-    hBeta[indLambda] = copy(curBeta)
-    if nnz(curBeta) > max_hat_s
-      _lambdaArr = lambdaArr[1:indLambda-1]
-      hBeta = hBeta[1:indLambda-1]
-      break
-    end
-  end
-
-  LassoPath(_lambdaArr, hBeta)
-end
-
-
-# helper function for Active Shooting implementation of Lasso
-# iterates over the active set
-#
-# beta is a sparse vector that contains information about the active set
-# when adding an element to the active set, we set that element of beta to eps()
-#
-# TODO: add logging capabilities
-function minimize_active_set!(beta::SparseVector{Float64, Int64},
-                     XX::Array{Float64, 2}, Xy::Array{Float64, 1},
-                     lambda::Array{Float64, 1};
-                     maxIter::Int64=2000, optTol::Float64=1e-7)
-
-  nzval = beta.nzval
-  rowval = beta.nzind
-
-  iter = 1
-  while iter <= maxIter
-    fDone = true
-    for j = 1:length(rowval)
-      ci = rowval[j]
-      # Compute the Shoot and Update the variable
-      S0 = compute_residual(XX, Xy, beta, ci) - XX[ci,ci]*nzval[j]
-      oldVal = nzval[j]
-      nzval[j] = SoftThreshold(-S0 / XX[ci,ci], lambda[ci] / XX[ci,ci])
-      if abs(oldVal - nzval[j]) > optTol
-        fDone = false
-      end
-    end
-
-    iter = iter + 1
-    if fDone
-      break
-    end
-  end
-  beta = sparse(beta)
-  nothing
-end
-
-# computes  (X^T)_k Y - sum_{j in active_set} (X^T)_j X_k beta_k
-function compute_residual(XX::Array{Float64, 2}, Xy::Array{Float64, 1}, beta::SparseVector{Float64, Int64}, k::Int64)
-  nzval = beta.nzval
-  rowval = beta.nzind
-
-  S0 = -Xy[k]
-  for rInd=1:length(rowval)
-    S0 += XX[rowval[rInd],k] * nzval[rInd]
-  end
-  return S0
-end
-
-
-# finds index to add to the active_set
-function add_violating_index!(beta::SparseVector{Float64, Int64},
-                              XX::Array{Float64, 2}, Xy::Array{Float64, 1}, lambda::Array{Float64, 1})
-  p = size(XX, 1)
-  nzval = beta.nzval
-  rowval = beta.nzind
-
-  val = 0
-  ind = 0
-  for j = setdiff(1:p, rowval)
-    S0 = abs(compute_residual(XX, Xy, beta, j))
-    if S0 > lambda[j]
-      if S0 > val
-        val = S0;
-        ind = j;
-      end
-    end
-  end
-  if ind != 0
-    beta[ind] = eps()
-  end
-  return ind
-end
-
-function lasso_raw!(beta::SparseVector{Float64, Int64},
-                    X::Array{Float64, 2}, y::Array{Float64, 1}, lambda::Array{Float64, 1};
-                    maxIter::Int64=2000, maxInnerIter::Int64=1000, optTol::Float64=1e-7)
-
-  n = size(X, 1)
-  XX = (X'*X) / n
-  Xy = (X'*y) / n
-
-  lasso!(beta, XX, Xy, lambda; maxIter=maxIter, maxInnerIter=maxInnerIter, optTol=optTol)
-
-  nothing
-end
-
-function lasso!(beta::SparseVector{Float64, Int64},
-                XX::Array{Float64, 2}, Xy::Array{Float64, 1}, lambda::Array{Float64, 1};
-                maxIter::Int64=2000, maxInnerIter::Int64=1000, optTol::Float64=1e-7)
-
-  p = size(XX, 2)
-
-  if length(beta.nzval) == 0
-    ind = add_violating_index!(beta, XX, Xy, lambda)
-    if ind == 0
-      return
-    end
-  end
-
-  iter = 1
-  while iter < maxIter
-    minimize_active_set!(beta, XX, Xy, lambda; maxIter=maxInnerIter, optTol=optTol)
-    ind = add_violating_index!(beta, XX, Xy, lambda)
-
-    iter = iter + 1;
-    if ind == 0
-      break
-    end
-  end
-
-  nothing
-end
+include("lasso.jl")
 
 ######################################################################
 #

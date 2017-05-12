@@ -2,11 +2,11 @@ using FactCheck
 
 using HD
 using Convex
-using Mosek
+using Gurobi
 # using GLPKMathProgInterface
 # using SCS
 
-solver = MosekSolver(LOG=0)
+solver = GurobiSolver()
 #solver = SCSSolver(verbose=0)
 set_default_solver(solver)
 
