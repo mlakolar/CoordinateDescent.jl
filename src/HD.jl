@@ -2,7 +2,6 @@ module HD
 
 import ProximalBase: shrink
 
-
 export
   prox_l2!,
   group_lasso_raw!,
@@ -10,14 +9,18 @@ export
   lasso!,
   lasso_raw!,
   compute_lasso_path,
-  compute_lasso_path_refit
+  compute_lasso_path_refit,
 
-
-
-
+  # CD
+  CoordinateDifferentiableFunction,
+  CDLeastSquaresLoss,
+  CDQuadraticLoss,
+  coordinateDescent,
+  coordinateDescent!
 
 
 include("lasso.jl")
+include("coordinate_descent.jl")
 
 ######################################################################
 #
