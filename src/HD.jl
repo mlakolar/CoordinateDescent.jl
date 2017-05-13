@@ -6,8 +6,8 @@ export
   prox_l2!,
   group_lasso_raw!,
   group_lasso!,
-  lasso!,
-  lasso_raw!,
+  lasso,
+  lasso_raw,
   compute_lasso_path,
   compute_lasso_path_refit,
 
@@ -19,8 +19,8 @@ export
   coordinateDescent!
 
 
-include("lasso.jl")
 include("coordinate_descent.jl")
+include("lasso.jl")
 
 ######################################################################
 #

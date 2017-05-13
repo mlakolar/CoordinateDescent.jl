@@ -30,6 +30,27 @@ update!(f::CoordinateDifferentiableFunction, x, h, k) = error("update! not imple
 
 ####################################
 #
+# options
+#
+####################################
+
+
+struct CDOptions
+  maxIter::Int64
+  maxInnerIter::Int64
+  optTol::Float64
+  kktTol::Float64
+end
+
+CDOptions(;
+  maxIter::Int64=2000,
+  maxInnerIter::Int64=1000,
+  optTol::Float64=1e-7,
+  kktTol::Float64=1e-7) = CDOptions(maxIter, maxInnerIter, optTol, kktTol)
+
+
+####################################
+#
 # utils
 #
 ####################################
@@ -269,7 +290,6 @@ function add_violating_index!{T<:AbstractFloat}(
   end
   return ind
 end
-
 
 coordinateDescent{T<:AbstractFloat}(
   f::CoordinateDifferentiableFunction{T},
