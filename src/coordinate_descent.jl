@@ -4,12 +4,12 @@ abstract type CoordinateDifferentiableFunction{T} end
 """
   Set internal parameters of the function f at the point x.
 """
-initialize!(f::CoordinateDifferentiableFunction, x) = error("update! not implemented for $(typeof(f))")
+initialize!(f, x) = error("update! not implemented for $(typeof(f))")
 
 """
   Coordinate k of the gradient of f evaluated at x.
 """
-gradient(f::CoordinateDifferentiableFunction, x, k::Int64) = error("gradient not implemented for $(typeof(f))")
+gradient(f, x, k) = error("gradient not implemented for $(typeof(f))")
 
 numCoordinates(f) = error("numCoordinates not implemented for $(typeof(f))")
 
@@ -17,7 +17,7 @@ numCoordinates(f) = error("numCoordinates not implemented for $(typeof(f))")
   Finds a and b such that
   f(x + e_k ⋅ h) = cst + (a/2)⋅(h+b)^2
 """
-quadraticApprox(f::CoordinateDifferentiableFunction, x, k::Int64) = error("quadraticApprox not implemented for $(typeof(f))")
+quadraticApprox(f, x, k) = error("quadraticApprox not implemented for $(typeof(f))")
 
 """
   Update internal parameters of the function f.
@@ -25,7 +25,7 @@ quadraticApprox(f::CoordinateDifferentiableFunction, x, k::Int64) = error("quadr
   The update was of size h.
   The new values is x.
 """
-update!(f::CoordinateDifferentiableFunction, x, h, k) = error("update! not implemented for $(typeof(f))")
+update!(f, x, h, k) = error("update! not implemented for $(typeof(f))")
 
 
 ####################################
@@ -64,7 +64,7 @@ function _row_A_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseVector{T},
   rowval = SparseArrays.nonzeroinds(b)
   v = zero(T)
   for i=1:length(nzval)
-    v += A[row, rowval[i]] * nzval[i]
+    @inbounds v += A[row, rowval[i]] * nzval[i]
   end
   v
 end
@@ -75,7 +75,7 @@ function _row_A_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::StridedVector{T}
 
   v = zero(T)
   for i=1:p
-    v += A[row, i] * b[i]
+    @inbounds v += A[row, i] * b[i]
   end
   v
 end
@@ -88,7 +88,7 @@ function _row_At_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseVector{T}
   rowval = SparseArrays.nonzeroinds(b)
   v = zero(T)
   for i=1:length(nzval)
-    v += A[rowval[i], row] * nzval[i]
+    @inbounds v += A[rowval[i], row] * nzval[i]
   end
   v
 end
@@ -99,7 +99,7 @@ function _row_At_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::StridedVector{T
 
   v = zero(T)
   for i=1:n
-    v += A[i, row] * b[i]
+    @inbounds v += A[i, row] * b[i]
   end
   v
 end

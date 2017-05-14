@@ -15,8 +15,10 @@ export
   CoordinateDifferentiableFunction,
   CDLeastSquaresLoss,
   CDQuadraticLoss,
+  CDOptions,
   coordinateDescent,
   coordinateDescent!
+
 
 
 include("coordinate_descent.jl")
