@@ -3,21 +3,23 @@
 
 abstract type CDIterate{T} <: AbstractVector{T} end
 
-immutable SparseIterate{T} <: CDIterate{T}
+mutable struct SparseIterate{T} <: CDIterate{T}
     nzval::Vector{T}         # nonzero values
     nzval2full::Vector{Int}  # Mapping from indices in nzval to full vector
     full2nzval::Vector{Int}   # Mapping from indices in full vector to indices in nzval
+    nnz::Int
 end
 
-SparseIterate(n::Int) = new(T[], Int[], zeros(Int, n))
+SparseIterate(n::Int) = SparseIterate{Float64}(zeros(Float64, n), zeros(Int, n), zeros(Int, n), 0)
+SparseIterate{T}(::T, n::Int) = SparseIterate{T}(zeros(T, n), zeros(Int, n), zeros(Int, n), 0)
 
 function Base.A_mul_B!{T}(out::Vector, A::Matrix, coef::SparseIterate{T})
     fill!(out, zero(eltype(out)))
     @inbounds for icoef = 1:nnz(coef)
         ipred = coef.nzval2full[icoef]
         c = coef.nzval[icoef]
-        @simd for i = 1:size(X, 1)
-            out[i] += c*X[i, ipred]
+        @simd for i = 1:size(A, 1)
+            out[i] += c*A[i, ipred]
         end
     end
     out
@@ -31,70 +33,64 @@ function Base.dot{T}(x::Vector{T}, coef::SparseIterate{T})
     v
 end
 
+Base.length(x::SparseIterate) = length(x.full2nzval)
 Base.size(x::SparseIterate) = (length(x.full2nzval),)
-Base.nnz(x::SparseIterate) = length(x.nzval)
+Base.nnz(x::SparseIterate) = x.nnz
 Base.getindex{T}(x::SparseIterate{T}, ipred::Int) =
     x.full2nzval[ipred] == 0 ? zero(T) : x.nzval[x.full2nzval[ipred]]
 
-Base.iszero(x::SparseIterate) = length(x.nzval) == 0
+function Base.setindex!{T}(x::SparseIterate{T}, v::T, ipred::Int)
+  if x.full2nzval[ipred] == 0
+    if v != zero(T)
+      # newlen = length(x.nzval) + 1
+      x.nnz += 1
+      # resize!(x.nzval, newlen)
+      # resize!(x.nzval2full, newlen)
+      x.nzval[x.nnz] = v
+      x.nzval2full[x.nnz] = ipred
+      x.full2nzval[ipred] = x.nnz
+    end
+  else
+    icoef = x.full2nzval[ipred]
+    x.nzval[icoef] = v
+  end
+  v
+end
 
-# function Base.setindex!{T}(A::Matrix{T}, coef::SparseIterate, rg::UnitRange{Int}, i::Int)
-#     A[:, i] = zero(T)
-#     for icoef = 1:nnz(coef)
-#         A[rg[coef.coef2predictor[icoef]], i] = coef.coef[icoef]
-#     end
-#     A
-# end
+Base.iszero(x::SparseIterate) = x.nnz == 0
+
+function Base.dropzeros!{T}(x::SparseIterate{T})
+  i = 1
+  while i <= x.nnz
+    if x.nzval[i] == zero(T)
+      x.full2nzval[x.nzval2full[i]] = 0
+      if i != x.nnz
+        x.nzval[i] = x.nzval[x.nnz]
+        x.full2nzval[x.nzval2full[x.nnz]] = i
+        x.nzval2full[i] = x.nzval2full[x.nnz]
+      end
+      x.nnz -= 1
+      i -= 1
+    end
+    i += 1
+  end
+  x
+end
 
 function Base.copy!(x::SparseIterate, y::SparseIterate)
     length(x) == length(y) || throw(DimensionMismatch())
-    n = length(y.nzval)
-    resize!(x.nzval, n)
-    resize!(x.nzval2full, n)
     copy!(x.nzval, y.nzval)
     copy!(x.nzval2full, y.nzval2full)
     copy!(x.full2nzval, y.full2nzval)
+    x.nnz = y.nnz
     x
 end
-
-# # Add a new coefficient to x, returning its index in x.coef
-# function addcoef!{T}(x::SparseIterate{T}, ipred::Int)
-#     push!(x.coef, zero(T))
-#     push!(x.coef2predictor, ipred)
-#     coefindex = nnz(x)
-#     x.predictor2coef[ipred] = coefindex
-# end
-#
-# # Add newcoef to column i of coefs
-# function addcoefs!(coefs::SparseMatrixCSC, newcoef::SparseIterate, i::Int)
-#     n = nnz(coefs)
-#     nzval = coefs.nzval
-#     rowval = coefs.rowval
-#     resize!(nzval, n+nnz(newcoef))
-#     resize!(rowval, n+nnz(newcoef))
-#     @inbounds for ipred = 1:length(newcoef.predictor2coef)
-#         icoef = newcoef.predictor2coef[ipred]
-#         if icoef != 0
-#             cval = newcoef.coef[icoef]
-#             if cval != 0
-#                 n += 1
-#                 nzval[n] = cval
-#                 rowval[n] = ipred
-#             end
-#         end
-#     end
-#     resize!(nzval, n)
-#     resize!(rowval, n)
-#     coefs.colptr[i+1:end] = n+1
-# end
-
-
 
 #################
 
 
 
-abstract type CoordinateDifferentiableFunction{T} end
+abstract type CoordinateDifferentiableFunction end
 
 """
   Set internal parameters of the function f at the point x.
@@ -122,13 +118,6 @@ quadraticApprox(f, x, k) = error("quadraticApprox not implemented for $(typeof(f
 """
 updateSingle!(f, x, h, k) = error("updateSingle! not implemented for $(typeof(f))")
 
-"""
-  Update internal parameters of the function f.
-  This function is called after a convergence on the active set.
-  x is the current iterate.
-"""
-updateAfterActive!(f, x) = error("updateAfterActive! not implemented for $(typeof(f))")
-
 
 ####################################
 #
@@ -139,16 +128,12 @@ updateAfterActive!(f, x) = error("updateAfterActive! not implemented for $(typeo
 
 struct CDOptions
   maxIter::Int64
-  maxInnerIter::Int64
   optTol::Float64
-  kktTol::Float64
 end
 
 CDOptions(;
   maxIter::Int64=2000,
-  maxInnerIter::Int64=1000,
-  optTol::Float64=1e-7,
-  kktTol::Float64=1e-7) = CDOptions(maxIter, maxInnerIter, optTol, kktTol)
+  optTol::Float64=1e-7) = CDOptions(maxIter, optTol)
 
 
 ####################################
@@ -182,6 +167,18 @@ function _row_A_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::StridedVector{T}
   v
 end
 
+function _row_A_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseIterate{T}, row::Int64)
+  n, p = size(A)
+  ((p == length(b)) && (1 <= row <= n)) || throw(DimensionMismatch())
+
+  v = zero(T)
+  @inbounds for icoef = 1:nnz(b)
+      v += A[row, b.nzval2full[icoef]] * b.nzval[icoef]
+  end
+  v
+end
+
+
 function _row_At_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseVector{T}, row::Int64)
   n, p = size(A)
   ((n == length(b)) && (1 <= row <= p)) || throw(DimensionMismatch())
@@ -207,13 +204,25 @@ function _row_At_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::StridedVector{T
 end
 
 
+function _row_At_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseIterate{T}, row::Int64)
+  n, p = size(A)
+  ((n == length(b)) && (1 <= row <= n)) || throw(DimensionMismatch())
+
+  v = zero(T)
+  @inbounds for icoef = 1:b.nnz
+      v += A[b.nzval2full[icoef], row] * b.nzval[icoef]
+  end
+  v
+end
+
+
 
 ####################################
 #
 # loss |Y - X⋅β|^2 / (2⋅n)
 #
 ####################################
-struct CDLeastSquaresLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction{T}
+struct CDLeastSquaresLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   y::S
   X::U
   r::Vector{T}
@@ -228,7 +237,8 @@ function CDLeastSquaresLoss{T<:AbstractFloat}(y::AbstractVector{T}, X::AbstractM
 end
 
 numCoordinates(f::CDLeastSquaresLoss) = size(f.X, 2)
-function initialize!{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseVector{T})
+
+function initialize!{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseIterate{T})
   # compute residuals for the loss
 
   X = f.X
@@ -236,19 +246,21 @@ function initialize!{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseVector
   r = f.r
 
   n, p = size(f.X)
-  nzval = SparseArrays.nonzeros(x)
-  rowval = SparseArrays.nonzeroinds(x)
 
   @simd for i=1:n
     @inbounds r[i] = y[i] - _row_A_mul_b(X, x, i)
   end
   nothing
 end
-gradient{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseVector{T}, j::Int64) =
+
+
+gradient{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) =
   _row_At_mul_b(f.X, f.r, j) / (-1*size(f.X, 1))
+
+
 function quadraticApprox{T<:AbstractFloat}(
   f::CDLeastSquaresLoss{T},
-  x::SparseVector{T},
+  x::SparseIterate{T},
   j::Int64)
 
   y = f.y
@@ -270,7 +282,7 @@ end
 
 function updateSingle!{T<:AbstractFloat}(
   f::CDLeastSquaresLoss{T},
-  x::SparseVector{T},
+  x::SparseIterate{T},
   h::T,
   j::Int64)
 
@@ -283,16 +295,12 @@ function updateSingle!{T<:AbstractFloat}(
   nothing
 end
 
-updateAfterActive!{T<:AbstractFloat}(
-  f::CDLeastSquaresLoss{T},
-  x::SparseVector{T}) = nothing
-
 ####################################
 #
 # quadratic x'Ax/2 + x'b
 #
 ####################################
-struct CDQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction{T}
+struct CDQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   A::S
   b::U
 
@@ -306,12 +314,12 @@ function CDQuadraticLoss{T<:AbstractFloat}(A::AbstractMatrix{T}, b::AbstractVect
 end
 
 numCoordinates(f::CDQuadraticLoss) = length(f.b)
-initialize!{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseVector{T}) = nothing
-gradient{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseVector{T}, j::Int64) =
+initialize!{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseIterate{T}) = nothing
+gradient{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseIterate{T}, j::Int64) =
   _row_At_mul_b(f.A, x, j) + f.b[j]
 function quadraticApprox{T<:AbstractFloat}(
   f::CDQuadraticLoss{T},
-  x::SparseVector{T},
+  x::SparseIterate{T},
   j::Int64)
 
   a = f.A[j,j]
@@ -320,11 +328,7 @@ function quadraticApprox{T<:AbstractFloat}(
   (a, b)
 end
 
-updateSingle!{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseVector{T}, h::T, j::Int64) = nothing
-
-updateAfterActive!{T<:AbstractFloat}(
-  f::CDQuadraticLoss{T},
-  x::SparseVector{T}) = nothing
+updateSingle!{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseIterate{T}, h::T, j::Int64) = nothing
 
 
 ####################
@@ -333,111 +337,56 @@ updateAfterActive!{T<:AbstractFloat}(
 #
 ####################
 
+function fullPass!{T<:AbstractFloat}(
+  x::SparseIterate{T},
+  f::CoordinateDifferentiableFunction,
+  λ::StridedVector{T})
 
-# helper function for Active Shooting implementation of Coordinate Descent
-# iterates over the active set
-#
-# β is a sparse vector that contains information about the active set
-# when adding an element to the active set, we set that element of β to eps()
-function minimize_active_set!{T<:AbstractFloat}(
-  β::SparseVector{T},
-  f::CoordinateDifferentiableFunction{T},
-  λ::StridedVector{T},
-  options::CDOptions=CDOptions())
-
-  nzval = SparseArrays.nonzeros(β)
-  rowval = SparseArrays.nonzeroinds(β)
-
-  maxInnerIter = options.maxInnerIter
-  optTol = options.optTol
-
-  for iter=1:maxInnerIter
-    fDone = true
-    for j = 1:length(rowval)
-      ci = rowval[j]
-      # Compute the Shoot and Update the variable
-      a, b = quadraticApprox(f, β, ci)
-      oldVal = nzval[j]
-      nzval[j] = shrink(oldVal - b, λ[ci] / a)
-      h = nzval[j] - oldVal
-      updateSingle!(f, β, h, ci)
-      if abs(h) > optTol
-        fDone = false
-      end
-    end
-    if fDone
-      break
+  maxH = zero(T)
+  for ipred = 1:length(x)
+    # Compute the Shoot and Update the variable
+    a, b = quadraticApprox(f, x, ipred)
+    oldVal = x[ipred]
+    newVal = shrink(oldVal - b, λ[ipred] / a)
+    h = newVal - oldVal
+    x[ipred] = newVal
+    updateSingle!(f, x, h, ipred)
+    if abs(h) > maxH
+      maxH = h
     end
   end
-  updateAfterActive!(f, β)
-  dropzeros!(β)
+  dropzeros!(x)
+  maxH
 end
 
-# finds index to add to the active_set
-function add_violating_index!{T<:AbstractFloat}(
-  β::SparseVector{T},
-  f::CoordinateDifferentiableFunction{T},
-  λ::StridedVector{T},
-  options::CDOptions=CDOptions())
+function nonZeroPass!{T<:AbstractFloat}(
+  x::SparseIterate{T},
+  f::CoordinateDifferentiableFunction,
+  λ::StridedVector{T})
 
-  p = numCoordinates(f)
-  kktTol = options.kktTol
-  nzval = SparseArrays.nonzeros(β)
-  rowval = SparseArrays.nonzeroinds(β)
-
-  val = zero(T)
-  ind = 0
-  for j = 1:p
-    S0 = abs(gradient(f, β, j))
-    if S0 > λ[j] + kktTol && S0 > val
-      val = S0
-      ind = j
+  maxH = zero(T)
+  for i = 1:x.nnz
+    ipred = x.nzval2full[i]
+    # Compute the Shoot and Update the variable
+    a, b = quadraticApprox(f, x, ipred)
+    oldVal = x[ipred]
+    newVal = shrink(oldVal - b, λ[ipred] / a)
+    h = newVal - oldVal
+    x[ipred] = newVal
+    updateSingle!(f, x, h, ipred)
+    if abs(h) > maxH
+      maxH = h
     end
   end
-  if ind != 0
-    β[ind] = eps()
-  end
-  return ind
+  dropzeros!(x)
+  maxH
 end
 
-coordinateDescentActiveShooting{T<:AbstractFloat}(
-  f::CoordinateDifferentiableFunction{T},
-  λ::Vector{T},
-  options::CDOptions=CDOptions()) = coordinateDescent!(spzeros(numCoordinates(f)), f, λ, options)
-
-function coordinateDescentActiveShooting!{T<:AbstractFloat}(
-  β::SparseVector{T},
-  f::CoordinateDifferentiableFunction{T},
-  λ::Vector{T},
-  options::CDOptions=CDOptions())
-
-  p = numCoordinates(f)
-  length(λ) == p || throw(DimensionMismatch())
-
-  if iszero(β)
-    add_violating_index!(β, f, λ) != 0 || return β
-  else
-    initialize!(f, β)
-  end
-
-  for iter=1:options.maxIter
-    minimize_active_set!(β, f, λ, options)
-    add_violating_index!(β, f, λ) != 0 || return β
-  end
-  β
-end
-
-###
 
 #
 # minimize f(x) + ∑ λi⋅|xi|
 #
-function coordinateDescent!{T<:AbstractFloat}(
-  x::SparseIterate{T},
-  f::CoordinateDifferentiableFunction{T},
-  λ::Vector{T},
-  options=CDOptions())
-
+function coordinateDescent!(x::SparseIterate, f::CoordinateDifferentiableFunction, λ::Vector, options=CDOptions())
   p = numCoordinates(f)
   length(λ) == p || throw(DimensionMismatch())
 
@@ -445,18 +394,28 @@ function coordinateDescent!{T<:AbstractFloat}(
     initialize!(f, x)
   end
 
-
-  add_violating_index!(x, f, λ) != 0 || return x
-
-
+  prev_converged = false
+  converged = true
   for iter=1:options.maxIter
-    minimize_active_set!(β, f, λ, options)
-    add_violating_index!(β, f, λ) != 0 || return β
+
+    if converged
+      # @show "fullPass"
+      maxH = fullPass!(x, f, λ)
+    else
+      # @show "nonzeroPass"
+      maxH = nonZeroPass!(x, f, λ)
+    end
+    prev_converged = converged
+
+    # test for convergence
+    converged = maxH < options.optTol
+
+    prev_converged && converged && break
   end
-  β
+  x
 end
 
-
-
+coordinateDescent(f::CoordinateDifferentiableFunction, λ::Vector, options=CDOptions()) =
+  coordinateDescent!(SparseIterate(numCoordinates(f)), f, λ, options)
 
 ##
