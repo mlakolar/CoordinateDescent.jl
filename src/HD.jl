@@ -16,9 +16,8 @@ export
   CDLeastSquaresLoss,
   CDQuadraticLoss,
   CDOptions,
-  coordinateDescent,
-  coordinateDescent!
-
+  coordinateDescentActiveShooting,
+  coordinateDescentActiveShooting!
 
 
 include("coordinate_descent.jl")

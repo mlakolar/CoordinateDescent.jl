@@ -14,7 +14,7 @@ lasso_raw{T<:AbstractFloat}(
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::StridedVector{T},
-  options::CDOptions=CDOptions()) = coordinateDescent(CDLeastSquaresLoss(y,X), λ, options)
+  options::CDOptions=CDOptions()) = coordinateDescentActiveShooting(CDLeastSquaresLoss(y,X), λ, options)
 
 # minimize x'Ax / 2 + b'x + λ⋅|x|
 lasso{T<:AbstractFloat}(
@@ -27,7 +27,7 @@ lasso{T<:AbstractFloat}(
   XX::StridedMatrix{T},
   Xy::StridedVector{T},
   λ::Array{Float64, 1},
-  options::CDOptions=CDOptions()) = coordinateDescent(CDQuadraticLoss(A, b), λ)
+  options::CDOptions=CDOptions()) = coordinateDescentActiveShooting(CDQuadraticLoss(A, b), λ)
 
 
 ######################################################################
@@ -81,7 +81,7 @@ function compute_lasso_path{T<:AbstractFloat}(
   hβ = Vector{SparseVector{T}}(numλ)
 
   for indλ=1:numλ
-    coordinateDescent!(curβ, f, λArr[indλ] * loadingX)
+    coordinateDescentActiveShooting!(curβ, f, λArr[indλ] * loadingX)
     hβ[indλ] = copy(curβ)
     if nnz(curβ) > max_hat_s
       _λArr = λArr[1:indλ-1]

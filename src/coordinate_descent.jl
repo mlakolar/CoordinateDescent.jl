@@ -1,10 +1,105 @@
+#################
+
+
+abstract type CDIterate{T} <: AbstractVector{T} end
+
+immutable SparseIterate{T} <: CDIterate{T}
+    nzval::Vector{T}         # nonzero values
+    nzval2full::Vector{Int}  # Mapping from indices in nzval to full vector
+    full2nzval::Vector{Int}   # Mapping from indices in full vector to indices in nzval
+end
+
+SparseIterate(n::Int) = new(T[], Int[], zeros(Int, n))
+
+function Base.A_mul_B!{T}(out::Vector, A::Matrix, coef::SparseIterate{T})
+    fill!(out, zero(eltype(out)))
+    @inbounds for icoef = 1:nnz(coef)
+        ipred = coef.nzval2full[icoef]
+        c = coef.nzval[icoef]
+        @simd for i = 1:size(X, 1)
+            out[i] += c*X[i, ipred]
+        end
+    end
+    out
+end
+
+function Base.dot{T}(x::Vector{T}, coef::SparseIterate{T})
+    v = 0.0
+    @inbounds @simd for icoef = 1:nnz(coef)
+        v += x[coef.nzval2full[icoef]]*coef.nzval[icoef]
+    end
+    v
+end
+
+Base.size(x::SparseIterate) = (length(x.full2nzval),)
+Base.nnz(x::SparseIterate) = length(x.nzval)
+Base.getindex{T}(x::SparseIterate{T}, ipred::Int) =
+    x.full2nzval[ipred] == 0 ? zero(T) : x.nzval[x.full2nzval[ipred]]
+
+Base.iszero(x::SparseIterate) = length(x.nzval) == 0
+
+# function Base.setindex!{T}(A::Matrix{T}, coef::SparseIterate, rg::UnitRange{Int}, i::Int)
+#     A[:, i] = zero(T)
+#     for icoef = 1:nnz(coef)
+#         A[rg[coef.coef2predictor[icoef]], i] = coef.coef[icoef]
+#     end
+#     A
+# end
+
+function Base.copy!(x::SparseIterate, y::SparseIterate)
+    length(x) == length(y) || throw(DimensionMismatch())
+    n = length(y.nzval)
+    resize!(x.nzval, n)
+    resize!(x.nzval2full, n)
+    copy!(x.nzval, y.nzval)
+    copy!(x.nzval2full, y.nzval2full)
+    copy!(x.full2nzval, y.full2nzval)
+    x
+end
+
+# # Add a new coefficient to x, returning its index in x.coef
+# function addcoef!{T}(x::SparseIterate{T}, ipred::Int)
+#     push!(x.coef, zero(T))
+#     push!(x.coef2predictor, ipred)
+#     coefindex = nnz(x)
+#     x.predictor2coef[ipred] = coefindex
+# end
+#
+# # Add newcoef to column i of coefs
+# function addcoefs!(coefs::SparseMatrixCSC, newcoef::SparseIterate, i::Int)
+#     n = nnz(coefs)
+#     nzval = coefs.nzval
+#     rowval = coefs.rowval
+#     resize!(nzval, n+nnz(newcoef))
+#     resize!(rowval, n+nnz(newcoef))
+#     @inbounds for ipred = 1:length(newcoef.predictor2coef)
+#         icoef = newcoef.predictor2coef[ipred]
+#         if icoef != 0
+#             cval = newcoef.coef[icoef]
+#             if cval != 0
+#                 n += 1
+#                 nzval[n] = cval
+#                 rowval[n] = ipred
+#             end
+#         end
+#     end
+#     resize!(nzval, n)
+#     resize!(rowval, n)
+#     coefs.colptr[i+1:end] = n+1
+# end
+
+
+
+#################
+
+
 
 abstract type CoordinateDifferentiableFunction{T} end
 
 """
   Set internal parameters of the function f at the point x.
 """
-initialize!(f, x) = error("update! not implemented for $(typeof(f))")
+initialize!(f, x) = error("initialize! not implemented for $(typeof(f))")
 
 """
   Coordinate k of the gradient of f evaluated at x.
@@ -25,7 +120,14 @@ quadraticApprox(f, x, k) = error("quadraticApprox not implemented for $(typeof(f
   The update was of size h.
   The new values is x.
 """
-update!(f, x, h, k) = error("update! not implemented for $(typeof(f))")
+updateSingle!(f, x, h, k) = error("updateSingle! not implemented for $(typeof(f))")
+
+"""
+  Update internal parameters of the function f.
+  This function is called after a convergence on the active set.
+  x is the current iterate.
+"""
+updateAfterActive!(f, x) = error("updateAfterActive! not implemented for $(typeof(f))")
 
 
 ####################################
@@ -166,7 +268,7 @@ function quadraticApprox{T<:AbstractFloat}(
   (a, b)
 end
 
-function update!{T<:AbstractFloat}(
+function updateSingle!{T<:AbstractFloat}(
   f::CDLeastSquaresLoss{T},
   x::SparseVector{T},
   h::T,
@@ -181,6 +283,9 @@ function update!{T<:AbstractFloat}(
   nothing
 end
 
+updateAfterActive!{T<:AbstractFloat}(
+  f::CDLeastSquaresLoss{T},
+  x::SparseVector{T}) = nothing
 
 ####################################
 #
@@ -215,8 +320,11 @@ function quadraticApprox{T<:AbstractFloat}(
   (a, b)
 end
 
-update!{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseVector{T}, h::T, j::Int64) = nothing
+updateSingle!{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseVector{T}, h::T, j::Int64) = nothing
 
+updateAfterActive!{T<:AbstractFloat}(
+  f::CDQuadraticLoss{T},
+  x::SparseVector{T}) = nothing
 
 
 ####################
@@ -252,7 +360,7 @@ function minimize_active_set!{T<:AbstractFloat}(
       oldVal = nzval[j]
       nzval[j] = shrink(oldVal - b, λ[ci] / a)
       h = nzval[j] - oldVal
-      update!(f, β, h, ci)
+      updateSingle!(f, β, h, ci)
       if abs(h) > optTol
         fDone = false
       end
@@ -261,6 +369,7 @@ function minimize_active_set!{T<:AbstractFloat}(
       break
     end
   end
+  updateAfterActive!(f, β)
   dropzeros!(β)
 end
 
@@ -291,12 +400,12 @@ function add_violating_index!{T<:AbstractFloat}(
   return ind
 end
 
-coordinateDescent{T<:AbstractFloat}(
+coordinateDescentActiveShooting{T<:AbstractFloat}(
   f::CoordinateDifferentiableFunction{T},
   λ::Vector{T},
   options::CDOptions=CDOptions()) = coordinateDescent!(spzeros(numCoordinates(f)), f, λ, options)
 
-function coordinateDescent!{T<:AbstractFloat}(
+function coordinateDescentActiveShooting!{T<:AbstractFloat}(
   β::SparseVector{T},
   f::CoordinateDifferentiableFunction{T},
   λ::Vector{T},
@@ -317,3 +426,37 @@ function coordinateDescent!{T<:AbstractFloat}(
   end
   β
 end
+
+###
+
+#
+# minimize f(x) + ∑ λi⋅|xi|
+#
+function coordinateDescent!{T<:AbstractFloat}(
+  x::SparseIterate{T},
+  f::CoordinateDifferentiableFunction{T},
+  λ::Vector{T},
+  options=CDOptions())
+
+  p = numCoordinates(f)
+  length(λ) == p || throw(DimensionMismatch())
+
+  if !iszero(x)
+    initialize!(f, x)
+  end
+
+
+  add_violating_index!(x, f, λ) != 0 || return x
+
+
+  for iter=1:options.maxIter
+    minimize_active_set!(β, f, λ, options)
+    add_violating_index!(β, f, λ) != 0 || return β
+  end
+  β
+end
+
+
+
+
+##
