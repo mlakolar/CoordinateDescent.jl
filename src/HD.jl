@@ -12,12 +12,10 @@ export
   compute_lasso_path_refit,
 
   # CD
-  CoordinateDifferentiableFunction,
-  CDLeastSquaresLoss,
-  CDQuadraticLoss,
-  CDOptions,
-  coordinateDescent,
-  coordinateDescent!
+  CoordinateDifferentiableFunction, CDLeastSquaresLoss, CDQuadraticLoss,
+  SparseIterate, CDOptions,
+  coordinateDescent, coordinateDescent!
+
 
 
 include("coordinate_descent.jl")
