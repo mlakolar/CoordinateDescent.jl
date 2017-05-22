@@ -1,0 +1,13 @@
+language: julia
+julia:
+  - 0.6
+os:
+  - linux
+notifications:
+  email: mkolar@gmail.com
+addons:
+    apt_packages:
+        - gfortran
+sudo: false
+script:
+  - julia -e 'Pkg.clone("https://github.com/mlakolar/ProximalBase.jl"); Pkg.clone(pwd()); Pkg.build("HD"); Pkg.test("HD"; coverage=true)'

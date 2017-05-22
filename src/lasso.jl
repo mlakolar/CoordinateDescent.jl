@@ -4,30 +4,18 @@
 #
 ######################################################################
 
-lasso_raw{T<:AbstractFloat}(
+lasso{T<:AbstractFloat}(
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::T,
-  options::CDOptions=CDOptions()) = lasso_raw(X, y, λ*ones(size(X,2)), options)
+  options::CDOptions=CDOptions()) = coordinateDescent(CDLeastSquaresLoss(y,X), ProxL1(λ), options)
 
-lasso_raw{T<:AbstractFloat}(
+lasso{T<:AbstractFloat}(
   X::StridedMatrix{T},
   y::StridedVector{T},
-  λ::StridedVector{T},
-  options::CDOptions=CDOptions()) = coordinateDescentActiveShooting(CDLeastSquaresLoss(y,X), λ, options)
+  λ::Array{T},
+  options::CDOptions=CDOptions()) = coordinateDescent(CDLeastSquaresLoss(y,X), AProxL1(λ), options)
 
-# minimize x'Ax / 2 + b'x + λ⋅|x|
-lasso{T<:AbstractFloat}(
-  A::StridedMatrix{T},
-  b::StridedVector{T},
-  λ::T,
-  options::CDOptions=CDOptions()) = lasso(A, b, λ*ones(length(b)), options)
-
-lasso{T<:AbstractFloat}(
-  XX::StridedMatrix{T},
-  Xy::StridedVector{T},
-  λ::Array{Float64, 1},
-  options::CDOptions=CDOptions()) = coordinateDescentActiveShooting(CDQuadraticLoss(A, b), λ)
 
 
 ######################################################################
