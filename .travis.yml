@@ -11,3 +11,6 @@ addons:
 sudo: false
 script:
   - julia -e 'Pkg.clone("https://github.com/mlakolar/ProximalBase.jl"); Pkg.clone(pwd()); Pkg.build("HD"); Pkg.test("HD"; coverage=true)'
+after_success:
+    - echo $TRAVIS_JULIA_VERSION
+    - julia -e 'Pkg.add("Coverage"); cd(Pkg.dir("HD")); using Coverage; Codecov.submit(process_folder())'
