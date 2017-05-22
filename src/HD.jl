@@ -11,7 +11,8 @@ export
   compute_lasso_path_refit,
 
   # CD
-  CoordinateDifferentiableFunction, CDLeastSquaresLoss, CDQuadraticLoss,
+  CoordinateDifferentiableFunction,
+  CDLeastSquaresLoss, CDQuadraticLoss, CDSqrtLassoLoss,
   CDOptions,
   coordinateDescent, coordinateDescent!
 

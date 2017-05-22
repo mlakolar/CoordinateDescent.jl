@@ -208,6 +208,101 @@ function descend_coordinate!{T<:AbstractFloat}(
   h
 end
 
+
+####################################
+#
+# loss |Y - X⋅β|_2 / sqrt(n)
+#
+####################################
+struct CDSqrtLassoLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
+  y::S
+  X::U
+  r::Vector{T}
+
+  CDSqrtLassoLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, r::Vector{T}) where {T,S,U} =
+    new(y,X,r)
+end
+
+function CDSqrtLassoLoss{T<:AbstractFloat}(y::AbstractVector{T}, X::AbstractMatrix{T})
+  length(y) == size(X, 1) || throw(DimensionMismatch())
+  CDSqrtLassoLoss{T, typeof(y), typeof(X)}(y,X,copy(y))
+end
+
+numCoordinates(f::CDSqrtLassoLoss) = size(f.X, 2)
+
+function initialize!{T<:AbstractFloat}(f::CDSqrtLassoLoss{T}, x::SparseIterate{T})
+  # compute residuals for the loss
+
+  X = f.X
+  y = f.y
+  r = f.r
+
+  n, p = size(f.X)
+
+  @simd for i=1:n
+    @inbounds r[i] = y[i] - _row_A_mul_b(X, x, i)
+  end
+  nothing
+end
+
+
+gradient{T<:AbstractFloat}(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}, j::Int64) =
+  -one(T) * _row_At_mul_b(f.X, f.r, j) / vecnorm(f.r)
+
+# a = X[:, k]' X[:, k]
+# b = X[:, k]' r
+#
+# h        = arg_min a/(2n) (h-b/a)^2 + λ_k⋅|x_k + h|
+# xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
+function descend_coordinate!{T<:AbstractFloat}(
+  f::CDSqrtLassoLoss{T},
+  g::Union{ProxL1{T}, AProxL1{T}},
+  x::SparseIterate{T},
+  k::Int64)
+
+  y = f.y
+  X = f.X
+  r = f.r
+  n = length(f.y)
+
+  # residuls = y - X * x + X[:, k] * x[k]
+  @inbounds @simd for i=1:n
+    r[i] += X[i, k] * x[k]
+  end
+
+  s = zero(T)
+  xsqr = zero(T)
+  rsqr = zero(T)
+  @inbounds @simd for i=1:n
+    xsqr += X[i, k] * X[i, k]
+    s += r[i] * X[i, k]
+    rsqr += r[i] * r[i]
+  end
+
+  λ = zero(T)
+  if isa(g, ProxL1{T})
+    λ = g.λ
+  else
+    λ = g.λ[k]
+  end
+
+  oldVal = x[k]
+  if abs(s) <= λ * sqrt(rsqr)
+    x[k] = zero(T)
+  elseif s > λ * sqrt(rsqr)
+    x[k] = ( s - λ / sqrt(1 - λ^2 / xsqr) * sqrt(rsqr - s^2/xsqr) ) / xsqr
+  else
+    x[k] = ( s + λ / sqrt(1 - λ^2 / xsqr) * sqrt(rsqr - s^2/xsqr) ) / xsqr
+  end
+
+  # update internals -- residuls = y - X * xnew
+  @inbounds @simd for i=1:n
+    r[i] -= X[i, k] * x[k]
+  end
+  x[k] - oldVal
+end
+
+
 ####################################
 #
 # quadratic x'Ax/2 + x'b
@@ -216,9 +311,6 @@ end
 struct CDQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   A::S
   b::U
-  #
-  # CDQuadraticLoss{T, S, U}(A::AbstractMatrix{T}, b::AbstractVector{T}) where {T,S,U} =
-  #   new(A,b)
 end
 
 function CDQuadraticLoss{T<:AbstractFloat}(A::AbstractMatrix{T}, b::AbstractVector{T})

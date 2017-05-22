@@ -3,25 +3,25 @@ using FactCheck
 using HD
 using ProximalBase
 
-# function try_import(name::Symbol)
-#     try
-#         @eval import $name
-#         return true
-#     catch e
-#         return false
-#     end
-# end
+function try_import(name::Symbol)
+    try
+        @eval import $name
+        return true
+    catch e
+        return false
+    end
+end
 
-# grb = try_import(:Gurobi)
-# cvx = try_import(:Convex)
-# ipopt = try_import(:Ipopt)
-# grb = false
-#
-# if grb
-#   Convex.set_default_solver(Gurobi.GurobiSolver(OutputFlag=0))
-# else
-#   Convex.set_default_solver(Ipopt.IpoptSolver(print_level=0, tol=1e-12))
-# end
+grb = try_import(:Gurobi)
+cvx = try_import(:Convex)
+scs = try_import(:SCS)
+grb = false
+
+if grb
+  Convex.set_default_solver(Gurobi.GurobiSolver(OutputFlag=0))
+else
+  Convex.set_default_solver(SCS.SCSSolver(eps=1e-6, verbose=0))
+end
 
 ##############################################
 #
@@ -61,7 +61,7 @@ facts("lasso") do
       x1 = coordinateDescent(f, g, CDOptions(;optTol=1e-12))
       @fact beta --> roughly(x1; atol=1e-5)
 
-      @fact maximum(abs.(X'*(Y - X*beta) / n)) <= 0.3 + 1e-5 --> true
+      @fact maximum(abs.(X'*(Y - X*beta) / n)) <= 0.3 + 5e-4 --> true
     end
   end
 
@@ -69,26 +69,57 @@ end
 
 facts("cd lasso") do
 
-for i=1:100
-  n = 200
-  p = 50
-  s = 10
+  for i=1:100
+    n = 200
+    p = 50
+    s = 10
 
-  X = randn(n, p)
-  β = randn(s)
-  Y = X[:,1:s] * β + 0.1 * randn(n)
+    X = randn(n, p)
+    β = randn(s)
+    Y = X[:,1:s] * β + 0.1 * randn(n)
 
-  g = ProximalBase.ProxL1(0.2)
-  f1 = CDQuadraticLoss(X'X/n, -X'Y/n)
-  f2 = CDLeastSquaresLoss(Y, X)
+    g = ProximalBase.ProxL1(0.2)
+    f1 = CDQuadraticLoss(X'X/n, -X'Y/n)
+    f2 = CDLeastSquaresLoss(Y, X)
 
-  x1 = coordinateDescent(f1, g, CDOptions(;optTol=1e-12))
-  x2 = coordinateDescent(f2, g, CDOptions(;optTol=1e-12))
+    x1 = coordinateDescent(f1, g, CDOptions(;optTol=1e-12))
+    x2 = coordinateDescent(f2, g, CDOptions(;optTol=1e-12))
 
-  @fact maximum(abs.(x1 - x2)) --> roughly(0.; atol=1e-5)
+    @fact maximum(abs.(x1 - x2)) --> roughly(0.; atol=1e-5)
+  end
+
 end
 
+
+facts("cd sqrt-lasso") do
+
+  for i=1:10
+    n = 100
+    p = 10
+    s = 5
+
+    X = randn(n, p)
+    β = randn(s)
+    Y = X[:,1:s] * β + 0.1 * randn(n)
+
+    g = ProximalBase.ProxL1(2.8)
+    f = CDSqrtLassoLoss(Y, X)
+
+    x1 = coordinateDescent(f, g, CDOptions(;optTol=1e-16))
+
+    @fact maximum(abs.(X'*(Y - X*x1) / vecnorm(Y - X*x1))) <= 2.8 + 0.05 --> true
+
+    x2 = Convex.Variable(p)
+    prob = Convex.minimize(Convex.vecnorm(Y-X*x2) + 2.8 * vecnorm(x2, 1))
+    Convex.solve!(prob)
+
+    @fact maximum(abs.(X'*(Y - X*x2.value) / vecnorm(Y - X*x2.value))) <= 2.8 + 0.05 --> true
+    # @fact maximum(abs.(x1 - x2.value)) --> roughly(0.; atol=1e-3)
+  end
+
+
 end
+
 
 
 # ##############################################
