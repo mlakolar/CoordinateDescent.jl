@@ -4,7 +4,7 @@ julia:
 os:
   - linux
 notifications:
-  email: mkolar@gmail.com
+  email: false  
 addons:
     apt_packages:
         - gfortran

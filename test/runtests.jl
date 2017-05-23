@@ -15,7 +15,6 @@ end
 grb = try_import(:Gurobi)
 cvx = try_import(:Convex)
 scs = try_import(:SCS)
-grb = false
 
 if grb
   Convex.set_default_solver(Gurobi.GurobiSolver(OutputFlag=0))
@@ -117,8 +116,8 @@ facts("cd sqrt-lasso") do
     prob = Convex.minimize(Convex.vecnorm(Y-X*x2) + λ * vecnorm(x2, 1))
     Convex.solve!(prob)
 
-    @fact (maximum(abs.(X'*(Y - X*x2.value) / vecnorm(Y - X*x2.value))) - λ) / λ --> roughly(0.; atol=1e-3)
-    @fact maximum(abs.(x1 - x2.value)) --> roughly(0.; atol=1e-3)
+    @fact (maximum(abs.(X'*(Y - X*x2.value) / vecnorm(Y - X*x2.value))) - λ) / λ --> roughly(0.; atol=3e-3)
+    @fact maximum(abs.(x1 - x2.value)) --> roughly(0.; atol=2e-3)
   end
 
 
