@@ -6,9 +6,9 @@ export
   # prox_l2!,
   # group_lasso_raw!,
   # group_lasso!,
-  lasso,
-  compute_lasso_path,
-  compute_lasso_path_refit,
+  lasso, sqrtLasso,
+  computeLassoPath, refitLassoPath,
+  ScaledLassoOptions, scaledLasso,
 
   # CD
   CoordinateDifferentiableFunction,

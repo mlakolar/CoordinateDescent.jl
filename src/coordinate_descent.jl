@@ -32,7 +32,7 @@ numCoordinates(f) = error("numCoordinates not implemented for $(typeof(f))")
     that the algorithm to call this function again is coordinate descent.
     In future, we may want to implement other variants of coordinate descent.
 """
-descend_coordinate!(f, g, x, k) = error("quadraticApprox not implemented for $(typeof(f))")
+descendCoordinate!(f, g, x, k) = error("quadraticApprox not implemented for $(typeof(f))")
 
 
 ####################################
@@ -178,7 +178,7 @@ gradient{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int
 #
 # h        = arg_min a/(2n) (h-b/a)^2 + λ_k⋅|x_k + h|
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
-function descend_coordinate!{T<:AbstractFloat}(
+function descendCoordinate!{T<:AbstractFloat}(
   f::CDLeastSquaresLoss{T},
   g::Union{ProxL1{T}, AProxL1{T}},
   x::SparseIterate{T},
@@ -254,7 +254,7 @@ gradient{T<:AbstractFloat}(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}, j::Int64)
 #
 # h        = arg_min a/(2n) (h-b/a)^2 + λ_k⋅|x_k + h|
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
-function descend_coordinate!{T<:AbstractFloat}(
+function descendCoordinate!{T<:AbstractFloat}(
   f::CDSqrtLassoLoss{T},
   g::Union{ProxL1{T}, AProxL1{T}},
   x::SparseIterate{T},
@@ -269,6 +269,7 @@ function descend_coordinate!{T<:AbstractFloat}(
   @inbounds @simd for i=1:n
     r[i] += X[i, k] * x[k]
   end
+  # r = y - X*x + X[:,k]*x[k]
 
   s = zero(T)
   xsqr = zero(T)
@@ -278,6 +279,9 @@ function descend_coordinate!{T<:AbstractFloat}(
     s += r[i] * X[i, k]
     rsqr += r[i] * r[i]
   end
+  # s = dot(r, X[:,k])
+  # xsqr = dot(X[:,k], X[:, k])
+  # rsqr = dot(r, r)
 
   λ = zero(T)
   if isa(g, ProxL1{T})
@@ -299,6 +303,7 @@ function descend_coordinate!{T<:AbstractFloat}(
   @inbounds @simd for i=1:n
     r[i] -= X[i, k] * x[k]
   end
+
   x[k] - oldVal
 end
 
@@ -323,7 +328,7 @@ initialize!(f::CDQuadraticLoss, x::SparseIterate) = nothing
 gradient{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseIterate{T}, j::Int64) =
   _row_At_mul_b(f.A, x, j) + f.b[j]
 
-function descend_coordinate!{T<:AbstractFloat}(
+function descendCoordinate!{T<:AbstractFloat}(
   f::CDQuadraticLoss{T},
   g::Union{ProxL1{T}, AProxL1{T}},
   x::SparseIterate{T},
@@ -352,9 +357,9 @@ function fullPass!{T<:AbstractFloat}(
 
   maxH = zero(T)
   for ipred = 1:length(x)
-    h = descend_coordinate!(f, g, x, ipred)
+    h = descendCoordinate!(f, g, x, ipred)
     if abs(h) > maxH
-      maxH = h
+      maxH = abs(h)
     end
   end
   dropzeros!(x)
@@ -369,9 +374,9 @@ function nonZeroPass!{T<:AbstractFloat}(
   maxH = zero(T)
   for i = 1:x.nnz
     ipred = x.nzval2full[i]
-    h = descend_coordinate!(f, g, x, ipred)
+    h = descendCoordinate!(f, g, x, ipred)
     if abs(h) > maxH
-      maxH = h
+      maxH = abs(h)
     end
   end
   dropzeros!(x)
@@ -393,9 +398,7 @@ function coordinateDescent!(
     length(g.λ) == p || throw(DimensionMismatch())
   end
 
-  if !iszero(x)
-    initialize!(f, x)
-  end
+  initialize!(f, x)
 
   prev_converged = false
   converged = true
@@ -403,8 +406,10 @@ function coordinateDescent!(
 
     if converged
       maxH = fullPass!(x, f, g)
+      # @show x
     else
       maxH = nonZeroPass!(x, f, g)
+      # @show x
     end
     prev_converged = converged
 
