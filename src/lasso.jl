@@ -39,8 +39,6 @@ ScaledLassoOptions(;
   maxIter::Int64=100,
   optTol::Float64=1e-6) = ScaledLassoOptions(maxIter, optTol)
 
-
-
 scaledLasso{T<:AbstractFloat}(
   X::StridedMatrix{T},
   y::StridedVector{T},
