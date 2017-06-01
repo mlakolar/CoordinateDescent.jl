@@ -37,28 +37,28 @@ struct ScaledLassoOptions
 end
 
 ScaledLassoOptions(;
-  maxIter::Int64=100,
-  optTol::Float64=1e-6,
+  maxIter::Int64=20,
+  optTol::Float64=1e-2,
   optionsCD::CDOptions=CDOptions()) = ScaledLassoOptions(maxIter, optTol, optionsCD)
 
 
 scaledLasso{T<:AbstractFloat}(
-    X::StridedMatrix{T},
-    y::StridedVector{T},
+    X::AbstractMatrix{T},
+    y::AbstractVector{T},
     λ::Array{T},
     optionsScaledLasso::ScaledLassoOptions=ScaledLassoOptions()
     ) = scaledLasso!(SparseIterate(size(X, 2)), X, y, λ, optionsScaledLasso)
 
 function scaledLasso!{T<:AbstractFloat}(
   β::SparseIterate{T},
-  X::StridedMatrix{T},
-  y::StridedVector{T},
+  X::AbstractMatrix{T},
+  y::AbstractVector{T},
   λ::Array{T},
   optionsScaledLasso::ScaledLassoOptions=ScaledLassoOptions()
   )
 
   n, p = size(X)
-  f = CDSqrtLassoLoss(y,X)
+  f = CDLeastSquaresLoss(y,X)
   σ = one(T)
   g = AProxL1(λ * σ)
   σnew = one(T)
