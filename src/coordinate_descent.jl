@@ -58,7 +58,7 @@ CDOptions(;
 #
 ####################################
 
-function _row_A_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseVector{T}, row::Int64)
+function _row_A_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::SparseVector{T}, row::Int64)
   n, p = size(A)
   ((p == length(b)) && (1 <= row <= n)) || throw(DimensionMismatch())
 
@@ -72,7 +72,7 @@ function _row_A_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseVector{T},
   v
 end
 
-function _row_A_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::StridedVector{T}, row::Int64)
+function _row_A_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::StridedVector{T}, row::Int64)
   n, p = size(A)
   ((p == length(b)) && (1 <= row <= n)) || throw(DimensionMismatch())
 
@@ -83,7 +83,7 @@ function _row_A_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::StridedVector{T}
   v
 end
 
-function _row_A_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseIterate{T}, row::Int64)
+function _row_A_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::SparseIterate{T}, row::Int64)
   n, p = size(A)
   ((p == length(b)) && (1 <= row <= n)) || throw(DimensionMismatch())
 
@@ -95,7 +95,7 @@ function _row_A_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseIterate{T}
 end
 
 
-function _row_At_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseVector{T}, row::Int64)
+function _row_At_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::SparseVector{T}, row::Int64)
   n, p = size(A)
   ((n == length(b)) && (1 <= row <= p)) || throw(DimensionMismatch())
 
@@ -108,7 +108,7 @@ function _row_At_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseVector{T}
   v
 end
 
-function _row_At_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::StridedVector{T}, row::Int64)
+function _row_At_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::StridedVector{T}, row::Int64)
   n, p = size(A)
   ((n == length(b)) && (1 <= row <= p)) || throw(DimensionMismatch())
 
@@ -120,7 +120,7 @@ function _row_At_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::StridedVector{T
 end
 
 
-function _row_At_mul_b{T<:AbstractFloat}(A::StridedMatrix{T}, b::SparseIterate{T}, row::Int64)
+function _row_At_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::SparseIterate{T}, row::Int64)
   n, p = size(A)
   ((n == length(b)) && (1 <= row <= n)) || throw(DimensionMismatch())
 

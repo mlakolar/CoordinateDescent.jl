@@ -8,7 +8,7 @@ export
   # group_lasso!,
   lasso, sqrtLasso,
   computeLassoPath, refitLassoPath,
-  ScaledLassoOptions, scaledLasso,
+  ScaledLassoOptions, scaledLasso, scaledLasso!,
 
   # CD
   CoordinateDifferentiableFunction,

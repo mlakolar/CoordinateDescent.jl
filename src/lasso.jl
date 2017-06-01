@@ -33,37 +33,38 @@ sqrtLasso{T<:AbstractFloat}(
 struct ScaledLassoOptions
   maxIter::Int64
   optTol::Float64
+  optionsCD::CDOptions
 end
 
 ScaledLassoOptions(;
   maxIter::Int64=100,
-  optTol::Float64=1e-6) = ScaledLassoOptions(maxIter, optTol)
+  optTol::Float64=1e-6,
+  optionsCD::CDOptions=CDOptions()) = ScaledLassoOptions(maxIter, optTol, optionsCD)
+
 
 scaledLasso{T<:AbstractFloat}(
-  X::StridedMatrix{T},
-  y::StridedVector{T},
-  λ::T,
-  optionsScaledLasso::ScaledLassoOptions=ScaledLassoOptions(),
-  optionsCD::CDOptions=CDOptions()
-  ) = scaledLasso(X, y, λ * ones(size(X,2)), optionsScaledLasso, optionsCD)
+    X::StridedMatrix{T},
+    y::StridedVector{T},
+    λ::Array{T},
+    optionsScaledLasso::ScaledLassoOptions=ScaledLassoOptions()
+    ) = scaledLasso!(SparseIterate(size(X, 2)), X, y, λ, optionsScaledLasso)
 
-function scaledLasso{T<:AbstractFloat}(
+function scaledLasso!{T<:AbstractFloat}(
+  β::SparseIterate{T},
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::Array{T},
-  optionsScaledLasso::ScaledLassoOptions=ScaledLassoOptions(),
-  optionsCD::CDOptions=CDOptions()
+  optionsScaledLasso::ScaledLassoOptions=ScaledLassoOptions()
   )
 
   n, p = size(X)
-  β = SparseIterate(p)
   f = CDSqrtLassoLoss(y,X)
   σ = one(T)
   g = AProxL1(λ * σ)
   σnew = one(T)
 
   for iter=1:optionsScaledLasso.maxIter
-    coordinateDescent!(β, f, g, optionsCD)
+    coordinateDescent!(β, f, g, optionsScaledLasso.optionsCD)
     σnew = sqrt( sum(abs2, f.r) / n )
 
     if abs(σnew - σ) / σ < optionsScaledLasso.optTol
