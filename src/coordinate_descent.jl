@@ -41,7 +41,6 @@ descendCoordinate!(f, g, x, k) = error("quadraticApprox not implemented for $(ty
 #
 ####################################
 
-
 struct CDOptions
   maxIter::Int64
   optTol::Float64
@@ -50,87 +49,6 @@ end
 CDOptions(;
   maxIter::Int64=2000,
   optTol::Float64=1e-7) = CDOptions(maxIter, optTol)
-
-
-####################################
-#
-# helper functions
-#
-####################################
-
-function _row_A_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::SparseVector{T}, row::Int64)
-  n, p = size(A)
-  ((p == length(b)) && (1 <= row <= n)) || throw(DimensionMismatch())
-
-
-  nzval = SparseArrays.nonzeros(b)
-  rowval = SparseArrays.nonzeroinds(b)
-  v = zero(T)
-  for i=1:length(nzval)
-    @inbounds v += A[row, rowval[i]] * nzval[i]
-  end
-  v
-end
-
-function _row_A_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::StridedVector{T}, row::Int64)
-  n, p = size(A)
-  ((p == length(b)) && (1 <= row <= n)) || throw(DimensionMismatch())
-
-  v = zero(T)
-  for i=1:p
-    @inbounds v += A[row, i] * b[i]
-  end
-  v
-end
-
-function _row_A_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::SparseIterate{T}, row::Int64)
-  n, p = size(A)
-  ((p == length(b)) && (1 <= row <= n)) || throw(DimensionMismatch())
-
-  v = zero(T)
-  @inbounds for icoef = 1:nnz(b)
-      v += A[row, b.nzval2full[icoef]] * b.nzval[icoef]
-  end
-  v
-end
-
-
-function _row_At_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::SparseVector{T}, row::Int64)
-  n, p = size(A)
-  ((n == length(b)) && (1 <= row <= p)) || throw(DimensionMismatch())
-
-  nzval = SparseArrays.nonzeros(b)
-  rowval = SparseArrays.nonzeroinds(b)
-  v = zero(T)
-  for i=1:length(nzval)
-    @inbounds v += A[rowval[i], row] * nzval[i]
-  end
-  v
-end
-
-function _row_At_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::StridedVector{T}, row::Int64)
-  n, p = size(A)
-  ((n == length(b)) && (1 <= row <= p)) || throw(DimensionMismatch())
-
-  v = zero(T)
-  for i=1:n
-    @inbounds v += A[i, row] * b[i]
-  end
-  v
-end
-
-
-function _row_At_mul_b{T<:AbstractFloat}(A::AbstractMatrix{T}, b::SparseIterate{T}, row::Int64)
-  n, p = size(A)
-  ((n == length(b)) && (1 <= row <= n)) || throw(DimensionMismatch())
-
-  v = zero(T)
-  @inbounds for icoef = 1:b.nnz
-      v += A[b.nzval2full[icoef], row] * b.nzval[icoef]
-  end
-  v
-end
-
 
 
 ####################################
@@ -164,14 +82,14 @@ function initialize!{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseIterat
   n, p = size(f.X)
 
   @simd for i=1:n
-    @inbounds r[i] = y[i] - _row_A_mul_b(X, x, i)
+    @inbounds r[i] = y[i] - A_mul_B_row(X, x, i)
   end
   nothing
 end
 
 
 gradient{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) =
-  _row_At_mul_b(f.X, f.r, j) / (-1*size(f.X, 1))
+  At_mul_B_row(f.X, f.r, j) / (-1*size(f.X, 1))
 
 # a = X[:, k]' X[:, k]
 # b = X[:, k]' r
@@ -240,14 +158,14 @@ function initialize!{T<:AbstractFloat}(f::CDSqrtLassoLoss{T}, x::SparseIterate{T
   n, p = size(f.X)
 
   @simd for i=1:n
-    @inbounds r[i] = y[i] - _row_A_mul_b(X, x, i)
+    @inbounds r[i] = y[i] - A_mul_B_row(X, x, i)
   end
   nothing
 end
 
 
 gradient{T<:AbstractFloat}(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}, j::Int64) =
-  -one(T) * _row_At_mul_b(f.X, f.r, j) / vecnorm(f.r)
+  -one(T) * At_mul_B_row(f.X, f.r, j) / vecnorm(f.r)
 
 # a = X[:, k]' X[:, k]
 # b = X[:, k]' r
@@ -326,7 +244,7 @@ end
 numCoordinates(f::CDQuadraticLoss) = length(f.b)
 initialize!(f::CDQuadraticLoss, x::SparseIterate) = nothing
 gradient{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseIterate{T}, j::Int64) =
-  _row_At_mul_b(f.A, x, j) + f.b[j]
+  At_mul_B_row(f.A, x, j) + f.b[j]
 
 function descendCoordinate!{T<:AbstractFloat}(
   f::CDQuadraticLoss{T},
@@ -406,10 +324,8 @@ function coordinateDescent!(
 
     if converged
       maxH = fullPass!(x, f, g)
-      # @show x
     else
       maxH = nonZeroPass!(x, f, g)
-      # @show x
     end
     prev_converged = converged
 
