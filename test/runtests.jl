@@ -1,6 +1,6 @@
 using FactCheck
 
-using HD
+using CoordinateDescent
 using ProximalBase
 
 function try_import(name::Symbol)

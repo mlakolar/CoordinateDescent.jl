@@ -1,4 +1,4 @@
-module HD
+module CoordinateDescent
 
 using ProximalBase
 using DataStructures: binary_maxheap
