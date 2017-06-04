@@ -8,46 +8,67 @@ lasso{T<:AbstractFloat}(
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::T,
-  options::CDOptions=CDOptions()) = coordinateDescent(CDLeastSquaresLoss(y,X), ProxL1(λ), options)
+  options::CDOptions=CDOptions()) =
+    coordinateDescent!(SparseIterate(size(X, 2)), CDLeastSquaresLoss(y,X), ProxL1(λ), options)
 
 lasso{T<:AbstractFloat}(
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::T,
   ω::Array{T},
-  options::CDOptions=CDOptions()) = coordinateDescent(CDLeastSquaresLoss(y,X), AProxL1(λ, ω), options)
+  options::CDOptions=CDOptions()) =
+    coordinateDescent!(SparseIterate(size(X, 2)), CDLeastSquaresLoss(y,X), AProxL1(λ, ω), options)
 
 lasso{T<:AbstractFloat}(
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::Array{T},
-  options::CDOptions=CDOptions()) = coordinateDescent(CDLeastSquaresLoss(y,X), AProxL1(1., λ), options)
+  options::CDOptions=CDOptions()) =
+    coordinateDescent!(SparseIterate(size(X, 2)), CDLeastSquaresLoss(y,X), AProxL1(1., λ), options)
+
+
+######################################################################
+#
+#   Sqrt-Lasso Interface
+#
+######################################################################
 
 
 sqrtLasso{T<:AbstractFloat}(
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::T,
-  options::CDOptions=CDOptions()) = coordinateDescent(CDSqrtLassoLoss(y,X), ProxL1(λ), options)
+  options::CDOptions=CDOptions()) =
+    coordinateDescent!(SparseIterate(size(X, 2)), CDSqrtLassoLoss(y,X), ProxL1(λ), options)
 
 sqrtLasso{T<:AbstractFloat}(
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::T,
   ω::Array{T},
-  options::CDOptions=CDOptions()) = coordinateDescent(CDSqrtLassoLoss(y,X), AProxL1(λ, ω), options)
+  options::CDOptions=CDOptions()) =
+    coordinateDescent!(SparseIterate(size(X, 2)), CDSqrtLassoLoss(y,X), AProxL1(λ, ω), options)
+
+
+######################################################################
+#
+#   Scaled Lasso Interface
+#
+######################################################################
 
 
 struct ScaledLassoOptions
   maxIter::Int64
   optTol::Float64
+  σinit::Float64
   optionsCD::CDOptions
 end
 
 ScaledLassoOptions(;
   maxIter::Int64=20,
   optTol::Float64=1e-2,
-  optionsCD::CDOptions=CDOptions()) = ScaledLassoOptions(maxIter, optTol, optionsCD)
+  σinit::Float64=1.,
+  optionsCD::CDOptions=CDOptions()) = ScaledLassoOptions(maxIter, optTol, σinit, optionsCD)
 
 
 scaledLasso{T<:AbstractFloat}(
@@ -57,6 +78,7 @@ scaledLasso{T<:AbstractFloat}(
     ω::Array{T},
     optionsScaledLasso::ScaledLassoOptions=ScaledLassoOptions()
     ) = scaledLasso!(SparseIterate(size(X, 2)), X, y, λ, ω, optionsScaledLasso)
+
 
 function scaledLasso!{T<:AbstractFloat}(
   β::SparseIterate{T},
@@ -69,11 +91,10 @@ function scaledLasso!{T<:AbstractFloat}(
 
   n, p = size(X)
   f = CDLeastSquaresLoss(y,X)
-  σ = one(T)
-  g = AProxL1(λ * σ, ω)
-  σnew = one(T)
+  σ = optionsScaledLasso.σinit
 
   for iter=1:optionsScaledLasso.maxIter
+    g = AProxL1(λ * σ, ω)
     coordinateDescent!(β, f, g, optionsScaledLasso.optionsCD)
     σnew = sqrt( sum(abs2, f.r) / n )
 
@@ -81,9 +102,8 @@ function scaledLasso!{T<:AbstractFloat}(
       break
     end
     σ = σnew
-    g = AProxL1(λ * σ, ω)
   end
-  β, σnew
+  β, σ
 end
 
 
@@ -96,7 +116,7 @@ end
 
 struct LassoPath{T<:AbstractFloat}
   λarr::Vector{T}
-  β::Vector{SparseVector{T}}
+  β::Vector{SparseIterate{T}}
 end
 
 function refitLassoPath{T<:AbstractFloat}(
@@ -108,11 +128,11 @@ function refitLassoPath{T<:AbstractFloat}(
 
   tmpDict = Dict()
   for i=1:length(λArr)
-    support_nz = nonzeroinds(lasso_path.β[i])
-    if haskey(tmpDict, support_nz)
+    S = find(lasso_path.β)
+    if haskey(tmpDict, S)
       continue
     end
-    tmpDict[support_nz] = X[:, support_nz] \ Y
+    tmpDict[S] = X[:, S] \ Y
   end
   tmpDict
 end

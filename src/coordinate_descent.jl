@@ -44,11 +44,15 @@ descendCoordinate!(f, g, x, k) = error("quadraticApprox not implemented for $(ty
 struct CDOptions
   maxIter::Int64
   optTol::Float64
+  warmStart::Bool           # when running CD, should we do path following or not
+  numSteps::Int64           # when pathFollowing, how many points are there on the path
 end
 
 CDOptions(;
   maxIter::Int64=2000,
-  optTol::Float64=1e-7) = CDOptions(maxIter, optTol)
+  optTol::Float64=1e-7,
+  warmStart::Bool=true,
+  numSteps::Int=50) = CDOptions(maxIter, optTol, warmStart, numSteps)
 
 
 ####################################
@@ -89,7 +93,7 @@ end
 
 
 gradient{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) =
-  At_mul_B_row(f.X, f.r, j) / (-1*size(f.X, 1))
+  - At_mul_B_row(f.X, f.r, j) / size(f.X, 1)
 
 # a = X[:, k]' X[:, k]
 # b = X[:, k]' r
@@ -165,7 +169,7 @@ end
 
 
 gradient{T<:AbstractFloat}(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}, j::Int64) =
-  -one(T) * At_mul_B_row(f.X, f.r, j) / vecnorm(f.r)
+  - At_mul_B_row(f.X, f.r, j) / vecnorm(f.r)
 
 # a = X[:, k]' X[:, k]
 # b = X[:, k]' r
@@ -291,7 +295,7 @@ function nonZeroPass!{T<:AbstractFloat}(
 
   maxH = zero(T)
   for i = 1:x.nnz
-    ipred = x.nzval2full[i]
+    ipred = x.nzval2ind[i]
     h = descendCoordinate!(f, g, x, ipred)
     if abs(h) > maxH
       maxH = abs(h)
@@ -305,18 +309,89 @@ end
 #
 # minimize f(x) + ∑ λi⋅|xi|
 #
+# If warmStart is true, the descent will start from the supplied x
+# otherwise it will start from 0 by setting a large value of λ which is
+# decreased to the target value
 function coordinateDescent!(
   x::SparseIterate,
   f::CoordinateDifferentiableFunction,
   g::Union{ProxL1, AProxL1},
-  options=CDOptions())
+  options::CDOptions=CDOptions())
 
-  p = numCoordinates(f)
-  if typeof(g) == AProxL1
-    length(g.λ) == p || throw(DimensionMismatch())
+  length(x) == numCoordinates(f) || throw(DimensionMismatch())
+  if typeof(g) <: AProxL1
+    length(g.λ) == numCoordinates(f) || throw(DimensionMismatch())
   end
 
-  initialize!(f, x)
+  if options.warmStart
+    initialize!(f, x)
+    return _coordinateDescent_inner_L1!(x, f, g, options)
+  else
+    # set x to zero and initialize
+    fill!(x, zero(eltype(x)))
+    initialize!(f, x)
+
+    # find λmax
+    λmax = _findLambdaMax(x, f, g)
+
+    # find decreasing schedule for λ
+    l1 = log(λmax)
+    if typeof(g) <: AProxL1
+      l2 = log(g.λ0)
+    else
+      l2 = log(g.λ)
+    end
+    for l in colon(l1, (l2-l1)/options.numSteps, l2)
+      if typeof(g) <: AProxL1
+        g1 = AProxL1(exp(l), g.λ)
+      else
+        g1 = ProxL1(exp(l))
+      end
+      _coordinateDescent_inner_L1!(x, f, g, options)
+    end
+    return x
+  end
+end
+
+function _findLambdaMax(x::SparseIterate,
+  f::CoordinateDifferentiableFunction,
+  ::ProxL1)
+
+  p = length(x)
+  λmax = 0.
+  for k=1:p
+    f_g = gradient(f, x, k)
+    t = abs(f_g)
+    if t > λmax
+      λmax = t
+    end
+  end
+  λmax
+end
+
+function _findLambdaMax(x::SparseIterate{T},
+  f::CoordinateDifferentiableFunction,
+  g::AProxL1{T}) where T
+
+  p = length(x)
+  λmax = zero(T)
+  for k=1:p
+    f_g = gradient(f, x, k)
+    t = abs(f_g) / g.λ[k]
+    if t > λmax
+      λmax = t
+    end
+  end
+  λmax
+end
+
+
+# assumes that f is initialized before the call here
+function _coordinateDescent_inner_L1!(
+  x::SparseIterate,
+  f::CoordinateDifferentiableFunction,
+  g::Union{ProxL1, AProxL1},
+  options::CDOptions)
 
   prev_converged = false
   converged = true
@@ -336,8 +411,5 @@ function coordinateDescent!(
   end
   x
 end
-
-coordinateDescent(f::CoordinateDifferentiableFunction, g::Union{ProxL1, AProxL1}, options=CDOptions()) =
-  coordinateDescent!(SparseIterate(numCoordinates(f)), f, g, options)
 
 ##

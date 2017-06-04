@@ -1,6 +1,7 @@
 module HD
 
 using ProximalBase
+using DataStructures: binary_maxheap
 
 export
   lasso, sqrtLasso,
@@ -17,6 +18,6 @@ export
 
 include("coordinate_descent.jl")
 include("lasso.jl")
-
+include("utils.jl")
 
 end
