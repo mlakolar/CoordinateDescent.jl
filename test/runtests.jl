@@ -22,10 +22,13 @@ else
   Convex.set_default_solver(SCS.SCSSolver(eps=1e-6, verbose=0))
 end
 
+srand(1)
+const NUMBER_REPEAT = 100
 
 tests = [
-  "test_atom_iterator",
-	"test_lasso",
+  "atom_iterator",
+	"lasso",
+  "coordinate_descent",
 ]
 
 for t in tests

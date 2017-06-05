@@ -189,7 +189,7 @@ function descendCoordinate!{T<:AbstractFloat}(
   if isa(g, ProxL1{T})
     λ = g.λ
   else
-    λ = g.λ[k]
+    λ = g.λ[k] * g.λ0
   end
 
   oldVal = x[k]
