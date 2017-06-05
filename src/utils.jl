@@ -1,3 +1,32 @@
+####################################
+#
+# options
+#
+####################################
+
+struct CDOptions
+  maxIter::Int64
+  optTol::Float64
+  randomize::Bool           # coordinate are visitied in a randomized order or not
+  warmStart::Bool           # when running CD, should we do path following or not
+  numSteps::Int64           # when pathFollowing, how many points are there on the path
+end
+
+CDOptions(;
+  maxIter::Int64=2000,
+  optTol::Float64=1e-7,
+  randomize::Bool=true,
+  warmStart::Bool=true,
+  numSteps::Int=50) = CDOptions(maxIter, optTol, randomize, warmStart, numSteps)
+
+
+
+####################################
+#
+# helper functions
+#
+####################################
+
 
 """
 Helper function that finds an initial estimate for σ that is needed
