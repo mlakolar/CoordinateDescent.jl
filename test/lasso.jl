@@ -192,8 +192,8 @@ facts("scaled lasso") do
 
     λ = rand() / 5.
 
-    opt1 = ScaledLassoOptions(;maxIter=100, optTol=1e-8)
-    opt2 = ScaledLassoOptions(;maxIter=100, optTol=1e-8, σinit=findInitSigma(X,Y,10))
+    opt1 = ScaledLassoOptions(;maxIter=100, optTol=1e-8, optionsCD=CDOptions(;maxIter=5000, optTol=1e-8))
+    opt2 = ScaledLassoOptions(;maxIter=100, optTol=1e-8, σinit=findInitSigma(X,Y,10), optionsCD=CDOptions(;maxIter=5000, optTol=1e-8))
 
     x1, σh1 = scaledLasso(X, Y, λ, ones(p), opt1)
     x2, σh2 = scaledLasso(X, Y, λ, ones(p), opt2)
