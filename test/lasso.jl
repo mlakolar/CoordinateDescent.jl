@@ -205,3 +205,77 @@ facts("scaled lasso") do
 
 
 end
+
+
+
+facts("lasso path") do
+
+  context("standardizeX = false") do
+    n = 1000
+    p = 500
+    s = 50
+
+    X = randn(n, p)
+    β = randn(s)
+    Y = X[:,1:s] * β + randn(n)
+
+    λ1 = 0.3
+    λ2 = 0.1
+    opt = CDOptions(;maxIter=5000, optTol=1e-8)
+
+    x1 = lasso(X, Y, λ1)
+    x2 = lasso(X, Y, λ2)
+
+    λpath = [λ1, λ2]
+    path = LassoPath(X, Y, λpath, opt; standardizeX=false)
+
+    @fact typeof(path) == LassoPath{Float64} --> true
+    @fact full(path.βpath[1]) --> roughly(full(x1); atol=1e-5)
+    @fact full(path.βpath[2]) --> roughly(full(x2); atol=1e-5)
+
+    S1 = find(x1)
+    S2 = find(x2)
+    rf = refitLassoPath(path, X, Y)
+
+    @fact rf[S1] --> roughly(X[:,S1] \ Y; atol=1e-5)
+    @fact rf[S2] --> roughly(X[:,S2] \ Y; atol=1e-5)
+  end
+
+  context("standardizeX = true") do
+    n = 1000
+    p = 500
+    s = 50
+
+    X = randn(n, p)
+    β = randn(s)
+    Y = X[:,1:s] * β + randn(n)
+
+    loadingX = ones(p)
+    @inbounds for i=1:p
+      loadingX[i] = std(view(X, :, i))
+    end
+
+    λ1 = 0.3
+    λ2 = 0.1
+    opt = CDOptions(;maxIter=5000, optTol=1e-8)
+
+    x1 = lasso(X, Y, λ1, loadingX)
+    x2 = lasso(X, Y, λ2, loadingX)
+
+    λpath = [λ1, λ2]
+    path = LassoPath(X, Y, λpath, opt)
+
+    @fact typeof(path) == LassoPath{Float64} --> true
+    @fact full(path.βpath[1]) --> roughly(full(x1); atol=1e-5)
+    @fact full(path.βpath[2]) --> roughly(full(x2); atol=1e-5)
+
+    S1 = find(x1)
+    S2 = find(x2)
+    rf = refitLassoPath(path, X, Y)
+
+    @fact rf[S1] --> roughly(X[:,S1] \ Y; atol=1e-5)
+    @fact rf[S2] --> roughly(X[:,S2] \ Y; atol=1e-5)
+  end
+
+
+end

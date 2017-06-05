@@ -5,7 +5,7 @@ using DataStructures: binary_maxheap
 
 export
   lasso, sqrtLasso,
-  computeLassoPath, refitLassoPath,
+  LassoPath, refitLassoPath,
   ScaledLassoOptions, scaledLasso, scaledLasso!, findInitSigma,
 
   # CD

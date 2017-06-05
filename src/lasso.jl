@@ -115,8 +115,8 @@ end
 
 
 struct LassoPath{T<:AbstractFloat}
-  λarr::Vector{T}
-  β::Vector{SparseIterate{T}}
+  λpath::Vector{T}
+  βpath::Vector{SparseIterate{T,1}}
 end
 
 function refitLassoPath{T<:AbstractFloat}(
@@ -124,52 +124,51 @@ function refitLassoPath{T<:AbstractFloat}(
   X::StridedMatrix{T},
   Y::StridedVector{T})
 
-  λArr = path.λArr
+  λpath = path.λpath
+  βpath = path.βpath
 
-  tmpDict = Dict()
-  for i=1:length(λArr)
-    S = find(lasso_path.β)
-    if haskey(tmpDict, S)
+  out = Dict{Vector{Int64},Vector{Float64}}()
+  for i=1:length(λpath)
+    S = find(βpath[i])
+    if haskey(out, S)
       continue
     end
-    tmpDict[S] = X[:, S] \ Y
+    out[S] = X[:, S] \ Y
   end
-  tmpDict
+  out
 end
 
 
 # λArr is in decreasing order
-function computeLassoPath{T<:AbstractFloat}(
+function LassoPath(
   X::StridedMatrix{T},
   Y::StridedVector{T},
-  λarr::StridedVector{T},
+  λpath::Vector{T},
   options=CDOptions();
-  max_hat_s=Inf, intercept=false)
+  max_hat_s=Inf, standardizeX::Bool=true) where {T<:AbstractFloat}
 
   n, p = size(X)
-  loadingX = zeros(p)
-  j = intercept ? 2 : 1
-  for i=j:p
-    loadingX[i] = vecnorm(view(X, :, i)) / sqrt(n)
+  loadingX = ones(p)
+  if standardizeX
+    @inbounds for i=1:p
+      loadingX[i] = std(view(X, :, i))
+    end
   end
 
-  β = SparseIterate(p)
+  β = SparseIterate(T, p)
   f = CDLeastSquaresLoss(Y, X)
 
-  _λArr = copy(λArr)
-  numλ  = length(λArr)
-  hβ = Vector{SparseVector{T}}(numλ)
+  numλ  = length(λpath)
+  βpath = Vector{SparseIterate{T}}(numλ)
 
   for indλ=1:numλ
-    g = AProxL1(loadingX*λArr[indλ])
-    coordinateDescent!(β, f, g)
-    hβ[indλ] = copy(β)         # need to create a constructor for this
+    coordinateDescent!(β, f, AProxL1(λpath[indλ], loadingX), options)
+    βpath[indλ] = copy(β)
     if nnz(β) > max_hat_s
-      _λArr = λArr[1:indλ-1]   # todo: use resize?
-      hβ = hβ[1:indλ-1]
+      resize!(λpath, indλ)
       break
     end
   end
 
-  LassoPath(_λArr, hβ)
+  LassoPath{T}(copy(λpath), βpath)
 end
