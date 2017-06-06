@@ -3,6 +3,8 @@ using FactCheck
 using CoordinateDescent
 using ProximalBase
 
+using CoordinateDescent: _expand_wX!, _expand_X!, _expand_Xt_w_X!, _expand_Xt_w_Y!, _locpoly!
+
 function try_import(name::Symbol)
     try
         @eval import $name

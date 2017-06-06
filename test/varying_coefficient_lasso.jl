@@ -50,10 +50,55 @@ facts("expand_X") do
   @fact CoordinateDescent._expand_X!(tX, X, z, z0, 2) --> roughly(tX1)
 end
 
+facts("expand_X multiplications") do
+
+  p = 10
+  X = randn(100, p)
+  Y = randn(100)
+  z = rand(100)
+  w = zeros(100)
+  k = GaussianKernel(0.2)
+  @. w = evaluate(k, z, 0.5)
+
+  for degree=0:2
+    cp = p*(degree+1)
+    eX = zeros(100, cp)
+    ewX = zeros(100, cp)
+
+    CoordinateDescent._expand_X!(eX, X, z, 0.5, degree)
+    @fact CoordinateDescent._expand_wX!(ewX, w, X, z, 0.5, degree) --> roughly(diagm(w)*eX)
+
+    Xt_w_Y = zeros(cp)
+    @fact CoordinateDescent._expand_Xt_w_Y!(Xt_w_Y, w, X, z, Y, 0.5, degree) --> roughly(eX' * diagm(w) * Y)
+
+    Xt_w_X = zeros(cp, cp)
+    @fact CoordinateDescent._expand_Xt_w_X!(Xt_w_X, w, X, z, 0.5, degree) --> roughly((eX'*diagm(w))*eX)
+  end
+end
+
+include(joinpath(@__DIR__, "..", "benchmark", "locpoly_bench.jl"))
 
 facts("locpoly") do
 
+  n, p = 500, 2
+  Y, X, Z, betaMat = genData(n, p)
+  zgrid = collect(0.01:0.2:0.99)
 
+  gk = GaussianKernel(0.2)
 
+  w = zeros(n)
 
+  for degree=0:2
+    @fact locpoly(X, Z, Y, zgrid, degree, gk) --> roughly(locpoly_alt(X, Z, Y, zgrid, degree, gk))
+
+    z0 = 0.5
+    cp = p*(degree+1)
+
+    eX = zeros(n, cp)
+    CoordinateDescent._expand_X!(eX, X, Z, z0, degree)
+
+    @. w = evaluate(gk, Z, z0)
+
+    @fact locpoly(X, Z, Y, z0, degree, gk) --> roughly((eX' * diagm(w) * eX)\(eX' * diagm(w) * Y))
+  end
 end

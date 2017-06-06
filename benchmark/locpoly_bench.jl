@@ -1,49 +1,102 @@
+##
 
-function locpoly_alt(X::Matrix{T}, z::Vector{T}, y::Vector{T},
-                 z0::T,
-                 degree::Int64,                                           # degree of the polynomial
-                 kernel::SmoothingKernel=GaussianKernel(one(T))) where {T <: AbstractFloat}
+function _locpoly_alt1!(
+  eX::Matrix{T}, w::Vector{T},
+  X::Matrix{T}, z::Vector{T}, y::Vector{T},
+  z0::T, degree::Int64, kernel::SmoothingKernel{T}) where {T <: AbstractFloat}
 
-    n, p = size(X)
-    tX = zeros(n, p*(degree+1))
-    _expand_X_alt!(tX, X, z, z0, degree)
+  @. w = evaluate(kernel, z, z0)
+  _expand_X!(eX, X, z, z0, degree)
 
-    w = zeros(T, n)
-    @. w = evaluate(kernel, z, z0)
-    (tX' * diagm(w) * tX) \ (tX' * diagm(w) * y)
+  ((eX' * diagm(w)) * eX) \ ((eX' * diagm(w)) * y)
 end
 
-function locpoly_alt(X::Matrix{T}, z::Vector{T}, y::Vector{T},
-                 zgrid::Vector{T},
-                 degree::Int64,                                     # degree of the polynomial
-                 kernel::SmoothingKernel=GaussianKernel(one(T))) where {T <: AbstractFloat}
+function locpoly_alt1(
+  X::Matrix{T}, z::Vector{T}, y::Vector{T},
+  zgrid::Vector{T},
+  degree::Int64,                                     # degree of the polynomial
+  kernel::SmoothingKernel{T}=GaussianKernel(one(T))) where {T <: AbstractFloat}
 
-  out = zeros(size(X, 2)*(degree+1), length(zgrid))
+  n, p = size(X)
+  ep = p * (degree + 1)
+  out = Array{T}(ep, length(zgrid))
+  w = Array{T}(n)
+  eX = Array{T}(n, ep)
+
   ind = 0
   for z0 in zgrid
     ind += 1
-    out[:, ind] = locpoly_alt(X, z, y, z0, degree, kernel)
+    out[:, ind] = _locpoly_alt1!(eX, w, X, z, y, z0, degree, kernel)
   end
   out
 end
 
-function _expand_X_alt!(tX::Matrix{T}, X::Matrix{T}, z::Vector{T}, z0::T, degree::Int64) where {T <: AbstractFloat}
+##
+
+function _locpoly_alt!(
+  Xt_w_X::Matrix{T}, Xt_w_Y::Vector{T}, w::Vector{T},
+  X::Matrix{T}, z::Vector{T}, y::Vector{T},
+  z0::T, degree::Int64, kernel::SmoothingKernel{T}) where {T <: AbstractFloat}
+
+  @. w = evaluate(kernel, z, z0)
+  _expand_Xt_w_X!(Xt_w_X, w, X, z, z0, degree)
+  _expand_Xt_w_Y!(Xt_w_Y, w, X, z, y, z0, degree)
+
+  cholfact!(Xt_w_X) \ Xt_w_Y
+end
+
+function locpoly_alt(
+  X::Matrix{T}, z::Vector{T}, y::Vector{T},
+  zgrid::Vector{T},
+  degree::Int64,                                     # degree of the polynomial
+  kernel::SmoothingKernel{T}=GaussianKernel(one(T))) where {T <: AbstractFloat}
+
   n, p = size(X)
-  for j=1:p
-    for i=1:n
-      v = X[i, j]
-      df = z[i] - z0
-      col = (j-1)*(degree+1) + 1
-      @inbounds tX[i, col] = v
-      for l=1:degree
-        v *= df
-        @inbounds tX[i, col + l] = v
+  ep = p * (degree + 1)
+  out = Array{T}(ep, length(zgrid))
+  w = Array{T}(n)
+  Xt_w_X = Array{T}(ep, ep)
+  Xt_w_Y = Array{T}(ep)
+
+  ind = 0
+  for z0 in zgrid
+    ind += 1
+    out[:, ind] = _locpoly_alt!(Xt_w_X, Xt_w_Y, w, X, z, y, z0, degree, kernel)
+  end
+  out
+end
+
+
+function _expand_Xt_w_X_alt!(
+  Xt_w_X::Matrix{T},
+  w::Vector{T}, X::Matrix{T},
+  z::Vector{T}, z0::T, degree::Int64) where {T <: AbstractFloat}
+
+  n, p = size(X)
+  fill!(Xt_w_X, zero(T))
+  @inbounds for j=1:p, jj=0:degree
+    col=(j-1)*(degree+1)+1+jj
+    for k=j:p
+      if k != j
+        krange = 0:degree
+      else
+        krange = jj:degree
+      end
+      for kk=krange
+        row = (k-1)*(degree+1)+1+kk
+
+        # compute Xt_w_X[row, col]
+        for i=1:n
+          Xt_w_X[row, col] += X[i, j] * (z[i] - z0)^(jj+kk) * X[i, k] * w[i]
+        end
+        if row != col
+          Xt_w_X[col, row] = Xt_w_X[row, col]
+        end
       end
     end
   end
-  tX
+  Xt_w_X
 end
-
 
 
 function genData(n, p)
@@ -61,13 +114,75 @@ function genData(n, p)
   Y, X, Z, betaMat
 end
 
-n, p = 1000, 3
-Y, X, Z, betaMat = genData(n, p)
-zgrid = collect(0.01:0.05:0.99)
 
-gk = GaussianKernel(0.2)
-tX = zeros(n, 2 * p)
+# using BenchmarkTools
 
-@time o1 = locpoly(X, Z, Y, zgrid, 1, gk)
-@time o2 = locpoly_alt(X, Z, Y, zgrid, 1, gk)
-maximum(abs.(o1-o2))
+####
+#
+# n, p = 100, 2
+# Y, X, Z, betaMat = genData(n, p)
+# zgrid = collect(0.01:0.1:0.99)
+#
+# gk = GaussianKernel(0.2)
+# degree = 3
+#
+# @time o1 = locpoly(X, Z, Y, zgrid, 1, gk)
+# @time o2 = locpoly_alt(X, Z, Y, zgrid, 1, gk)
+# @time o3 = locpoly_alt1(X, Z, Y, zgrid, 1, gk)
+#
+# maximum(abs.(o1-o2))
+# maximum(abs.(o1-o3))
+#
+# @benchmark locpoly($X, $Z, $Y, $zgrid, $degree, $gk)
+# @benchmark locpoly_alt($X, $Z, $Y, $zgrid, $degree, $gk)
+# @benchmark locpoly_alt1($X, $Z, $Y, $zgrid, $degree, $gk)
+
+
+####
+
+# p = 10
+# X = randn(100, p)
+# z = rand(100)
+# w = zeros(100)
+# k = GaussianKernel(0.2)
+# @. w = evaluate(k, z, 0.5)
+#
+#
+# degree = 2
+# cp = p*(degree+1)
+#
+# eX = zeros(100, cp)
+# _expand_X!(eX, X, z, 0.5, degree)
+#
+# Xt_w_X = zeros(cp, cp)
+# Xt_w_X1 = zeros(cp, cp)
+# o1 = _expand_Xt_w_X!(Xt_w_X, w, X, z, 0.5, degree)
+# o2 = _expand_Xt_w_X_alt!(Xt_w_X1, w, X, z, 0.5, degree)
+# o3 = (eX'*diagm(w))*eX
+#
+# maximum(abs.(o1 - o2))
+# maximum(abs.(o1 - o3))
+#
+# using BenchmarkTools
+# @benchmark _expand_Xt_w_X!($Xt_w_X, $w, $X, $z, 0.5, degree)
+# @benchmark _expand_Xt_w_X_alt!($Xt_w_X1, $w, $X, $z, 0.5, degree)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##
