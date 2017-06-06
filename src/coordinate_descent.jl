@@ -77,12 +77,12 @@ function _coordinateDescent_inner_L1!(
   x
 end
 
-function _cdPass!{T<:AbstractFloat}(
+function _cdPass!(
   x::SparseIterate{T},
   f::CoordinateDifferentiableFunction,
   g::Union{ProxL1{T}, AProxL1{T}},
   coef_iterator::AtomIterator
-  )
+  ) where {T<:AbstractFloat}
 
   maxH = zero(T)
   for ipred = coef_iterator               # coef_iterator produces original indexes
@@ -122,7 +122,7 @@ Helper function that finds the smallest value of λ0 for which the solution is e
 """
 function _findLambdaMax(x::SparseIterate{T},
   f::CoordinateDifferentiableFunction,
-  g::AProxL1{T}) where T
+  g::AProxL1{T}) where {T<:AbstractFloat}
 
   p = length(x)
   λmax = zero(T)

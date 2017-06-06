@@ -12,13 +12,17 @@ export
   CoordinateDifferentiableFunction,
   CDLeastSquaresLoss, CDQuadraticLoss, CDSqrtLassoLoss,
   CDOptions,
-  coordinateDescent, coordinateDescent!
+  coordinateDescent, coordinateDescent!,
 
+  # var coef
+  GaussianKernel, SmoothingKernel, evaluate,
+  locpoly
 
 include("utils.jl")
 include("atom_iterator.jl")
 include("cd_differentiable_function.jl")
 include("coordinate_descent.jl")
 include("lasso.jl")
+include("varying_coefficient_lasso.jl")
 
 end

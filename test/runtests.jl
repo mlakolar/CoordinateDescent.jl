@@ -29,6 +29,7 @@ tests = [
   "atom_iterator",
 	"lasso",
   "coordinate_descent",
+  "varying_coefficient_lasso"
 ]
 
 for t in tests
