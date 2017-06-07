@@ -68,28 +68,29 @@ sqrtLasso{T<:AbstractFloat}(
 #
 ######################################################################
 
-
-scaledLasso{T<:AbstractFloat}(
-    X::AbstractMatrix{T},
-    y::AbstractVector{T},
-    λ::T,
-    ω::Array{T},
-    optionsScaledLasso::IterLassoOptions=IterLassoOptions()
-    ) = scaledLasso!(SparseIterate(size(X, 2)), X, y, λ, ω, optionsScaledLasso)
-
-
 function scaledLasso!{T<:AbstractFloat}(
   β::SparseIterate{T},
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   λ::T,
-  ω::Array{T},
+  ω::AbstractVector{T},
   options::IterLassoOptions=IterLassoOptions()
   )
 
   n, p = size(X)
   f = CDLeastSquaresLoss(y,X)
-  σ = options.σinit
+
+  # initializa σ
+  if options.initProcedure == :Screening
+    σ = _findInitSigma!(X, y, options.sinit, f.r)
+  elseif options.initProcedure == :InitStd
+    σ = options.σinit
+  elseif options.initProcedure == :WarmStart
+    initialize!(f, x)
+    σ = std(f.r)
+  else
+    throw(ArgumentError("Incorrect initialization Symbol"))
+  end
 
   for iter=1:options.maxIter
     g = ProxL1(λ * σ, ω)
@@ -125,17 +126,26 @@ function feasibleLasso!{T<:AbstractFloat}(
   Γ = Array{T}(p)              # stores loadings
   Γold = Array{T}(p)
 
-  res = findInitResiduals(X, y, min(10, p))    # TODO: if warmstart is provided, then that solution could be used
-  _getLoadings!(Γ, X, res)
+  # initializa residuals
+  if options.initProcedure == :Screening
+    _findInitResiduals!(X, y, options.sinit, f.r)
+  elseif options.initProcedure == :InitStd
+    σ = options.σinit
+    _stdX!(Γ, X)
+    coordinateDescent!(β, f, ProxL1(λ0*σ, Γ), options.optionsCD)
+  elseif options.initProcedure == :WarmStart
+    initialize!(f, x)
+  else
+    throw(ArgumentError("Incorrect initialization Symbol"))
+  end
+  _getLoadings!(Γ, X, f.r)
 
-  g = ProxL1(λ, Γ)
-
+  g = ProxL1(λ0, Γ)
   for iter=1:options.maxIter
     copy!(Γold, Γ)
 
     coordinateDescent!(β, f, g, options.optionsCD)
-    copy!(res, f.r)
-    _getLoadings!(Γ, X, res)
+    _getLoadings!(Γ, X, f.r)
 
     if maximum(abs.(Γold  - Γ)) / maximum(Γ) < options.optTol
       break

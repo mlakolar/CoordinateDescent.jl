@@ -1,12 +1,12 @@
 module CoordinateDescent
 
 using ProximalBase
-using DataStructures: binary_maxheap
+using DataStructures: nlargest
 
 export
   lasso, sqrtLasso, feasibleLasso!, scaledLasso, scaledLasso!,
   LassoPath, refitLassoPath,
-  IterLassoOptions, findInitSigma,
+  IterLassoOptions,
 
   # CD
   CoordinateDifferentiableFunction,

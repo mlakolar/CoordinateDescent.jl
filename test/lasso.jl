@@ -191,10 +191,12 @@ facts("scaled lasso") do
     λ = rand() / 5.
 
     opt1 = IterLassoOptions(;maxIter=100, optTol=1e-8, optionsCD=CDOptions(;maxIter=5000, optTol=1e-8))
-    opt2 = IterLassoOptions(;maxIter=100, optTol=1e-8, σinit=findInitSigma(X,Y,10), optionsCD=CDOptions(;maxIter=5000, optTol=1e-8))
+    opt2 = IterLassoOptions(;maxIter=100, optTol=1e-8, initProcedure=:InitStd, σinit=2., optionsCD=CDOptions(;maxIter=5000, optTol=1e-8))
 
-    x1, σh1 = scaledLasso(X, Y, λ, ones(p), opt1)
-    x2, σh2 = scaledLasso(X, Y, λ, ones(p), opt2)
+    x1 = SparseIterate(p)
+    x2 = SparseIterate(p)
+    _, σh1 = scaledLasso!(x1, X, Y, λ, ones(p), opt1)
+    _, σh2 = scaledLasso!(x2, X, Y, λ, ones(p), opt2)
 
     @fact max.((maximum(abs.(X'*(Y - X*x1) / n)) - λ*σh1), 0.) / (σh1*λ) --> roughly(0.; atol=1e-4)
     @fact max.((maximum(abs.(X'*(Y - X*x2) / n)) - λ*σh2), 0.) / (σh2*λ) --> roughly(0.; atol=1e-4)

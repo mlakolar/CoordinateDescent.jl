@@ -4,13 +4,14 @@ julia:
 os:
   - linux
 notifications:
-  email: false  
+  email: false
 addons:
     apt_packages:
         - gfortran
 sudo: false
 script:
-  - julia -e 'Pkg.clone(pwd()); Pkg.build("CoordinateDescent"); Pkg.test("CoordinateDescent"; coverage=true)'
+  - julia -e 'Pkg.clone("https://github.com/mlakolar/ProximalBase.jl"); Pkg.clone(pwd()); Pkg.build("CoordinateDescent"); Pkg.test("CoordinateDescent"; coverage=true)'
+  #- julia -e 'Pkg.clone(pwd()); Pkg.build("CoordinateDescent"); Pkg.test("CoordinateDescent"; coverage=true)'
 after_success:
     - echo $TRAVIS_JULIA_VERSION
     - julia -e 'Pkg.add("Coverage"); cd(Pkg.dir("CoordinateDescent")); using Coverage; Codecov.submit(process_folder())'

@@ -1,9 +1,9 @@
 import ProximalBase
-import HD
+import CoordinateDescent
 
 
 reload("ProximalBase")
-reload("HD")
+reload("CoordinateDescent")
 
 n = 3000
 p = 5000
@@ -15,49 +15,49 @@ Y = X[:,1:s] * (randn(s) .* (1. .+ rand(s))) + 6. * randn(n)
 
 stdX = std(X, 1)[:]
 
-options = HD.ScaledLassoOptions(;optTol=1e-3, maxIter=50)
+options = CoordinateDescent.ScaledLassoOptions(;optTol=1e-3, maxIter=50)
 x = ProximalBase.SparseIterate(p)
 λ = sqrt(2. * log(p) / n)
-@time HD.scaledLasso!(x, X, Y, λ, stdX, options)
+@time CoordinateDescent.scaledLasso!(x, X, Y, λ, stdX, options)
 
 
-@show σinit = HD.findInitSigma(X, Y, 30)
-options = HD.ScaledLassoOptions(;optTol=1e-2, maxIter=10, σinit=σinit)
+@show σinit = CoordinateDescent.findInitSigma(X, Y, 30)
+options = CoordinateDescent.ScaledLassoOptions(;optTol=1e-2, maxIter=10, σinit=σinit)
 x = ProximalBase.SparseIterate(p)
 λ = sqrt(2. * log(p) / n)
-@time HD.scaledLasso!(x, X, Y, λ, stdX, options)
+@time CoordinateDescent.scaledLasso!(x, X, Y, λ, stdX, options)
 
 
 
 λ = 0.001
 
-options = HD.CDOptions(;warmStart=true)
+options = CoordinateDescent.CDOptions(;warmStart=true)
 x = ProximalBase.SparseIterate(p)
-f = HD.CDLeastSquaresLoss(Y,X)
+f = CoordinateDescent.CDLeastSquaresLoss(Y,X)
 g = ProximalBase.ProxL1(λ)
-@time HD.coordinateDescent!(x, f, g, options)
+@time CoordinateDescent.coordinateDescent!(x, f, g, options)
 
-options = HD.CDOptions(;warmStart=false)
+options = CoordinateDescent.CDOptions(;warmStart=false)
 x = ProximalBase.SparseIterate(p)
-f = HD.CDLeastSquaresLoss(Y,X)
+f = CoordinateDescent.CDLeastSquaresLoss(Y,X)
 g = ProximalBase.ProxL1(λ)
-@time HD.coordinateDescent!(x, f, g, options)
+@time CoordinateDescent.coordinateDescent!(x, f, g, options)
 
-options = HD.CDOptions(;warmStart=true)
+options = CoordinateDescent.CDOptions(;warmStart=true)
 x = ProximalBase.SparseIterate(p)
-f = HD.CDLeastSquaresLoss(Y,X)
+f = CoordinateDescent.CDLeastSquaresLoss(Y,X)
 g = ProximalBase.ProxL1(λ, stdX)
-@time HD.coordinateDescent!(x, f, g, options)
+@time CoordinateDescent.coordinateDescent!(x, f, g, options)
 
-options = HD.CDOptions(;warmStart=false, numSteps=100)
+options = CoordinateDescent.CDOptions(;warmStart=false, numSteps=100)
 x = ProximalBase.SparseIterate(p)
-f = HD.CDLeastSquaresLoss(Y,X)
+f = CoordinateDescent.CDLeastSquaresLoss(Y,X)
 g = ProximalBase.ProxL1(λ, stdX)
-@time HD.coordinateDescent!(x, f, g, options)
+@time CoordinateDescent.coordinateDescent!(x, f, g, options)
 
 
-options = HD.CDOptions(;warmStart=false, numSteps=100)
+options = CoordinateDescent.CDOptions(;warmStart=false, numSteps=100)
 x = ProximalBase.SparseIterate(p)
-f = HD.CDLeastSquaresLoss(Y,X)
+f = CoordinateDescent.CDLeastSquaresLoss(Y,X)
 g = ProximalBase.ProxL1(λ, stdX)
-@time HD.coordinateDescent!(x, f, g, options)
+@time CoordinateDescent.coordinateDescent!(x, f, g, options)

@@ -24,6 +24,8 @@ CDOptions(;
 struct IterLassoOptions
   maxIter::Int64
   optTol::Float64
+  initProcedure::Symbol    # :Screening, :InitStd, :WarmStart
+  sinit::Int64             # how many columns of X to use to estimate initial variance or obtain initial residuals
   σinit::Float64
   optionsCD::CDOptions
 end
@@ -31,8 +33,10 @@ end
 IterLassoOptions(;
   maxIter::Int64=20,
   optTol::Float64=1e-2,
+  initProcedure::Symbol=:Screening,
+  sinit::Int64=5,
   σinit::Float64=1.,
-  optionsCD::CDOptions=CDOptions()) = IterLassoOptions(maxIter, optTol, σinit, optionsCD)
+  optionsCD::CDOptions=CDOptions()) = IterLassoOptions(maxIter, optTol, initProcedure, sinit, σinit, optionsCD)
 
 
 
@@ -53,95 +57,70 @@ The procedure works as follows:
 * y is regressed on those s features
 * σ is estimated based on the residuals, which gives an upper bound on the true sigma
 """
-findInitSigma(
+_findInitSigma!(
   X::AbstractMatrix{T},
   y::AbstractVector{T},
-  s::Int) where {T <: AbstractFloat} =  std(findInitResiduals(X, y, s))
+  s::Int,
+  storage::Vector{T}) where {T <: AbstractFloat} =  std(_findInitResiduals!(X, y, s, storage))
 
-function findInitResiduals(
+function _findInitResiduals!(
   X::AbstractMatrix{T},
   y::AbstractVector{T},
-  s::Int) where {T <: AbstractFloat}
+  s::Int,
+  storage::Vector{T}) where {T <: AbstractFloat}
 
-  S = findLargestCorrelations(X, y, s)
-
-  res = X[:,S]*(X[:, S] \ y)
-  @. res = y - res
-  res
+  S = _findLargestCorrelations(X, y, s)
+  Xs = view(X, :, S)
+  A_mul_B!(storage, Xs, Xs \ y)
+  @. storage = y - storage
+  return storage
 end
 
-function findInitResiduals(
+function _findInitResiduals!(
   w::AbstractVector{T},
   X::AbstractMatrix{T},
   y::AbstractVector{T},
-  s::Int) where {T <: AbstractFloat}
+  s::Int,
+  storage::Vector{T}) where {T <: AbstractFloat}
 
-  S = findLargestCorrelations(w, X, y, s)
+  S = _findLargestCorrelations(w, X, y, s)
 
   Xs = view(X, :, S)
-  res = Xs * ((Xs' * diagm(w) * Xs) \ (Xs' * diagm(w) * y))
-  @. res = y - res
-  res
+  A_mul_B!(storage, Xs, (Xs' * diagm(w) * Xs) \ (Xs' * diagm(w) * y))
+  @. storage = y - storage
+  return storage
 end
 
 
 # return a bit array containing indices of columns
-function findLargestCorrelations(
+function _findLargestCorrelations(
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   s::Int) where {T <: AbstractFloat}
 
-  n, p = size(X)
-  if s > p
-    s = p
-  end
-  c = X' * y
-  @. c = abs(c)
-
-  # find value of s-th largest element in abs(c)
-  h = binary_maxheap(T)
-  @inbounds for i=1:p
-      push!(h, c[i])
-  end
-
-  val = zero(T)
-  for i=1:s
-    val = pop!(h)
-  end
-
-  S = c .> val
+  p = size(X, 2)
+  storage = Array{T}(p)
+  At_mul_B!(storage, X, y)
+  @. storage = abs(storage)
+  S = storage .>= nlargest(s, storage)[end]
 end
 
-function findLargestCorrelations(
+function _findLargestCorrelations(
   w::AbstractVector{T},
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   s::Int) where {T <: AbstractFloat}
 
   n, p = size(X)
-  if s > p
-    s = p
-  end
-  c = Array{T}(p)
+  storage = Array{T}(p)
   @inbounds for j=1:p
     val = zero(T)
     @simd for i=1:n
       val += X[i,j] * w[i] * y[i]
     end
-    c[j] = abs(val)
+    storage[j] = abs(val)
   end
-
-  # find value of s-th largest element in abs(c)
-  h = binary_maxheap(T)
-  @inbounds for i=1:p
-      push!(h, c[i])
-  end
-
-  for i=1:s
-    val = pop!(h)
-  end
-
-  S = c .> val
+  S = storage .>= nlargest(s, storage)[end]
 end
 
 
