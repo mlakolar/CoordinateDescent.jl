@@ -108,13 +108,6 @@ facts("cd sqrt-lasso") do
       coordinateDescent!(x1, f, g, CDOptions(;maxIter=5000, optTol=1e-8))
 
       @fact max(0, maximum(abs.(X'*(Y - X*x1) / vecnorm(Y - X*x1))) - λ) / λ  --> roughly(0.; atol=1e-3)
-
-      x2 = Convex.Variable(p)
-      prob = Convex.minimize(Convex.vecnorm(Y-X*x2) + λ * vecnorm(x2, 1))
-      Convex.solve!(prob)
-
-      @fact max(0, maximum(abs.(X'*(Y - X*x2.value) / vecnorm(Y - X*x2.value))) - λ) / λ --> roughly(0.; atol=3e-3)
-      @fact maximum(abs.(x1 - x2.value)) --> roughly(0.; atol=2e-3)
     end
   end
 
