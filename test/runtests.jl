@@ -3,7 +3,8 @@ using FactCheck
 using CoordinateDescent
 using ProximalBase
 
-using CoordinateDescent: _expand_wX!, _expand_X!, _expand_Xt_w_X!, _expand_Xt_w_Y!, _locpoly!
+using CoordinateDescent: _expand_wX!, _expand_X!, _expand_Xt_w_X!,
+                         _expand_Xt_w_Y!, _locpoly!, _stdX!
 
 function try_import(name::Symbol)
     try
@@ -25,7 +26,7 @@ else
 end
 
 srand(1)
-const NUMBER_REPEAT = 100
+const NUMBER_REPEAT = 20
 
 include(joinpath(@__DIR__, "..", "benchmark", "locpoly_bench.jl"))
 

@@ -81,7 +81,7 @@ facts("coordinate descent") do
       β = randn(s)
       Y = X[:,1:s] * β + randn(n)
 
-      λ = 0.01
+      λ = 0.05
       g = ProximalBase.AProxL1(λ, ones(p))
       g1 = ProximalBase.ProxL1(λ)
       f = CDLeastSquaresLoss(Y, X)

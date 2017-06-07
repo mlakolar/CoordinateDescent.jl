@@ -20,6 +20,21 @@ CDOptions(;
   numSteps::Int=50) = CDOptions(maxIter, optTol, randomize, warmStart, numSteps)
 
 
+# this is used for ScaledLasso and FeasibleLasso
+struct IterLassoOptions
+  maxIter::Int64
+  optTol::Float64
+  σinit::Float64
+  optionsCD::CDOptions
+end
+
+IterLassoOptions(;
+  maxIter::Int64=20,
+  optTol::Float64=1e-2,
+  σinit::Float64=1.,
+  optionsCD::CDOptions=CDOptions()) = IterLassoOptions(maxIter, optTol, σinit, optionsCD)
+
+
 
 ####################################
 #
@@ -38,7 +53,40 @@ The procedure works as follows:
 * y is regressed on those s features
 * σ is estimated based on the residuals, which gives an upper bound on the true sigma
 """
-function findInitSigma(
+findInitSigma(
+  X::AbstractMatrix{T},
+  y::AbstractVector{T},
+  s::Int) where {T <: AbstractFloat} =  std(findInitResiduals(X, y, s))
+
+function findInitResiduals(
+  X::AbstractMatrix{T},
+  y::AbstractVector{T},
+  s::Int) where {T <: AbstractFloat}
+
+  S = findLargestCorrelations(X, y, s)
+
+  res = X[:,S]*(X[:, S] \ y)
+  @. res = y - res
+  res
+end
+
+function findInitResiduals(
+  w::AbstractVector{T},
+  X::AbstractMatrix{T},
+  y::AbstractVector{T},
+  s::Int) where {T <: AbstractFloat}
+
+  S = findLargestCorrelations(w, X, y, s)
+
+  Xs = view(X, :, S)
+  res = Xs * ((Xs' * diagm(w) * Xs) \ (Xs' * diagm(w) * y))
+  @. res = y - res
+  res
+end
+
+
+# return a bit array containing indices of columns
+function findLargestCorrelations(
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   s::Int) where {T <: AbstractFloat}
@@ -47,12 +95,12 @@ function findInitSigma(
   if s > p
     s = p
   end
-  c = (X'*y) / n
+  c = X' * y
   @. c = abs(c)
 
   # find value of s-th largest element in abs(c)
   h = binary_maxheap(T)
-  for i=1:p
+  @inbounds for i=1:p
       push!(h, c[i])
   end
 
@@ -61,50 +109,77 @@ function findInitSigma(
     val = pop!(h)
   end
 
-  # solve OLS with s most correlated values
   S = c .> val
-  βh = X[:, S] \ y
-  std(y - X[:,S]*βh)
+end
+
+function findLargestCorrelations(
+  w::AbstractVector{T},
+  X::AbstractMatrix{T},
+  y::AbstractVector{T},
+  s::Int) where {T <: AbstractFloat}
+
+  n, p = size(X)
+  if s > p
+    s = p
+  end
+  c = Array{T}(p)
+  @inbounds for j=1:p
+    val = zero(T)
+    @simd for i=1:n
+      val += X[i,j] * w[i] * y[i]
+    end
+    c[j] = abs(val)
+  end
+
+  # find value of s-th largest element in abs(c)
+  h = binary_maxheap(T)
+  @inbounds for i=1:p
+      push!(h, c[i])
+  end
+
+  for i=1:s
+    val = pop!(h)
+  end
+
+  S = c .> val
 end
 
 
+function _stdX!(out::Vector{T}, X::AbstractMatrix{T}) where {T <: AbstractFloat}
+  n, p = size(X)
 
+  @inbounds for j=1:p
+    v = zero(T)
+    @simd for i=1:n
+      v += X[i, j]^2.
+    end
+    out[j] = sqrt(v / n)
+  end
+  out
+end
 
+function _stdX!(out::Vector{T}, w::AbstractVector{T}, X::AbstractMatrix{T}) where {T <: AbstractFloat}
+  n, p = size(X)
 
-# ###
-#
-# # find the most correlated columns of X with Y
-# #
-# # this runs marginal rergession of Y on X_j for every j
-# #
-# function findCorrelatedColumns(tildeX::Array{Float64, 2}, y::Array{Float64, 1},
-#                                q::Int64,                                          # order of the polynomial
-#                                numCorrCol::Int64,
-#                                kernelWeights::Array{Float64, 1})
-#
-#   (n, qp) = size(X)
-#   p = Int(qp / q)
-#   sqKernelWeights = sqrt(kernelWeights)
-#   wX = zeros(n, (q+1))             # sqrt(kernelWeights) * [1, (z - z0), ..., (z-z0)^q] ⊗ X_j
-#   wY = sqKernelWeights .* y        # sqrt(kernelWeights) * Y
-#
-#   resSq = zeros(p)                     # placeholder for residuals squared
-#
-#   for j=1:p
-#
-#     # transform features for X_j
-#     for i=1:n
-#       for l=0:q
-#         @inbounds wX[i, l + 1] = X[i, (j - 1) * (q + 1) + l + 1] * sqKernelWeights[i]
-#       end
-#     end
-#
-#     # compute hat_beta
-#     βh = wX \ wY
-#     # compute residuals squared
-#     res[j] = sumabs2(wY - wX * βh)
-#
-#   end
-#
-#   sortperm(res)[1:numCorrCol]
-# end
+  @inbounds for j=1:p
+    v = zero(T)
+    @simd for i=1:n
+      v += w[i] * X[i, j]^2.
+    end
+    out[j] = sqrt(v / n)
+  end
+  out
+end
+
+function _getLoadings!(out::Vector{T}, X::AbstractMatrix{T}, e::AbstractVector{T}) where {T <: AbstractFloat}
+  n, p = size(X)
+
+  @inbounds for j=1:p
+    v = zero(T)
+    @simd for i=1:n
+      v += (X[i, j]*e[i])^2.
+    end
+    out[j] = sqrt(v / n)
+  end
+  out
+end

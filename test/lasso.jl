@@ -192,8 +192,8 @@ facts("scaled lasso") do
 
     λ = rand() / 5.
 
-    opt1 = ScaledLassoOptions(;maxIter=100, optTol=1e-8, optionsCD=CDOptions(;maxIter=5000, optTol=1e-8))
-    opt2 = ScaledLassoOptions(;maxIter=100, optTol=1e-8, σinit=findInitSigma(X,Y,10), optionsCD=CDOptions(;maxIter=5000, optTol=1e-8))
+    opt1 = IterLassoOptions(;maxIter=100, optTol=1e-8, optionsCD=CDOptions(;maxIter=5000, optTol=1e-8))
+    opt2 = IterLassoOptions(;maxIter=100, optTol=1e-8, σinit=findInitSigma(X,Y,10), optionsCD=CDOptions(;maxIter=5000, optTol=1e-8))
 
     x1, σh1 = scaledLasso(X, Y, λ, ones(p), opt1)
     x2, σh2 = scaledLasso(X, Y, λ, ones(p), opt2)
@@ -250,17 +250,15 @@ facts("lasso path") do
     β = randn(s)
     Y = X[:,1:s] * β + randn(n)
 
-    loadingX = ones(p)
-    @inbounds for i=1:p
-      loadingX[i] = std(view(X, :, i))
-    end
+    loadingX = Array{Float64}(p)
+    _stdX!(loadingX, X)
 
     λ1 = 0.3
     λ2 = 0.1
     opt = CDOptions(;maxIter=5000, optTol=1e-8)
 
-    x1 = lasso(X, Y, λ1, loadingX)
-    x2 = lasso(X, Y, λ2, loadingX)
+    x1 = lasso(X, Y, λ1, loadingX, opt)
+    x2 = lasso(X, Y, λ2, loadingX, opt)
 
     λpath = [λ1, λ2]
     path = LassoPath(X, Y, λpath, opt)

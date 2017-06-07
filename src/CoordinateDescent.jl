@@ -4,9 +4,9 @@ using ProximalBase
 using DataStructures: binary_maxheap
 
 export
-  lasso, sqrtLasso,
+  lasso, sqrtLasso, feasibleLasso!, scaledLasso, scaledLasso!,
   LassoPath, refitLassoPath,
-  ScaledLassoOptions, scaledLasso, scaledLasso!, findInitSigma,
+  IterLassoOptions, findInitSigma,
 
   # CD
   CoordinateDifferentiableFunction,

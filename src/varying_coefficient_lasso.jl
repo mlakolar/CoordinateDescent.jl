@@ -36,7 +36,7 @@ function locpolyl1(
   # temporary storage
   w = Array{T}(n)
   wX = Array{T}(n, ep)
-  stdX = ones(T, ep)
+  stdX = Array{T}(ep)
   f = CDWeightedLSLoss(y, wX, w)        # inner parts of f will be modified in a loop
   g = AProxL1(λ0, stdX)
   β = SparseIterate(ep)
@@ -48,14 +48,7 @@ function locpolyl1(
     # the following two should update f
     @. w = evaluate(kernel, z, z0)
     _expand_X!(wX, X, z, z0, degree)
-    # compute std for each column
-    @inbounds for j=1:ep
-      v = zero(T)
-      @simd for i=1:n
-        v += wX[i, j] * wX[i, j] * w[i]
-      end
-      stdX[j] = sqrt(v / n)
-    end
+    _stdX!(stdX, w, wX)
 
     # solve for β
     coordinateDescent!(β, f, g, opt)
@@ -63,8 +56,6 @@ function locpolyl1(
   end
   out
 end
-
-
 
 ############################################################
 #
