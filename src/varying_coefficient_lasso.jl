@@ -38,7 +38,7 @@ function locpolyl1(
   wX = Array{T}(n, ep)
   stdX = Array{T}(ep)
   f = CDWeightedLSLoss(y, wX, w)        # inner parts of f will be modified in a loop
-  g = AProxL1(λ0, stdX)
+  g = ProxL1(λ0, stdX)
   β = SparseIterate(ep)
 
   ind = 0

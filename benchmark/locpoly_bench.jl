@@ -109,7 +109,7 @@ function locpolyl1_alt(
 
     @. w = sqrt(w)
     f = CDLeastSquaresLoss(diagm(w)*y, diagm(w)*wX)
-    g = ProximalBase.AProxL1(λ0, stdX)
+    g = ProximalBase.ProxL1(λ0, stdX)
     β = ProximalBase.SparseIterate(ep)
 
     # solve for β

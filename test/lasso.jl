@@ -15,7 +15,7 @@ facts("lasso") do
     Y = X * ones(p) + 0.1 * randn(n)
     Xy = X' * Y / n
 
-    lambda = fill(maximum(abs.(Xy)) + 0.1, p)
+    lambda = maximum(abs.(Xy)) + 0.1
     beta = lasso(X, Y, lambda)
     @fact beta --> spzeros(p)
   end
@@ -30,10 +30,10 @@ facts("lasso") do
       Y = X[:,1:s] * ones(s) + 0.1 * randn(n)
 
       λ = fill(0.3, p)
-      beta = lasso(X, Y, λ, CDOptions(;optTol=1e-12))
+      beta = lasso(X, Y, 1., λ, CDOptions(;optTol=1e-12))
 
       f = CDQuadraticLoss(X'X/n, -X'Y/n)
-      g = ProximalBase.AProxL1(1., λ)
+      g = ProximalBase.ProxL1(1., λ)
       x1 = SparseIterate(p)
       coordinateDescent!(x1, f, g, CDOptions(;optTol=1e-12))
       @fact beta --> roughly(x1; atol=1e-5)
@@ -54,10 +54,8 @@ facts("lasso") do
     λ = 0.1
     x1 = lasso(X, Y, λ)
     x2 = lasso(X, Y, λ, ones(p))
-    x3 = lasso(X, Y, λ*ones(p))
 
     @fact full(x1) --> roughly(full(x2); atol=1e-5)
-    @fact full(x3) --> roughly(full(x2); atol=1e-5)
   end
 
 end

@@ -7,11 +7,11 @@
 function coordinateDescent!(
   x::SparseIterate,
   f::CoordinateDifferentiableFunction,
-  g::Union{ProxL1, AProxL1},
+  g::ProxL1,
   options::CDOptions=CDOptions())
 
   ProximalBase.numCoordinates(x) == numCoordinates(f) || throw(DimensionMismatch())
-  if typeof(g) <: AProxL1
+  if !isa(g, ProxL1{typeof(g.λ0), Void}) # TODO: create a test for this
     length(g.λ) == numCoordinates(f) || throw(DimensionMismatch())
   end
 
@@ -19,7 +19,7 @@ function coordinateDescent!(
 
   if options.warmStart
     initialize!(f, x)
-    return _coordinateDescent_inner_L1!(x, f, g, coef_iterator, options)
+    return _coordinateDescent!(x, f, g, coef_iterator, options)
   else
     # set x to zero and initialize
     fill!(x, zero(eltype(x)))
@@ -29,29 +29,20 @@ function coordinateDescent!(
     λmax = _findLambdaMax(x, f, g)
 
     # find decreasing schedule for λ
-    l1 = log(λmax)
-    if typeof(g) <: AProxL1
-      l2 = log(g.λ0)
-    else
-      l2 = log(g.λ)
-    end
+    l1, l2 = log(λmax), log(g.λ0)
     for l in colon(l1, (l2-l1)/options.numSteps, l2)
-      if typeof(g) <: AProxL1
-        g1 = AProxL1(exp(l), g.λ)
-      else
-        g1 = ProxL1(exp(l))
-      end
-      _coordinateDescent_inner_L1!(x, f, g, coef_iterator, options)
+      g1 = ProxL1(exp(l), g.λ)
+      _coordinateDescent!(x, f, g, coef_iterator, options)
     end
     return x
   end
 end
 
 # assumes that f is initialized before the call here
-function _coordinateDescent_inner_L1!(
+function _coordinateDescent!(
   x::SparseIterate,
   f::CoordinateDifferentiableFunction,
-  g::Union{ProxL1, AProxL1},
+  g::ProxL1,
   coef_iterator::AtomIterator,
   options::CDOptions)
 
@@ -78,13 +69,13 @@ function _coordinateDescent_inner_L1!(
 end
 
 function _cdPass!(
-  x::SparseIterate{T},
+  x::SparseIterate,
   f::CoordinateDifferentiableFunction,
-  g::Union{ProxL1{T}, AProxL1{T}},
+  g::ProxL1,
   coef_iterator::AtomIterator
-  ) where {T<:AbstractFloat}
+  )
 
-  maxH = zero(T)
+  maxH = zero(eltype(x))
   for ipred = coef_iterator               # coef_iterator produces original indexes
     h = descendCoordinate!(f, g, x, ipred)
     if abs(h) > maxH
@@ -101,13 +92,12 @@ end
 """
 Helper function that finds the smallest value of λ for which the solution is equal to zero.
 """
-function _findLambdaMax(x::SparseIterate,
+function _findLambdaMax(x::SparseIterate{T},
   f::CoordinateDifferentiableFunction,
-  ::ProxL1)
+  ::ProxL1{T, Void}) where {T<:AbstractFloat}
 
-  p = length(x)
-  λmax = 0.
-  for k=1:p
+  λmax = zero(T)
+  for k=1:length(x)
     f_g = gradient(f, x, k)
     t = abs(f_g)
     if t > λmax
@@ -122,11 +112,10 @@ Helper function that finds the smallest value of λ0 for which the solution is e
 """
 function _findLambdaMax(x::SparseIterate{T},
   f::CoordinateDifferentiableFunction,
-  g::AProxL1{T}) where {T<:AbstractFloat}
+  g::ProxL1{T, S}) where {T<:AbstractFloat} where S <: AbstractArray
 
-  p = length(x)
   λmax = zero(T)
-  for k=1:p
+  for k=1:length(x)
     f_g = gradient(f, x, k)
     t = abs(f_g) / g.λ[k]
     if t > λmax

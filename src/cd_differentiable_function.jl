@@ -32,7 +32,7 @@ numCoordinates(f) = error("numCoordinates not implemented for $(typeof(f))")
     that the algorithm to call this function again is coordinate descent.
     In future, we may want to implement other variants of coordinate descent.
 """
-descendCoordinate!(f, g, x, k) = error("quadraticApprox not implemented for $(typeof(f))")
+descendCoordinate!(f, g, x, k) = error("descendCoordinate not implemented for $(typeof(f))")
 
 
 ####################################
@@ -82,7 +82,7 @@ gradient(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:Abst
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
 function descendCoordinate!(
   f::CDLeastSquaresLoss{T},
-  g::Union{ProxL1{T}, AProxL1{T}},
+  g::ProxL1{T},
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
@@ -150,7 +150,7 @@ end
 function gradient(f::CDWeightedLSLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat}
   out = zero(T)
 
-  n = length(f.r)  
+  n = length(f.r)
   @inbounds @simd for i=1:n
     out += f.w[i] * f.X[i, j] * f.r[i]
   end
@@ -164,7 +164,7 @@ end
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
 function descendCoordinate!(
   f::CDWeightedLSLoss{T},
-  g::Union{ProxL1{T}, AProxL1{T}},
+  g::ProxL1{T},
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
@@ -241,7 +241,7 @@ gradient{T<:AbstractFloat}(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}, j::Int64)
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
 function descendCoordinate!{T<:AbstractFloat}(
   f::CDSqrtLassoLoss{T},
-  g::Union{ProxL1{T}, AProxL1{T}},
+  g::ProxL1{T},
   x::SparseIterate{T},
   k::Int64)
 
@@ -268,11 +268,9 @@ function descendCoordinate!{T<:AbstractFloat}(
   # xsqr = dot(X[:,k], X[:, k])
   # rsqr = dot(r, r)
 
-  λ = zero(T)
-  if isa(g, ProxL1{T})
-    λ = g.λ
-  else
-    λ = g.λ[k] * g.λ0
+  λ = g.λ0
+  if !isa(g, ProxL1{T, Void})
+    λ *= g.λ[k] 
   end
 
   oldVal = x[k]
@@ -315,7 +313,7 @@ gradient{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseIterate{T}, j::Int64)
 
 function descendCoordinate!{T<:AbstractFloat}(
   f::CDQuadraticLoss{T},
-  g::Union{ProxL1{T}, AProxL1{T}},
+  g::ProxL1{T},
   x::SparseIterate{T},
   k::Int64)
 

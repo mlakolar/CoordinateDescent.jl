@@ -1,5 +1,24 @@
 ######################################################################
 #
+#   Lasso Solution
+#
+######################################################################
+
+struct LassoSolution{T}
+  x::SparseIterate{T}
+  residuals::Vector{T}
+  penalty::ProxL1{T}
+  σ::Nullable{T}
+
+  LassoSolution{T}(x::SparseIterate{T}, residuals::AbstractVector{T}, penalty::ProxL1{T}, σ::T) where {T} =
+    new(x, residuals, penalty, σ)
+  LassoSolution{T}(x::SparseIterate{T}, residuals::AbstractVector{T}, penalty::ProxL1{T}) where {T} =
+    new(x, residuals, penalty, Nullable{T}( ))
+end
+
+
+######################################################################
+#
 #   Lasso Interface
 #
 ######################################################################
@@ -17,14 +36,7 @@ lasso{T<:AbstractFloat}(
   λ::T,
   ω::Array{T},
   options::CDOptions=CDOptions()) =
-    coordinateDescent!(SparseIterate(size(X, 2)), CDLeastSquaresLoss(y,X), AProxL1(λ, ω), options)
-
-lasso{T<:AbstractFloat}(
-  X::StridedMatrix{T},
-  y::StridedVector{T},
-  λ::Array{T},
-  options::CDOptions=CDOptions()) =
-    coordinateDescent!(SparseIterate(size(X, 2)), CDLeastSquaresLoss(y,X), AProxL1(1., λ), options)
+    coordinateDescent!(SparseIterate(size(X, 2)), CDLeastSquaresLoss(y,X), ProxL1(λ, ω), options)
 
 
 ######################################################################
@@ -47,7 +59,7 @@ sqrtLasso{T<:AbstractFloat}(
   λ::T,
   ω::Array{T},
   options::CDOptions=CDOptions()) =
-    coordinateDescent!(SparseIterate(size(X, 2)), CDSqrtLassoLoss(y,X), AProxL1(λ, ω), options)
+    coordinateDescent!(SparseIterate(size(X, 2)), CDSqrtLassoLoss(y,X), ProxL1(λ, ω), options)
 
 
 ######################################################################
@@ -80,7 +92,7 @@ function scaledLasso!{T<:AbstractFloat}(
   σ = options.σinit
 
   for iter=1:options.maxIter
-    g = AProxL1(λ * σ, ω)
+    g = ProxL1(λ * σ, ω)
     coordinateDescent!(β, f, g, options.optionsCD)
     σnew = sqrt( sum(abs2, f.r) / n )
 
@@ -116,7 +128,7 @@ function feasibleLasso!{T<:AbstractFloat}(
   res = findInitResiduals(X, y, min(10, p))    # TODO: if warmstart is provided, then that solution could be used
   _getLoadings!(Γ, X, res)
 
-  g = AProxL1(λ, Γ)
+  g = ProxL1(λ, Γ)
 
   for iter=1:options.maxIter
     copy!(Γold, Γ)
@@ -187,7 +199,7 @@ function LassoPath(
   βpath = Vector{SparseIterate{T}}(numλ)
 
   for indλ=1:numλ
-    coordinateDescent!(β, f, AProxL1(λpath[indλ], stdX), options)
+    coordinateDescent!(β, f, ProxL1(λpath[indλ], stdX), options)
     βpath[indλ] = copy(β)
     if nnz(β) > max_hat_s
       resize!(λpath, indλ)
