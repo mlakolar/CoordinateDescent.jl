@@ -10,13 +10,13 @@ export
 
   # CD
   CoordinateDifferentiableFunction,
-  CDLeastSquaresLoss, CDQuadraticLoss, CDSqrtLassoLoss,
+  CDLeastSquaresLoss, CDWeightedLSLoss, CDQuadraticLoss, CDSqrtLassoLoss,
   CDOptions,
   coordinateDescent, coordinateDescent!,
 
   # var coef
   GaussianKernel, SmoothingKernel, evaluate,
-  locpoly
+  locpoly, locpolyl1
 
 include("utils.jl")
 include("atom_iterator.jl")

@@ -27,6 +27,8 @@ end
 srand(1)
 const NUMBER_REPEAT = 100
 
+include(joinpath(@__DIR__, "..", "benchmark", "locpoly_bench.jl"))
+
 tests = [
   "atom_iterator",
 	"lasso",

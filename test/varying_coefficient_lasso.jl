@@ -76,15 +76,13 @@ facts("expand_X multiplications") do
   end
 end
 
-include(joinpath(@__DIR__, "..", "benchmark", "locpoly_bench.jl"))
-
 facts("locpoly") do
 
   n, p = 500, 2
   Y, X, Z, betaMat = genData(n, p)
   zgrid = collect(0.01:0.2:0.99)
 
-  gk = GaussianKernel(0.2)
+  gk = GaussianKernel(0.4)
 
   w = zeros(n)
 
@@ -95,10 +93,35 @@ facts("locpoly") do
     cp = p*(degree+1)
 
     eX = zeros(n, cp)
-    CoordinateDescent._expand_X!(eX, X, Z, z0, degree)
+    _expand_X!(eX, X, Z, z0, degree)
 
     @. w = evaluate(gk, Z, z0)
 
     @fact locpoly(X, Z, Y, z0, degree, gk) --> roughly((eX' * diagm(w) * eX)\(eX' * diagm(w) * Y))
   end
+end
+
+
+
+facts("locpolyl1") do
+
+  n, s, p = 500, 10, 50
+  gk = GaussianKernel(0.1)
+  zgrid = collect(0.01:0.1:0.99)
+  opt = CDOptions(;randomize=false)
+
+  for i=1:NUMBER_REPEAT
+    Y, X, Z, betaT = genData(n, s)
+    X = [X zeros(n, p-s)]
+
+    λ0 = rand() / 10
+
+    for degree=0:2
+      o1 = locpolyl1(X,Z,Y,zgrid,degree,gk,λ0, opt)
+      o2 = locpolyl1_alt(X,Z,Y,zgrid,degree,gk,λ0, opt)
+
+      @fact maximum( maximum(abs.(o1[i] - o2[i])) for i=1:length(zgrid) ) --> roughly(0.; atol=1e-4)
+    end
+  end
+
 end

@@ -56,14 +56,14 @@ end
 
 numCoordinates(f::CDLeastSquaresLoss) = size(f.X, 2)
 
-function initialize!{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseIterate{T})
+function initialize!(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
   # compute residuals for the loss
 
   X = f.X
   y = f.y
   r = f.r
 
-  n, p = size(f.X)
+  n = size(X, 1)
 
   @simd for i=1:n
     @inbounds r[i] = y[i] - A_mul_B_row(X, x, i)
@@ -72,7 +72,7 @@ function initialize!{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseIterat
 end
 
 
-gradient{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) =
+gradient(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
   - At_mul_B_row(f.X, f.r, j) / size(f.X, 1)
 
 # a = X[:, k]' X[:, k]
@@ -80,11 +80,11 @@ gradient{T<:AbstractFloat}(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int
 #
 # h        = arg_min a/(2n) (h-b/a)^2 + λ_k⋅|x_k + h|
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
-function descendCoordinate!{T<:AbstractFloat}(
+function descendCoordinate!(
   f::CDLeastSquaresLoss{T},
   g::Union{ProxL1{T}, AProxL1{T}},
   x::SparseIterate{T},
-  k::Int64)
+  k::Int64) where {T<:AbstractFloat}
 
   y = f.y
   X = f.X
@@ -96,6 +96,89 @@ function descendCoordinate!{T<:AbstractFloat}(
   @inbounds @simd for i=1:n
     a += X[i, k] * X[i, k]
     b += r[i] * X[i, k]
+  end
+
+  oldVal = x[k]
+  x[k] += b / a
+  newVal = cdprox!(g, x, k, n / a)
+  h = newVal - oldVal
+
+  # update internals -- residuls = y - X * xnew
+  @inbounds @simd for i=1:n
+    r[i] -= X[i, k] * h
+  end
+  h
+end
+
+################################################################################
+#
+# loss ∑_i w_i ⋅ |Y_i - X_i⋅β|^2 / (2⋅n)
+#
+################################################################################
+struct CDWeightedLSLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
+  y::S
+  X::U
+  w::S
+  r::Vector{T}
+
+  CDWeightedLSLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, w::AbstractVector{T}, r::Vector{T}) where {T,S,U} =
+    new(y,X,w,r)
+end
+
+function CDWeightedLSLoss(y::AbstractVector{T}, X::AbstractMatrix{T}, w::AbstractVector{T}) where {T<:AbstractFloat}
+  length(y) == size(X, 1) == length(w) || throw(DimensionMismatch())
+  CDWeightedLSLoss{T, typeof(y), typeof(X)}(y,X,w,copy(y))
+end
+
+numCoordinates(f::CDWeightedLSLoss) = size(f.X, 2)
+
+function initialize!(f::CDWeightedLSLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
+  # compute residuals for the loss
+
+  X = f.X
+  y = f.y
+  r = f.r
+
+  n = size(X, 1)
+
+  @simd for i=1:n
+    @inbounds r[i] = y[i] - A_mul_B_row(X, x, i)
+  end
+  nothing
+end
+
+function gradient(f::CDWeightedLSLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat}
+  out = zero(T)
+
+  n = length(f.r)  
+  @inbounds @simd for i=1:n
+    out += f.w[i] * f.X[i, j] * f.r[i]
+  end
+  - out / length(f.w)
+end
+
+# a = X[:, k]' X[:, k]
+# b = X[:, k]' r
+#
+# h        = arg_min a/(2n) (h-b/a)^2 + λ_k⋅|x_k + h|
+# xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
+function descendCoordinate!(
+  f::CDWeightedLSLoss{T},
+  g::Union{ProxL1{T}, AProxL1{T}},
+  x::SparseIterate{T},
+  k::Int64) where {T<:AbstractFloat}
+
+  y = f.y
+  X = f.X
+  r = f.r
+  w = f.w
+  n = length(f.y)
+
+  a = zero(T)
+  b = zero(T)
+  @inbounds @simd for i=1:n
+    a += X[i, k] * X[i, k] * w[i]
+    b += r[i] * X[i, k] * w[i]
   end
 
   oldVal = x[k]

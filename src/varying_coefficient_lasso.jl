@@ -10,11 +10,67 @@ evaluate(k::GaussianKernel{T}, x::T, y::T) where {T <: AbstractFloat} = exp(-(x-
 
 
 
-######################
+############################################################
 #
+# local polynomial regression with lasso
 #
+############################################################
+
+function locpolyl1(
+  X::Matrix{T}, z::Vector{T}, y::Vector{T},
+  zgrid::Vector{T},
+  degree::Int64,
+  kernel::SmoothingKernel{T},
+  λ0::T,
+  options::CDOptions=CDOptions()) where {T <: AbstractFloat}
+
+  # construct inner options because we do not want warmStart = false
+  # we want to start from the previous iteration since the points
+  # on the grid should be close to each other
+  opt = CDOptions(options.maxIter, options.optTol, options.randomize, true, options.numSteps)
+
+  n, p = size(X)
+  ep = p * (degree + 1)
+  out = Array{SparseVector{T, Int64}}(length(zgrid))
+
+  # temporary storage
+  w = Array{T}(n)
+  wX = Array{T}(n, ep)
+  stdX = ones(T, ep)
+  f = CDWeightedLSLoss(y, wX, w)        # inner parts of f will be modified in a loop
+  g = AProxL1(λ0, stdX)
+  β = SparseIterate(ep)
+
+  ind = 0
+  for z0 in zgrid
+    ind += 1
+
+    # the following two should update f
+    @. w = evaluate(kernel, z, z0)
+    _expand_X!(wX, X, z, z0, degree)
+    # compute std for each column
+    @inbounds for j=1:ep
+      v = zero(T)
+      @simd for i=1:n
+        v += wX[i, j] * wX[i, j] * w[i]
+      end
+      stdX[j] = sqrt(v / n)
+    end
+
+    # solve for β
+    coordinateDescent!(β, f, g, opt)
+    out[ind] = convert(SparseVector, β)
+  end
+  out
+end
+
+
+
+############################################################
 #
-######################
+# local polynomial regression low dimensions
+#
+############################################################
 
 
 function _locpoly!(
@@ -54,103 +110,11 @@ function locpoly(
 end
 
 
-# ###
-#
-# # find the most correlated columns of X with Y
-# #
-# # this runs marginal rergession of Y on X_j for every j
-# #
-# function findCorrelatedColumns(tildeX::Array{Float64, 2}, y::Array{Float64, 1},
-#                                q::Int64,                                          # order of the polynomial
-#                                numCorrCol::Int64,
-#                                kernelWeights::Array{Float64, 1})
-#
-#   (n, qp) = size(X)
-#   p = Int(qp / q)
-#   sqKernelWeights = sqrt(kernelWeights)
-#   wX = zeros(n, (q+1))             # sqrt(kernelWeights) * [1, (z - z0), ..., (z-z0)^q] ⊗ X_j
-#   wY = sqKernelWeights .* y        # sqrt(kernelWeights) * Y
-#
-#   resSq = zeros(p)                     # placeholder for residuals squared
-#
-#   for j=1:p
-#
-#     # transform features for X_j
-#     for i=1:n
-#       for l=0:q
-#         @inbounds wX[i, l + 1] = X[i, (j - 1) * (q + 1) + l + 1] * sqKernelWeights[i]
-#       end
-#     end
-#
-#     # compute hat_beta
-#     βh = wX \ wY
-#     # compute residuals squared
-#     res[j] = sumabs2(wY - wX * βh)
-#
-#   end
-#
-#   sortperm(res)[1:numCorrCol]
-# end
-
-
-
-#
-# function var_coef_lasso!(beta::SparseVector{Float64, Int64},
-#                     X::Array{Float64, 2}, y::Array{Float64, 1}, z::Array{Float64, 1},
-#                     lambda::Array{Float64, 1},
-#                     z0::Float64,
-#                     q::Int64,                                          # order of the polynomial
-#                     h::Float64;                                        # bandwidth
-#                     maxIter::Int64=2000, maxInnerIter::Int64=1000, optTol::Float64=1e-7,
-#                     kernel::SmoothingKernelFunction=GaussianKernel(),
-#                     sizeInitS::Int64=5)
-#
-#   (n, p) = size(X)
-#   tildeX = zeros(n, p*(q+1))
-#   get_data_matrix!(tildeX, X, z, z0, q)
-#
-#   kernelWeights = zeros(n)
-#   evalKernel!(kernel, kernelWeights, z, z0, h)
-#
-#   # find largest correlations
-#   initS = findCorrelatedColumns(tildeX, y, q, sizeInitS, kernelWeights)
-#
-#   # compute regression with the selected S
-#   XX = zeros((q+1)*sizeInitS, (q+1)*sizeInitS)
-#   for a=1:(q+1)*sizeInitS
-#     for b=a:(q+1)*sizeInitS
-#       if a == b
-#         k = initS[a]
-#         for i=1:n
-#           @inbounds XX[a,a] = XX[a,a] + tildeX[i, k]^2 * kernelWeights[i]
-#         end
-#       else
-#         k = initS[a]
-#         l = initS[b]
-#         for i=1:n
-#           @inbounds XX[a,b] = XX[a,b] + tildeX[i, k] * kernelWeights[i] * tildeX[i, l]
-#         end
-#         @inbounds XX[b,a] = XX[a,b]
-#       end
-#     end
-#   end
-#
-#
-#   XX = zeros((q+1)*p, (q+1)*p)
-#
-#
-#
-#   lasso!(beta, XX, Xy, lambda; maxIter=maxIter, maxInnerIter=maxInnerIter, optTol=optTol)
-#
-#   nothing
-# end
-
-
-######################################
+############################################################
 #
 # utils
 #
-######################################
+############################################################
 
 """
 Computes matrix whose each row is equal to

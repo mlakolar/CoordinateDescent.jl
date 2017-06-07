@@ -66,3 +66,45 @@ function findInitSigma(
   βh = X[:, S] \ y
   std(y - X[:,S]*βh)
 end
+
+
+
+
+
+# ###
+#
+# # find the most correlated columns of X with Y
+# #
+# # this runs marginal rergession of Y on X_j for every j
+# #
+# function findCorrelatedColumns(tildeX::Array{Float64, 2}, y::Array{Float64, 1},
+#                                q::Int64,                                          # order of the polynomial
+#                                numCorrCol::Int64,
+#                                kernelWeights::Array{Float64, 1})
+#
+#   (n, qp) = size(X)
+#   p = Int(qp / q)
+#   sqKernelWeights = sqrt(kernelWeights)
+#   wX = zeros(n, (q+1))             # sqrt(kernelWeights) * [1, (z - z0), ..., (z-z0)^q] ⊗ X_j
+#   wY = sqKernelWeights .* y        # sqrt(kernelWeights) * Y
+#
+#   resSq = zeros(p)                     # placeholder for residuals squared
+#
+#   for j=1:p
+#
+#     # transform features for X_j
+#     for i=1:n
+#       for l=0:q
+#         @inbounds wX[i, l + 1] = X[i, (j - 1) * (q + 1) + l + 1] * sqKernelWeights[i]
+#       end
+#     end
+#
+#     # compute hat_beta
+#     βh = wX \ wY
+#     # compute residuals squared
+#     res[j] = sumabs2(wY - wX * βh)
+#
+#   end
+#
+#   sortperm(res)[1:numCorrCol]
+# end
