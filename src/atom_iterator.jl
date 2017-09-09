@@ -17,12 +17,15 @@ OrderedIterator(iterate) = OrderedIterator{typeof(iterate)}(iterate, true)
 
 Base.start(x::OrderedIterator) = 1
 Base.next(x::OrderedIterator, i) = x.fullPass ? (i, i + 1) : (x.iterate.nzval2ind[i], i + 1)
+Base.next(x::OrderedIterator{SymmetricSparseIterate{T}}, i) where T =
+  x.fullPass ? (i, i + 1) : (x.iterate.data.nzval2ind[i], i + 1)
 Base.done(x::OrderedIterator, i) = x.fullPass ? i > ProximalBase.numCoordinates(x.iterate) : i > nnz(x.iterate)
 
 function reset!(x::OrderedIterator, fullPass::Bool)
   x.fullPass = fullPass
   x
 end
+
 
 
 mutable struct RandomIterator{T} <: AtomIterator
@@ -53,4 +56,6 @@ end
 
 Base.start(x::RandomIterator) = 1
 Base.next(x::RandomIterator, i) = x.fullPass ? (x.order[i], i + 1) : (x.iterate.nzval2ind[x.order[i]], i + 1)
+Base.next(x::RandomIterator{SymmetricSparseIterate{T}}, i) where T =
+  x.fullPass ? (x.order[i], i + 1) : (x.iterate.data.nzval2ind[x.order[i]], i + 1)
 Base.done(x::RandomIterator, i) = x.fullPass ? i > ProximalBase.numCoordinates(x.iterate) : i > nnz(x.iterate)
