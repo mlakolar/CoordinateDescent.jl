@@ -7,7 +7,7 @@ using CoordinateDescent: _expand_wX!, _expand_X!, _expand_Xt_w_X!,
                          _expand_Xt_w_Y!, _locpoly!, _stdX!
 
 srand(1)
-const NUMBER_REPEAT = 20
+const NUMBER_REPEAT = 1
 
 include(joinpath(@__DIR__, "..", "benchmark", "locpoly_bench.jl"))
 
