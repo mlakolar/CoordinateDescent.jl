@@ -5,7 +5,7 @@
 # otherwise it will start from 0 by setting a large value of λ which is
 # decreased to the target value
 function coordinateDescent!(
-  x::SparseIterate,
+  x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
   f::CoordinateDifferentiableFunction,
   g::ProxL1,
   options::CDOptions=CDOptions())
@@ -40,7 +40,7 @@ end
 
 # assumes that f is initialized before the call here
 function _coordinateDescent!(
-  x::SparseIterate,
+  x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
   f::CoordinateDifferentiableFunction,
   g::ProxL1,
   coef_iterator::AtomIterator,
@@ -69,7 +69,7 @@ function _coordinateDescent!(
 end
 
 function _cdPass!(
-  x::SparseIterate,
+  x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
   f::CoordinateDifferentiableFunction,
   g::ProxL1,
   coef_iterator::AtomIterator
@@ -92,12 +92,12 @@ end
 """
 Helper function that finds the smallest value of λ for which the solution is equal to zero.
 """
-function _findLambdaMax(x::SparseIterate{T},
+function _findLambdaMax(x::Union{SparseIterate{T},SymmetricSparseIterate{T}},
   f::CoordinateDifferentiableFunction,
   ::ProxL1{T, Void}) where {T<:AbstractFloat}
 
   λmax = zero(T)
-  for k=1:length(x)
+  for k=1:ProximalBase.numCoordinates(x)
     f_g = gradient(f, x, k)
     t = abs(f_g)
     if t > λmax
