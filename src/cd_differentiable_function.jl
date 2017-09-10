@@ -270,7 +270,7 @@ function descendCoordinate!{T<:AbstractFloat}(
 
   λ = g.λ0
   if !isa(g, ProxL1{T, Void})
-    λ *= g.λ[k] 
+    λ *= g.λ[k]
   end
 
   oldVal = x[k]
@@ -308,14 +308,14 @@ end
 
 numCoordinates(f::CDQuadraticLoss) = length(f.b)
 initialize!(f::CDQuadraticLoss, x::SparseIterate) = nothing
-gradient{T<:AbstractFloat}(f::CDQuadraticLoss{T}, x::SparseIterate{T}, j::Int64) =
+gradient(f::CDQuadraticLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
   At_mul_B_row(f.A, x, j) + f.b[j]
 
-function descendCoordinate!{T<:AbstractFloat}(
+function descendCoordinate!(
   f::CDQuadraticLoss{T},
   g::ProxL1{T},
   x::SparseIterate{T},
-  k::Int64)
+  k::Int64) where {T<:AbstractFloat}
 
   a = f.A[k,k]
   b = gradient(f, x, k)

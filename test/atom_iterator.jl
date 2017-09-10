@@ -74,7 +74,7 @@ facts("AtomIterator") do
     @fact collect(it) --> it.order                       # this should be a full pass over 1:p in a random order
 
     CoordinateDescent.reset!(it, false)
-    @fact collect(it) --> [x.data.nzval2ind[it.order[i]] for i=1:nnz(x)] # this should be a sparse pass
+    @fact collect(it) --> [x.nzval2ind[it.order[i]] for i=1:nnz(x)] # this should be a sparse pass
 
   end
 
