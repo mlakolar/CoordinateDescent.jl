@@ -49,7 +49,7 @@ struct CDLeastSquaresLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFun
     new(y,X,r)
 end
 
-function CDLeastSquaresLoss{T<:AbstractFloat}(y::AbstractVector{T}, X::AbstractMatrix{T})
+function CDLeastSquaresLoss(y::AbstractVector{T}, X::AbstractMatrix{T}) where {T<:AbstractFloat}
   length(y) == size(X, 1) || throw(DimensionMismatch())
   CDLeastSquaresLoss{T, typeof(y), typeof(X)}(y,X,copy(y))
 end
@@ -208,14 +208,14 @@ struct CDSqrtLassoLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFuncti
     new(y,X,r)
 end
 
-function CDSqrtLassoLoss{T<:AbstractFloat}(y::AbstractVector{T}, X::AbstractMatrix{T})
+function CDSqrtLassoLoss(y::AbstractVector{T}, X::AbstractMatrix{T}) where {T<:AbstractFloat}
   length(y) == size(X, 1) || throw(DimensionMismatch())
   CDSqrtLassoLoss{T, typeof(y), typeof(X)}(y,X,copy(y))
 end
 
 numCoordinates(f::CDSqrtLassoLoss) = size(f.X, 2)
 
-function initialize!{T<:AbstractFloat}(f::CDSqrtLassoLoss{T}, x::SparseIterate{T})
+function initialize!(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
   # compute residuals for the loss
 
   X = f.X
@@ -231,19 +231,19 @@ function initialize!{T<:AbstractFloat}(f::CDSqrtLassoLoss{T}, x::SparseIterate{T
 end
 
 
-gradient{T<:AbstractFloat}(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}, j::Int64) =
-  - At_mul_B_row(f.X, f.r, j) / vecnorm(f.r)
+gradient(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
+  - At_mul_B_row(f.X, f.r, j) / norm(f.r)
 
 # a = X[:, k]' X[:, k]
 # b = X[:, k]' r
 #
 # h        = arg_min a/(2n) (h-b/a)^2 + λ_k⋅|x_k + h|
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
-function descendCoordinate!{T<:AbstractFloat}(
+function descendCoordinate!(
   f::CDSqrtLassoLoss{T},
   g::ProxL1{T},
   x::SparseIterate{T},
-  k::Int64)
+  k::Int64) where {T<:AbstractFloat}
 
   y = f.y
   X = f.X
@@ -269,7 +269,7 @@ function descendCoordinate!{T<:AbstractFloat}(
   # rsqr = dot(r, r)
 
   λ = g.λ0
-  if !isa(g, ProxL1{T, Void})
+  if !isa(g, ProxL1{T, Nothing})
     λ *= g.λ[k]
   end
 
@@ -301,7 +301,7 @@ struct CDQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFuncti
   b::U
 end
 
-function CDQuadraticLoss{T<:AbstractFloat}(A::AbstractMatrix{T}, b::AbstractVector{T})
+function CDQuadraticLoss(A::AbstractMatrix{T}, b::AbstractVector{T}) where {T<:AbstractFloat}
   (issymmetric(A) && length(b) == size(A, 2)) || throw(ArgumentError())
   CDQuadraticLoss{T, typeof(A), typeof(b)}(A,b)
 end

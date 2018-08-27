@@ -8,12 +8,12 @@ struct LassoSolution{T, S}
   x::SparseIterate{T}
   residuals::Vector{T}
   penalty::S
-  σ::Nullable{T}
+  σ::Union{T, Nothing}
 
   LassoSolution{T, S}(x::SparseIterate{T}, residuals::AbstractVector{T}, penalty::ProxL1{T}, σ::T) where {T, S} =
     new(x, residuals, penalty, σ)
   LassoSolution{T, S}(x::SparseIterate{T}, residuals::AbstractVector{T}, penalty::ProxL1{T}) where {T, S} =
-    new(x, residuals, penalty, Nullable{T}( ))
+    new(x, residuals, penalty, nothing)
 end
 
 
@@ -23,11 +23,11 @@ end
 #
 ######################################################################
 
-function lasso{T<:AbstractFloat}(
+function lasso(
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::T,
-  options::CDOptions=CDOptions())
+  options::CDOptions=CDOptions()) where {T<:AbstractFloat}
 
   x = SparseIterate( size(X, 2) )
   f = CDLeastSquaresLoss(y, X)
@@ -37,12 +37,12 @@ function lasso{T<:AbstractFloat}(
   LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r))
 end
 
-function lasso{T<:AbstractFloat}(
+function lasso(
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::T,
   ω::Array{T},
-  options::CDOptions=CDOptions())
+  options::CDOptions=CDOptions()) where {T<:AbstractFloat}
 
   x = SparseIterate( size(X, 2) )
   f = CDLeastSquaresLoss(y, X)
@@ -59,12 +59,12 @@ end
 ######################################################################
 
 
-function sqrtLasso{T<:AbstractFloat}(
+function sqrtLasso(
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::T,
   options::CDOptions=CDOptions();
-  standardizeX=true)
+  standardizeX=true) where {T<:AbstractFloat}
 
   p = size(X, 2)
   x = SparseIterate( p )
@@ -81,12 +81,12 @@ function sqrtLasso{T<:AbstractFloat}(
   LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r))
 end
 
-function sqrtLasso{T<:AbstractFloat}(
+function sqrtLasso(
   X::StridedMatrix{T},
   y::StridedVector{T},
   λ::T,
   ω::Array{T},
-  options::CDOptions=CDOptions())
+  options::CDOptions=CDOptions()) where {T<:AbstractFloat}
 
   p = size(X, 2)
   x = SparseIterate( p )
@@ -104,14 +104,14 @@ end
 #
 ######################################################################
 
-function scaledLasso!{T<:AbstractFloat}(
+function scaledLasso!(
   x::SparseIterate{T},
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   λ::T,
   ω::AbstractVector{T},
   options::IterLassoOptions=IterLassoOptions()
-  )
+  )  where {T<:AbstractFloat}
 
   n, p = size(X)
   f = CDLeastSquaresLoss(y,X)
@@ -151,13 +151,13 @@ end
 ######################################################################
 
 
-function feasibleLasso!{T<:AbstractFloat}(
+function feasibleLasso!(
   x::SparseIterate{T},
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   λ0::T,
   options::IterLassoOptions=IterLassoOptions()
-  )
+  )  where {T<:AbstractFloat}
 
   n, p = size(X)
   f = CDLeastSquaresLoss(y,X)
@@ -205,10 +205,10 @@ struct LassoPath{T<:AbstractFloat}
   βpath::Vector{SparseIterate{T,1}}
 end
 
-function refitLassoPath{T<:AbstractFloat}(
+function refitLassoPath(
   path::LassoPath{T},
   X::StridedMatrix{T},
-  Y::StridedVector{T})
+  Y::StridedVector{T}) where {T<:AbstractFloat}
 
   λpath = path.λpath
   βpath = path.βpath

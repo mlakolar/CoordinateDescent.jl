@@ -2,6 +2,9 @@ module CoordinateDescent
 
 using ProximalBase
 using DataStructures: nlargest
+using SparseArrays
+using Statistics
+using LinearAlgebra
 
 export
   lasso, sqrtLasso, feasibleLasso!, scaledLasso, scaledLasso!,

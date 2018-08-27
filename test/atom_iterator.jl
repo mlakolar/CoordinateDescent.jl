@@ -1,7 +1,14 @@
+module AtomIteratorTest
 
-facts("AtomIterator") do
+using Test
+using ProximalBase
+using CoordinateDescent
+using Random
 
-  context("Ordered") do
+Random.seed!(1)
+
+
+@testset "Ordered" begin
     p = 5
     x = SparseIterate(p)
     x[2] = 1.
@@ -12,13 +19,13 @@ facts("AtomIterator") do
     fullPass   = collect(1:5)
     sparsePass = [2, 1]
 
-    @fact collect(it) --> fullPass           # this should be a full pass
+    @test collect(it) == fullPass           # this should be a full pass
 
     CoordinateDescent.reset!(it, true)
-    @fact collect(it) --> fullPass           # this should be a full pass
+    @test collect(it) == fullPass           # this should be a full pass
 
     CoordinateDescent.reset!(it, false)
-    @fact collect(it) --> sparsePass         # pass over non-zeros
+    @test collect(it) == sparsePass         # pass over non-zeros
 
 
     # SymmetricSparseIterate
@@ -31,17 +38,16 @@ facts("AtomIterator") do
     fullPass   = collect(1:6)
     sparsePass = [2, 1]
 
-    @fact collect(it) --> fullPass           # this should be a full pass
+    @test collect(it) == fullPass           # this should be a full pass
 
     CoordinateDescent.reset!(it, true)
-    @fact collect(it) --> fullPass           # this should be a full pass
+    @test collect(it) == fullPass           # this should be a full pass
 
     CoordinateDescent.reset!(it, false)
-    @fact collect(it) --> sparsePass         # pass over non-zeros
-  end
+    @test collect(it) == sparsePass         # pass over non-zeros
+end
 
-  context("Random") do
-    srand(1)
+@testset "Random" begin
     p = 50
     s = 10
 
@@ -52,13 +58,13 @@ facts("AtomIterator") do
 
     it = CoordinateDescent.RandomIterator(x)
 
-    @fact collect(it) --> collect(1:ProximalBase.numCoordinates(it.iterate))   # this should be a full pass over 1:p
+    @test collect(it) == collect(1:ProximalBase.numCoordinates(it.iterate))   # this should be a full pass over 1:p
 
     CoordinateDescent.reset!(it, true)
-    @fact collect(it) --> it.order                       # this should be a full pass over 1:p in a random order
+    @test collect(it) == it.order                       # this should be a full pass over 1:p in a random order
 
     CoordinateDescent.reset!(it, false)
-    @fact collect(it) --> [x.nzval2ind[it.order[i]] for i=1:nnz(x)] # this should be a sparse pass
+    @test collect(it) == [x.nzval2ind[it.order[i]] for i=1:nnz(x)] # this should be a sparse pass
 
     # SymmetricSparseIterate
     x = SymmetricSparseIterate(10)
@@ -68,14 +74,16 @@ facts("AtomIterator") do
 
     it = CoordinateDescent.RandomIterator(x)
 
-    @fact collect(it) --> collect(1:ProximalBase.numCoordinates(it.iterate))   # this should be a full pass over 1:p
+    @test collect(it) == collect(1:ProximalBase.numCoordinates(it.iterate))   # this should be a full pass over 1:p
 
     CoordinateDescent.reset!(it, true)
-    @fact collect(it) --> it.order                       # this should be a full pass over 1:p in a random order
+    @test collect(it) == it.order                       # this should be a full pass over 1:p in a random order
 
     CoordinateDescent.reset!(it, false)
-    @fact collect(it) --> [x.nzval2ind[it.order[i]] for i=1:nnz(x)] # this should be a sparse pass
+    @test collect(it) == [x.nzval2ind[it.order[i]] for i=1:nnz(x)] # this should be a sparse pass
 
-  end
+end
+
+
 
 end

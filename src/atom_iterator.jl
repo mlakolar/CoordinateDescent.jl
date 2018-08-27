@@ -15,10 +15,22 @@ end
 
 OrderedIterator(iterate) = OrderedIterator{typeof(iterate)}(iterate, true)
 
-Base.start(x::OrderedIterator) = 1
-Base.next(x::OrderedIterator, i) = x.fullPass ? (i, i + 1) : (x.iterate.nzval2ind[i], i + 1)
-Base.done(x::OrderedIterator, i) = x.fullPass ? i > ProximalBase.numCoordinates(x.iterate) : i > nnz(x.iterate)
+Base.iterate(x::OrderedIterator) = iterate(x, 1)
+function Base.iterate(x::OrderedIterator, i)
+    # check if done
+    done = x.fullPass ? i > ProximalBase.numCoordinates(x.iterate) : i > nnz(x.iterate)
+    if done
+        return nothing
+    end
+    x.fullPass ? (i, i + 1) : (x.iterate.nzval2ind[i], i + 1)
+end
 
+
+# Base.start(x::OrderedIterator) = 1
+# # current item, next state
+# Base.next(x::OrderedIterator, i) = x.fullPass ? (i, i + 1) : (x.iterate.nzval2ind[i], i + 1)
+# Base.done(x::OrderedIterator, i) = x.fullPass ? i > ProximalBase.numCoordinates(x.iterate) : i > nnz(x.iterate)
+#
 function reset!(x::OrderedIterator, fullPass::Bool)
   x.fullPass = fullPass
   x
@@ -52,6 +64,17 @@ function reset!(x::RandomIterator, fullPass::Bool)
 end
 
 
-Base.start(x::RandomIterator) = 1
-Base.next(x::RandomIterator, i) = x.fullPass ? (x.order[i], i + 1) : (x.iterate.nzval2ind[x.order[i]], i + 1)
-Base.done(x::RandomIterator, i) = x.fullPass ? i > ProximalBase.numCoordinates(x.iterate) : i > nnz(x.iterate)
+Base.iterate(x::RandomIterator) = iterate(x, 1)
+function Base.iterate(x::RandomIterator, i)
+    # check if done
+    done = x.fullPass ? i > ProximalBase.numCoordinates(x.iterate) : i > nnz(x.iterate)
+    if done
+        return nothing
+    end
+    x.fullPass ? (x.order[i], i + 1) : (x.iterate.nzval2ind[x.order[i]], i + 1)
+end
+
+
+# Base.start(x::RandomIterator) = 1
+# Base.next(x::RandomIterator, i) = x.fullPass ? (x.order[i], i + 1) : (x.iterate.nzval2ind[x.order[i]], i + 1)
+# Base.done(x::RandomIterator, i) = x.fullPass ? i > ProximalBase.numCoordinates(x.iterate) : i > nnz(x.iterate)

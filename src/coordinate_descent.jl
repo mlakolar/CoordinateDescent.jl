@@ -1,4 +1,4 @@
-#
+Nothing#
 # minimize f(x) + ∑ λi⋅|xi|
 #
 # If warmStart is true, the descent will start from the supplied x
@@ -11,7 +11,7 @@ function coordinateDescent!(
   options::CDOptions=CDOptions())
 
   ProximalBase.numCoordinates(x) == numCoordinates(f) || throw(DimensionMismatch())
-  if !isa(g, ProxL1{typeof(g.λ0), Void}) # TODO: create a test for this
+  if !isa(g, ProxL1{typeof(g.λ0), Nothing}) # TODO: create a test for this
     length(g.λ) == numCoordinates(f) || throw(DimensionMismatch())
   end
 
@@ -30,7 +30,7 @@ function coordinateDescent!(
 
     # find decreasing schedule for λ
     l1, l2 = log(λmax), log(g.λ0)
-    for l in colon(l1, (l2-l1)/options.numSteps, l2)
+    for l in l1:(l2-l1)/options.numSteps:l2
       g1 = ProxL1(exp(l), g.λ)
       _coordinateDescent!(x, f, g, coef_iterator, options)
     end
@@ -94,7 +94,7 @@ Helper function that finds the smallest value of λ for which the solution is eq
 """
 function _findLambdaMax(x::Union{SparseIterate{T},SymmetricSparseIterate{T}},
   f::CoordinateDifferentiableFunction,
-  ::ProxL1{T, Void}) where {T<:AbstractFloat}
+  ::ProxL1{T, Nothing}) where {T<:AbstractFloat}
 
   λmax = zero(T)
   for k=1:ProximalBase.numCoordinates(x)
