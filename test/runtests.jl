@@ -1,8 +1,5 @@
 using CoordinateDescent
 
-using CoordinateDescent: _expand_wX!, _expand_X!, _expand_Xt_w_X!,
-                         _expand_Xt_w_Y!, _locpoly!, _stdX!
-
 include(joinpath(@__DIR__, "..", "benchmark", "locpoly_bench.jl"))
 
 tests = [
