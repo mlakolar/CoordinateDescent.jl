@@ -204,8 +204,8 @@ end
     sol1 = scaledLasso!(x1, X, Y, λ, ones(p), opt1)
     sol2 = scaledLasso!(x2, X, Y, λ, ones(p), opt2)
 
-    σ1 = get(sol1.σ)
-    σ2 = get(sol2.σ)
+    σ1 = sol1.σ
+    σ2 = sol2.σ
 
     @test max.((maximum(abs.(X'*(Y - X*x1) / n)) - λ*σ1), 0.) / (σ1*λ) ≈ 0. atol=1e-4
     @test max.((maximum(abs.(X'*(Y - X*x2) / n)) - λ*σ2), 0.) / (σ2*λ) ≈ 0. atol=1e-4
@@ -242,8 +242,8 @@ end
     @test Vector(path.βpath[1]) ≈ Vector(x1.x) atol=1e-5
     @test Vector(path.βpath[2]) ≈ Vector(x2.x) atol=1e-5
 
-    S1 = find(x1.x)
-    S2 = find(x2.x)
+    S1 = findall(!iszero, x1.x)
+    S2 = findall(!iszero, x2.x)
     rf = refitLassoPath(path, X, Y)
 
     @test rf[S1] ≈ X[:,S1] \ Y atol=1e-5
@@ -259,8 +259,8 @@ end
     β = randn(s)
     Y = X[:,1:s] * β + randn(n)
 
-    loadingX = Array{Float64}(p)
-    _stdX!(loadingX, X)
+    loadingX = Array{Float64}(undef, p)
+    CoordinateDescent._stdX!(loadingX, X)
 
     λ1 = 0.3
     λ2 = 0.1
@@ -276,8 +276,8 @@ end
     @test Vector(path.βpath[1]) ≈ Vector(x1.x) atol=1e-5
     @test Vector(path.βpath[2]) ≈ Vector(x2.x) atol=1e-5
 
-    S1 = find(x1.x)
-    S2 = find(x2.x)
+    S1 = findall(!iszero, x1.x)
+    S2 = findall(!iszero, x2.x)
     rf = refitLassoPath(path, X, Y)
 
     @test rf[S1] ≈ X[:,S1] \ Y atol=1e-5

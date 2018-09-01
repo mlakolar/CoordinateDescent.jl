@@ -71,7 +71,7 @@ function _findInitResiduals!(
 
   S = _findLargestCorrelations(X, y, s)
   Xs = view(X, :, S)
-  A_mul_B!(storage, Xs, Xs \ y)
+  mul!(storage, Xs, Xs \ y)
   @. storage = y - storage
   return storage
 end
@@ -99,8 +99,8 @@ function _findLargestCorrelations(
   s::Int) where {T <: AbstractFloat}
 
   p = size(X, 2)
-  storage = Array{T}(p)
-  At_mul_B!(storage, X, y)
+  storage = Array{T}(undef, p)
+  mul!(storage, transpose(X), y)
   @. storage = abs(storage)
   S = storage .>= nlargest(s, storage)[end]
 end
@@ -112,7 +112,7 @@ function _findLargestCorrelations(
   s::Int) where {T <: AbstractFloat}
 
   n, p = size(X)
-  storage = Array{T}(p)
+  storage = Array{T}(undef, p)
   @inbounds for j=1:p
     val = zero(T)
     @simd for i=1:n

@@ -6,10 +6,10 @@ using CoordinateDescent: _expand_wX!, _expand_X!, _expand_Xt_w_X!,
 include(joinpath(@__DIR__, "..", "benchmark", "locpoly_bench.jl"))
 
 tests = [
-  # "atom_iterator",
-  # "lasso",
-  # "coordinate_descent",
-  # "varying_coefficient_lasso"
+  "atom_iterator",
+  "coordinate_descent",
+  "lasso",
+  "varying_coefficient_lasso"
 ]
 
 for t in tests

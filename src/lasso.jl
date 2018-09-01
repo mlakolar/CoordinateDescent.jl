@@ -215,7 +215,7 @@ function refitLassoPath(
 
   out = Dict{Vector{Int64},Vector{Float64}}()
   for i=1:length(λpath)
-    S = find(βpath[i])
+    S = findall(!iszero, βpath[i])
     if haskey(out, S)
       continue
     end
@@ -234,7 +234,7 @@ function LassoPath(
   max_hat_s=Inf, standardizeX::Bool=true) where {T<:AbstractFloat}
 
   n, p = size(X)
-  stdX = Array{T}(p)
+  stdX = Array{T}(undef, p)
   if standardizeX
     _stdX!(stdX, X)
   else
@@ -245,7 +245,7 @@ function LassoPath(
   f = CDLeastSquaresLoss(Y, X)
 
   numλ  = length(λpath)
-  βpath = Vector{SparseIterate{T}}(numλ)
+  βpath = Vector{SparseIterate{T}}(undef, numλ)
 
   for indλ=1:numλ
     coordinateDescent!(x, f, ProxL1(λpath[indλ], stdX), options)
