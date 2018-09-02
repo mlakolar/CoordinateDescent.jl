@@ -31,7 +31,7 @@ function locpolyl1(
 
   n, p = size(X)
   ep = p * (degree + 1)
-  out = Array{SparseVector{T, Int64}}(length(zgrid))
+  out = Array{SparseVector{T, Int64}}(undef, length(zgrid))
 
   # temporary storage
   w = Array{T}(n)
@@ -46,7 +46,7 @@ function locpolyl1(
     ind += 1
 
     # the following two should update f
-    @. w = evaluate(kernel, z, z0)
+    w = .evaluate(Ref(kernel), z, Ref(z0))
     _expand_X!(wX, X, z, z0, degree)
     _stdX!(stdX, w, wX)
 
@@ -69,10 +69,10 @@ function _locpoly!(
   X::Matrix{T}, z::Vector{T}, y::Vector{T},
   z0::T, degree::Int64, kernel::SmoothingKernel{T}) where {T <: AbstractFloat}
 
-  @. w = sqrt(evaluate(kernel, z, z0))    # square root of kernel weights
+  w = sqrt.(evaluate.(Ref(kernel), z, Ref(z0)))    # square root of kernel weights
   _expand_wX!(wX, w, X, z, z0, degree)    # √w ⋅ x ⊗ [1 (zi - z0) ... (zi-z0)^q]
   @. w *= y                               # √w ⋅ y
-  qrfact!(wX) \ w
+  qr!(wX) \ w
 end
 
 locpoly(
@@ -88,9 +88,9 @@ function locpoly(
 
   n, p = size(X)
   ep = p * (degree + 1)
-  out = Array{T}(ep, length(zgrid))
-  w = Array{T}(n)
-  wX = Array{T}(n, ep)
+  out = Array{T}(undef, ep, length(zgrid))
+  w = Array{T}(undef, n)
+  wX = Array{T}(undef, n, ep)
 
   ind = 0
   for z0 in zgrid
@@ -112,7 +112,7 @@ Computes matrix whose each row is equal to
 w[i] ⋅ (X[i, :] ⊗ [1, (z - z0), ..., (z-z0)^q])
 where q is the degree of the polynomial.
 
-The otput matrix is preallocated.
+The output matrix is preallocated.
 """
 function _expand_wX!(
   wX::Matrix{T},
