@@ -46,7 +46,7 @@ function locpolyl1(
     ind += 1
 
     # the following two should update f
-    w = .evaluate(Ref(kernel), z, Ref(z0))
+    w = evaluate.(Ref(kernel), z, Ref(z0))
     _expand_X!(wX, X, z, z0, degree)
     _stdX!(stdX, w, wX)
 
