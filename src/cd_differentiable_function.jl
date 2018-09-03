@@ -154,7 +154,7 @@ function gradient(f::CDWeightedLSLoss{T}, x::SparseIterate{T}, j::Int64) where {
   @inbounds @simd for i=1:n
     out += f.w[i] * f.X[i, j] * f.r[i]
   end
-  - out / length(f.w)
+  - out / n
 end
 
 # a = X[:, k]' X[:, k]

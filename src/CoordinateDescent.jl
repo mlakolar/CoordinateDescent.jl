@@ -18,7 +18,7 @@ export
   coordinateDescent, coordinateDescent!,
 
   # var coef
-  GaussianKernel, SmoothingKernel, evaluate,
+  GaussianKernel, SmoothingKernel, EpanechnikovKernel, evaluate, createKernel,
   locpoly, locpolyl1
 
 include("utils.jl")

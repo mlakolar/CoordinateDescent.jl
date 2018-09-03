@@ -86,7 +86,7 @@ function _findInitResiduals!(
   S = _findLargestCorrelations(w, X, y, s)
 
   Xs = view(X, :, S)
-  A_mul_B!(storage, Xs, (Xs' * diagm(w) * Xs) \ (Xs' * diagm(w) * y))
+  mul!(storage, Xs, (Xs' * Diagonal(w) * Xs) \ (Xs' * Diagonal(w) * y))
   @. storage = y - storage
   return storage
 end
@@ -161,4 +161,15 @@ function _getLoadings!(out::Vector{T}, X::AbstractMatrix{T}, e::AbstractVector{T
     out[j] = sqrt(v / n)
   end
   out
+end
+
+
+function _getSigma(w::AbstractVector{T}, r::AbstractVector{T}) where {T <: AbstractFloat}
+    n = length(w)
+    σ = zero(T)
+    for ii = 1:n
+        σ += r[ii]^2 * w[ii]
+    end
+    σ /= sum(w)
+    sqrt(σ)
 end
