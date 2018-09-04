@@ -33,6 +33,7 @@ function locpolyl1(
   degree::Int64,
   kernel::SmoothingKernel{T},
   λ0::T,
+  refit::Bool,
   options::CDOptions=CDOptions()) where {T <: AbstractFloat}
 
   # construct inner options because we do not want warmStart = false
@@ -43,12 +44,14 @@ function locpolyl1(
   n, p = size(X)
   ep = p * (degree + 1)
   out = spzeros(T, ep, length(zgrid))
+  outR = spzeros(T, ep, length(zgrid))
 
   # temporary storage
   w = Array{T}(undef, n)
-  wX = Array{T}(undef, n, ep)
+  expandX = Array{T}(undef, n, ep)
+  S = BitArray(undef, ep)
   stdX = Array{T}(undef, ep)
-  f = CDWeightedLSLoss(y, wX, w)        # inner parts of f will be modified in a loop
+  f = CDWeightedLSLoss(y, expandX, w)        # inner parts of f will be modified in a loop
   g = ProxL1(λ0, stdX)
   β = SparseIterate(ep)
 
@@ -58,14 +61,21 @@ function locpolyl1(
 
     # the following two should update f
     w .= evaluate.(Ref(kernel), z, Ref(z0))
-    _expand_X!(wX, X, z, z0, degree)
-    _stdX!(stdX, w, wX)
+    _expand_X!(expandX, X, z, z0, degree)
+    _stdX!(stdX, w, expandX)
 
     # solve for β
     coordinateDescent!(β, f, g, opt)
     out[:, ind] = β
+
+    if refit
+        get_nonzero_coordinates!(S, β, p, degree, true)
+        Xs = view(expandX, :, S)
+        tmp = Xs' * Diagonal(w)
+        outR[S, ind] = (tmp * Xs) \ (tmp * y)
+    end
   end
-  out
+  out, outR
 end
 
 # leave one out for h selection
@@ -117,7 +127,7 @@ function lvocv_locpolyl1(
             end
 
             # refit and make prediction
-            get_nonzero_coordinates!(S, β, p, degree)
+            get_nonzero_coordinates!(S, β, p, degree, true)
             Xs = view(wX, :, S)
             Yh = dot(wX[i, S], (Xs' * Diagonal(w) * Xs) \ (Xs' * Diagonal(w) * y))
             MSE[indH] += (Yh - y[i])^2.
@@ -125,6 +135,56 @@ function lvocv_locpolyl1(
     end
     MSE
 end
+
+function refit_locpolyl1(
+    X::Matrix{T}, z::Vector{T}, y::Vector{T},
+    z0::T,
+    degree::Int64,
+    kernel::SmoothingKernel{T},
+    β::Union{SparseIterate{T}, SparseVector{T}}
+    ) where {T <: AbstractFloat}
+
+    n, p = size(X)
+    ep = p * (degree + 1)
+
+    S = BitArray(undef, p)
+    get_nonzero_coordinates!(S, β, p, degree, false)
+    βr = locpoly(view(X, :, S), z, y, z0, degree, kernel)
+    (βr, S)
+end
+
+
+# function refit_locpolyl1(
+#     X::Matrix{T}, z::Vector{T}, y::Vector{T},
+#     zgrid::Vector{T},
+#     degree::Int64,
+#     kernel::SmoothingKernel{T},
+#     β::SparseMatrixCSC{T}
+#     ) where {T <: AbstractFloat}
+#
+#     n, p = size(X)
+#     ep = p * (degree + 1)
+#     S = BitArray(undef, p, length(zgrid))
+#     fill!(S, false)
+#     w = Array{T}(undef, n)
+#     expandedX = Array{T}(undef, n, ep)
+#     βr = Array{Array{T}}(undef, length(zgrid))
+#     tS = BitArray(undef, p)
+#
+#     for indZ = 1:length(zgrid)
+#         o_coordinates!(tS, β[:, indZ], p, degree, false)
+#         @show β[:, indZ]
+#         @show S[:, indZ] = tS
+#         z0 = zgrid[indZ]
+#         num_col_refit = sum(S[:, indZ])*(degree+1)
+#         Xs = view(X, :, S[:, indZ])
+#         βr[indZ] = _locpoly!(view(expandedX, :, 1:num_col_refit), w, Xs, z, y, z0, degree, kernel)
+#     end
+#     (βr, S)
+# end
+
+
+
 
 
 ############################################################
@@ -135,9 +195,13 @@ end
 
 
 function _locpoly!(
-  wX::Matrix{T}, w::Vector{T},
-  X::Union{SubArray{T, 2}, Matrix{T}}, z::Union{SubArray{T, 1}, Vector{T}}, y::Union{SubArray{T, 1}, Vector{T}},
-  z0::T, degree::Int64, kernel::SmoothingKernel{T}) where {T <: AbstractFloat}
+  wX::Union{SubArray{T, 2}, Matrix{T}}, w::Vector{T},
+  X::Union{SubArray{T, 2}, Matrix{T}},
+  z::Union{SubArray{T, 1}, Vector{T}},
+  y::Union{SubArray{T, 1}, Vector{T}},
+  z0::T,
+  degree::Int64,
+  kernel::SmoothingKernel{T}) where {T <: AbstractFloat}
 
   w .= sqrt.(evaluate.(Ref(kernel), z, Ref(z0)))    # square root of kernel weights
   _expand_wX!(wX, w, X, z, z0, degree)              # √w ⋅ x ⊗ [1 (zi - z0) ... (zi-z0)^q]
@@ -146,12 +210,12 @@ function _locpoly!(
 end
 
 locpoly(
-  X::Matrix{T}, z::Vector{T}, y::Vector{T},
+  X::Union{SubArray{T, 2}, Matrix{T}}, z::Vector{T}, y::Vector{T},
   z0::T, degree::Int64, kernel::SmoothingKernel=GaussianKernel(one(T))) where {T <: AbstractFloat} =
-    _locpoly!(Array{T}(length(y), size(X, 2) * (degree+1)), similar(y), X, z, y, z0, degree, kernel)
+    _locpoly!(Array{T}(undef, length(y), size(X, 2) * (degree+1)), similar(y), X, z, y, z0, degree, kernel)
 
 function locpoly(
-  X::Matrix{T}, z::Vector{T}, y::Vector{T},
+  X::Union{SubArray{T, 2}, Matrix{T}}, z::Vector{T}, y::Vector{T},
   zgrid::Vector{T},
   degree::Int64,                                     # degree of the polynomial
   kernel::SmoothingKernel{T}=GaussianKernel(one(T))) where {T <: AbstractFloat}
@@ -296,11 +360,21 @@ function get_beta!(
 end
 
 
+get_nonzero_coordinates(
+    β::Union{SparseVector{T}, SparseIterate{T}},
+    p::Int,
+    degree::Int,
+    expanded::Bool
+    ) where {T <: AbstractFloat}  =
+       expanded ? get_nonzero_coordinates!(BitArray(undef, p*(degree+1)), β, p, degree, expanded) : get_nonzero_coordinates!(BitArray(undef, p), β, p, degree, expanded)
+
+
 function get_nonzero_coordinates!(
     S::BitArray,
-    β::SparseIterate{T},
-    p,
-    degree) where {T <: AbstractFloat}
+    β::Union{SparseVector{T}, SparseIterate{T}},
+    p::Int,
+    degree::Int,
+    expanded::Bool) where {T <: AbstractFloat}
 
     fill!(S, false)
     for j = 1:p
@@ -309,8 +383,12 @@ function get_nonzero_coordinates!(
             nonzero = nonzero | !iszero(β[k])
         end
         if nonzero
-            for k=((j-1)*(degree+1)+1):(j*(degree+1))
-                S[k] = true
+            if expanded
+                for k=((j-1)*(degree+1)+1):(j*(degree+1))
+                    S[k] = true
+                end
+            else
+                S[j] = true
             end
         end
     end
@@ -326,7 +404,7 @@ where q is the degree of the polynomial.
 The output matrix is preallocated.
 """
 function _expand_wX!(
-  wX::Matrix{T},
+  wX::Union{SubArray{T, 2}, Matrix{T}},
   w::Vector{T},
   X::Union{SubArray{T, 2}, Matrix{T}},
   z::Union{SubArray{T, 1}, Vector{T}}, z0::T, degree::Int64) where {T <: AbstractFloat}
