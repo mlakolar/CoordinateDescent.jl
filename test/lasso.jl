@@ -134,10 +134,10 @@ end
       β = randn(s)
       Y = X[:,1:s] * β + randn(n)
 
-      opt1 = CDOptions(;maxIter=5000, optTol=1e-8, warmStart=true, randomize=false)
-      opt2 = CDOptions(;maxIter=5000, optTol=1e-8, warmStart=true, randomize=true)
-      opt3 = CDOptions(;maxIter=5000, optTol=1e-8, warmStart=false, randomize=false)
-      opt4 = CDOptions(;maxIter=5000, optTol=1e-8, warmStart=false, randomize=true)
+      opt1 = CDOptions(;maxIter=5000, optTol=1e-10, warmStart=true, randomize=false)
+      opt2 = CDOptions(;maxIter=5000, optTol=1e-10, warmStart=true, randomize=true)
+      opt3 = CDOptions(;maxIter=5000, optTol=1e-10, warmStart=false, randomize=false)
+      opt4 = CDOptions(;maxIter=5000, optTol=1e-10, warmStart=false, randomize=true)
 
       x1 = SparseIterate(sprand(p, 0.6))
       x2 = SparseIterate(sprand(p, 0.6))
@@ -153,29 +153,29 @@ end
       coordinateDescent!(x3, f, g, opt3)
       coordinateDescent!(x4, f, g, opt4)
 
-      @test Vector(x1) ≈ Vector(x2) atol=1e-5
-      @test Vector(x3) ≈ Vector(x2) atol=1e-5
-      @test Vector(x4) ≈ Vector(x2) atol=1e-5
+      @test Vector(x1) ≈ Vector(x2) atol=1e-4
+      @test Vector(x3) ≈ Vector(x2) atol=1e-4
+      @test Vector(x4) ≈ Vector(x2) atol=1e-4
 
       y1 = sqrtLasso(X, Y, λ, opt1, standardizeX=false)
       y2 = sqrtLasso(X, Y, λ, opt2, standardizeX=false)
       y3 = sqrtLasso(X, Y, λ, opt3, standardizeX=false)
       y4 = sqrtLasso(X, Y, λ, opt4, standardizeX=false)
 
-      @test Vector(y1.x) ≈ Vector(x2) atol=1e-5
-      @test Vector(y2.x) ≈ Vector(x2) atol=1e-5
-      @test Vector(y3.x) ≈ Vector(x2) atol=1e-5
-      @test Vector(y4.x) ≈ Vector(x2) atol=1e-5
+      @test Vector(y1.x) ≈ Vector(x2) atol=1e-4
+      @test Vector(y2.x) ≈ Vector(x2) atol=1e-4
+      @test Vector(y3.x) ≈ Vector(x2) atol=1e-4
+      @test Vector(y4.x) ≈ Vector(x2) atol=1e-4
 
       z1 = sqrtLasso(X, Y, λ, ones(p), opt1)
       z2 = sqrtLasso(X, Y, λ, ones(p), opt2)
       z3 = sqrtLasso(X, Y, λ, ones(p), opt3)
       z4 = sqrtLasso(X, Y, λ, ones(p), opt4)
 
-      @test Vector(z1.x) ≈ Vector(x2) atol=1e-5
-      @test Vector(z2.x) ≈ Vector(x2) atol=1e-5
-      @test Vector(z3.x) ≈ Vector(x2) atol=1e-5
-      @test Vector(z4.x) ≈ Vector(x2) atol=1e-5
+      @test Vector(z1.x) ≈ Vector(x2) atol=1e-4
+      @test Vector(z2.x) ≈ Vector(x2) atol=1e-4
+      @test Vector(z3.x) ≈ Vector(x2) atol=1e-4
+      @test Vector(z4.x) ≈ Vector(x2) atol=1e-4
 
     end
   end
