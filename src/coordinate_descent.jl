@@ -38,11 +38,34 @@ function coordinateDescent!(
   end
 end
 
+function coordinateDescent!(
+  x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
+  f::CoordinateDifferentiableFunction,
+  g::ProxZero,
+  options::CDOptions=CDOptions())
+
+  ProximalBase.numCoordinates(x) == numCoordinates(f) || throw(DimensionMismatch())
+
+  coef_iterator = options.randomize ? RandomIterator(x) : OrderedIterator(x)
+
+  if options.warmStart
+    initialize!(f, x)
+  else
+    # set x to zero and initialize
+    fill!(x, zero(eltype(x)))
+    initialize!(f, x)
+  end
+
+  return _coordinateDescent!(x, f, g, coef_iterator, options)
+end
+
+
+
 # assumes that f is initialized before the call here
 function _coordinateDescent!(
   x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
   f::CoordinateDifferentiableFunction,
-  g::ProxL1,
+  g::Union{ProxL1, ProxZero},
   coef_iterator::AtomIterator,
   options::CDOptions)
 
@@ -71,7 +94,7 @@ end
 function _cdPass!(
   x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
   f::CoordinateDifferentiableFunction,
-  g::ProxL1,
+  g::Union{ProxL1, ProxZero},
   coef_iterator::AtomIterator
   )
 
