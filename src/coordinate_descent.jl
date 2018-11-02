@@ -1,4 +1,4 @@
-Nothing#
+#
 # minimize f(x) + ∑ λi⋅|xi|
 #
 # If warmStart is true, the descent will start from the supplied x
@@ -32,7 +32,7 @@ function coordinateDescent!(
     l1, l2 = log(λmax), log(g.λ0)
     for l in l1:(l2-l1)/options.numSteps:l2
       g1 = ProxL1(exp(l), g.λ)
-      _coordinateDescent!(x, f, g, coef_iterator, options)
+      _coordinateDescent!(x, f, g1, coef_iterator, options)
     end
     return x
   end
