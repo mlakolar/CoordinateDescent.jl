@@ -234,6 +234,90 @@ function locpoly(
   out
 end
 
+function getResiduals!(
+     ϵhat::Vector{T},
+     X::Union{SubArray{T, 2}, Matrix{T}}, z::Vector{T}, y::Vector{T},
+     zgrid::Vector{T},
+     βhat::Union{Matrix{T}, SparseMatrixCSC{T}},
+     degree::Int64,
+     kernel::SmoothingKernel{T}=GaussianKernel(one(T))
+    ) where {T <: AbstractFloat}
+
+    n, p = size(X)
+    ep = p * (degree + 1)
+    βi = spzeros(ep)
+    for i=1:n
+        get_beta!(βi, zgrid, βhat, z[i])
+        ϵhat[i] = y[i] - dot(X[i, :], βi[1:(degree+1):ep])
+    end
+
+    ϵhat
+end
+
+function getStandardError(
+    X::Union{SubArray{T, 2}, Matrix{T}}, z::Vector{T},
+    σ2::T,
+    z0::T,
+    degree::Int64,                                     # degree of the polynomial
+    kernel::SmoothingKernel{T}) where {T <: AbstractFloat}
+
+    n, p = size(X)
+    ep = p * (degree + 1)
+    out = Array{T}(undef, p)
+    w = Array{T}(undef, n)
+    w1 = Array{T}(undef, n)
+    XtwX = Array{T}(undef, ep, ep)
+    XtwwX = Array{T}(undef, ep, ep)
+
+    w .= evaluate.(Ref(kernel), z, Ref(z0))
+    _expand_Xt_w_X!(XtwX, w, X, z, z0, degree)
+
+    w .= w .* w
+    _expand_Xt_w_X!(XtwwX, w, X, z, z0, degree)
+
+    A = inv(XtwX)
+    varMat = A * XtwwX * A
+
+    for j=1:p
+        out[j] = varMat[(j-1)*(degree+1)+1, (j-1)*(degree+1)+1]
+    end
+
+    out
+end
+
+function getStandardErrorHEW(
+    X::Union{SubArray{T, 2}, Matrix{T}}, z::Vector{T},
+    ϵ_sqr::Vector{T},
+    z0::T,
+    degree::Int64,                                     # degree of the polynomial
+    kernel::SmoothingKernel{T}) where {T <: AbstractFloat}
+
+    n, p = size(X)
+    ep = p * (degree + 1)
+    out = Array{T}(undef, p)
+    w = Array{T}(undef, n)
+    w1 = Array{T}(undef, n)
+    XtwX = Array{T}(undef, ep, ep)
+    XtwΨwX = Array{T}(undef, ep, ep)
+
+    w .= evaluate.(Ref(kernel), z, Ref(z0))
+    _expand_Xt_w_X!(XtwX, w, X, z, z0, degree)
+
+    @. w = w * w * ϵ_sqr
+    _expand_Xt_w_X!(XtwΨwX, w, X, z, z0, degree)
+
+    A = inv(XtwX)
+    varMat = A * XtwΨwX * A
+
+    for j=1:p
+        out[j] = varMat[(j-1)*(degree+1)+1, (j-1)*(degree+1)+1]
+    end
+
+    out
+end
+
+
+
 
 # function locpoly_alt(
 #   X::Matrix{T}, z::Vector{T}, y::Vector{T},
@@ -295,6 +379,36 @@ function lvocv_locpoly(
     MSE
 end
 
+# data split for h selection
+function split_locpoly(
+    X::Matrix{T}, z::Vector{T}, y::Vector{T},
+    Xtest::Matrix{T}, ztest::Vector{T}, ytest::Vector{T},
+    zgrid::Vector{T},
+    degree::Int64,                                     # degree of the polynomial
+    hArr::Vector{T},
+    kernelType::Type{<:SmoothingKernel}) where {T <: AbstractFloat}
+
+    n, p = size(X)
+    numH = length(hArr)
+    MSE = zeros(numH)
+    ep = p * (degree + 1)
+    βhati = zeros(ep)
+
+    for indH = 1:numH
+        kernel = createKernel(kernelType, hArr[indH])
+        βhat = locpoly(X, z, y, zgrid, degree, kernel)
+        for i = 1:n
+            get_beta!(βhati, zgrid, βhat, ztest[i])
+
+            # make prediction
+            Yh = dot(Xtest[i, :], βhati[1:(degree+1):ep])
+            MSE[indH] += (ytest[i] - Yh)^2.
+        end
+    end
+    MSE
+end
+
+
 
 # # leave one out for h selection
 # function lvocv_locpoly(
@@ -334,6 +448,8 @@ end
 # utils
 #
 ############################################################
+
+
 
 """
 For a given z0 finds two closest points in zgrid
