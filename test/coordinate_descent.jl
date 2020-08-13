@@ -37,14 +37,14 @@ end
       β = randn(s)
       Y = X[:,1:s] * β + randn(n)
 
-      λ = 0.01
+      λ = 0.02
       g = ProximalBase.ProxL1(λ)
       f = CDLeastSquaresLoss(Y, X)
 
-      opt1 = CDOptions(;maxIter=5000, optTol=1e-8, warmStart=true, randomize=false)
-      opt2 = CDOptions(;maxIter=5000, optTol=1e-8, warmStart=true, randomize=true)
-      opt3 = CDOptions(;maxIter=5000, optTol=1e-8, warmStart=false, randomize=false)
-      opt4 = CDOptions(;maxIter=5000, optTol=1e-8, warmStart=false, randomize=true)
+      opt1 = CDOptions(;maxIter=5000, optTol=1e-12, warmStart=true, randomize=false)
+      opt2 = CDOptions(;maxIter=5000, optTol=1e-12, warmStart=true, randomize=true)
+      opt3 = CDOptions(;maxIter=5000, optTol=1e-12, warmStart=false, randomize=false)
+      opt4 = CDOptions(;maxIter=5000, optTol=1e-12, warmStart=false, randomize=true)
 
       x1 = SparseIterate(sprand(p, 0.6))
       x2 = SparseIterate(sprand(p, 0.6))
