@@ -299,17 +299,27 @@ end
 struct CDQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   A::S
   b::U
+  Ax::Vector{T}
 end
 
 function CDQuadraticLoss(A::AbstractMatrix{T}, b::AbstractVector{T}) where {T<:AbstractFloat}
   (issymmetric(A) && length(b) == size(A, 2)) || throw(ArgumentError())
-  CDQuadraticLoss{T, typeof(A), typeof(b)}(A,b)
+  CDQuadraticLoss{T, typeof(A), typeof(b)}(A, b, zeros(length(b)))
 end
 
 numCoordinates(f::CDQuadraticLoss) = length(f.b)
-initialize!(f::CDQuadraticLoss, x::SparseIterate) = nothing
-gradient(f::CDQuadraticLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
-  At_mul_B_row(f.A, x, j) + f.b[j]
+function initialize!(f::CDQuadraticLoss, x::SparseIterate) 
+  Ax = f.Ax
+  A = f.A
+  p = length(Ax)
+
+  @simd for i=1:p
+    @inbounds Ax[i] = A_mul_B_row(A, x, i)
+  end
+  nothing
+end
+gradient(f::CDQuadraticLoss{T}, ::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
+  f.Ax[j] + f.b[j]
 
 function descendCoordinate!(
   f::CDQuadraticLoss{T},
@@ -325,4 +335,14 @@ function descendCoordinate!(
   x[k] -= b * a
   newVal = cdprox!(g, x, k, a)
   h = newVal - oldVal
+
+  # update Ax
+  Ax = f.Ax
+  A  = f.A
+  p = length(f.Ax)
+  @simd for i=1:p
+    @inbounds Ax[i] += A[i,k] * h
+  end
+
+  h
 end
