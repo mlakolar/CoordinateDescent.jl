@@ -1,3 +1,19 @@
+"""
+    CoordinateDescent
+
+Coordinate descent for problems of the form
+
+    minimize  f(x) + g(x)
+
+where `f` is a smooth loss (a [`CoordinateDifferentiableFunction`](@ref)) and
+`g` is a penalty that separates across coordinates, such as the weighted ℓ1
+norm `ProxL1` from ProximalBase.jl. The solver works on sparse iterates and
+alternates between full passes and passes over the active set.
+
+High-level interfaces: [`lasso`](@ref), [`sqrtLasso`](@ref),
+[`scaledLasso`](@ref), [`feasibleLasso!`](@ref), [`LassoPath`](@ref), and the
+varying-coefficient estimators [`locpoly`](@ref) and [`locpolyl1`](@ref).
+"""
 module CoordinateDescent
 
 using ProximalBase
@@ -15,7 +31,7 @@ export
   CoordinateDifferentiableFunction,
   CDLeastSquaresLoss, CDWeightedLSLoss, CDQuadraticLoss, CDSqrtLassoLoss,
   CDOptions,
-  coordinateDescent, coordinateDescent!,
+  coordinateDescent!,
 
   # var coef
   GaussianKernel, SmoothingKernel, EpanechnikovKernel, evaluate, createKernel,

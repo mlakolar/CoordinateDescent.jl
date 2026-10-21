@@ -1,36 +1,53 @@
+"""
+    CoordinateDifferentiableFunction
+
+Supertype of smooth losses `f` that [`coordinateDescent!`](@ref) can minimize.
+A subtype caches whatever it needs (for example residuals) to make coordinate
+updates cheap, and implements
+
+- `initialize!(f, x)`: set the cache for the iterate `x`
+- `gradient(f, x, k)`: coordinate `k` of the gradient of `f` at `x`
+- `numCoordinates(f)`: number of coordinates
+- `descendCoordinate!(f, g, x, k)`: update `x[k]` and the cache
+
+These functions are not exported; extend them as
+`CoordinateDescent.initialize!` and so on.
+"""
 abstract type CoordinateDifferentiableFunction end
 
 """
-  Set internal parameters of the function f at the point x.
+    initialize!(f, x)
+
+Set the internal cache of `f` (for example the residuals) for the iterate `x`.
+Called by [`coordinateDescent!`](@ref) before the first pass.
 """
 initialize!(f, x) = error("initialize! not implemented for $(typeof(f))")
 
 """
-  Coordinate k of the gradient of f evaluated at x.
+    gradient(f, x, k)
+
+Coordinate `k` of the gradient of `f` at `x`, computed from the cache of `f`,
+which must be current for `x`.
 """
 gradient(f, x, k) = error("gradient not implemented for $(typeof(f))")
 
 """
-  This should return number of coordinates or blocks of coordinates over
-  which the coordinate descent iterates.
+    numCoordinates(f)
+
+Number of coordinates (or blocks of coordinates) over which coordinate descent
+iterates.
 """
 numCoordinates(f) = error("numCoordinates not implemented for $(typeof(f))")
 
 """
-  Arguments:
+    descendCoordinate!(f, g, x, k)
 
-  * f is CoordinateDifferentiableFunction
-  * g is a prox function
+Update coordinate `k` of `x` to decrease `f(x) + g(x)`, and return the change
+`h = xnew[k] - xold[k]`.
 
-  This function does two things:
-
-  * It finds h such that f(x + e_k⋅h) + g(x_k + h) decreses f(x) + g(x).
-    Often h = arg_min f(x + e_k⋅h) + g(x_k + h), but it could also
-    minimize a local quadratic approximation.
-
-  * The function also updates its internals. This is done by expecting
-    that the algorithm to call this function again is coordinate descent.
-    In future, we may want to implement other variants of coordinate descent.
+Usually `h = argmin_h f(x + h eₖ) + g(x + h eₖ)`, but an implementation may
+instead minimize a local quadratic approximation of `f`. The function must also
+update the cache of `f` so that it is current for the new `x`.
 """
 descendCoordinate!(f, g, x, k) = error("descendCoordinate not implemented for $(typeof(f))")
 
@@ -40,6 +57,13 @@ descendCoordinate!(f, g, x, k) = error("descendCoordinate not implemented for $(
 # loss |Y - X⋅β|^2 / (2⋅n)
 #
 ####################################
+
+"""
+    CDLeastSquaresLoss(y, X)
+
+The least squares loss `f(β) = ‖y - Xβ‖² / (2n)`. Caches the residuals
+`r = y - Xβ`, so a coordinate update costs `O(n)`.
+"""
 struct CDLeastSquaresLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   y::S
   X::U
@@ -82,7 +106,7 @@ gradient(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:Abst
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
 function descendCoordinate!(
   f::CDLeastSquaresLoss{T},
-  g::ProxL1{T},
+  g::Union{ProxL1{T}, ProxZero},
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
@@ -115,6 +139,16 @@ end
 # loss ∑_i w_i ⋅ |Y_i - X_i⋅β|^2 / (2⋅n)
 #
 ################################################################################
+
+"""
+    CDWeightedLSLoss(y, X, w)
+
+The weighted least squares loss `f(β) = ∑ᵢ wᵢ (yᵢ - Xᵢ'β)² / (2n)`. Caches the
+residuals `r = y - Xβ`.
+
+`y`, `X` and `w` are stored by reference, so changing them in place (as
+[`locpolyl1`](@ref) does) changes the loss; call `initialize!` afterwards.
+"""
 struct CDWeightedLSLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   y::S
   X::U
@@ -164,7 +198,7 @@ end
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
 function descendCoordinate!(
   f::CDWeightedLSLoss{T},
-  g::ProxL1{T},
+  g::Union{ProxL1{T}, ProxZero},
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
@@ -196,9 +230,20 @@ end
 
 ####################################
 #
-# loss |Y - X⋅β|_2 / sqrt(n)
+# loss |Y - X⋅β|_2
 #
 ####################################
+
+"""
+    CDSqrtLassoLoss(y, X)
+
+The square-root lasso loss `f(β) = ‖y - Xβ‖`. Caches the residuals
+`r = y - Xβ`.
+
+This loss is not smooth where `r = 0`, so its `descendCoordinate!` minimizes
+`f + g` over a coordinate exactly instead of using a quadratic approximation.
+It is implemented for [`ProxL1`](@ref ProximalBase.ProxL1) only.
+"""
 struct CDSqrtLassoLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   y::S
   X::U
@@ -250,11 +295,10 @@ function descendCoordinate!(
   r = f.r
   n = length(f.y)
 
-  # residuls = y - X * x + X[:, k] * x[k]
+  # partial residuals with coordinate k removed: r = y - X*x + X[:,k]*x[k]
   @inbounds @simd for i=1:n
     r[i] += X[i, k] * x[k]
   end
-  # r = y - X*x + X[:,k]*x[k]
 
   s = zero(T)
   xsqr = zero(T)
@@ -273,6 +317,8 @@ function descendCoordinate!(
     λ *= g.λ[k]
   end
 
+  # closed-form minimizer of ‖r - X[:,k] t‖ + λ|t| over t; zero when the
+  # subgradient condition |X[:,k]'r| ≤ λ‖r‖ holds
   oldVal = x[k]
   if abs(s) <= λ * sqrt(rsqr)
     x[k] = zero(T)
@@ -296,6 +342,14 @@ end
 # quadratic x'Ax/2 + x'b
 #
 ####################################
+
+"""
+    CDQuadraticLoss(A, b)
+
+The quadratic `f(x) = x'Ax / 2 + b'x` with symmetric `A`. Caches `Ax`, so a
+coordinate update costs `O(p)`. With `A = X'X/n` and `b = -X'y/n` it gives the
+same minimizer as [`CDLeastSquaresLoss`](@ref).
+"""
 struct CDQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   A::S
   b::U
@@ -303,8 +357,9 @@ struct CDQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFuncti
 end
 
 function CDQuadraticLoss(A::AbstractMatrix{T}, b::AbstractVector{T}) where {T<:AbstractFloat}
-  (issymmetric(A) && length(b) == size(A, 2)) || throw(ArgumentError())
-  CDQuadraticLoss{T, typeof(A), typeof(b)}(A, b, zeros(length(b)))
+  issymmetric(A) || throw(ArgumentError("A must be symmetric"))
+  length(b) == size(A, 2) || throw(ArgumentError("length of b must equal the number of columns of A"))
+  CDQuadraticLoss{T, typeof(A), typeof(b)}(A, b, zeros(T, length(b)))
 end
 
 numCoordinates(f::CDQuadraticLoss) = length(f.b)
@@ -323,7 +378,7 @@ gradient(f::CDQuadraticLoss{T}, ::SparseIterate{T}, j::Int64) where {T<:Abstract
 
 function descendCoordinate!(
   f::CDQuadraticLoss{T},
-  g::ProxL1{T},
+  g::Union{ProxL1{T}, ProxZero},
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 

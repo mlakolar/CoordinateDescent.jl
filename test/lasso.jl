@@ -8,6 +8,7 @@ using ProximalBase
 using Random
 using LinearAlgebra
 using SparseArrays
+using Statistics
 
 Random.seed!(1)
 
@@ -217,6 +218,67 @@ end
 
 
 
+@testset "lasso Float32" begin
+  n, p, s = 200, 20, 5
+  X = randn(Float32, n, p)
+  Y = X[:,1:s] * ones(Float32, s) + 0.1f0 * randn(Float32, n)
+
+  sol = lasso(X, Y, 0.1f0, CDOptions(;optTol=1e-6))
+  @test eltype(sol.x) == Float32
+  @test maximum(abs.(X'*(Y - X*sol.x) / n)) ≈ 0.1f0 atol=1e-4
+end
+
+@testset "sqrt-lasso standardizeX" begin
+  n, p, s = 200, 50, 5
+  X = randn(n, p) .* (0.5 .+ rand(1, p))
+  Y = X[:,1:s] * ones(s) + randn(n)
+
+  λ = 1.5
+  sol = sqrtLasso(X, Y, λ, CDOptions(;maxIter=5000, optTol=1e-10))
+  stdX = vec(sqrt.(sum(abs2, X, dims=1) / n))
+  r = Y - X*sol.x
+  @test sol.penalty.λ ≈ stdX
+  @test maximum(abs.(X'*r) ./ (norm(r) * λ * stdX)) ≈ 1. atol=1e-4
+end
+
+@testset "scaledLasso" begin
+  n, p, s = 500, 100, 10
+  X = randn(n, p)
+  Y = X[:,1:s] * randn(s) + randn(n)
+
+  λ = 0.05
+  opt = IterLassoOptions(;maxIter=100, optTol=1e-8, optionsCD=CDOptions(;optTol=1e-10))
+  x = SparseIterate(p)
+  sol1 = scaledLasso!(x, X, Y, λ, ones(p), opt)
+  sol2 = scaledLasso(X, Y, λ, ones(p), opt)
+  @test Vector(sol2.x) ≈ Vector(sol1.x) atol=1e-6
+end
+
+@testset "feasible lasso" begin
+  n, p, s = 500, 100, 10
+  X = randn(n, p)
+  Y = X[:,1:s] * randn(s) + randn(n)
+
+  λ0 = 0.1
+  for initProcedure in (:Screening, :InitStd, :WarmStart)
+    opt = IterLassoOptions(;maxIter=100, optTol=1e-6, initProcedure=initProcedure,
+                           optionsCD=CDOptions(;maxIter=5000, optTol=1e-10))
+    sol = feasibleLasso!(SparseIterate(p), X, Y, λ0, opt)
+
+    # the loadings are Γ_j = sqrt(∑ X_ij^2 r_i^2 / n) evaluated at the solution
+    r = Y - X*sol.x
+    Γ = vec(sqrt.(sum(abs2, X .* r, dims=1) / n))
+    @test sol.penalty.λ ≈ Γ rtol=1e-3
+
+    # KKT for the final penalty
+    @test maximum(abs.(X'*r / n) ./ (λ0 * sol.penalty.λ)) ≈ 1. atol=1e-6
+  end
+
+  @test_throws ArgumentError feasibleLasso!(SparseIterate(p), X, Y, λ0, IterLassoOptions(;initProcedure=:Foo))
+  @test_throws ArgumentError scaledLasso!(SparseIterate(p), X, Y, λ0, ones(p), IterLassoOptions(;initProcedure=:Foo))
+end
+
+
 @testset "lasso path" begin
 
   @testset "standardizeX = false" begin
@@ -287,5 +349,82 @@ end
 
 end
 
+@testset "lasso residuals and σ" begin
+  n, p, s = 200, 30, 5
+  X = randn(n, p)
+  Y = X[:,1:s] * ones(s) + randn(n)
+
+  sol = lasso(X, Y, 0.1, CDOptions(;optTol=1e-10))
+  @test sol.residuals ≈ Y - X*sol.x
+  @test sol.σ ≈ std(Y - X*sol.x)
+  @test sol.penalty.λ0 == 0.1
+end
+
+@testset "sqrt-lasso path following" begin
+  n, p, s = 200, 50, 5
+  X = randn(n, p)
+  Y = X[:,1:s] * ones(s) + randn(n)
+
+  λ = 1.5
+  sol = sqrtLasso(X, Y, λ, CDOptions(;maxIter=5000, optTol=1e-10, warmStart=false); standardizeX=false)
+  r = Y - X*sol.x
+  @test maximum(abs.(X'*r)) / norm(r) ≈ λ atol=1e-4
+end
+
+@testset "scaled lasso σ and warm start" begin
+  n, p, s = 500, 100, 10
+  X = randn(n, p)
+  Y = X[:,1:s] * randn(s) + 0.5 * randn(n)
+
+  λ = sqrt(2 * log(p) / n)
+  opt = IterLassoOptions(;maxIter=100, optTol=1e-10, optionsCD=CDOptions(;optTol=1e-12))
+  sol = scaledLasso(X, Y, λ, ones(p), opt)
+  r = Y - X*sol.x
+
+  # σ is the noise estimate the penalty is scaled by
+  @test sol.σ ≈ norm(r) / sqrt(n)
+  @test sol.penalty.λ0 ≈ λ * sol.σ rtol=1e-8
+  @test maximum(abs.(X'*r / n)) ≈ sol.penalty.λ0 rtol=1e-6
+  @test 0.4 < sol.σ < 0.6
+
+  # starting from the solution, the warm start stops at once at the same point
+  x = copy(sol.x)
+  sol2 = scaledLasso!(x, X, Y, λ, ones(p), IterLassoOptions(;initProcedure=:WarmStart, maxIter=100, optTol=1e-10, optionsCD=CDOptions(;optTol=1e-12)))
+  @test Vector(sol2.x) ≈ Vector(sol.x) atol=1e-6
+  @test sol2.σ ≈ sol.σ rtol=1e-6
+end
+
+@testset "lasso path early stop" begin
+  n, p, s = 200, 100, 20
+  X = randn(n, p)
+  Y = X[:,1:s] * ones(s) + randn(n)
+
+  λpath = [0.5, 0.3, 0.2, 0.1, 0.05, 0.01]
+  λcopy = copy(λpath)
+  path = LassoPath(X, Y, λpath, CDOptions(;optTol=1e-8); max_hat_s=10)
+
+  @test λpath == λcopy                            # the input is not modified
+  @test length(path.λpath) == length(path.βpath)
+  K = length(path.βpath)
+  @test 1 <= K < length(λpath)
+  @test path.λpath == λpath[1:K]
+  @test nnz(path.βpath[K]) > 10
+  @test all(nnz(path.βpath[k]) <= 10 for k=1:K-1)
+end
+
+@testset "refit lasso path" begin
+  n, p, s = 200, 30, 5
+  X = randn(n, p)
+  Y = X[:,1:s] * ones(s) + randn(n)
+
+  # repeated λ values give repeated supports, which are refit once
+  path = LassoPath(X, Y, [0.5, 0.5, 0.1, 0.1], CDOptions(;optTol=1e-8))
+  rf = refitLassoPath(path, X, Y)
+  supports = unique([findall(!iszero, β) for β in path.βpath])
+  @test length(rf) == length(supports) == 2
+  for S in supports
+    @test rf[S] ≈ X[:, S] \ Y
+  end
+end
 
 end
