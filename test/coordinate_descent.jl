@@ -172,5 +172,101 @@ end
   end
 end
 
+@testset "argument checks" begin
+  n, p = 20, 5
+  X = randn(n, p)
+  Y = randn(n)
+
+  @test_throws DimensionMismatch CDLeastSquaresLoss(randn(n+1), X)
+  @test_throws DimensionMismatch CDWeightedLSLoss(Y, X, rand(n+1))
+  @test_throws DimensionMismatch CDSqrtLassoLoss(randn(n+1), X)
+  @test_throws ArgumentError CDQuadraticLoss(randn(p, p) + triu(ones(p, p)), randn(p))
+  @test_throws ArgumentError CDQuadraticLoss(Matrix(1.0I, p, p), randn(p+1))
+
+  f = CDLeastSquaresLoss(Y, X)
+  @test_throws DimensionMismatch coordinateDescent!(SparseIterate(p+1), f, ProximalBase.ProxL1(0.1))
+  @test_throws DimensionMismatch coordinateDescent!(SparseIterate(p+1), f, ProxZero())
+  @test_throws DimensionMismatch coordinateDescent!(SparseIterate(p), f, ProximalBase.ProxL1(0.1, ones(p+1)))
+end
+
+@testset "gradients" begin
+  n, p = 50, 8
+  X = randn(n, p)
+  Y = randn(n)
+  w = rand(n)
+  x = SparseIterate(sprand(p, 0.5))
+  r = Y - X * Vector(x)
+
+  f = CDLeastSquaresLoss(Y, X)
+  CoordinateDescent.initialize!(f, x)
+  @test CoordinateDescent.numCoordinates(f) == p
+  @test [CoordinateDescent.gradient(f, x, k) for k=1:p] ≈ -X'r / n
+
+  f = CDWeightedLSLoss(Y, X, w)
+  CoordinateDescent.initialize!(f, x)
+  @test CoordinateDescent.numCoordinates(f) == p
+  @test [CoordinateDescent.gradient(f, x, k) for k=1:p] ≈ -X'*(w .* r) / n
+
+  f = CDSqrtLassoLoss(Y, X)
+  CoordinateDescent.initialize!(f, x)
+  @test CoordinateDescent.numCoordinates(f) == p
+  @test [CoordinateDescent.gradient(f, x, k) for k=1:p] ≈ -X'r / norm(r)
+
+  A = X'X / n
+  b = randn(p)
+  f = CDQuadraticLoss(A, b)
+  CoordinateDescent.initialize!(f, x)
+  @test CoordinateDescent.numCoordinates(f) == p
+  @test [CoordinateDescent.gradient(f, x, k) for k=1:p] ≈ A * Vector(x) + b
+end
+
+# a user-defined loss f(x) = ‖x - c‖² / 2 through the documented interface;
+# with ProxL1 its minimizer is the soft-thresholded c
+struct SeparableLoss <: CoordinateDifferentiableFunction
+  c::Vector{Float64}
+end
+CoordinateDescent.initialize!(::SeparableLoss, x) = nothing
+CoordinateDescent.numCoordinates(f::SeparableLoss) = length(f.c)
+CoordinateDescent.gradient(f::SeparableLoss, x, k) = x[k] - f.c[k]
+function CoordinateDescent.descendCoordinate!(f::SeparableLoss, g::ProxL1, x, k)
+  oldVal = x[k]
+  x[k] = f.c[k]
+  cdprox!(g, x, k, 1.)
+  x[k] - oldVal
+end
+
+@testset "user-defined loss" begin
+  c = [3., -0.5, 0.2, -2.]
+  for warmStart in (true, false)
+    x = SparseIterate(4)
+    coordinateDescent!(x, SeparableLoss(c), ProximalBase.ProxL1(1.), CDOptions(;warmStart=warmStart))
+    @test Vector(x) ≈ [2., 0., 0., -1.]
+    @test nnz(x) == 2
+  end
+
+  struct IncompleteLoss <: CoordinateDifferentiableFunction end
+  @test_throws ErrorException CoordinateDescent.initialize!(IncompleteLoss(), SparseIterate(2))
+  @test_throws ErrorException CoordinateDescent.gradient(IncompleteLoss(), SparseIterate(2), 1)
+  @test_throws ErrorException CoordinateDescent.numCoordinates(IncompleteLoss())
+  @test_throws ErrorException CoordinateDescent.descendCoordinate!(IncompleteLoss(), ProxZero(), SparseIterate(2), 1)
+end
+
+@testset "maxIter" begin
+  n, p = 100, 20
+  X = randn(n, p)
+  Y = X * randn(p) + randn(n)
+  f = CDLeastSquaresLoss(Y, X)
+  g = ProximalBase.ProxL1(0.01)
+
+  # a single pass is one sweep of coordinate updates
+  x1 = SparseIterate(p)
+  coordinateDescent!(x1, f, g, CDOptions(;maxIter=1, randomize=false))
+  x2 = SparseIterate(p)
+  CoordinateDescent.initialize!(f, x2)
+  for k=1:p
+    CoordinateDescent.descendCoordinate!(f, g, x2, k)
+  end
+  @test Vector(x1) == Vector(x2)
+end
 
 end

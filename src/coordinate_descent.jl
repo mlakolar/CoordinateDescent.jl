@@ -1,9 +1,24 @@
-#
-# minimize f(x) + ∑ λi⋅|xi|
-#
-# If warmStart is true, the descent will start from the supplied x
-# otherwise it will start from 0 by setting a large value of λ which is
-# decreased to the target value
+"""
+    coordinateDescent!(x, f, g, options=CDOptions())
+
+Minimize `f(x) + g(x)` by coordinate descent and store the solution in `x`,
+where `f` is a [`CoordinateDifferentiableFunction`](@ref), `g` is a
+[`ProxL1`](@ref ProximalBase.ProxL1) or [`ProxZero`](@ref ProximalBase.ProxZero)
+penalty and `x` is a `SparseIterate`.
+
+The method alternates between full passes over all coordinates and passes over
+the nonzero coordinates only (the active set). It stops when a full pass is
+followed by a pass in which no coordinate changes by more than
+`options.optTol`, or after `options.maxIter` passes.
+
+If `options.warmStart` is true, the descent starts from the supplied `x`.
+Otherwise `x` is set to zero and, for `ProxL1`, the problem is solved along a
+geometric sequence of `options.numSteps` penalty levels that decreases from the
+smallest `λ0` with zero solution to `g.λ0`, each one warm started from the
+previous solution.
+
+Returns `x`.
+"""
 function coordinateDescent!(
   x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
   f::CoordinateDifferentiableFunction,
@@ -11,7 +26,7 @@ function coordinateDescent!(
   options::CDOptions=CDOptions())
 
   ProximalBase.numCoordinates(x) == numCoordinates(f) || throw(DimensionMismatch())
-  if !isa(g, ProxL1{typeof(g.λ0), Nothing}) # TODO: create a test for this
+  if !isa(g, ProxL1{typeof(g.λ0), Nothing})
     length(g.λ) == numCoordinates(f) || throw(DimensionMismatch())
   end
 
@@ -62,7 +77,10 @@ end
 
 
 
-# assumes that f is initialized before the call here
+# Alternates full passes with passes over the active set; stops after two
+# consecutive passes below optTol, the first of which is a full pass, so that
+# the active set is checked against all coordinates before stopping.
+# Assumes that f is initialized before the call here.
 function _coordinateDescent!(
   x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
   f::CoordinateDifferentiableFunction,
@@ -74,13 +92,9 @@ function _coordinateDescent!(
   converged = true
   for iter=1:options.maxIter
 
-    if converged
-      reset!(coef_iterator, true)
-      # maxH = fullPass!(x, f, g)
-    else
-      reset!(coef_iterator, false)
-      # maxH = nonZeroPass!(x, f, g)
-    end
+    # a full pass after convergence on the active set, otherwise a pass over
+    # the nonzero coordinates
+    reset!(coef_iterator, converged)
     maxH = _cdPass!(x, f, g, coef_iterator)
     prev_converged = converged
 
@@ -113,9 +127,8 @@ end
 
 ######
 
-"""
-Helper function that finds the smallest value of λ for which the solution is equal to zero.
-"""
+# the smallest λ0 for which zero is a solution: max_k |∇f(0)_k|
+# (x must be zero when this is called)
 function _findLambdaMax(x::Union{SparseIterate{T},SymmetricSparseIterate{T}},
   f::CoordinateDifferentiableFunction,
   ::ProxL1{T, Nothing}) where {T<:AbstractFloat}
@@ -131,9 +144,7 @@ function _findLambdaMax(x::Union{SparseIterate{T},SymmetricSparseIterate{T}},
   λmax
 end
 
-"""
-Helper function that finds the smallest value of λ0 for which the solution is equal to zero.
-"""
+# the smallest λ0 for which zero is a solution with weights λ: max_k |∇f(0)_k| / λ_k
 function _findLambdaMax(x::SparseIterate{T},
   f::CoordinateDifferentiableFunction,
   g::ProxL1{T, S}) where {T<:AbstractFloat} where S <: AbstractArray

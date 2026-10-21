@@ -1,3 +1,8 @@
+# Iterators over the coordinates visited in one pass of coordinate descent.
+#
+# With fullPass = true they produce every coordinate 1:numCoordinates(iterate);
+# otherwise only the coordinates stored in the sparse iterate (the active set).
+# reset! switches between the two and, for RandomIterator, draws a new order.
 abstract type AtomIterator end
 
 Base.eltype(::AtomIterator) = Int64
@@ -25,12 +30,6 @@ function Base.iterate(x::OrderedIterator, i)
     x.fullPass ? (i, i + 1) : (x.iterate.nzval2ind[i], i + 1)
 end
 
-
-# Base.start(x::OrderedIterator) = 1
-# # current item, next state
-# Base.next(x::OrderedIterator, i) = x.fullPass ? (i, i + 1) : (x.iterate.nzval2ind[i], i + 1)
-# Base.done(x::OrderedIterator, i) = x.fullPass ? i > ProximalBase.numCoordinates(x.iterate) : i > nnz(x.iterate)
-#
 function reset!(x::OrderedIterator, fullPass::Bool)
   x.fullPass = fullPass
   x
@@ -50,6 +49,8 @@ end
 RandomIterator(iterate::Union{SparseIterate,SymmetricSparseIterate,AtomIterate}) =
   RandomIterator{typeof(iterate)}(iterate, collect(1:ProximalBase.numCoordinates(iterate)), true)
 
+# draws a new uniformly random order (Fisher–Yates shuffle) over the
+# coordinates of the next pass
 function reset!(x::RandomIterator, fullPass::Bool)
   x.fullPass = fullPass
   newLength = fullPass ? ProximalBase.numCoordinates(x.iterate) : nnz(x.iterate)
@@ -73,8 +74,3 @@ function Base.iterate(x::RandomIterator, i)
     end
     x.fullPass ? (x.order[i], i + 1) : (x.iterate.nzval2ind[x.order[i]], i + 1)
 end
-
-
-# Base.start(x::RandomIterator) = 1
-# Base.next(x::RandomIterator, i) = x.fullPass ? (x.order[i], i + 1) : (x.iterate.nzval2ind[x.order[i]], i + 1)
-# Base.done(x::RandomIterator, i) = x.fullPass ? i > ProximalBase.numCoordinates(x.iterate) : i > nnz(x.iterate)
