@@ -1,6 +1,6 @@
 using CoordinateDescent
-
-include(joinpath(@__DIR__, "..", "benchmark", "locpoly_bench.jl"))
+using Test
+using Aqua
 
 tests = [
   "atom_iterator",
@@ -9,8 +9,14 @@ tests = [
   "varying_coefficient_lasso"
 ]
 
-for t in tests
-	f = "$t.jl"
-	println("* running $f ...")
-	include(f)
+@testset "CoordinateDescent" begin
+  for t in tests
+    f = "$t.jl"
+    println("* running $f ...")
+    include(f)
+  end
+
+  @testset "Aqua" begin
+    Aqua.test_all(CoordinateDescent)
+  end
 end

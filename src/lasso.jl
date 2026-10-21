@@ -29,7 +29,7 @@ function lasso(
   λ::T,
   options::CDOptions=CDOptions()) where {T<:AbstractFloat}
 
-  x = SparseIterate( size(X, 2) )
+  x = SparseIterate(T, size(X, 2))
   f = CDLeastSquaresLoss(y, X)
   g = ProxL1(λ)
   coordinateDescent!(x, f, g, options)
@@ -44,7 +44,7 @@ function lasso(
   ω::Array{T},
   options::CDOptions=CDOptions()) where {T<:AbstractFloat}
 
-  x = SparseIterate( size(X, 2) )
+  x = SparseIterate(T, size(X, 2))
   f = CDLeastSquaresLoss(y, X)
   g = ProxL1(λ, ω)
   coordinateDescent!(x, f, g, options)
@@ -67,10 +67,10 @@ function sqrtLasso(
   standardizeX=true) where {T<:AbstractFloat}
 
   p = size(X, 2)
-  x = SparseIterate( p )
+  x = SparseIterate(T, p)
   f = CDSqrtLassoLoss(y, X)
   if standardizeX
-    stdX = Array{T}(p)
+    stdX = Array{T}(undef, p)
     _stdX!(stdX, X)
     g = ProxL1(λ, stdX)
   else
@@ -89,7 +89,7 @@ function sqrtLasso(
   options::CDOptions=CDOptions()) where {T<:AbstractFloat}
 
   p = size(X, 2)
-  x = SparseIterate( p )
+  x = SparseIterate(T, p)
   f = CDSqrtLassoLoss(y, X)
   g = ProxL1(λ, ω)
   coordinateDescent!(x, f, g, options)
@@ -143,10 +143,18 @@ function scaledLasso!(
   LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r))
 end
 
+scaledLasso(
+  X::AbstractMatrix{T},
+  y::AbstractVector{T},
+  λ::T,
+  ω::AbstractVector{T},
+  options::IterLassoOptions=IterLassoOptions()
+  ) where {T<:AbstractFloat} = scaledLasso!(SparseIterate(T, size(X, 2)), X, y, λ, ω, options)
+
 
 ######################################################################
 #
-#   Lasso Path Interface
+#   Feasible Lasso Interface
 #
 ######################################################################
 
@@ -161,8 +169,8 @@ function feasibleLasso!(
 
   n, p = size(X)
   f = CDLeastSquaresLoss(y,X)
-  Γ = Array{T}(p)              # stores loadings
-  Γold = Array{T}(p)
+  Γ = Array{T}(undef, p)              # stores loadings
+  Γold = Array{T}(undef, p)
 
   # initializa residuals
   if options.initProcedure == :Screening
@@ -180,7 +188,7 @@ function feasibleLasso!(
 
   g = ProxL1(λ0, Γ)
   for iter=1:options.maxIter
-    copy!(Γold, Γ)
+    copyto!(Γold, Γ)
 
     coordinateDescent!(x, f, g, options.optionsCD)
     _getLoadings!(Γ, X, f.r)
@@ -190,7 +198,7 @@ function feasibleLasso!(
     end
   end
 
-  LassoSolution(x, f.r, g, std(f.r))
+  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r))
 end
 
 ######################################################################

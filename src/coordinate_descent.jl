@@ -28,13 +28,14 @@ function coordinateDescent!(
     # find λmax
     λmax = _findLambdaMax(x, f, g)
 
-    # find decreasing schedule for λ
+    # find decreasing schedule for λ; the last step is solved at g itself,
+    # since a floating point range l1:step:l2 may stop short of l2
     l1, l2 = log(λmax), log(g.λ0)
-    for l in l1:(l2-l1)/options.numSteps:l2
-      g1 = ProxL1(exp(l), g.λ)
+    for k in 0:options.numSteps-1
+      g1 = ProxL1(exp(l1 + k * (l2 - l1) / options.numSteps), g.λ)
       _coordinateDescent!(x, f, g1, coef_iterator, options)
     end
-    return x
+    return _coordinateDescent!(x, f, g, coef_iterator, options)
   end
 end
 

@@ -15,7 +15,7 @@ export
   CoordinateDifferentiableFunction,
   CDLeastSquaresLoss, CDWeightedLSLoss, CDQuadraticLoss, CDSqrtLassoLoss,
   CDOptions,
-  coordinateDescent, coordinateDescent!,
+  coordinateDescent!,
 
   # var coef
   GaussianKernel, SmoothingKernel, EpanechnikovKernel, evaluate, createKernel,

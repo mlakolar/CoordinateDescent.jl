@@ -90,57 +90,74 @@ end
     @test CoordinateDescent._expand_Xt_w_X!(Xt_w_X, w, X, z, 0.5, degree) ≈ (eX'*Diagonal(w))*eX
   end
 end
-#
-# @testset "locpoly" begin
-#
-#   n, p = 500, 2
-#   Y, X, Z, betaMat = genData(n, p)
-#   zgrid = collect(0.01:0.2:0.99)
-#
-#   gk = GaussianKernel(0.4)
-#
-#   w = zeros(n)
-#
-#   for degree=0:2
-#     @test locpoly(X, Z, Y, zgrid, degree, gk) ≈ locpoly_alt(X, Z, Y, zgrid, degree, gk)
-#
-#     z0 = 0.5
-#     cp = p*(degree+1)
-#
-#     eX = zeros(n, cp)
-#     _expand_X!(eX, X, Z, z0, degree)
-#
-#     @. w = evaluate(gk, Z, z0)
-#
-#     @test locpoly(X, Z, Y, z0, degree, gk) ≈ (eX' * diagm(w) * eX)\(eX' * diagm(w) * Y)
-#   end
-# end
-#
-#
-#
-# @testset "locpolyl1" begin
-#
-#   n, s, p = 500, 10, 50
-#   gk = GaussianKernel(0.1)
-#   zgrid = collect(0.01:0.1:0.99)
-#   opt = CDOptions(;randomize=false)
-#
-#   for i=1:NUMBER_REPEAT
-#     Y, X, Z, betaT = genData(n, s)
-#     X = [X zeros(n, p-s)]
-#
-#     λ0 = rand() / 10
-#
-#     for degree=0:2
-#       o1 = locpolyl1(X,Z,Y,zgrid,degree,gk,λ0, opt)
-#       o2 = locpolyl1_alt(X,Z,Y,zgrid,degree,gk,λ0, opt)
-#
-#       @test maximum( maximum(abs.(o1[i] - o2[i])) for i=1:length(zgrid) ) ≈ 0. atol=1e-4
-#     end
-#   end
-#
-# end
+@testset "epanechnikov kernel" begin
+  k = EpanechnikovKernel(0.5)
+  @test evaluate(k, 0.1, 0.3) ≈ 0.75 * (1 - 0.4^2) / 0.5
+  @test evaluate(k, 0.1, 0.7) == 0.
+  @test createKernel(EpanechnikovKernel{Float64}, 0.5) == k
+  @test createKernel(GaussianKernel{Float64}, 0.5) == GaussianKernel(0.5)
+end
 
+@testset "locpoly" begin
+  n, p = 500, 2
+  X = randn(n, p)
+  z = rand(n)
+  y = sin.(4 * z) .* X[:, 1] + cos.(2 * z) .* X[:, 2] + 0.1 * randn(n)
+  zgrid = collect(0.1:0.2:0.9)
+  gk = GaussianKernel(0.1)
+
+  for degree=0:2
+    cp = p*(degree+1)
+    eX = zeros(n, cp)
+    B = locpoly(X, z, y, zgrid, degree, gk)
+    @test size(B) == (cp, length(zgrid))
+
+    for (ind, z0) in enumerate(zgrid)
+      CoordinateDescent._expand_X!(eX, X, z, z0, degree)
+      w = evaluate.(Ref(gk), z, Ref(z0))
+      β = (eX' * Diagonal(w) * eX) \ (eX' * Diagonal(w) * y)
+      @test B[:, ind] ≈ β
+      @test locpoly(X, z, y, z0, degree, gk) ≈ β
+    end
+  end
+end
+
+@testset "locpolyl1" begin
+  n, s, p = 500, 2, 10
+  X = randn(n, p)
+  z = rand(n)
+  y = sin.(4 * z) .* X[:, 1] + cos.(2 * z) .* X[:, 2] + 0.1 * randn(n)
+  zgrid = collect(0.1:0.2:0.9)
+  gk = GaussianKernel(0.1)
+  opt = CDOptions(;maxIter=5000, optTol=1e-10)
+
+  for degree=0:2
+    cp = p*(degree+1)
+    eX = zeros(n, cp)
+    stdX = zeros(cp)
+
+    λ0 = 0.05
+    B, BR = locpolyl1(X, z, y, zgrid, degree, gk, λ0, true, opt)
+    @test size(B) == size(BR) == (cp, length(zgrid))
+
+    for (ind, z0) in enumerate(zgrid)
+      w = evaluate.(Ref(gk), z, Ref(z0))
+      CoordinateDescent._expand_X!(eX, X, z, z0, degree)
+      CoordinateDescent._stdX!(stdX, w, eX)
+
+      # KKT conditions of the weighted lasso at z0
+      r = y - eX * B[:, ind]
+      @test maximum(abs.(eX' * (w .* r) / n) ./ (λ0 * stdX)) ≈ 1. atol=1e-5
+
+      # refit is weighted least squares on the selected groups
+      S = CoordinateDescent.get_nonzero_coordinates(B[:, ind], p, degree, true)
+      @test any(S)
+      Xs = eX[:, S]
+      @test Vector(BR[S, ind]) ≈ (Xs' * Diagonal(w) * Xs) \ (Xs' * Diagonal(w) * y)
+      @test iszero(BR[.!S, ind])
+    end
+  end
+end
 
 
 end

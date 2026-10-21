@@ -53,7 +53,7 @@ function locpolyl1(
   stdX = Array{T}(undef, ep)
   f = CDWeightedLSLoss(y, expandX, w)        # inner parts of f will be modified in a loop
   g = ProxL1(λ0, stdX)
-  β = SparseIterate(ep)
+  β = SparseIterate(T, ep)
 
   ind = 0
   for z0 in zgrid
@@ -100,7 +100,7 @@ function lvocv_locpolyl1(
     S = BitArray(undef, ep)
 
     f = CDWeightedLSLoss(y, wX, w)
-    β = SparseIterate(ep)
+    β = SparseIterate(T, ep)
 
     for indH = 1:numH
         kernel = createKernel(kernelType, hArr[indH])

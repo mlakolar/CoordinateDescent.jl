@@ -82,7 +82,7 @@ gradient(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:Abst
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
 function descendCoordinate!(
   f::CDLeastSquaresLoss{T},
-  g::ProxL1{T},
+  g::Union{ProxL1{T}, ProxZero},
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
@@ -164,7 +164,7 @@ end
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
 function descendCoordinate!(
   f::CDWeightedLSLoss{T},
-  g::ProxL1{T},
+  g::Union{ProxL1{T}, ProxZero},
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
@@ -304,7 +304,7 @@ end
 
 function CDQuadraticLoss(A::AbstractMatrix{T}, b::AbstractVector{T}) where {T<:AbstractFloat}
   (issymmetric(A) && length(b) == size(A, 2)) || throw(ArgumentError())
-  CDQuadraticLoss{T, typeof(A), typeof(b)}(A, b, zeros(length(b)))
+  CDQuadraticLoss{T, typeof(A), typeof(b)}(A, b, zeros(T, length(b)))
 end
 
 numCoordinates(f::CDQuadraticLoss) = length(f.b)
@@ -323,7 +323,7 @@ gradient(f::CDQuadraticLoss{T}, ::SparseIterate{T}, j::Int64) where {T<:Abstract
 
 function descendCoordinate!(
   f::CDQuadraticLoss{T},
-  g::ProxL1{T},
+  g::Union{ProxL1{T}, ProxZero},
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 

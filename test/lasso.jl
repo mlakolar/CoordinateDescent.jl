@@ -217,6 +217,67 @@ end
 
 
 
+@testset "lasso Float32" begin
+  n, p, s = 200, 20, 5
+  X = randn(Float32, n, p)
+  Y = X[:,1:s] * ones(Float32, s) + 0.1f0 * randn(Float32, n)
+
+  sol = lasso(X, Y, 0.1f0, CDOptions(;optTol=1e-6))
+  @test eltype(sol.x) == Float32
+  @test maximum(abs.(X'*(Y - X*sol.x) / n)) ≈ 0.1f0 atol=1e-4
+end
+
+@testset "sqrt-lasso standardizeX" begin
+  n, p, s = 200, 50, 5
+  X = randn(n, p) .* (0.5 .+ rand(1, p))
+  Y = X[:,1:s] * ones(s) + randn(n)
+
+  λ = 1.5
+  sol = sqrtLasso(X, Y, λ, CDOptions(;maxIter=5000, optTol=1e-10))
+  stdX = vec(sqrt.(sum(abs2, X, dims=1) / n))
+  r = Y - X*sol.x
+  @test sol.penalty.λ ≈ stdX
+  @test maximum(abs.(X'*r) ./ (norm(r) * λ * stdX)) ≈ 1. atol=1e-4
+end
+
+@testset "scaledLasso" begin
+  n, p, s = 500, 100, 10
+  X = randn(n, p)
+  Y = X[:,1:s] * randn(s) + randn(n)
+
+  λ = 0.05
+  opt = IterLassoOptions(;maxIter=100, optTol=1e-8, optionsCD=CDOptions(;optTol=1e-10))
+  x = SparseIterate(p)
+  sol1 = scaledLasso!(x, X, Y, λ, ones(p), opt)
+  sol2 = scaledLasso(X, Y, λ, ones(p), opt)
+  @test Vector(sol2.x) ≈ Vector(sol1.x) atol=1e-6
+end
+
+@testset "feasible lasso" begin
+  n, p, s = 500, 100, 10
+  X = randn(n, p)
+  Y = X[:,1:s] * randn(s) + randn(n)
+
+  λ0 = 0.1
+  for initProcedure in (:Screening, :InitStd, :WarmStart)
+    opt = IterLassoOptions(;maxIter=100, optTol=1e-6, initProcedure=initProcedure,
+                           optionsCD=CDOptions(;maxIter=5000, optTol=1e-10))
+    sol = feasibleLasso!(SparseIterate(p), X, Y, λ0, opt)
+
+    # the loadings are Γ_j = sqrt(∑ X_ij^2 r_i^2 / n) evaluated at the solution
+    r = Y - X*sol.x
+    Γ = vec(sqrt.(sum(abs2, X .* r, dims=1) / n))
+    @test sol.penalty.λ ≈ Γ rtol=1e-3
+
+    # KKT for the final penalty
+    @test maximum(abs.(X'*r / n) ./ (λ0 * sol.penalty.λ)) ≈ 1. atol=1e-6
+  end
+
+  @test_throws ArgumentError feasibleLasso!(SparseIterate(p), X, Y, λ0, IterLassoOptions(;initProcedure=:Foo))
+  @test_throws ArgumentError scaledLasso!(SparseIterate(p), X, Y, λ0, ones(p), IterLassoOptions(;initProcedure=:Foo))
+end
+
+
 @testset "lasso path" begin
 
   @testset "standardizeX = false" begin
