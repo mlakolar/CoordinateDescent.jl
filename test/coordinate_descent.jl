@@ -320,4 +320,120 @@ end
   @test opt.warmStart
 end
 
+@testset "option conversions" begin
+  opt = CDOptions(;maxIter=1e5, optTol=1, numSteps=10.0)
+  @test opt.maxIter === 100_000
+  @test opt.optTol === 1.0
+  @test opt.numSteps === 10
+  @test_throws InexactError CDOptions(;maxIter=1.5)
+
+  opt = IterLassoOptions(;maxIter=10.0, optTol=1, sinit=3.0, σinit=2)
+  @test opt.maxIter === 10
+  @test opt.optTol === 1.0
+  @test opt.sinit === 3
+  @test opt.σinit === 2.0
+end
+
+@testset "zero penalty weights" begin
+  n, p = 100, 20
+  X = randn(n, p)
+  Y = X[:,1:3] * ones(3) + 0.1 * randn(n)
+  f = CDLeastSquaresLoss(Y, X)
+
+  # the path of warmStart = false starts from the largest λ0 at which the
+  # penalized coordinates are zero; an unpenalized coordinate made it Inf
+  w = ones(p)
+  w[1] = 0.
+  x = SparseIterate(p)
+  CoordinateDescent.initialize!(f, x)
+  @test CoordinateDescent._findLambdaMax(x, f, ProximalBase.ProxL1(1., w)) ≈ maximum(abs.(X[:,2:end]'Y / n))
+
+  for warmStart in (true, false)
+    x = SparseIterate(p)
+    info = CDInfo()
+    coordinateDescent!(x, f, ProximalBase.ProxL1(0.1, w), CDOptions(;optTol=1e-12, warmStart=warmStart), info)
+    @test info.converged
+    grad = X'*(Y - X*x) / n
+    @test abs(grad[1]) < 1e-8                     # unpenalized
+    @test maximum(abs.(grad[2:end])) ≈ 0.1 atol=1e-8
+  end
+
+  # no penalty at all: the path is skipped and the least squares fit is returned
+  for g in (ProximalBase.ProxL1(1., zeros(p)), ProximalBase.ProxL1(0.))
+    x = SparseIterate(p)
+    coordinateDescent!(x, f, g, CDOptions(;optTol=1e-12, warmStart=false))
+    @test Vector(x) ≈ X \ Y atol=1e-6
+  end
+end
+
+@testset "dense starting point" begin
+  n, p = 100, 20
+  X = randn(n, p)
+  Y = X * randn(p) + randn(n)
+  f = CDLeastSquaresLoss(Y, X)
+  g = ProximalBase.ProxL1(0.05)
+  opt = CDOptions(;optTol=1e-12)
+
+  x = SparseIterate(p)
+  coordinateDescent!(x, f, g, opt)
+  for x0 in (zeros(p), randn(p))
+    xd = copy(x0)
+    @test coordinateDescent!(xd, f, g, opt) === xd
+    @test xd ≈ Vector(x) atol=1e-8
+  end
+end
+
+@testset "caches match their definitions" begin
+  # the losses skip the updates of coordinates that do not move, and the
+  # least squares losses compute the column norms on the first visit
+  n, p = 100, 30
+  X = randn(n, p)
+  Y = X[:,1:5] * ones(5) + randn(n)
+  w = 2 * rand(n)
+
+  for (f, g) in ((CDLeastSquaresLoss(Y, X), ProximalBase.ProxL1(0.1)),
+                 (CDWeightedLSLoss(Y, X, w), ProximalBase.ProxL1(0.1)),
+                 (CDSqrtLassoLoss(Y, X), ProximalBase.ProxL1(2.5)))
+    x = SparseIterate(p)
+    coordinateDescent!(x, f, g, CDOptions(;optTol=1e-10))
+    @test 0 < nnz(x) < p
+    @test nnz(x) == count(!iszero, Vector(x))     # no stored zeros
+    @test f.r ≈ Y - X*x
+  end
+  f = CDLeastSquaresLoss(Y, X)
+  coordinateDescent!(SparseIterate(p), f, ProximalBase.ProxL1(0.1))
+  @test f.a ≈ vec(sum(abs2, X, dims=1))
+  f = CDWeightedLSLoss(Y, X, w)
+  coordinateDescent!(SparseIterate(p), f, ProximalBase.ProxL1(0.1))
+  @test f.a ≈ vec(sum(abs2, X .* sqrt.(w), dims=1))
+
+  A = X'X / n
+  f = CDQuadraticLoss(A, -X'Y / n)
+  x = SparseIterate(p)
+  coordinateDescent!(x, f, ProximalBase.ProxL1(0.1), CDOptions(;optTol=1e-10))
+  @test f.Ax ≈ A * Vector(x)
+end
+
+@testset "data changed in place" begin
+  # locpolyl1 changes the weights and the design in place between solves; the
+  # cached column norms must follow
+  n, p = 100, 20
+  X = randn(n, p)
+  Y = X[:,1:3] * ones(3) + randn(n)
+  w = rand(n)
+  g = ProximalBase.ProxL1(0.05)
+  opt = CDOptions(;optTol=1e-12)
+
+  f = CDWeightedLSLoss(Y, X, w)
+  x = SparseIterate(p)
+  coordinateDescent!(x, f, g, opt)
+  w .= 2 .* rand(n)
+  X .*= 1.5
+  coordinateDescent!(x, f, g, opt)
+
+  x2 = SparseIterate(p)
+  coordinateDescent!(x2, CDWeightedLSLoss(Y, copy(X), copy(w)), g, opt)
+  @test Vector(x) ≈ Vector(x2) atol=1e-8
+end
+
 end
