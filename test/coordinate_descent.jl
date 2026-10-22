@@ -253,6 +253,17 @@ end
     @test [x[k] for k in 1:6] ≈ [2., 0., 0., -1., 0.5, 0.]
   end
 
+  # with penalty weights, the path starts from max |cₖ| / wₖ over the penalized
+  # coordinates, 2 / 0.5 here
+  w = [1., 0., 2., 0.5, 1., 1.]
+  x = SymmetricSparseIterate(3)
+  @test CoordinateDescent._findLambdaMax(x, SeparableLoss(c), ProximalBase.ProxL1(1., w)) == 4.
+  for warmStart in (true, false)
+    x = SymmetricSparseIterate(3)
+    coordinateDescent!(x, SeparableLoss(c), ProximalBase.ProxL1(1., w), CDOptions(;warmStart=warmStart))
+    @test [x[k] for k in 1:6] ≈ [2., -0.5, 0., -1.5, 0.5, 0.]
+  end
+
   struct IncompleteLoss <: CoordinateDifferentiableFunction end
   @test_throws ErrorException CoordinateDescent.initialize!(IncompleteLoss(), SparseIterate(2))
   @test_throws ErrorException CoordinateDescent.gradient(IncompleteLoss(), SparseIterate(2), 1)
