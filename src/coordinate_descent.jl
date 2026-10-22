@@ -365,12 +365,12 @@ end
 
 # the smallest λ0 for which zero is a solution with weights λ: max_k |∇f(0)_k| / λ_k
 # over the penalized coordinates; those with λ_k = 0 are not zero at any λ0
-function _findLambdaMax(x::SparseIterate{T},
+function _findLambdaMax(x::Union{SparseIterate{T},SymmetricSparseIterate{T}},
   f::CoordinateDifferentiableFunction,
   g::ProxL1{T, S}) where {T<:AbstractFloat} where S <: AbstractArray
 
   λmax = zero(T)
-  for k=1:length(x)
+  for k=1:ProximalBase.numCoordinates(x)
     iszero(g.λ[k]) && continue
     f_g = gradient(f, x, k)
     t = abs(f_g) / g.λ[k]
