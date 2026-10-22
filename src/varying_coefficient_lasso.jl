@@ -92,7 +92,8 @@ Returns `(B, BR)`, sparse matrices of size `p(degree + 1) × length(zgrid)`.
 Column `k` of `B` holds the lasso estimate at `zgrid[k]`. If `refit` is true,
 column `k` of `BR` holds the weighted least squares refit on the selected
 variables (all `degree + 1` coefficients of a variable are refit when any of
-them is nonzero); otherwise `BR` is zero.
+them is nonzero, and the refit of minimum norm is taken when it is not
+unique); otherwise `BR` is zero.
 """
 function locpolyl1(
   X::Matrix{T}, z::Vector{T}, y::Vector{T},
@@ -143,9 +144,7 @@ function locpolyl1(
 
     if refit
         get_nonzero_coordinates!(S, β, p, degree, true)
-        Xs = view(expandX, :, S)
-        tmp = Xs' * Diagonal(w)
-        outR[S, ind] = (tmp * Xs) \ (tmp * y)
+        outR[S, ind] = _wls(view(expandX, :, S), w, y)
     end
   end
   out, outR
@@ -160,8 +159,9 @@ estimator for each bandwidth in `hArr`.
 For each observation `i`, the model is fit at `z0 = zᵢ` with observation `i`
 given zero weight. The lasso penalty is `λ0 σ̂`, where the noise level `σ̂` is
 estimated jointly with the coefficients as in the scaled lasso. The selected
-variables are refit by weighted least squares and used to predict `yᵢ`. As in
-`locpolyl1`, `λ0` is on the scale of the kernel.
+variables are refit by weighted least squares, taking the refit of minimum
+norm when it is not unique, and used to predict `yᵢ`. As in `locpolyl1`, `λ0`
+is on the scale of the kernel.
 
 Returns the vector of summed squared prediction errors, one per bandwidth.
 """
@@ -219,8 +219,7 @@ function lvocv_locpolyl1(
 
             # refit and make prediction
             get_nonzero_coordinates!(S, β, p, degree, true)
-            Xs = view(wX, :, S)
-            Yh = dot(wX[i, S], (Xs' * Diagonal(w) * Xs) \ (Xs' * Diagonal(w) * y))
+            Yh = dot(wX[i, S], _wls(view(wX, :, S), w, y))
             MSE[indH] += abs2(Yh - y[i])
         end
     end

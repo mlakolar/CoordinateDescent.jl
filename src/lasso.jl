@@ -223,7 +223,7 @@ function scaledLasso!(
     σ = options.σinit
   elseif options.initProcedure == :WarmStart
     initialize!(f, x)
-    σ = std(f.r)
+    σ = sqrt( sum(abs2, f.r) / n )      # as in the update, so a solution is a fixed point
   else
     throw(ArgumentError("Incorrect initialization Symbol"))
   end

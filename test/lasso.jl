@@ -392,6 +392,11 @@ end
   sol2 = scaledLasso!(x, X, Y, λ, ones(p), IterLassoOptions(;initProcedure=:WarmStart, maxIter=100, optTol=1e-10, optionsCD=CDOptions(;optTol=1e-12)))
   @test Vector(sol2.x) ≈ Vector(sol.x) atol=1e-6
   @test sol2.σ ≈ sol.σ rtol=1e-6
+
+  # one outer iteration meets the stopping rule: the initial σ is the one of
+  # the update, not the sample standard deviation of the residuals
+  sol3 = @test_logs scaledLasso!(copy(sol.x), X, Y, λ, ones(p), IterLassoOptions(;initProcedure=:WarmStart, maxIter=1, optTol=1e-6, optionsCD=CDOptions(;optTol=1e-12)))
+  @test sol3.converged
 end
 
 @testset "lasso path early stop" begin

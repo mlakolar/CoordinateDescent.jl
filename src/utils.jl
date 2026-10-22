@@ -171,6 +171,16 @@ function _column_means(X::AbstractMatrix{T}) where {T}
 end
 
 
+# the weighted least squares coefficients argmin_β ∑ᵢ wᵢ (yᵢ - Xᵢ'β)², from a
+# pivoted QR factorization of √w X rather than the normal equations; when they
+# are not unique, as when X has more columns than there are positive weights,
+# the one of minimum norm
+function _wls(X::AbstractMatrix{T}, w::AbstractVector{T}, y::AbstractVector{T}) where {T <: AbstractFloat}
+  sw = sqrt.(w)
+  qr(sw .* X, ColumnNorm()) \ (sw .* y)
+end
+
+
 # Initial estimate of σ for the scaled lasso:
 #
 # * the s columns of X most correlated with y are found
@@ -218,7 +228,7 @@ function _findInitResiduals!(
   S = _findLargestCorrelations(w, X, y, s)
 
   Xs = view(X, :, S)
-  mul!(storage, Xs, (Xs' * Diagonal(w) * Xs) \ (Xs' * Diagonal(w) * y))
+  mul!(storage, Xs, _wls(Xs, w, y))
   @. storage = y - storage
   return storage
 end

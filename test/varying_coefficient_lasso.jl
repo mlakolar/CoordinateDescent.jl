@@ -324,4 +324,32 @@ CoordinateDescent.evaluate(k::ScaledGaussianKernel{T}, x::T, y::T) where {T <: A
   @test_throws ArgumentError CoordinateDescent.lvocv_locpolyl1(Xn, z, y, 1, [0.1], GaussianKernel{Float64}, 0.1)
 end
 
+@testset "weighted least squares refits" begin
+  # the solution of the normal equations when it is unique
+  X = randn(20, 3); w = rand(20); y = randn(20)
+  @test CoordinateDescent._wls(X, w, y) ≈ (X' * Diagonal(w) * X) \ (X' * Diagonal(w) * y)
+
+  # the one of minimum norm when there are more columns than positive weights,
+  # where the normal equations are singular
+  X = randn(20, 6); w = [rand(4); zeros(16)]
+  sw = sqrt.(w[1:4])
+  @test CoordinateDescent._wls(X, w, y) ≈ pinv(sw .* X[1:4, :]) * (sw .* y[1:4])
+
+  # so in locpolyl1, where few observations in the window of a compact kernel
+  # and a small penalty select more columns than there are observations
+  n, p, degree = 40, 10, 2
+  z = collect(range(0, 1; length = n))
+  X = randn(n, p)
+  y = X[:, 1] .* z + 0.1 * randn(n)
+  kernel = EpanechnikovKernel(0.06)
+  B, BR = locpolyl1(X, z, y, [0.5], degree, kernel, 1e-3, true, CDOptions(;randomize=false, optTol=1e-8))
+  S = CoordinateDescent.get_nonzero_coordinates(B[:, 1], p, degree, true)
+  w = evaluate.(Ref(kernel), z, Ref(0.5))
+  R = w .> 0
+  @test count(S) > count(R)
+  eX = zeros(n, p * (degree + 1))
+  CoordinateDescent._expand_X!(eX, X, z, 0.5, degree)
+  @test Vector(BR[S, 1]) ≈ pinv(sqrt.(w[R]) .* eX[R, S]) * (sqrt.(w[R]) .* y[R])
+end
+
 end
