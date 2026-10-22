@@ -216,16 +216,14 @@ function scaledLasso!(
   n = size(X, 1)
   f = CDLeastSquaresLoss(y, X; intercept)
 
-  # initialize σ
+  # initialize σ; IterLassoOptions allows only these three procedures
   if options.initProcedure == :Screening
     σ = _findInitSigma!(X, y, options.sinit, f.r; intercept)
   elseif options.initProcedure == :InitStd
     σ = options.σinit
-  elseif options.initProcedure == :WarmStart
+  else    # :WarmStart
     initialize!(f, x)
-    σ = std(f.r)
-  else
-    throw(ArgumentError("Incorrect initialization Symbol"))
+    σ = sqrt( sum(abs2, f.r) / n )      # as in the update, so a solution is a fixed point
   end
 
   g = ProxL1(λ * σ, ω)
@@ -328,7 +326,7 @@ function feasibleLasso!(
   info = CDInfo()
   iterations = 0
 
-  # initialize residuals
+  # initialize residuals; IterLassoOptions allows only these three procedures
   if options.initProcedure == :Screening
     _findInitResiduals!(X, y, options.sinit, f.r; intercept)
   elseif options.initProcedure == :InitStd
@@ -336,10 +334,8 @@ function feasibleLasso!(
     Γ .= _loadings(f)
     coordinateDescent!(x, f, ProxL1(λ0*σ, Γ), options.optionsCD, info)
     iterations += info.iterations
-  elseif options.initProcedure == :WarmStart
+  else    # :WarmStart
     initialize!(f, x)
-  else
-    throw(ArgumentError("Incorrect initialization Symbol"))
   end
   _getLoadings!(Γ, X, f.r, f.xbar)
 
@@ -461,6 +457,7 @@ function LassoPath(
   max_hat_s=Inf, standardizeX::Bool=true, intercept::Bool=false,
   screening::Bool=true) where {T<:AbstractFloat}
 
+  all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
   p = size(X, 2)
   x = SparseIterate(T, p)
   f = CDLeastSquaresLoss(Y, X; intercept)

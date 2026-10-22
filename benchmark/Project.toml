@@ -13,6 +13,6 @@ CoordinateDescent = {path = ".."}
 
 [compat]
 BenchmarkTools = "1"
-CoordinateDescent = "0.5.3"
+CoordinateDescent = "0.5.4"
 ProximalBase = "0.4"
 julia = "1.10"

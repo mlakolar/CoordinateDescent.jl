@@ -99,6 +99,15 @@ end
   @test createKernel(GaussianKernel{Float64}, 0.5) == GaussianKernel(0.5)
 end
 
+@testset "kernels keep the floating point type" begin
+  for K in (GaussianKernel, EpanechnikovKernel)
+    k = K(0.5f0)
+    @test @inferred(evaluate(k, 0.1f0, 0.3f0)) isa Float32     # inside the support
+    @test @inferred(evaluate(k, 0.1f0, 0.9f0)) isa Float32     # outside it for Epanechnikov
+  end
+  @test evaluate(EpanechnikovKernel(0.5f0), 0.1f0, 0.3f0) ≈ 0.75f0 * (1 - 0.4f0^2) / 0.5f0
+end
+
 @testset "locpoly" begin
   n, p = 500, 2
   X = randn(n, p)
@@ -284,6 +293,63 @@ end
   @test length(MSE) == 2
   @test all(isfinite, MSE) && all(>(0), MSE)
   @test MSE[1] / m < var(y[1:m])
+end
+
+# the Gaussian kernel times a constant c
+struct ScaledGaussianKernel{T} <: SmoothingKernel{T}
+  h::T
+  c::T
+end
+CoordinateDescent.evaluate(k::ScaledGaussianKernel{T}, x::T, y::T) where {T <: AbstractFloat} =
+  k.c * evaluate(GaussianKernel(k.h), x, y)
+
+@testset "locpolyl1 penalty scale and input checks" begin
+  n, p = 300, 8
+  X = randn(n, p)
+  z = rand(n)
+  y = sin.(4 * z) .* X[:, 1] + cos.(2 * z) .* X[:, 2] + 0.1 * randn(n)
+  zgrid = [0.25, 0.5, 0.75]
+  opt = CDOptions(;maxIter=10_000, optTol=1e-12)
+
+  # λ0 is on the scale of the kernel: c K with √c λ0 gives the estimate of K with λ0
+  B, _ = locpolyl1(X, z, y, zgrid, 1, GaussianKernel(0.1), 0.05, false, opt)
+  B4, _ = locpolyl1(X, z, y, zgrid, 1, ScaledGaussianKernel(0.1, 4.), 0.1, false, opt)
+  @test Matrix(B4) ≈ Matrix(B) atol=1e-6
+
+  # NaN or Inf in the data are errors, not a zero fit
+  Xn = copy(X); Xn[1, 1] = NaN
+  zn = copy(z); zn[2] = Inf
+  @test_throws ArgumentError locpolyl1(Xn, z, y, zgrid, 1, GaussianKernel(0.1), 0.05, false)
+  @test_throws ArgumentError locpolyl1(X, zn, y, zgrid, 1, GaussianKernel(0.1), 0.05, false)
+  @test_throws ArgumentError CoordinateDescent.lvocv_locpolyl1(Xn, z, y, 1, [0.1], GaussianKernel{Float64}, 0.1)
+end
+
+@testset "weighted least squares refits" begin
+  # the solution of the normal equations when it is unique
+  X = randn(20, 3); w = rand(20); y = randn(20)
+  @test CoordinateDescent._wls(X, w, y) ≈ (X' * Diagonal(w) * X) \ (X' * Diagonal(w) * y)
+
+  # the one of minimum norm when there are more columns than positive weights,
+  # where the normal equations are singular
+  X = randn(20, 6); w = [rand(4); zeros(16)]
+  sw = sqrt.(w[1:4])
+  @test CoordinateDescent._wls(X, w, y) ≈ pinv(sw .* X[1:4, :]) * (sw .* y[1:4])
+
+  # so in locpolyl1, where few observations in the window of a compact kernel
+  # and a small penalty select more columns than there are observations
+  n, p, degree = 40, 10, 2
+  z = collect(range(0, 1; length = n))
+  X = randn(n, p)
+  y = X[:, 1] .* z + 0.1 * randn(n)
+  kernel = EpanechnikovKernel(0.06)
+  B, BR = locpolyl1(X, z, y, [0.5], degree, kernel, 1e-3, true, CDOptions(;randomize=false, optTol=1e-8))
+  S = CoordinateDescent.get_nonzero_coordinates(B[:, 1], p, degree, true)
+  w = evaluate.(Ref(kernel), z, Ref(0.5))
+  R = w .> 0
+  @test count(S) > count(R)
+  eX = zeros(n, p * (degree + 1))
+  CoordinateDescent._expand_X!(eX, X, z, 0.5, degree)
+  @test Vector(BR[S, 1]) ≈ pinv(sqrt.(w[R]) .* eX[R, S]) * (sqrt.(w[R]) .* y[R])
 end
 
 end

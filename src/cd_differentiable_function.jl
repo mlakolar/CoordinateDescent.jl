@@ -235,6 +235,11 @@ the column means `x̄ = f.xbar` and the mean `ȳ = f.ybar` of `y`. The columns
 and `y` are centered on the fly, so `X` is not copied, and the residuals are
 `y - β₀ - Xβ`.
 
+A column that the loss does not depend on, a zero column or, with
+`intercept`, a constant one, gets a zero coefficient (with another penalty than
+`ProxL1` or `ProxZero`, the minimizer of the penalty nearest zero). `y` and `X`
+must not contain `NaN` or `Inf`.
+
 On an `AtomIterate`, for the group lasso, a group `G` is updated at once, with
 the largest eigenvalue of the centered `X[:, G]'X[:, G] / n` as the curvature;
 it is computed when the group first leaves zero after `initialize!`.
@@ -255,8 +260,10 @@ end
 
 function CDLeastSquaresLoss(y::AbstractVector{T}, X::AbstractMatrix{T}; intercept::Bool=false) where {T<:AbstractFloat}
   length(y) == size(X, 1) || throw(DimensionMismatch())
+  _check_finite(y, "y")
+  _check_finite(X, "X")
   p = size(X, 2)
-  xbar = intercept ? vec(mean(X; dims=1)) : zeros(T, p)
+  xbar = intercept ? _column_means(X) : zeros(T, p)
   ybar = intercept ? mean(y) : zero(T)
   CDLeastSquaresLoss{T, typeof(y), typeof(X)}(y,X,copy(y),fill(T(NaN), p),xbar,ybar)
 end
@@ -327,7 +334,10 @@ function descendCoordinate!(
   f.a[k] = a
 
   oldVal = x[k]
-  newVal = _cdshrink(g, x, oldVal + b / a, k, n / a)
+  # a zero column (centered with an intercept) does not enter the loss, and the
+  # coefficient goes to the minimizer of the penalty nearest zero: the proximal
+  # point of 0 with an unbounded step, which is 0 for ProxL1 and ProxZero
+  newVal = iszero(a) ? _cdshrink(g, x, zero(T), k, floatmax(T)) : _cdshrink(g, x, oldVal + b / a, k, n / a)
   h = newVal - oldVal
   iszero(h) && return h      # x and the residuals do not change
   x[k] = newVal
@@ -420,6 +430,9 @@ residuals `r = y - Xβ` and the weighted squared column norms.
 
 `y`, `X` and `w` are stored by reference, so changing them in place (as
 [`locpolyl1`](@ref) does) changes the loss; call `initialize!` afterwards.
+For the same reason they are not checked for `NaN` or `Inf`. A coefficient
+whose column does not enter the loss (`∑ᵢ wᵢ Xᵢₖ² = 0`) goes to zero, as in
+[`CDLeastSquaresLoss`](@ref).
 """
 struct CDWeightedLSLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   y::S
@@ -510,7 +523,9 @@ function descendCoordinate!(
   end
 
   oldVal = x[k]
-  newVal = _cdshrink(g, x, oldVal + b / a, k, n / a)
+  # a column with ∑ᵢ wᵢ X[i, k]² = 0 does not enter the loss, and the coefficient
+  # goes to the minimizer of the penalty nearest zero, as for CDLeastSquaresLoss
+  newVal = iszero(a) ? _cdshrink(g, x, zero(T), k, floatmax(T)) : _cdshrink(g, x, oldVal + b / a, k, n / a)
   h = newVal - oldVal
   iszero(h) && return h      # x and the residuals do not change
   x[k] = newVal
@@ -556,8 +571,10 @@ end
 
 function CDSqrtLassoLoss(y::AbstractVector{T}, X::AbstractMatrix{T}; intercept::Bool=false) where {T<:AbstractFloat}
   length(y) == size(X, 1) || throw(DimensionMismatch())
+  _check_finite(y, "y")
+  _check_finite(X, "X")
   p = size(X, 2)
-  xbar = intercept ? vec(mean(X; dims=1)) : zeros(T, p)
+  xbar = intercept ? _column_means(X) : zeros(T, p)
   ybar = intercept ? mean(y) : zero(T)
   CDSqrtLassoLoss{T, typeof(y), typeof(X)}(y,X,copy(y),fill(T(NaN), p),xbar,ybar)
 end
@@ -666,13 +683,14 @@ function descendCoordinate!(
   end
 
   # closed-form minimizer of ‖r - X[:,k] t‖ + λ|t| over t; zero when the
-  # subgradient condition |X[:,k]'r| ≤ λ‖r‖ holds
-  if abs(s) <= λ * sqrt(rsqr)
+  # subgradient condition |X[:,k]'r| ≤ λ‖r‖ holds. Otherwise λ² < ‖X[:,k]‖² and
+  # (X[:,k]'r)² ≤ ‖X[:,k]‖² ‖r‖² by Cauchy–Schwarz, but rounding can break
+  # either when r is nearly parallel to X[:,k], so both are enforced
+  q = 1 - λ^2 / xsqr
+  if abs(s) <= λ * sqrt(rsqr) || !(q > 0)
     newVal = zero(T)
-  elseif s > λ * sqrt(rsqr)
-    newVal = ( s - λ / sqrt(1 - λ^2 / xsqr) * sqrt(rsqr - s^2/xsqr) ) / xsqr
   else
-    newVal = ( s + λ / sqrt(1 - λ^2 / xsqr) * sqrt(rsqr - s^2/xsqr) ) / xsqr
+    newVal = ( s - copysign(λ / sqrt(q) * sqrt(max(rsqr - s^2/xsqr, zero(T))), s) ) / xsqr
   end
 
   # update internals -- residuls = y - X * xnew
@@ -700,6 +718,10 @@ The quadratic `f(x) = x'Ax / 2 + b'x` with symmetric `A`. Caches `Ax`, so a
 coordinate update costs `O(p)`. With `A = X'X/n` and `b = -X'y/n` it gives the
 same minimizer as [`CDLeastSquaresLoss`](@ref).
 
+A coordinate with `A[k, k] = 0`, which `f` does not depend on when `A` is
+positive semidefinite, goes to zero, as in [`CDLeastSquaresLoss`](@ref). `A`
+and `b` must not contain `NaN` or `Inf`.
+
 On an `AtomIterate`, for the group lasso, a group `G` is updated at once, with
 the largest eigenvalue of `A[G, G]` as the curvature; it is computed when the
 group first leaves zero after `initialize!`.
@@ -712,6 +734,8 @@ struct CDQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFuncti
 end
 
 function CDQuadraticLoss(A::AbstractMatrix{T}, b::AbstractVector{T}) where {T<:AbstractFloat}
+  _check_finite(A, "A")
+  _check_finite(b, "b")
   issymmetric(A) || throw(ArgumentError("A must be symmetric"))
   length(b) == size(A, 2) || throw(ArgumentError("length of b must equal the number of columns of A"))
   CDQuadraticLoss{T, typeof(A), typeof(b)}(A, b, zeros(T, length(b)), T[])
@@ -763,7 +787,10 @@ function descendCoordinate!(
 
   oldVal = x[k]
   a = one(T) / a
-  newVal = _cdshrink(g, x, oldVal - b * a, k, a)
+  # A[k, k] = 0 (a = Inf): f does not depend on x[k] when A is positive
+  # semidefinite, and the coordinate goes to the minimizer of the penalty nearest
+  # zero, as for CDLeastSquaresLoss
+  newVal = isinf(a) ? _cdshrink(g, x, zero(T), k, floatmax(T)) : _cdshrink(g, x, oldVal - b * a, k, a)
   h = newVal - oldVal
   iszero(h) && return h      # x and Ax do not change
   x[k] = newVal

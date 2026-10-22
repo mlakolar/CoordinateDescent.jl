@@ -159,6 +159,68 @@ end
   end
 end
 
+# the constraints lo ≤ xₖ ≤ hi, a penalty whose minimizers exclude zero
+struct BoxPenalty <: ProximableFunction
+  lo::Float64
+  hi::Float64
+end
+ProximalBase.cdprox!(g::BoxPenalty, x::SparseIterate{Float64}, k::Int, γ::Float64) =
+  x[k] = clamp(x[k], g.lo, g.hi)
+
+@testset "zero and constant columns" begin
+  n, p = 100, 6
+  X = randn(n, p)
+  Y = X * randn(p) + randn(n)
+  opt = CDOptions(;maxIter=5000, optTol=1e-12)
+  keep = [1, 2, 4, 5, 6]
+
+  # without a penalty, a zero column gets a zero coefficient instead of NaN
+  Xz = copy(X); Xz[:, 3] .= 0
+  for f in (CDLeastSquaresLoss(Y, Xz), CDWeightedLSLoss(Y, Xz, ones(n)), CDQuadraticLoss(Xz'Xz/n, -Xz'Y/n))
+    x = SparseIterate(p)
+    coordinateDescent!(x, f, ProxZero(), opt)
+    @test x[3] == 0
+    @test Vector(x)[keep] ≈ X[:, keep] \ Y atol=1e-6
+  end
+  x = SparseIterate(ones(p))                      # also from a nonzero start
+  coordinateDescent!(x, CDLeastSquaresLoss(Y, Xz), ProxZero(), opt)
+  @test x[3] == 0
+
+  # with another penalty, it goes to the minimizer of the penalty nearest zero
+  for f in (CDLeastSquaresLoss(Y, Xz), CDWeightedLSLoss(Y, Xz, ones(n)), CDQuadraticLoss(Xz'Xz/n, -Xz'Y/n))
+    x = SparseIterate(p)
+    coordinateDescent!(x, f, BoxPenalty(1., 2.), opt)
+    @test x[3] == 1
+    @test all(v -> 1 <= v <= 2, Vector(x))
+  end
+
+  # with an intercept, a constant column is a zero column, also when its mean
+  # is not exact in floating point
+  for c in (0.1, 0.3, 1.0)
+    Xc = copy(X); Xc[:, 3] .= c
+    f = CDLeastSquaresLoss(Y, Xc; intercept=true)
+    x = SparseIterate(p)
+    coordinateDescent!(x, f, ProxZero(), opt)
+    @test x[3] == 0
+    @test [f.ybar - dot(f.xbar, Vector(x)); Vector(x)[keep]] ≈ [ones(n) X[:, keep]] \ Y atol=1e-6
+
+    sol = lasso(Xc, Y, 0.01, opt; intercept=true, standardizeX=true)
+    @test sol.penalty.λ[3] == 0                   # its standard deviation is zero
+    @test sol.x[3] == 0
+  end
+end
+
+@testset "negative penalties" begin
+  n, p = 50, 6
+  X = randn(n, p)
+  Y = X[:, 1] + randn(n)
+  f = CDLeastSquaresLoss(Y, X)
+  for g in (ProxL1(-0.1), ProxL1(NaN), ProxL1(0.1, [-1.; ones(p - 1)])), warmStart in (true, false)
+    @test_throws ArgumentError coordinateDescent!(SparseIterate(p), f, g, CDOptions(;warmStart=warmStart))
+  end
+  @test_throws ArgumentError ProxGroupL2(0.1, [1:3, 4:6], [1., -1.])   # checked by ProximalBase
+end
+
 @testset "Float32" begin
   n, p, s = 200, 20, 5
   X = randn(Float32, n, p)
