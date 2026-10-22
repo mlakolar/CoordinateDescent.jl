@@ -5,13 +5,19 @@
 ####################################
 
 """
-    CDOptions(; maxIter=100_000, optTol=1e-7, randomize=true, warmStart=true, numSteps=50)
+    CDOptions(; maxIter=100_000, optTol=1e-7, randomize=true, warmStart=true,
+                numSteps=50, relativeTol=true)
 
 Options for [`coordinateDescent!`](@ref).
 
 - `maxIter`: maximum number of passes over the coordinates; reaching it without
   convergence gives a warning
-- `optTol`: convergence tolerance on the largest change of a coordinate in a pass
+- `optTol`: convergence tolerance on the largest change of a coordinate in a
+  pass. With `relativeTol`, the change of coordinate `k` is measured as
+  `|Δxₖ| ⋅ coordinateScale(f, k)` and compared with `optTol ⋅ responseScale(f)`,
+  so that the tolerance does not depend on the units of the data; for the
+  least squares loss these scales are `‖X[:, k]‖ / √n` and `‖y‖ / √n`.
+  Otherwise `|Δxₖ|` is compared with `optTol`
 - `randomize`: visit the coordinates in a random order in each pass, drawn from
   the global random number generator; otherwise in the order `1, 2, …`. The
   fixed order can be faster on some designs but much slower when the columns
@@ -19,6 +25,8 @@ Options for [`coordinateDescent!`](@ref).
 - `warmStart`: start from the supplied iterate; otherwise start from zero and
   follow a path of decreasing penalties
 - `numSteps`: number of penalty levels on that path when `warmStart` is false
+- `relativeTol`: see `optTol`; losses that do not define the scales, such as
+  user-defined ones, use the absolute rule either way
 """
 struct CDOptions
   maxIter::Int64
@@ -26,6 +34,7 @@ struct CDOptions
   randomize::Bool           # coordinate are visitied in a randomized order or not
   warmStart::Bool           # when running CD, should we do path following or not
   numSteps::Int64           # when pathFollowing, how many points are there on the path
+  relativeTol::Bool         # changes measured relative to the scales of the loss
 end
 
 CDOptions(;
@@ -33,7 +42,8 @@ CDOptions(;
   optTol::Real=1e-7,
   randomize::Bool=true,
   warmStart::Bool=true,
-  numSteps::Real=50) = CDOptions(Int(maxIter), Float64(optTol), randomize, warmStart, Int(numSteps))
+  numSteps::Real=50,
+  relativeTol::Bool=true) = CDOptions(Int(maxIter), Float64(optTol), randomize, warmStart, Int(numSteps), relativeTol)
 
 
 """
@@ -45,15 +55,18 @@ passed as the last argument.
 - `iterations`: number of passes over the coordinates, including those on the
   path of penalties when `warmStart` is false
 - `converged`: whether the stopping rule was met before `maxIter` passes
-- `maxChange`: largest change of a coordinate in the last pass
+- `maxChange`: largest change of a coordinate in the last pass, scaled as
+  described for `optTol` in [`CDOptions`](@ref)
+- `tolerance`: the threshold `maxChange` is compared with
 """
 mutable struct CDInfo
   iterations::Int64
   converged::Bool
   maxChange::Float64
+  tolerance::Float64
 end
 
-CDInfo() = CDInfo(0, false, NaN)
+CDInfo() = CDInfo(0, false, NaN, NaN)
 
 
 """
@@ -101,6 +114,16 @@ IterLassoOptions(;
 ####################################
 
 
+# the nonzero entries of x as a SparseVector
+function _sparsevec(x::SparseIterate{T, 1}) where {T}
+  k = nnz(x)
+  ind = x.nzval2ind[1:k]
+  val = x.nzval[1:k]
+  keep = .!iszero.(val)
+  sparsevec(ind[keep], val[keep], length(x))
+end
+
+
 # The floating point type T of real data X and y, and X and y converted to it;
 # an array that already has element type T is not copied
 function _float_data(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real})
@@ -112,26 +135,35 @@ end
 # Initial estimate of σ for the scaled lasso:
 #
 # * the s columns of X most correlated with y are found
-# * y is regressed on those s columns
+# * y is regressed on those s columns, and on a constant with an intercept
 # * σ is the standard deviation of the residuals, which tends to overestimate
 #   the true σ
 _findInitSigma!(
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   s::Int,
-  storage::Vector{T}) where {T <: AbstractFloat} =  std(_findInitResiduals!(X, y, s, storage))
+  storage::Vector{T};
+  intercept::Bool=false) where {T <: AbstractFloat} =  std(_findInitResiduals!(X, y, s, storage; intercept))
 
 # residuals of the least squares fit of y on the s columns of X most correlated
-# with y; storage is overwritten and returned
+# with y (both centered with an intercept), and on a constant with an
+# intercept; storage is overwritten and returned
 function _findInitResiduals!(
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   s::Int,
-  storage::Vector{T}) where {T <: AbstractFloat}
+  storage::Vector{T};
+  intercept::Bool=false) where {T <: AbstractFloat}
 
-  S = _findLargestCorrelations(X, y, s)
-  Xs = view(X, :, S)
-  mul!(storage, Xs, Xs \ y)
+  if intercept
+    S = _findLargestCorrelations(X, y .- mean(y), s)
+    Z = [ones(T, length(y)) X[:, S]]
+    mul!(storage, Z, Z \ y)
+  else
+    S = _findLargestCorrelations(X, y, s)
+    Xs = view(X, :, S)
+    mul!(storage, Xs, Xs \ y)
+  end
   @. storage = y - storage
   return storage
 end
@@ -214,14 +246,17 @@ function _stdX!(out::Vector{T}, w::AbstractVector{T}, X::AbstractMatrix{T}) wher
   out
 end
 
-# heteroscedasticity-robust penalty loadings out[j] = sqrt(∑ᵢ (X[i,j] e[i])² / n)
-function _getLoadings!(out::Vector{T}, X::AbstractMatrix{T}, e::AbstractVector{T}) where {T <: AbstractFloat}
+# heteroscedasticity-robust penalty loadings out[j] = sqrt(∑ᵢ ((X[i,j] - x̄[j]) e[i])² / n),
+# for the column means x̄ (zeros without an intercept)
+function _getLoadings!(out::Vector{T}, X::AbstractMatrix{T}, e::AbstractVector{T},
+                       xbar::AbstractVector{T}=zeros(T, size(X, 2))) where {T <: AbstractFloat}
   n, p = size(X)
 
   @inbounds for j=1:p
+    c = xbar[j]
     v = zero(T)
     @simd for i=1:n
-      v += (X[i, j]*e[i])^2.
+      v += ((X[i, j] - c)*e[i])^2.
     end
     out[j] = sqrt(v / n)
   end

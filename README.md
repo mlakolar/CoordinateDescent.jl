@@ -27,6 +27,14 @@ sol = lasso(X, y, 0.1)          # minimize ‖y - Xβ‖² / (2n) + 0.1 ‖β‖
 sol.x                           # sparse coefficient vector
 sol.converged, sol.iterations   # stopping rule met?, passes over the coordinates
 
+# an unpenalized intercept (sol.intercept) and penalties scaled by the
+# standard deviations of the columns
+sol = lasso(X, y, 0.1; intercept=true, standardizeX=true)
+
+# solutions along 50 values of λ, from the smallest one with a zero solution
+path = LassoPath(X, y; nλ=50, intercept=true)
+path.λpath, path.βpath, path.β0path
+
 # lower-level interface
 x = SparseIterate(p)
 f = CDLeastSquaresLoss(y, X)
@@ -37,7 +45,10 @@ info.converged, info.iterations
 ```
 
 Coordinate descent stops when no coordinate changes by more than `optTol` in a
-pass, or after `maxIter` passes (default 100 000); in the second case it warns
-that the solution may be inaccurate.
+pass, the change of coefficient `k` measured in units of `‖y‖ / ‖X[:, k]‖`, so
+the result does not depend on the units of the data (`CDOptions(; relativeTol =
+false)` measures it in the units of the coefficients). It also stops after
+`maxIter` passes (default 100 000), and then warns that the solution may be
+inaccurate.
 
 Package depends on [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl).

@@ -8,6 +8,7 @@ using ProximalBase
 using Random
 using LinearAlgebra
 using SparseArrays
+using Statistics
 
 Random.seed!(1)
 
@@ -244,6 +245,14 @@ end
     @test nnz(x) == 2
   end
 
+  # other iterates are not screened along the path of warmStart = false
+  c = [3., -0.5, 0.2, -2., 1.5, 0.7]
+  for warmStart in (true, false)
+    x = SymmetricSparseIterate(3)
+    coordinateDescent!(x, SeparableLoss(c), ProximalBase.ProxL1(1.), CDOptions(;warmStart=warmStart))
+    @test [x[k] for k in 1:6] ≈ [2., 0., 0., -1., 0.5, 0.]
+  end
+
   struct IncompleteLoss <: CoordinateDifferentiableFunction end
   @test_throws ErrorException CoordinateDescent.initialize!(IncompleteLoss(), SparseIterate(2))
   @test_throws ErrorException CoordinateDescent.gradient(IncompleteLoss(), SparseIterate(2), 1)
@@ -286,7 +295,8 @@ end
     @test_logs coordinateDescent!(x, f, g, opt, info)
     @test info.converged
     @test info.iterations >= 2          # a pass that moves x and one that confirms it
-    @test info.maxChange < 1e-10
+    @test info.maxChange < info.tolerance
+    @test info.tolerance ≈ 1e-10 * CoordinateDescent.responseScale(f)
     @test maximum(abs.(X'*(Y - X*x) / n)) ≈ 0.05 atol=1e-8
 
     # stopped by maxIter: reported and warned about; with warmStart = false the
@@ -301,7 +311,7 @@ end
     else
       @test opt.numSteps < info.iterations <= 2 * (opt.numSteps + 1)
     end
-    @test info.maxChange > 1e-10
+    @test info.maxChange > info.tolerance
   end
 
   # ProxZero, and an info object can be reused
@@ -318,6 +328,50 @@ end
   @test opt.optTol == 1e-7
   @test opt.randomize
   @test opt.warmStart
+  @test opt.relativeTol
+end
+
+@testset "scale-free stopping rule" begin
+  # the lasso with y and λ scaled by c: with powers of two the iterates scale
+  # exactly, so the relative rule stops after the same number of passes
+  n, p = 100, 50
+  X = randn(n, p)
+  Y = X[:,1:5] * ones(5) + randn(n)
+  λ = 0.05
+  opt = CDOptions(;randomize=false)
+  ref = lasso(X, Y, λ, opt)
+  for c in (2.0^-10, 2.0^10)
+    sol = lasso(X, c .* Y, c * λ, opt)
+    @test sol.iterations == ref.iterations
+    @test Vector(sol.x) ≈ c .* Vector(ref.x)
+  end
+  # the absolute rule depends on c
+  opt = CDOptions(;randomize=false, relativeTol=false)
+  @test lasso(X, 2.0^-10 .* Y, 2.0^-10 * λ, opt).iterations < lasso(X, 2.0^10 .* Y, 2.0^10 * λ, opt).iterations
+
+  # the scales of the built-in losses
+  f = CDLeastSquaresLoss(Y, X)
+  @test CoordinateDescent.responseScale(f) ≈ norm(Y) / sqrt(n)
+  @test CoordinateDescent.coordinateScale(f, 3) ≈ norm(X[:, 3]) / sqrt(n)
+  w = rand(n)
+  f = CDWeightedLSLoss(Y, X, w)
+  @test CoordinateDescent.responseScale(f) ≈ sqrt(sum(w .* Y.^2) / n)
+  @test CoordinateDescent.coordinateScale(f, 3) ≈ sqrt(sum(w .* X[:, 3].^2) / n)
+  f = CDSqrtLassoLoss(Y, X)
+  @test CoordinateDescent.responseScale(f) ≈ norm(Y) / sqrt(n)
+  @test CoordinateDescent.coordinateScale(f, 3) ≈ norm(X[:, 3]) / sqrt(n)
+  f = CDQuadraticLoss(X'X / n, -X'Y / n)
+  @test CoordinateDescent.coordinateScale(f, 3) ≈ norm(X[:, 3]) / sqrt(n)
+  @test 0 < CoordinateDescent.responseScale(f) <= norm(Y) / sqrt(n)
+
+  # a zero response falls back to the absolute rule, and zero is found at once
+  info = CDInfo()
+  x = SparseIterate(p)
+  coordinateDescent!(x, CDLeastSquaresLoss(zeros(n), X), ProximalBase.ProxL1(0.1), CDOptions(), info)
+  @test info.converged
+  @test info.iterations == 1
+  @test info.tolerance == CDOptions().optTol
+  @test nnz(x) == 0
 end
 
 @testset "option conversions" begin
@@ -364,6 +418,47 @@ end
     coordinateDescent!(x, f, g, CDOptions(;optTol=1e-12, warmStart=false))
     @test Vector(x) ≈ X \ Y atol=1e-6
   end
+end
+
+@testset "full gradient" begin
+  n, p = 50, 20
+  X = randn(n, p) .+ 1
+  Y = X * randn(p) + randn(n)
+  w = rand(n)
+  x = SparseIterate(sprandn(p, 0.3))
+  for f in (CDLeastSquaresLoss(Y, X), CDLeastSquaresLoss(Y, X; intercept=true), CDWeightedLSLoss(Y, X, w),
+            CDSqrtLassoLoss(Y, X), CDSqrtLassoLoss(Y, X; intercept=true), CDQuadraticLoss(X'X / n, -X'Y / n))
+    CoordinateDescent.initialize!(f, x)
+    grad = CoordinateDescent.fullGradient!(zeros(p), f, x)
+    @test grad ≈ [CoordinateDescent.gradient(f, x, k) for k in 1:p]
+  end
+  f = CDLeastSquaresLoss(Y, X; intercept=true)
+  CoordinateDescent.initialize!(f, x)
+  Xc = X .- mean(X, dims=1)
+  @test CoordinateDescent.fullGradient!(zeros(p), f, x) ≈ -Xc' * (Y .- mean(Y) - Xc * Vector(x)) / n
+end
+
+@testset "screening corrects the strong rule" begin
+  # with a strong set that is too small, the violators are found and added
+  n, p = 100, 500
+  X = randn(n, p)
+  Y = X[:,1:20] * ones(20) + randn(n)
+  f = CDLeastSquaresLoss(Y, X)
+  x = SparseIterate(p)
+  CoordinateDescent.initialize!(f, x)
+  grad = CoordinateDescent.fullGradient!(zeros(p), f, x)
+  g = ProximalBase.ProxL1(0.2 * maximum(abs, grad))
+  info = CDInfo()
+  opt = CDOptions(;optTol=1e-12)
+
+  # λprev = 0 keeps only the coordinates with |∇ₖf| ≥ 2λ at zero
+  checks = CoordinateDescent._screenedSolve!(x, f, g, 0.0, grad, CoordinateDescent.OrderedIterator(x), opt, info, falses(p))
+  @test checks > 1
+  @test info.converged
+  x2 = SparseIterate(p)
+  coordinateDescent!(x2, CDLeastSquaresLoss(Y, X), g, opt)
+  @test Vector(x) ≈ Vector(x2) atol=1e-8
+  @test grad ≈ -X'*(Y - X*x) / n                  # the gradient at the solution
 end
 
 @testset "dense starting point" begin

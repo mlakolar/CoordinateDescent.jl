@@ -84,6 +84,27 @@ end
 
 end
 
+@testset "candidates" begin
+    # full passes visit only the candidate coordinates; active passes are unchanged
+    x = SparseIterate(6)
+    x[2] = 1.
+    x[5] = 2.
+    for it in (CoordinateDescent.OrderedIterator(x), CoordinateDescent.RandomIterator(x))
+        CoordinateDescent.setCandidates!(it, [4, 2, 6])
+        CoordinateDescent.reset!(it, true)
+        @test sort(collect(it)) == [2, 4, 6]
+        @test length(it) == 3
+        CoordinateDescent.reset!(it, false)
+        @test sort(collect(it)) == [2, 5]
+        CoordinateDescent.setCandidates!(it, nothing)
+        CoordinateDescent.reset!(it, true)
+        @test sort(collect(it)) == 1:6
+    end
+    it = CoordinateDescent.OrderedIterator(x)
+    CoordinateDescent.setCandidates!(it, [4, 2, 6])
+    @test collect(it) == [4, 2, 6]
+end
+
 
 
 end
