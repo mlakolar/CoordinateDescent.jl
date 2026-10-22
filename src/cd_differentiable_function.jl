@@ -10,6 +10,8 @@ updates cheap, and implements
 - `numCoordinates(f)`: number of coordinates
 - `descendCoordinate!(f, g, x, k)`: update `x[k]` and the cache
 
+and optionally `coordinateScale(f, k)` and `responseScale(f)`, which make the
+stopping rule independent of the units of the data (see [`CDOptions`](@ref)).
 These functions are not exported; extend them as
 `CoordinateDescent.initialize!` and so on.
 """
@@ -50,6 +52,27 @@ instead minimize a local quadratic approximation of `f`. The function must also
 update the cache of `f` so that it is current for the new `x`.
 """
 descendCoordinate!(f, g, x, k) = error("descendCoordinate not implemented for $(typeof(f))")
+
+"""
+    coordinateScale(f, k)
+
+Scale of coordinate `k`: with `relativeTol` (see [`CDOptions`](@ref)),
+[`coordinateDescent!`](@ref) measures a change `Δxₖ` as
+`|Δxₖ| ⋅ coordinateScale(f, k)`. For a loss of the fitted values `Xβ` this is
+the size of the change in the fitted values, for example `‖X[:, k]‖ / √n`.
+Defaults to `1`.
+"""
+coordinateScale(f, k) = 1
+
+"""
+    responseScale(f)
+
+Scale of the response that the scaled changes are compared with: the stopping
+rule is `max_k |Δxₖ| ⋅ coordinateScale(f, k) < optTol ⋅ responseScale(f)`,
+for example with `responseScale(f) = ‖y‖ / √n`. Defaults to `1`, which with the
+default `coordinateScale` gives the absolute rule `max_k |Δxₖ| < optTol`.
+"""
+responseScale(f) = 1
 
 
 # The value cdprox!(g, x, k, γ) would give x[k] if x[k] were v, without writing
@@ -114,6 +137,23 @@ end
 
 gradient(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
   - At_mul_B_row(f.X, f.r, j) / size(f.X, 1)
+
+# X[:, k]' X[:, k] from the cache, computed and cached if needed
+function _sqnorm!(f::CDLeastSquaresLoss{T}, k::Int) where {T<:AbstractFloat}
+  a = f.a[k]
+  if isnan(a)
+    X = f.X
+    a = zero(T)
+    @inbounds @simd for i in axes(X, 1)
+      a += X[i, k] * X[i, k]
+    end
+    f.a[k] = a
+  end
+  a
+end
+
+coordinateScale(f::CDLeastSquaresLoss, k::Int) = sqrt(_sqnorm!(f, k) / length(f.y))
+responseScale(f::CDLeastSquaresLoss) = norm(f.y) / sqrt(length(f.y))
 
 # a = X[:, k]' X[:, k]
 # b = X[:, k]' r
@@ -207,6 +247,29 @@ function gradient(f::CDWeightedLSLoss{T}, x::SparseIterate{T}, j::Int64) where {
   - out / n
 end
 
+# ∑ᵢ wᵢ X[i, k]² from the cache, computed and cached if needed
+function _sqnorm!(f::CDWeightedLSLoss{T}, k::Int) where {T<:AbstractFloat}
+  a = f.a[k]
+  if isnan(a)
+    X, w = f.X, f.w
+    a = zero(T)
+    @inbounds @simd for i in axes(X, 1)
+      a += X[i, k] * X[i, k] * w[i]
+    end
+    f.a[k] = a
+  end
+  a
+end
+
+coordinateScale(f::CDWeightedLSLoss, k::Int) = sqrt(_sqnorm!(f, k) / length(f.y))
+function responseScale(f::CDWeightedLSLoss{T}) where {T<:AbstractFloat}
+  s = zero(T)
+  @inbounds @simd for i in eachindex(f.y)
+    s += f.w[i] * f.y[i] * f.y[i]
+  end
+  sqrt(s / length(f.y))
+end
+
 # a = X[:, k]' X[:, k]
 # b = X[:, k]' r
 #
@@ -262,7 +325,7 @@ end
     CDSqrtLassoLoss(y, X)
 
 The square-root lasso loss `f(β) = ‖y - Xβ‖`. Caches the residuals
-`r = y - Xβ`.
+`r = y - Xβ` and the squared column norms.
 
 This loss is not smooth where `r = 0`, so its `descendCoordinate!` minimizes
 `f + g` over a coordinate exactly instead of using a quadratic approximation.
@@ -272,26 +335,45 @@ struct CDSqrtLassoLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFuncti
   y::S
   X::U
   r::Vector{T}
+  a::Vector{T}          # squared column norms; NaN until computed
 
-  CDSqrtLassoLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, r::Vector{T}) where {T,S,U} =
-    new(y,X,r)
+  CDSqrtLassoLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, r::Vector{T}, a::Vector{T}) where {T,S,U} =
+    new(y,X,r,a)
 end
 
 function CDSqrtLassoLoss(y::AbstractVector{T}, X::AbstractMatrix{T}) where {T<:AbstractFloat}
   length(y) == size(X, 1) || throw(DimensionMismatch())
-  CDSqrtLassoLoss{T, typeof(y), typeof(X)}(y,X,copy(y))
+  CDSqrtLassoLoss{T, typeof(y), typeof(X)}(y,X,copy(y),fill(T(NaN), size(X, 2)))
 end
 
 numCoordinates(f::CDSqrtLassoLoss) = size(f.X, 2)
 
 function initialize!(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
   _residuals!(f.r, f.y, f.X, x)
+  fill!(f.a, T(NaN))          # X may have changed in place
   nothing
 end
 
 
 gradient(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
   - At_mul_B_row(f.X, f.r, j) / norm(f.r)
+
+# X[:, k]' X[:, k] from the cache, computed and cached if needed
+function _sqnorm!(f::CDSqrtLassoLoss{T}, k::Int) where {T<:AbstractFloat}
+  a = f.a[k]
+  if isnan(a)
+    X = f.X
+    a = zero(T)
+    @inbounds @simd for i in axes(X, 1)
+      a += X[i, k] * X[i, k]
+    end
+    f.a[k] = a
+  end
+  a
+end
+
+coordinateScale(f::CDSqrtLassoLoss, k::Int) = sqrt(_sqnorm!(f, k) / length(f.y))
+responseScale(f::CDSqrtLassoLoss) = norm(f.y) / sqrt(length(f.y))
 
 # a = X[:, k]' X[:, k]
 # b = X[:, k]' r
@@ -316,17 +398,24 @@ function descendCoordinate!(
     end
   end
 
+  # s = dot(r, X[:,k]), rsqr = dot(r, r), xsqr = dot(X[:,k], X[:, k]) cached
   s = zero(T)
-  xsqr = zero(T)
   rsqr = zero(T)
-  @inbounds @simd for i=1:n
-    xsqr += X[i, k] * X[i, k]
-    s += r[i] * X[i, k]
-    rsqr += r[i] * r[i]
+  xsqr = f.a[k]
+  if isnan(xsqr)
+    xsqr = zero(T)
+    @inbounds @simd for i=1:n
+      xsqr += X[i, k] * X[i, k]
+      s += r[i] * X[i, k]
+      rsqr += r[i] * r[i]
+    end
+    f.a[k] = xsqr
+  else
+    @inbounds @simd for i=1:n
+      s += r[i] * X[i, k]
+      rsqr += r[i] * r[i]
+    end
   end
-  # s = dot(r, X[:,k])
-  # xsqr = dot(X[:,k], X[:, k])
-  # rsqr = dot(r, r)
 
   λ = g.λ0
   if !isa(g, ProxL1{T, Nothing})
@@ -400,6 +489,20 @@ function initialize!(f::CDQuadraticLoss, x::SparseIterate)
 end
 gradient(f::CDQuadraticLoss{T}, ::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
   f.Ax[j] + f.b[j]
+
+# With A = X'X/n and b = -X'y/n, √A[k,k] = ‖X[:, k]‖ / √n, and
+# maxₖ |bₖ| / √A[k,k] is a lower bound on ‖y‖ / √n.
+coordinateScale(f::CDQuadraticLoss, k::Int) = sqrt(f.A[k, k])
+function responseScale(f::CDQuadraticLoss{T}) where {T<:AbstractFloat}
+  s = zero(T)
+  for k in eachindex(f.b)
+    a = f.A[k, k]
+    if a > 0
+      s = max(s, abs(f.b[k]) / sqrt(a))
+    end
+  end
+  s
+end
 
 function descendCoordinate!(
   f::CDQuadraticLoss{T},

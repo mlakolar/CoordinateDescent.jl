@@ -108,9 +108,11 @@ end
 
 
 # Alternates full passes with passes over the active set; stops after two
-# consecutive passes below optTol, the first of which is a full pass, so that
-# the active set is checked against all coordinates before stopping.
-# Records the passes made and whether it stopped in info.
+# consecutive passes below the tolerance, the first of which is a full pass, so
+# that the active set is checked against all coordinates before stopping.
+# With options.relativeTol the changes are scaled by coordinateScale and the
+# tolerance by responseScale; a zero response scale falls back to the absolute
+# rule. Records the passes made and whether it stopped in info.
 # Assumes that f is initialized before the call here.
 function _coordinateDescent!(
   x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
@@ -120,20 +122,24 @@ function _coordinateDescent!(
   options::CDOptions,
   info::CDInfo)
 
+  sy = options.relativeTol ? responseScale(f) : 1
+  scaled = options.relativeTol && sy > 0
+  tol = scaled ? options.optTol * sy : options.optTol
+
   prev_converged = false
   converged = true
-  info.iterations, info.converged, info.maxChange = 0, false, NaN
+  info.iterations, info.converged, info.maxChange, info.tolerance = 0, false, NaN, tol
   for iter=1:options.maxIter
 
     # a full pass after convergence on the active set, otherwise a pass over
     # the nonzero coordinates
     reset!(coef_iterator, converged)
-    maxH = _cdPass!(x, f, g, coef_iterator)
+    maxH = _cdPass!(x, f, g, coef_iterator, scaled)
     prev_converged = converged
     info.iterations, info.maxChange = iter, maxH
 
     # test for convergence
-    converged = maxH < options.optTol
+    converged = maxH < tol
 
     if prev_converged && converged
       info.converged = true
@@ -144,20 +150,22 @@ function _coordinateDescent!(
 end
 
 _warn_not_converged(info::CDInfo, options::CDOptions) =
-  info.converged || @warn "coordinate descent did not converge in maxIter = $(options.maxIter) passes (largest change of a coordinate in the last pass $(round(info.maxChange; sigdigits = 3)) > optTol = $(options.optTol)); the solution may be inaccurate. Increase maxIter in CDOptions."
+  info.converged || @warn "coordinate descent did not converge in maxIter = $(options.maxIter) passes (largest change of a coordinate in the last pass $(round(info.maxChange; sigdigits = 3)) > tolerance $(round(info.tolerance; sigdigits = 3))); the solution may be inaccurate. Increase maxIter in CDOptions."
 
 function _cdPass!(
   x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
   f::CoordinateDifferentiableFunction,
   g::Union{ProxL1, ProxZero},
-  coef_iterator::AtomIterator
+  coef_iterator::AtomIterator,
+  scaled::Bool
   )
 
   maxH = zero(eltype(x))
   for ipred = coef_iterator               # coef_iterator produces original indexes
     h = descendCoordinate!(f, g, x, ipred)
-    if abs(h) > maxH
-      maxH = abs(h)
+    ah = scaled ? oftype(maxH, abs(h) * coordinateScale(f, ipred)) : oftype(maxH, abs(h))
+    if ah > maxH
+      maxH = ah
     end
   end
   dropzeros!(x)

@@ -286,7 +286,8 @@ end
     @test_logs coordinateDescent!(x, f, g, opt, info)
     @test info.converged
     @test info.iterations >= 2          # a pass that moves x and one that confirms it
-    @test info.maxChange < 1e-10
+    @test info.maxChange < info.tolerance
+    @test info.tolerance ≈ 1e-10 * CoordinateDescent.responseScale(f)
     @test maximum(abs.(X'*(Y - X*x) / n)) ≈ 0.05 atol=1e-8
 
     # stopped by maxIter: reported and warned about; with warmStart = false the
@@ -301,7 +302,7 @@ end
     else
       @test opt.numSteps < info.iterations <= 2 * (opt.numSteps + 1)
     end
-    @test info.maxChange > 1e-10
+    @test info.maxChange > info.tolerance
   end
 
   # ProxZero, and an info object can be reused
@@ -318,6 +319,50 @@ end
   @test opt.optTol == 1e-7
   @test opt.randomize
   @test opt.warmStart
+  @test opt.relativeTol
+end
+
+@testset "scale-free stopping rule" begin
+  # the lasso with y and λ scaled by c: with powers of two the iterates scale
+  # exactly, so the relative rule stops after the same number of passes
+  n, p = 100, 50
+  X = randn(n, p)
+  Y = X[:,1:5] * ones(5) + randn(n)
+  λ = 0.05
+  opt = CDOptions(;randomize=false)
+  ref = lasso(X, Y, λ, opt)
+  for c in (2.0^-10, 2.0^10)
+    sol = lasso(X, c .* Y, c * λ, opt)
+    @test sol.iterations == ref.iterations
+    @test Vector(sol.x) ≈ c .* Vector(ref.x)
+  end
+  # the absolute rule depends on c
+  opt = CDOptions(;randomize=false, relativeTol=false)
+  @test lasso(X, 2.0^-10 .* Y, 2.0^-10 * λ, opt).iterations < lasso(X, 2.0^10 .* Y, 2.0^10 * λ, opt).iterations
+
+  # the scales of the built-in losses
+  f = CDLeastSquaresLoss(Y, X)
+  @test CoordinateDescent.responseScale(f) ≈ norm(Y) / sqrt(n)
+  @test CoordinateDescent.coordinateScale(f, 3) ≈ norm(X[:, 3]) / sqrt(n)
+  w = rand(n)
+  f = CDWeightedLSLoss(Y, X, w)
+  @test CoordinateDescent.responseScale(f) ≈ sqrt(sum(w .* Y.^2) / n)
+  @test CoordinateDescent.coordinateScale(f, 3) ≈ sqrt(sum(w .* X[:, 3].^2) / n)
+  f = CDSqrtLassoLoss(Y, X)
+  @test CoordinateDescent.responseScale(f) ≈ norm(Y) / sqrt(n)
+  @test CoordinateDescent.coordinateScale(f, 3) ≈ norm(X[:, 3]) / sqrt(n)
+  f = CDQuadraticLoss(X'X / n, -X'Y / n)
+  @test CoordinateDescent.coordinateScale(f, 3) ≈ norm(X[:, 3]) / sqrt(n)
+  @test 0 < CoordinateDescent.responseScale(f) <= norm(Y) / sqrt(n)
+
+  # a zero response falls back to the absolute rule, and zero is found at once
+  info = CDInfo()
+  x = SparseIterate(p)
+  coordinateDescent!(x, CDLeastSquaresLoss(zeros(n), X), ProximalBase.ProxL1(0.1), CDOptions(), info)
+  @test info.converged
+  @test info.iterations == 1
+  @test info.tolerance == CDOptions().optTol
+  @test nnz(x) == 0
 end
 
 @testset "option conversions" begin

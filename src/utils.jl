@@ -5,13 +5,19 @@
 ####################################
 
 """
-    CDOptions(; maxIter=100_000, optTol=1e-7, randomize=true, warmStart=true, numSteps=50)
+    CDOptions(; maxIter=100_000, optTol=1e-7, randomize=true, warmStart=true,
+                numSteps=50, relativeTol=true)
 
 Options for [`coordinateDescent!`](@ref).
 
 - `maxIter`: maximum number of passes over the coordinates; reaching it without
   convergence gives a warning
-- `optTol`: convergence tolerance on the largest change of a coordinate in a pass
+- `optTol`: convergence tolerance on the largest change of a coordinate in a
+  pass. With `relativeTol`, the change of coordinate `k` is measured as
+  `|Δxₖ| ⋅ coordinateScale(f, k)` and compared with `optTol ⋅ responseScale(f)`,
+  so that the tolerance does not depend on the units of the data; for the
+  least squares loss these scales are `‖X[:, k]‖ / √n` and `‖y‖ / √n`.
+  Otherwise `|Δxₖ|` is compared with `optTol`
 - `randomize`: visit the coordinates in a random order in each pass, drawn from
   the global random number generator; otherwise in the order `1, 2, …`. The
   fixed order can be faster on some designs but much slower when the columns
@@ -19,6 +25,8 @@ Options for [`coordinateDescent!`](@ref).
 - `warmStart`: start from the supplied iterate; otherwise start from zero and
   follow a path of decreasing penalties
 - `numSteps`: number of penalty levels on that path when `warmStart` is false
+- `relativeTol`: see `optTol`; losses that do not define the scales, such as
+  user-defined ones, use the absolute rule either way
 """
 struct CDOptions
   maxIter::Int64
@@ -26,6 +34,7 @@ struct CDOptions
   randomize::Bool           # coordinate are visitied in a randomized order or not
   warmStart::Bool           # when running CD, should we do path following or not
   numSteps::Int64           # when pathFollowing, how many points are there on the path
+  relativeTol::Bool         # changes measured relative to the scales of the loss
 end
 
 CDOptions(;
@@ -33,7 +42,8 @@ CDOptions(;
   optTol::Real=1e-7,
   randomize::Bool=true,
   warmStart::Bool=true,
-  numSteps::Real=50) = CDOptions(Int(maxIter), Float64(optTol), randomize, warmStart, Int(numSteps))
+  numSteps::Real=50,
+  relativeTol::Bool=true) = CDOptions(Int(maxIter), Float64(optTol), randomize, warmStart, Int(numSteps), relativeTol)
 
 
 """
@@ -45,15 +55,18 @@ passed as the last argument.
 - `iterations`: number of passes over the coordinates, including those on the
   path of penalties when `warmStart` is false
 - `converged`: whether the stopping rule was met before `maxIter` passes
-- `maxChange`: largest change of a coordinate in the last pass
+- `maxChange`: largest change of a coordinate in the last pass, scaled as
+  described for `optTol` in [`CDOptions`](@ref)
+- `tolerance`: the threshold `maxChange` is compared with
 """
 mutable struct CDInfo
   iterations::Int64
   converged::Bool
   maxChange::Float64
+  tolerance::Float64
 end
 
-CDInfo() = CDInfo(0, false, NaN)
+CDInfo() = CDInfo(0, false, NaN, NaN)
 
 
 """

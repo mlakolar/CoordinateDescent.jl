@@ -37,7 +37,10 @@ info.converged, info.iterations
 ```
 
 Coordinate descent stops when no coordinate changes by more than `optTol` in a
-pass, or after `maxIter` passes (default 100 000); in the second case it warns
-that the solution may be inaccurate.
+pass, the change of coefficient `k` measured in units of `‖y‖ / ‖X[:, k]‖`, so
+the result does not depend on the units of the data (`CDOptions(; relativeTol =
+false)` measures it in the units of the coefficients). It also stops after
+`maxIter` passes (default 100 000), and then warns that the solution may be
+inaccurate.
 
 Package depends on [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl).
