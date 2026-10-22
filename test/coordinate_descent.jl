@@ -855,6 +855,21 @@ end
   end
 end
 
+# least squares as a user-defined loss with value: Anderson acceleration does
+# not know its cache, and undoes an extrapolation with initialize!
+struct WrappedLS <: CoordinateDifferentiableFunction
+  f::CDLeastSquaresLoss{Float64, Vector{Float64}, Matrix{Float64}}
+end
+CoordinateDescent.initialize!(w::WrappedLS, x) = CoordinateDescent.initialize!(w.f, x)
+CoordinateDescent.numCoordinates(w::WrappedLS) = CoordinateDescent.numCoordinates(w.f)
+CoordinateDescent.gradient(w::WrappedLS, x, k) = CoordinateDescent.gradient(w.f, x, k)
+CoordinateDescent.descendCoordinate!(w::WrappedLS, g, x, k) = CoordinateDescent.descendCoordinate!(w.f, g, x, k)
+ProximalBase.value(w::WrappedLS, x::SparseIterate) = ProximalBase.value(w.f, x)
+
+# the value of the elastic net, which Anderson acceleration needs
+ProximalBase.value(g::ElasticNetPenalty, x::SparseIterate) =
+  g.λ * (g.α * norm(x, 1) + (1 - g.α) * sum(abs2, x) / 2)
+
 @testset "Anderson acceleration" begin
   @test CDOptions(;order=:cyclic, anderson=5).anderson == 5
   @test CDOptions(;randomize=false, anderson=5).anderson == 5
@@ -920,11 +935,20 @@ end
     @test Vector(path1.βpath[k]) ≈ Vector(path0.βpath[k]) atol=1e-6
   end
 
+  # a user-defined loss and penalty that define value
+  x0, info0 = SparseIterate(p), CDInfo()
+  coordinateDescent!(x0, f, ElasticNetPenalty(λ, 0.5), plain, info0)
+  x1, info1 = SparseIterate(p), CDInfo()
+  coordinateDescent!(x1, WrappedLS(f), ElasticNetPenalty(λ, 0.5), accelerated, info1)
+  @test info1.converged
+  @test info1.iterations < info0.iterations
+  @test Vector(x1) ≈ Vector(x0) atol=1e-6
+
   # it needs a SparseIterate, and the value of the loss and of the penalty
   gg = ProxGroupL2(λ, [((k-1)*8+1):(k*8) for k in 1:100])
   @test_throws ArgumentError coordinateDescent!(AtomIterate(p, gg), f, gg, accelerated)
   @test_throws ArgumentError coordinateDescent!(SparseIterate(3), SeparableLoss([1., -2., 3.]), ProxL1(0.5), accelerated)
-  @test_throws ArgumentError coordinateDescent!(SparseIterate(p), f, ElasticNetPenalty(λ, 0.5), accelerated)
+  @test_throws ArgumentError coordinateDescent!(SparseIterate(p), f, BoxPenalty(-1., 1.), accelerated)
 end
 
 end

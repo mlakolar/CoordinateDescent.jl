@@ -503,13 +503,8 @@ end
 # h        = arg_min a/(2n) (h-b/a)^2 + λ_k⋅|x_k + h|
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
 # f at x from the residuals, which f.r holds for x
-function ProximalBase.value(f::CDWeightedLSLoss{T}, ::SparseIterate{T}) where {T<:AbstractFloat}
-  s = zero(T)
-  @inbounds @simd for i in eachindex(f.r)
-    s += f.w[i] * f.r[i] * f.r[i]
-  end
-  s / (2 * length(f.y))
-end
+ProximalBase.value(f::CDWeightedLSLoss{T}, ::SparseIterate{T}) where {T<:AbstractFloat} =
+  sum(i -> f.w[i] * f.r[i]^2, eachindex(f.r)) / (2 * length(f.y))
 
 function descendCoordinate!(
   f::CDWeightedLSLoss{T},
