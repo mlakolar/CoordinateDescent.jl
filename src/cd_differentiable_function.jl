@@ -82,16 +82,72 @@ _cdshrink(g::ProxL1{T, Nothing}, v::T, ::Int, γ::T) where {T} = shrink(v, g.λ0
 _cdshrink(g::ProxL1{T, S}, v::T, k::Int, γ::T) where {T, S <: AbstractArray} = shrink(v, g.λ[k] * γ * g.λ0)
 _cdshrink(::ProxZero, v, ::Int, _) = v
 
-# r = y - X * x, accumulated over the columns of the stored entries of x
-function _residuals!(r::AbstractVector{T}, y::AbstractVector{T}, X::AbstractMatrix{T}, x::SparseIterate{T}) where {T}
-  copyto!(r, y)
+# Columns centered at c, where c is the column mean when a loss fits an
+# intercept and zero otherwise; a zero c takes the plain loops.
+
+# (a, b) with b = (X[:, k] - c)' r and a = ‖X[:, k] - c‖², which is computed
+# only when the cached a is NaN
+@inline function _column_dot(X::AbstractMatrix{T}, r::AbstractVector{T}, k::Int, c::T, a::T) where {T}
+  b = zero(T)
+  if isnan(a)
+    a = zero(T)
+    if iszero(c)
+      @inbounds @simd for i in eachindex(r)
+        a += X[i, k] * X[i, k]
+        b += r[i] * X[i, k]
+      end
+    else
+      @inbounds @simd for i in eachindex(r)
+        d = X[i, k] - c
+        a += d * d
+        b += r[i] * d
+      end
+    end
+  elseif iszero(c)
+    @inbounds @simd for i in eachindex(r)
+      b += r[i] * X[i, k]
+    end
+  else
+    @inbounds @simd for i in eachindex(r)
+      b += r[i] * (X[i, k] - c)
+    end
+  end
+  a, b
+end
+
+# ‖X[:, k] - c‖²
+function _column_sqnorm(X::AbstractMatrix{T}, k::Int, c::T) where {T}
+  a = zero(T)
+  @inbounds @simd for i in axes(X, 1)
+    a += (X[i, k] - c) * (X[i, k] - c)
+  end
+  a
+end
+
+# r -= h (X[:, k] - c)
+@inline function _column_axpy!(r::AbstractVector{T}, X::AbstractMatrix{T}, k::Int, c::T, h::T) where {T}
+  if iszero(c)
+    @inbounds @simd for i in eachindex(r)
+      r[i] -= X[i, k] * h
+    end
+  else
+    @inbounds @simd for i in eachindex(r)
+      r[i] -= (X[i, k] - c) * h
+    end
+  end
+  r
+end
+
+# r = y - ȳ - (X - 1x̄') x, accumulated over the columns of the stored entries
+# of x; without xbar the columns are not centered
+function _residuals!(r::AbstractVector{T}, y::AbstractVector{T}, X::AbstractMatrix{T}, x::SparseIterate{T},
+                     xbar::Union{Nothing, AbstractVector{T}}=nothing, ybar::T=zero(T)) where {T}
+  r .= y .- ybar
   @inbounds for j = 1:nnz(x)
     k = x.nzval2ind[j]
     v = x.nzval[j]
     iszero(v) && continue
-    @simd for i in eachindex(r)
-      r[i] -= X[i, k] * v
-    end
+    _column_axpy!(r, X, k, xbar === nothing ? zero(T) : xbar[k], v)
   end
   r
 end
@@ -104,62 +160,84 @@ end
 ####################################
 
 """
-    CDLeastSquaresLoss(y, X)
+    CDLeastSquaresLoss(y, X; intercept=false)
 
 The least squares loss `f(β) = ‖y - Xβ‖² / (2n)`. Caches the residuals
 `r = y - Xβ`, so a coordinate update costs `O(n)`, and the squared column
 norms `X[:, k]' X[:, k]`, computed on the first visit to each coordinate after
 `initialize!`.
+
+With `intercept`, the loss is minimized over an unpenalized intercept as well,
+`f(β) = min_β₀ ‖y - β₀ - Xβ‖² / (2n)`, whose minimizer is `β₀ = ȳ - x̄'β` for
+the column means `x̄ = f.xbar` and the mean `ȳ = f.ybar` of `y`. The columns
+and `y` are centered on the fly, so `X` is not copied, and the residuals are
+`y - β₀ - Xβ`.
 """
 struct CDLeastSquaresLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   y::S
   X::U
   r::Vector{T}
-  a::Vector{T}          # squared column norms; NaN until computed
+  a::Vector{T}          # squared norms of the centered columns; NaN until computed
+  xbar::Vector{T}       # column means with an intercept, otherwise zeros
+  ybar::T               # mean of y with an intercept, otherwise zero
 
-  CDLeastSquaresLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, r::Vector{T}, a::Vector{T}) where {T,S,U} =
-    new(y,X,r,a)
+  CDLeastSquaresLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, r::Vector{T}, a::Vector{T},
+                              xbar::Vector{T}, ybar::T) where {T,S,U} =
+    new(y,X,r,a,xbar,ybar)
 end
 
-function CDLeastSquaresLoss(y::AbstractVector{T}, X::AbstractMatrix{T}) where {T<:AbstractFloat}
+function CDLeastSquaresLoss(y::AbstractVector{T}, X::AbstractMatrix{T}; intercept::Bool=false) where {T<:AbstractFloat}
   length(y) == size(X, 1) || throw(DimensionMismatch())
-  CDLeastSquaresLoss{T, typeof(y), typeof(X)}(y,X,copy(y),fill(T(NaN), size(X, 2)))
+  p = size(X, 2)
+  xbar = intercept ? vec(mean(X; dims=1)) : zeros(T, p)
+  ybar = intercept ? mean(y) : zero(T)
+  CDLeastSquaresLoss{T, typeof(y), typeof(X)}(y,X,copy(y),fill(T(NaN), p),xbar,ybar)
 end
 
 numCoordinates(f::CDLeastSquaresLoss) = size(f.X, 2)
 
 function initialize!(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
-  _residuals!(f.r, f.y, f.X, x)
+  _residuals!(f.r, f.y, f.X, x, f.xbar, f.ybar)
   fill!(f.a, T(NaN))          # X may have changed in place
   nothing
 end
 
 
-gradient(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
-  - At_mul_B_row(f.X, f.r, j) / size(f.X, 1)
+function gradient(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat}
+  b = At_mul_B_row(f.X, f.r, j)
+  iszero(f.xbar[j]) || (b -= f.xbar[j] * sum(f.r))
+  - b / size(f.X, 1)
+end
 
-# X[:, k]' X[:, k] from the cache, computed and cached if needed
+# ‖X[:, k] - x̄ₖ‖² from the cache, computed and cached if needed
 function _sqnorm!(f::CDLeastSquaresLoss{T}, k::Int) where {T<:AbstractFloat}
   a = f.a[k]
   if isnan(a)
-    X = f.X
-    a = zero(T)
-    @inbounds @simd for i in axes(X, 1)
-      a += X[i, k] * X[i, k]
-    end
+    a = _column_sqnorm(f.X, k, f.xbar[k])
     f.a[k] = a
   end
   a
 end
 
 coordinateScale(f::CDLeastSquaresLoss, k::Int) = sqrt(_sqnorm!(f, k) / length(f.y))
-responseScale(f::CDLeastSquaresLoss) = norm(f.y) / sqrt(length(f.y))
+function responseScale(f::CDLeastSquaresLoss{T}) where {T<:AbstractFloat}
+  s = zero(T)
+  @inbounds @simd for i in eachindex(f.y)
+    s += (f.y[i] - f.ybar) * (f.y[i] - f.ybar)
+  end
+  sqrt(s / length(f.y))
+end
+
+# the intercept ȳ - x̄'x that goes with x
+_intercept(f::CDLeastSquaresLoss, x::SparseIterate) = f.ybar - dot(f.xbar, x)
 
 # a = X[:, k]' X[:, k]
 # b = X[:, k]' r
 #
 # h        = arg_min a/(2n) (h-b/a)^2 + λ_k⋅|x_k + h|
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
+#
+# with the columns centered at their means when the loss fits an intercept
 function descendCoordinate!(
   f::CDLeastSquaresLoss{T},
   g::Union{ProxL1{T}, ProxZero},
@@ -169,21 +247,10 @@ function descendCoordinate!(
   X = f.X
   r = f.r
   n = length(f.y)
+  c = f.xbar[k]
 
-  a = f.a[k]
-  b = zero(T)
-  if isnan(a)
-    a = zero(T)
-    @inbounds @simd for i=1:n
-      a += X[i, k] * X[i, k]
-      b += r[i] * X[i, k]
-    end
-    f.a[k] = a
-  else
-    @inbounds @simd for i=1:n
-      b += r[i] * X[i, k]
-    end
-  end
+  a, b = _column_dot(X, r, k, c, f.a[k])
+  f.a[k] = a
 
   oldVal = x[k]
   newVal = _cdshrink(g, oldVal + b / a, k, n / a)
@@ -192,9 +259,7 @@ function descendCoordinate!(
   x[k] = newVal
 
   # update internals -- residuls = y - X * xnew
-  @inbounds @simd for i=1:n
-    r[i] -= X[i, k] * h
-  end
+  _column_axpy!(r, X, k, c, h)
   h
 end
 
@@ -322,10 +387,12 @@ end
 ####################################
 
 """
-    CDSqrtLassoLoss(y, X)
+    CDSqrtLassoLoss(y, X; intercept=false)
 
 The square-root lasso loss `f(β) = ‖y - Xβ‖`. Caches the residuals
-`r = y - Xβ` and the squared column norms.
+`r = y - Xβ` and the squared column norms. With `intercept`,
+`f(β) = min_β₀ ‖y - β₀ - Xβ‖`, minimized by `β₀ = ȳ - x̄'β`; as in
+[`CDLeastSquaresLoss`](@ref), the columns and `y` are centered on the fly.
 
 This loss is not smooth where `r = 0`, so its `descendCoordinate!` minimizes
 `f + g` over a coordinate exactly instead of using a quadratic approximation.
@@ -335,51 +402,96 @@ struct CDSqrtLassoLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFuncti
   y::S
   X::U
   r::Vector{T}
-  a::Vector{T}          # squared column norms; NaN until computed
+  a::Vector{T}          # squared norms of the centered columns; NaN until computed
+  xbar::Vector{T}       # column means with an intercept, otherwise zeros
+  ybar::T               # mean of y with an intercept, otherwise zero
 
-  CDSqrtLassoLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, r::Vector{T}, a::Vector{T}) where {T,S,U} =
-    new(y,X,r,a)
+  CDSqrtLassoLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, r::Vector{T}, a::Vector{T},
+                           xbar::Vector{T}, ybar::T) where {T,S,U} =
+    new(y,X,r,a,xbar,ybar)
 end
 
-function CDSqrtLassoLoss(y::AbstractVector{T}, X::AbstractMatrix{T}) where {T<:AbstractFloat}
+function CDSqrtLassoLoss(y::AbstractVector{T}, X::AbstractMatrix{T}; intercept::Bool=false) where {T<:AbstractFloat}
   length(y) == size(X, 1) || throw(DimensionMismatch())
-  CDSqrtLassoLoss{T, typeof(y), typeof(X)}(y,X,copy(y),fill(T(NaN), size(X, 2)))
+  p = size(X, 2)
+  xbar = intercept ? vec(mean(X; dims=1)) : zeros(T, p)
+  ybar = intercept ? mean(y) : zero(T)
+  CDSqrtLassoLoss{T, typeof(y), typeof(X)}(y,X,copy(y),fill(T(NaN), p),xbar,ybar)
 end
 
 numCoordinates(f::CDSqrtLassoLoss) = size(f.X, 2)
 
 function initialize!(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
-  _residuals!(f.r, f.y, f.X, x)
+  _residuals!(f.r, f.y, f.X, x, f.xbar, f.ybar)
   fill!(f.a, T(NaN))          # X may have changed in place
   nothing
 end
 
 
-gradient(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
-  - At_mul_B_row(f.X, f.r, j) / norm(f.r)
+function gradient(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}, j::Int64) where {T<:AbstractFloat}
+  b = At_mul_B_row(f.X, f.r, j)
+  iszero(f.xbar[j]) || (b -= f.xbar[j] * sum(f.r))
+  - b / norm(f.r)
+end
 
-# X[:, k]' X[:, k] from the cache, computed and cached if needed
+# ‖X[:, k] - x̄ₖ‖² from the cache, computed and cached if needed
 function _sqnorm!(f::CDSqrtLassoLoss{T}, k::Int) where {T<:AbstractFloat}
   a = f.a[k]
   if isnan(a)
-    X = f.X
-    a = zero(T)
-    @inbounds @simd for i in axes(X, 1)
-      a += X[i, k] * X[i, k]
-    end
+    a = _column_sqnorm(f.X, k, f.xbar[k])
     f.a[k] = a
   end
   a
 end
 
 coordinateScale(f::CDSqrtLassoLoss, k::Int) = sqrt(_sqnorm!(f, k) / length(f.y))
-responseScale(f::CDSqrtLassoLoss) = norm(f.y) / sqrt(length(f.y))
+function responseScale(f::CDSqrtLassoLoss{T}) where {T<:AbstractFloat}
+  s = zero(T)
+  @inbounds @simd for i in eachindex(f.y)
+    s += (f.y[i] - f.ybar) * (f.y[i] - f.ybar)
+  end
+  sqrt(s / length(f.y))
+end
 
-# a = X[:, k]' X[:, k]
-# b = X[:, k]' r
-#
-# h        = arg_min a/(2n) (h-b/a)^2 + λ_k⋅|x_k + h|
-# xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
+_intercept(f::CDSqrtLassoLoss, x::SparseIterate) = f.ybar - dot(f.xbar, x)
+
+# (a, s, ρ) with s = (X[:, k] - c)' r, ρ = r' r and a = ‖X[:, k] - c‖², which
+# is computed only when the cached a is NaN
+@inline function _column_dot_rsqr(X::AbstractMatrix{T}, r::AbstractVector{T}, k::Int, c::T, a::T) where {T}
+  s = zero(T)
+  ρ = zero(T)
+  if isnan(a)
+    a = zero(T)
+    if iszero(c)
+      @inbounds @simd for i in eachindex(r)
+        a += X[i, k] * X[i, k]
+        s += r[i] * X[i, k]
+        ρ += r[i] * r[i]
+      end
+    else
+      @inbounds @simd for i in eachindex(r)
+        d = X[i, k] - c
+        a += d * d
+        s += r[i] * d
+        ρ += r[i] * r[i]
+      end
+    end
+  elseif iszero(c)
+    @inbounds @simd for i in eachindex(r)
+      s += r[i] * X[i, k]
+      ρ += r[i] * r[i]
+    end
+  else
+    @inbounds @simd for i in eachindex(r)
+      s += r[i] * (X[i, k] - c)
+      ρ += r[i] * r[i]
+    end
+  end
+  a, s, ρ
+end
+
+# the exact minimizer over coordinate k, with the columns centered at their
+# means when the loss fits an intercept
 function descendCoordinate!(
   f::CDSqrtLassoLoss{T},
   g::ProxL1{T},
@@ -388,34 +500,17 @@ function descendCoordinate!(
 
   X = f.X
   r = f.r
-  n = length(f.y)
+  c = f.xbar[k]
 
   # partial residuals with coordinate k removed: r = y - X*x + X[:,k]*x[k]
   oldVal = x[k]
   if !iszero(oldVal)
-    @inbounds @simd for i=1:n
-      r[i] += X[i, k] * oldVal
-    end
+    _column_axpy!(r, X, k, c, -oldVal)
   end
 
   # s = dot(r, X[:,k]), rsqr = dot(r, r), xsqr = dot(X[:,k], X[:, k]) cached
-  s = zero(T)
-  rsqr = zero(T)
-  xsqr = f.a[k]
-  if isnan(xsqr)
-    xsqr = zero(T)
-    @inbounds @simd for i=1:n
-      xsqr += X[i, k] * X[i, k]
-      s += r[i] * X[i, k]
-      rsqr += r[i] * r[i]
-    end
-    f.a[k] = xsqr
-  else
-    @inbounds @simd for i=1:n
-      s += r[i] * X[i, k]
-      rsqr += r[i] * r[i]
-    end
-  end
+  xsqr, s, rsqr = _column_dot_rsqr(X, r, k, c, f.a[k])
+  f.a[k] = xsqr
 
   λ = g.λ0
   if !isa(g, ProxL1{T, Nothing})
@@ -434,9 +529,7 @@ function descendCoordinate!(
 
   # update internals -- residuls = y - X * xnew
   if !iszero(newVal)
-    @inbounds @simd for i=1:n
-      r[i] -= X[i, k] * newVal
-    end
+    _column_axpy!(r, X, k, c, newVal)
   end
   if newVal != oldVal
     x[k] = newVal

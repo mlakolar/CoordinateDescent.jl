@@ -135,26 +135,35 @@ end
 # Initial estimate of σ for the scaled lasso:
 #
 # * the s columns of X most correlated with y are found
-# * y is regressed on those s columns
+# * y is regressed on those s columns, and on a constant with an intercept
 # * σ is the standard deviation of the residuals, which tends to overestimate
 #   the true σ
 _findInitSigma!(
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   s::Int,
-  storage::Vector{T}) where {T <: AbstractFloat} =  std(_findInitResiduals!(X, y, s, storage))
+  storage::Vector{T};
+  intercept::Bool=false) where {T <: AbstractFloat} =  std(_findInitResiduals!(X, y, s, storage; intercept))
 
 # residuals of the least squares fit of y on the s columns of X most correlated
-# with y; storage is overwritten and returned
+# with y (both centered with an intercept), and on a constant with an
+# intercept; storage is overwritten and returned
 function _findInitResiduals!(
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   s::Int,
-  storage::Vector{T}) where {T <: AbstractFloat}
+  storage::Vector{T};
+  intercept::Bool=false) where {T <: AbstractFloat}
 
-  S = _findLargestCorrelations(X, y, s)
-  Xs = view(X, :, S)
-  mul!(storage, Xs, Xs \ y)
+  if intercept
+    S = _findLargestCorrelations(X, y .- mean(y), s)
+    Z = [ones(T, length(y)) X[:, S]]
+    mul!(storage, Z, Z \ y)
+  else
+    S = _findLargestCorrelations(X, y, s)
+    Xs = view(X, :, S)
+    mul!(storage, Xs, Xs \ y)
+  end
   @. storage = y - storage
   return storage
 end
@@ -237,14 +246,17 @@ function _stdX!(out::Vector{T}, w::AbstractVector{T}, X::AbstractMatrix{T}) wher
   out
 end
 
-# heteroscedasticity-robust penalty loadings out[j] = sqrt(∑ᵢ (X[i,j] e[i])² / n)
-function _getLoadings!(out::Vector{T}, X::AbstractMatrix{T}, e::AbstractVector{T}) where {T <: AbstractFloat}
+# heteroscedasticity-robust penalty loadings out[j] = sqrt(∑ᵢ ((X[i,j] - x̄[j]) e[i])² / n),
+# for the column means x̄ (zeros without an intercept)
+function _getLoadings!(out::Vector{T}, X::AbstractMatrix{T}, e::AbstractVector{T},
+                       xbar::AbstractVector{T}=zeros(T, size(X, 2))) where {T <: AbstractFloat}
   n, p = size(X)
 
   @inbounds for j=1:p
+    c = xbar[j]
     v = zero(T)
     @simd for i=1:n
-      v += (X[i, j]*e[i])^2.
+      v += ((X[i, j] - c)*e[i])^2.
     end
     out[j] = sqrt(v / n)
   end

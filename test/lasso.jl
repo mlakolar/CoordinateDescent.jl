@@ -429,6 +429,101 @@ end
   @test Vector(path.βpath[end]) ≈ Vector(x) atol=1e-6
 end
 
+@testset "intercept" begin
+  # fitting an unpenalized intercept equals fitting the centered data
+  n, p, s = 200, 30, 5
+  X = randn(n, p) .+ 2 .* randn(1, p)          # columns with nonzero means
+  Y = 3 .+ X[:,1:s] * ones(s) + randn(n)
+  Xc, Yc = X .- mean(X, dims=1), Y .- mean(Y)
+  xbar = vec(mean(X, dims=1))
+  λ = 0.05
+  opt = CDOptions(;optTol=1e-12)
+
+  ref = lasso(Xc, Yc, λ, opt)
+  sol = lasso(X, Y, λ, opt; intercept=true)
+  @test Vector(sol.x) ≈ Vector(ref.x) atol=1e-8
+  @test sol.intercept ≈ mean(Y) - dot(xbar, Vector(sol.x))
+  @test sol.residuals ≈ Y .- sol.intercept .- X*sol.x
+  @test lasso(X, Y, λ, opt).intercept == 0
+
+  # an offset of y changes only the intercept
+  sol2 = lasso(X, Y .+ 100, λ, opt; intercept=true)
+  @test Vector(sol2.x) ≈ Vector(sol.x) atol=1e-8
+  @test sol2.intercept ≈ sol.intercept + 100
+
+  ω = 0.5 .+ rand(p)
+  @test Vector(lasso(X, Y, λ, ω, opt; intercept=true).x) ≈ Vector(lasso(Xc, Yc, λ, ω, opt).x) atol=1e-8
+  sd = vec(std(X, dims=1, corrected=false))
+  sol = lasso(X, Y, λ, opt; intercept=true, standardizeX=true)
+  @test sol.penalty.λ ≈ sd
+  @test Vector(sol.x) ≈ Vector(lasso(Xc, Yc, λ, sd, opt).x) atol=1e-8
+
+  opt = CDOptions(;optTol=1e-10)
+  sol = sqrtLasso(X, Y, 2.0, opt; intercept=true)
+  @test Vector(sol.x) ≈ Vector(sqrtLasso(Xc, Yc, 2.0, opt).x) atol=1e-7
+  @test sol.intercept ≈ mean(Y) - dot(xbar, Vector(sol.x))
+  @test Vector(sqrtLasso(X, Y, 2.0, ω, opt; intercept=true).x) ≈ Vector(sqrtLasso(Xc, Yc, 2.0, ω, opt).x) atol=1e-7
+
+  iopt = IterLassoOptions(;optTol=1e-8, optionsCD=CDOptions(;optTol=1e-12))
+  s1 = scaledLasso(X, Y, λ, ones(p), iopt; intercept=true)
+  s2 = scaledLasso(Xc, Yc, λ, ones(p), iopt)
+  @test Vector(s1.x) ≈ Vector(s2.x) atol=1e-6
+  @test s1.σ ≈ s2.σ rtol=1e-6
+  @test s1.intercept ≈ mean(Y) - dot(xbar, Vector(s1.x))
+  for initProcedure in (:Screening, :InitStd)
+    iopt = IterLassoOptions(;optTol=1e-8, initProcedure=initProcedure, optionsCD=CDOptions(;optTol=1e-12))
+    f1 = feasibleLasso!(SparseIterate(p), X, Y, λ, iopt; intercept=true)
+    f2 = feasibleLasso!(SparseIterate(p), Xc, Yc, λ, iopt)
+    @test Vector(f1.x) ≈ Vector(f2.x) atol=1e-6
+    @test f1.penalty.λ ≈ f2.penalty.λ rtol=1e-6
+  end
+end
+
+@testset "lasso path grid" begin
+  n, p = 100, 300
+  X = randn(n, p) .+ 1
+  Y = 2 .+ X[:,1:5] * ones(5) + randn(n)
+  Xc, Yc = X .- mean(X, dims=1), Y .- mean(Y)
+  sd = vec(std(X, dims=1, corrected=false))
+  opt = CDOptions(;optTol=1e-10)
+
+  path = LassoPath(X, Y, opt; nλ=20, intercept=true)
+  @test length(path.λpath) == length(path.βpath) == length(path.β0path) == 20
+  @test path.λpath[1] ≈ maximum(abs.(Xc'Yc) ./ (n .* sd))   # the smallest λ with zero solution
+  @test path.λpath[end] ≈ 0.01 * path.λpath[1]              # default ratio when n < p
+  @test issorted(path.λpath; rev=true)
+  @test nnz(path.βpath[1]) == 0
+  @test path.β0path[1] ≈ mean(Y)
+  @test nnz(path.βpath[end]) > 5
+  @test all(path.converged)
+
+  # the same as solving at the grid points, and as the centered data
+  path2 = LassoPath(X, Y, path.λpath, opt; intercept=true)
+  path3 = LassoPath(Xc, Yc, path.λpath, opt)
+  for k in (5, 20)
+    @test Vector(path2.βpath[k]) ≈ Vector(path.βpath[k]) atol=1e-6
+    @test Vector(path3.βpath[k]) ≈ Vector(path.βpath[k]) atol=1e-6
+    @test path.β0path[k] ≈ mean(Y) - dot(vec(mean(X, dims=1)), Vector(path.βpath[k]))
+  end
+  @test all(iszero, path3.β0path)
+
+  # refits with an intercept put it first
+  rf = refitLassoPath(path, X, Y)
+  S = findall(!iszero, path.βpath[10])
+  @test rf[S] ≈ [ones(n) X[:, S]] \ Y
+
+  # options of the grid
+  path = LassoPath(X[:, 1:50], Y; nλ=5, standardizeX=false)
+  @test path.λpath[end] ≈ 1e-4 * path.λpath[1]              # n > p
+  @test path.λpath[1] ≈ maximum(abs.(X[:, 1:50]'Y)) / n
+  @test length(LassoPath(X, Y; nλ=1).λpath) == 1
+  λs = LassoPath(X, Y; nλ=3, λminratio=0.5).λpath
+  @test λs ≈ λs[1] .* [1, sqrt(0.5), 0.5]
+  @test_throws ArgumentError LassoPath(X, Y; nλ=0)
+  @test_throws ArgumentError LassoPath(X, Y; λminratio=2)
+  @test LassoPath(Int.(round.(X)), Y; nλ=3) isa LassoPath{Float64}
+end
+
 @testset "refit lasso path" begin
   n, p, s = 200, 30, 5
   X = randn(n, p)
