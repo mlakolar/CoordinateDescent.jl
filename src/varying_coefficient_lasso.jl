@@ -59,10 +59,10 @@ createKernel(::Type{EpanechnikovKernel{T}}, h::T) where {T <: AbstractFloat} = E
 
 Value of the kernel `K_h(x, y)`.
 """
-evaluate(k::GaussianKernel{T}, x::T, y::T) where {T <: AbstractFloat} = exp(-(x-y)^2. / k.h) / k.h
+evaluate(k::GaussianKernel{T}, x::T, y::T) where {T <: AbstractFloat} = exp(-abs2(x - y) / k.h) / k.h
 function evaluate(k::EpanechnikovKernel{T}, x::T, y::T) where {T <: AbstractFloat}
     u = (x - y) / k.h
-    abs(u) >= 1. ? zero(T) : 0.75 * (1. - u^2.) / k.h
+    abs(u) >= 1 ? zero(T) : T(0.75) * (1 - abs2(u)) / k.h
 end
 
 
@@ -84,6 +84,10 @@ where `wᵢ = K_h(zᵢ, z0)`, `X̃ᵢ = Xᵢ ⊗ [1, (zᵢ - z0), ..., (zᵢ - z
 `sₖ = sqrt(∑ᵢ wᵢ X̃ᵢₖ² / n)` standardizes the columns of the expanded design.
 Each problem is warm started from the solution at the previous grid point.
 
+The loss scales with the kernel and the loadings `sₖ` with its square root, so
+`λ0` is on the scale of the kernel: multiplying the kernel by a constant `c`
+gives the same estimate when `λ0` is multiplied by `√c`.
+
 Returns `(B, BR)`, sparse matrices of size `p(degree + 1) × length(zgrid)`.
 Column `k` of `B` holds the lasso estimate at `zgrid[k]`. If `refit` is true,
 column `k` of `BR` holds the weighted least squares refit on the selected
@@ -98,6 +102,12 @@ function locpolyl1(
   λ0::T,
   refit::Bool,
   options::CDOptions=CDOptions()) where {T <: AbstractFloat}
+
+  # the weighted loss below does not check its data, which it reads in place
+  _check_finite(X, "X")
+  _check_finite(z, "z")
+  _check_finite(y, "y")
+  _check_finite(zgrid, "zgrid")
 
   # construct inner options because we do not want warmStart = false
   # we want to start from the previous iteration since the points
@@ -150,7 +160,8 @@ estimator for each bandwidth in `hArr`.
 For each observation `i`, the model is fit at `z0 = zᵢ` with observation `i`
 given zero weight. The lasso penalty is `λ0 σ̂`, where the noise level `σ̂` is
 estimated jointly with the coefficients as in the scaled lasso. The selected
-variables are refit by weighted least squares and used to predict `yᵢ`.
+variables are refit by weighted least squares and used to predict `yᵢ`. As in
+`locpolyl1`, `λ0` is on the scale of the kernel.
 
 Returns the vector of summed squared prediction errors, one per bandwidth.
 """
@@ -161,6 +172,11 @@ function lvocv_locpolyl1(
     kernelType::Type{<:SmoothingKernel},
     λ0::T,
     options::CDOptions=CDOptions()) where {T <: AbstractFloat}
+
+    # the weighted loss below does not check its data, which it reads in place
+    _check_finite(X, "X")
+    _check_finite(z, "z")
+    _check_finite(y, "y")
 
     n, p = size(X)
     numH = length(hArr)
@@ -205,7 +221,7 @@ function lvocv_locpolyl1(
             get_nonzero_coordinates!(S, β, p, degree, true)
             Xs = view(wX, :, S)
             Yh = dot(wX[i, S], (Xs' * Diagonal(w) * Xs) \ (Xs' * Diagonal(w) * y))
-            MSE[indH] += (Yh - y[i])^2.
+            MSE[indH] += abs2(Yh - y[i])
         end
     end
     MSE
@@ -425,7 +441,7 @@ function lvocv_locpoly(
 
             # make prediction
             Yh = dot(X[i, :], hbeta[1:(degree+1):ep])
-            MSE[indH] += (Yh - y[i])^2.
+            MSE[indH] += abs2(Yh - y[i])
         end
     end
     MSE
@@ -461,7 +477,7 @@ function split_locpoly(
 
             # make prediction
             Yh = dot(Xtest[i, :], βhati[1:(degree+1):ep])
-            MSE[indH] += (ytest[i] - Yh)^2.
+            MSE[indH] += abs2(ytest[i] - Yh)
         end
     end
     MSE

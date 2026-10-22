@@ -461,6 +461,7 @@ function LassoPath(
   max_hat_s=Inf, standardizeX::Bool=true, intercept::Bool=false,
   screening::Bool=true) where {T<:AbstractFloat}
 
+  all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
   p = size(X, 2)
   x = SparseIterate(T, p)
   f = CDLeastSquaresLoss(Y, X; intercept)

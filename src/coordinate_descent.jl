@@ -73,6 +73,7 @@ function coordinateDescent!(
   if !isa(g, ProxL1{typeof(g.λ0), Nothing})
     length(g.λ) == numCoordinates(f) || throw(DimensionMismatch())
   end
+  _check_penalty(g)
 
   coef_iterator = options.randomize ? RandomIterator(x) : OrderedIterator(x)
 
@@ -318,6 +319,16 @@ end
 _weight(::ProxL1{T, Nothing}, ::Int) where {T} = one(T)
 _weight(g::ProxL1{T, S}, k::Int) where {T, S <: AbstractArray} = g.λ[k]
 _weight(g::ProxGroupL2, k::Int) = g.λ[k]
+
+# A negative penalty level or weight rewards nonzero coefficients, which the
+# coordinate steps do not handle, so it is an error; so is NaN. ProxGroupL2
+# checks this when it is constructed
+function _check_penalty(g::ProxL1)
+  g.λ0 >= 0 || throw(ArgumentError("The penalty level must be nonnegative, but λ0 = $(g.λ0)."))
+  g.λ === nothing || all(w -> w >= 0, g.λ) ||
+    throw(ArgumentError("The penalty weights must be nonnegative."))
+  nothing
+end
 
 # whether coordinate k of x is nonzero, and the size of the gradient over it
 _isnonzero(x::SparseIterate, k::Int) = !iszero(x[k])

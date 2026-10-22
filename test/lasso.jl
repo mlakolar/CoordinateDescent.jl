@@ -645,4 +645,61 @@ end
   @test Vector(sol.x) ≈ Vector(feasibleLasso!(SparseIterate(p), X, Y, 0.1, iopt).x) atol=1e-6
 end
 
+@testset "input checks" begin
+  n, p = 50, 10
+  X = randn(n, p)
+  Y = X[:, 1] + randn(n)
+
+  # negative or NaN penalties are errors, not fits that grow the coefficients
+  @test_throws ArgumentError lasso(X, Y, -0.1)
+  @test_throws ArgumentError lasso(X, Y, NaN)
+  @test_throws ArgumentError lasso(X, Y, 0.1, [-1.; ones(p - 1)])
+  @test_throws ArgumentError sqrtLasso(X, Y, -0.1)
+  @test_throws ArgumentError scaledLasso(X, Y, -0.1, ones(p))
+  @test_throws ArgumentError feasibleLasso!(SparseIterate(p), X, Y, -0.1)
+  @test_throws ArgumentError LassoPath(X, Y, [0.1, -0.1])
+  @test lasso(X, Y, 0.0).converged
+
+  # NaN or Inf in the data used to give a zero fit reported as converged
+  Ynan = copy(Y); Ynan[3] = NaN
+  Xinf = copy(X); Xinf[5, 2] = Inf
+  @test_throws ArgumentError lasso(X, Ynan, 0.1)
+  @test_throws ArgumentError lasso(Xinf, Y, 0.1)
+  @test_throws ArgumentError sqrtLasso(X, Ynan, 0.1)
+  @test_throws ArgumentError scaledLasso(X, Ynan, 0.1, ones(p))
+  @test_throws ArgumentError LassoPath(Xinf, Y)
+  @test_throws ArgumentError CDQuadraticLoss([1. NaN; NaN 1.], zeros(2))
+
+  # invalid options, also when built positionally
+  @test_throws ArgumentError CDOptions(;maxIter=-1)
+  @test_throws ArgumentError CDOptions(;optTol=-1)
+  @test_throws ArgumentError CDOptions(;optTol=NaN)
+  @test_throws ArgumentError CDOptions(;numSteps=-1)
+  o = CDOptions()
+  @test CDOptions(o.maxIter, o.optTol, o.randomize, o.warmStart, o.numSteps, o.relativeTol) == o
+  @test_throws ArgumentError CDOptions(-1, o.optTol, o.randomize, o.warmStart, o.numSteps, o.relativeTol)
+  @test_throws ArgumentError IterLassoOptions(;maxIter=-1)
+  @test_throws ArgumentError IterLassoOptions(;optTol=-1)
+  @test_throws ArgumentError IterLassoOptions(;initProcedure=:Bogus)
+  @test_throws ArgumentError IterLassoOptions(;sinit=0)        # was a BoundsError in scaledLasso
+  @test_throws ArgumentError IterLassoOptions(;σinit=0)
+end
+
+@testset "sqrt-lasso near a perfect fit" begin
+  # with y on the span of a column, ‖r‖² - (X[:, k]'r)² / ‖X[:, k]‖² is zero
+  # up to rounding, which made its square root throw a DomainError
+  for i in 1:100
+    x = 1 .+ rand(3)
+    @test sqrtLasso(reshape(x, 3, 1), 2x, 0.1; standardizeX=false).x[1] ≈ 2
+  end
+  n, p = 20, 60
+  for i in 1:20
+    X = randn(n, p)
+    Y = X[:, 1:3] * ones(3) + 0.01 * randn(n)
+    for λ in (1e-3, 1e-6)
+      @test sqrtLasso(X, Y, λ; standardizeX=false).x isa SparseIterate
+    end
+  end
+end
+
 end

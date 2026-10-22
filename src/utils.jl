@@ -35,6 +35,14 @@ struct CDOptions
   warmStart::Bool           # when running CD, should we do path following or not
   numSteps::Int64           # when pathFollowing, how many points are there on the path
   relativeTol::Bool         # changes measured relative to the scales of the loss
+
+  function CDOptions(maxIter, optTol, randomize, warmStart, numSteps, relativeTol)
+    o = new(maxIter, optTol, randomize, warmStart, numSteps, relativeTol)
+    o.maxIter >= 0 || throw(ArgumentError("maxIter must be nonnegative, but it is $(o.maxIter)."))
+    o.optTol >= 0 || throw(ArgumentError("optTol must be nonnegative, but it is $(o.optTol)."))
+    o.numSteps >= 0 || throw(ArgumentError("numSteps must be nonnegative, but it is $(o.numSteps)."))
+    o
+  end
 end
 
 CDOptions(;
@@ -94,6 +102,17 @@ struct IterLassoOptions
   sinit::Int64             # how many columns of X to use to estimate initial variance or obtain initial residuals
   σinit::Float64
   optionsCD::CDOptions
+
+  function IterLassoOptions(maxIter, optTol, initProcedure, sinit, σinit, optionsCD)
+    o = new(maxIter, optTol, initProcedure, sinit, σinit, optionsCD)
+    o.maxIter >= 0 || throw(ArgumentError("maxIter must be nonnegative, but it is $(o.maxIter)."))
+    o.optTol >= 0 || throw(ArgumentError("optTol must be nonnegative, but it is $(o.optTol)."))
+    o.initProcedure in (:Screening, :InitStd, :WarmStart) ||
+      throw(ArgumentError("initProcedure must be :Screening, :InitStd or :WarmStart, but it is :$(o.initProcedure)."))
+    o.sinit >= 1 || throw(ArgumentError("sinit must be positive, but it is $(o.sinit)."))
+    o.σinit > 0 || throw(ArgumentError("σinit must be positive, but it is $(o.σinit)."))
+    o
+  end
 end
 
 IterLassoOptions(;
@@ -129,6 +148,26 @@ end
 function _float_data(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real})
   T = float(promote_type(eltype(X), eltype(y)))
   T, convert(AbstractMatrix{T}, X), convert(AbstractVector{T}, y)
+end
+
+
+# NaN or Inf in the data would give a meaningless solution that is reported as
+# converged: shrinking a NaN gives zero, so a coordinate with a NaN gradient
+# stays at zero
+_check_finite(A::AbstractArray, name::AbstractString) =
+  all(isfinite, A) || throw(ArgumentError("$name contains NaN or Inf."))
+
+
+# the column means of X; a constant column gets its value exactly, so that it is
+# exactly zero once centered (the computed mean can differ in the last bits)
+function _column_means(X::AbstractMatrix{T}) where {T}
+  xbar = Vector{T}(vec(mean(X; dims=1)))
+  size(X, 1) > 0 || return xbar
+  for k in axes(X, 2)
+    c = X[1, k]
+    all(==(c), view(X, :, k)) && (xbar[k] = c)
+  end
+  xbar
 end
 
 
@@ -225,7 +264,7 @@ function _stdX!(out::Vector{T}, X::AbstractMatrix{T}) where {T <: AbstractFloat}
   @inbounds for j=1:p
     v = zero(T)
     @simd for i=1:n
-      v += X[i, j]^2.
+      v += abs2(X[i, j])
     end
     out[j] = sqrt(v / n)
   end
@@ -239,7 +278,7 @@ function _stdX!(out::Vector{T}, w::AbstractVector{T}, X::AbstractMatrix{T}) wher
   @inbounds for j=1:p
     v = zero(T)
     @simd for i=1:n
-      v += w[i] * X[i, j]^2.
+      v += w[i] * abs2(X[i, j])
     end
     out[j] = sqrt(v / n)
   end
@@ -256,7 +295,7 @@ function _getLoadings!(out::Vector{T}, X::AbstractMatrix{T}, e::AbstractVector{T
     c = xbar[j]
     v = zero(T)
     @simd for i=1:n
-      v += ((X[i, j] - c)*e[i])^2.
+      v += abs2((X[i, j] - c) * e[i])
     end
     out[j] = sqrt(v / n)
   end
