@@ -85,6 +85,18 @@ function lasso(
   LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), info.iterations, info.converged)
 end
 
+function lasso(X::StridedMatrix{<:Real}, y::StridedVector{<:Real}, λ::Real,
+  options::CDOptions=CDOptions())
+  T, Xf, yf = _float_data(X, y)
+  lasso(Xf, yf, T(λ), options)
+end
+
+function lasso(X::StridedMatrix{<:Real}, y::StridedVector{<:Real}, λ::Real,
+  ω::AbstractArray{<:Real}, options::CDOptions=CDOptions())
+  T, Xf, yf = _float_data(X, y)
+  lasso(Xf, yf, T(λ), convert(Array{T}, ω), options)
+end
+
 ######################################################################
 #
 #   Sqrt-Lasso Interface
@@ -143,6 +155,18 @@ function sqrtLasso(
   coordinateDescent!(x, f, g, options, info)
 
   LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), info.iterations, info.converged)
+end
+
+function sqrtLasso(X::StridedMatrix{<:Real}, y::StridedVector{<:Real}, λ::Real,
+  options::CDOptions=CDOptions(); standardizeX=true)
+  T, Xf, yf = _float_data(X, y)
+  sqrtLasso(Xf, yf, T(λ), options; standardizeX=standardizeX)
+end
+
+function sqrtLasso(X::StridedMatrix{<:Real}, y::StridedVector{<:Real}, λ::Real,
+  ω::AbstractArray{<:Real}, options::CDOptions=CDOptions())
+  T, Xf, yf = _float_data(X, y)
+  sqrtLasso(Xf, yf, T(λ), convert(Array{T}, ω), options)
 end
 
 
@@ -214,6 +238,17 @@ function scaledLasso!(
   LassoSolution{T, typeof(g)}(x, f.r, g, sqrt( sum(abs2, f.r) / n ), iterations, σconverged && info.converged)
 end
 
+scaledLasso!(
+  x::SparseIterate{T},
+  X::AbstractMatrix{<:Real},
+  y::AbstractVector{<:Real},
+  λ::Real,
+  ω::AbstractVector{<:Real},
+  options::IterLassoOptions=IterLassoOptions()
+  ) where {T<:AbstractFloat} =
+  scaledLasso!(x, convert(AbstractMatrix{T}, X), convert(AbstractVector{T}, y), T(λ),
+               convert(AbstractVector{T}, ω), options)
+
 """
     scaledLasso(X, y, λ, ω, options=IterLassoOptions())
 
@@ -226,6 +261,12 @@ scaledLasso(
   ω::AbstractVector{T},
   options::IterLassoOptions=IterLassoOptions()
   ) where {T<:AbstractFloat} = scaledLasso!(SparseIterate(T, size(X, 2)), X, y, λ, ω, options)
+
+function scaledLasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real,
+  ω::AbstractVector{<:Real}, options::IterLassoOptions=IterLassoOptions())
+  T, Xf, yf = _float_data(X, y)
+  scaledLasso(Xf, yf, T(λ), convert(AbstractVector{T}, ω), options)
+end
 
 
 ######################################################################
@@ -305,6 +346,15 @@ function feasibleLasso!(
 
   LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), iterations, Γconverged && info.converged)
 end
+
+feasibleLasso!(
+  x::SparseIterate{T},
+  X::AbstractMatrix{<:Real},
+  y::AbstractVector{<:Real},
+  λ0::Real,
+  options::IterLassoOptions=IterLassoOptions()
+  ) where {T<:AbstractFloat} =
+  feasibleLasso!(x, convert(AbstractMatrix{T}, X), convert(AbstractVector{T}, y), T(λ0), options)
 
 ######################################################################
 #
@@ -395,4 +445,14 @@ function LassoPath(
   end
 
   LassoPath{T}(λpath[1:length(βpath)], βpath, iterations, converged)
+end
+
+function LassoPath(
+  X::StridedMatrix{<:Real},
+  Y::StridedVector{<:Real},
+  λpath::AbstractVector{<:Real},
+  options=CDOptions();
+  kwargs...)
+  T, Xf, Yf = _float_data(X, Y)
+  LassoPath(Xf, Yf, convert(Vector{T}, λpath), options; kwargs...)
 end

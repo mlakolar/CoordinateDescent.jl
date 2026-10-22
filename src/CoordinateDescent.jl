@@ -12,7 +12,10 @@ alternates between full passes and passes over the active set.
 
 High-level interfaces: [`lasso`](@ref), [`sqrtLasso`](@ref),
 [`scaledLasso`](@ref), [`feasibleLasso!`](@ref), [`LassoPath`](@ref), and the
-varying-coefficient estimators [`locpoly`](@ref) and [`locpolyl1`](@ref).
+varying-coefficient estimators [`locpoly`](@ref) and [`locpolyl1`](@ref). The
+lasso solvers accept real data and penalties of any type and convert them to a
+common floating point type: the element type of `X` and `y` promoted to a
+float, or that of the iterate passed to `scaledLasso!` and `feasibleLasso!`.
 """
 module CoordinateDescent
 

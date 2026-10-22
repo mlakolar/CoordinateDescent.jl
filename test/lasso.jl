@@ -475,4 +475,42 @@ end
   @test !sol.converged
 end
 
+@testset "argument types" begin
+  # real data and penalties of any type are converted to a common float type
+  n, p, s = 100, 20, 3
+  X = randn(n, p)
+  Y = X[:,1:s] * ones(s) + randn(n)
+  opt = CDOptions(;optTol=1e-12)
+  ref = Vector(lasso(X, Y, 0.1, opt).x)
+
+  @test Vector(lasso(X, Y, 1//10, opt).x) ≈ ref
+  @test Vector(lasso(X, Y, 0.1, ones(Int, p), opt).x) ≈ ref
+  @test eltype(lasso(X, Y, 1, opt).x) == Float64
+
+  X32, Y32 = Float32.(X), Float32.(Y)
+  sol = lasso(X32, Y32, 0.1, CDOptions(;optTol=1e-6))  # Float64 λ, Float32 data
+  @test eltype(sol.x) == Float32
+  sol = lasso(X32, Y, 0.1, opt)                         # mixed data promotes
+  @test eltype(sol.x) == Float64
+  @test Vector(sol.x) ≈ Vector(lasso(Float64.(X32), Y, 0.1, opt).x)
+
+  Xi, Yi = rand(-3:3, n, p), rand(-5:5, n)              # integer data
+  @test Vector(lasso(Xi, Yi, 0.1, opt).x) ≈ Vector(lasso(Float64.(Xi), Float64.(Yi), 0.1, opt).x)
+
+  opt = CDOptions(;optTol=1e-10)
+  @test Vector(sqrtLasso(X, Y, 2, opt).x) ≈ Vector(sqrtLasso(X, Y, 2.0, opt).x) atol=1e-8
+  @test Vector(sqrtLasso(X, Y, 2, ones(Int, p), opt).x) ≈ Vector(sqrtLasso(X, Y, 2.0, ones(p), opt).x) atol=1e-8
+
+  path = LassoPath(X, Y, [1, 0.5f0], opt; standardizeX=false)
+  @test path isa LassoPath{Float64}
+  @test path.λpath == [1.0, 0.5]
+
+  iopt = IterLassoOptions(;optTol=1e-6, optionsCD=CDOptions(;optTol=1e-10))
+  @test Vector(scaledLasso(X, Y, 1//10, ones(Int, p), iopt).x) ≈ Vector(scaledLasso(X, Y, 0.1, ones(p), iopt).x) atol=1e-6
+  sol = scaledLasso!(SparseIterate(p), X32, Y, 0.1, ones(p), iopt)  # the iterate fixes the type
+  @test eltype(sol.x) == Float64
+  sol = feasibleLasso!(SparseIterate(p), X, Y, 1//10, iopt)
+  @test Vector(sol.x) ≈ Vector(feasibleLasso!(SparseIterate(p), X, Y, 0.1, iopt).x) atol=1e-6
+end
+
 end

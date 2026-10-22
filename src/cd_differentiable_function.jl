@@ -52,6 +52,28 @@ update the cache of `f` so that it is current for the new `x`.
 descendCoordinate!(f, g, x, k) = error("descendCoordinate not implemented for $(typeof(f))")
 
 
+# The value cdprox!(g, x, k, γ) would give x[k] if x[k] were v, without writing
+# x: the built-in losses write x[k] only when it changes, so a coordinate that
+# stays at zero never becomes a stored entry.
+_cdshrink(g::ProxL1{T, Nothing}, v::T, ::Int, γ::T) where {T} = shrink(v, g.λ0 * γ)
+_cdshrink(g::ProxL1{T, S}, v::T, k::Int, γ::T) where {T, S <: AbstractArray} = shrink(v, g.λ[k] * γ * g.λ0)
+_cdshrink(::ProxZero, v, ::Int, _) = v
+
+# r = y - X * x, accumulated over the columns of the stored entries of x
+function _residuals!(r::AbstractVector{T}, y::AbstractVector{T}, X::AbstractMatrix{T}, x::SparseIterate{T}) where {T}
+  copyto!(r, y)
+  @inbounds for j = 1:nnz(x)
+    k = x.nzval2ind[j]
+    v = x.nzval[j]
+    iszero(v) && continue
+    @simd for i in eachindex(r)
+      r[i] -= X[i, k] * v
+    end
+  end
+  r
+end
+
+
 ####################################
 #
 # loss |Y - X⋅β|^2 / (2⋅n)
@@ -62,36 +84,30 @@ descendCoordinate!(f, g, x, k) = error("descendCoordinate not implemented for $(
     CDLeastSquaresLoss(y, X)
 
 The least squares loss `f(β) = ‖y - Xβ‖² / (2n)`. Caches the residuals
-`r = y - Xβ`, so a coordinate update costs `O(n)`.
+`r = y - Xβ`, so a coordinate update costs `O(n)`, and the squared column
+norms `X[:, k]' X[:, k]`, computed on the first visit to each coordinate after
+`initialize!`.
 """
 struct CDLeastSquaresLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   y::S
   X::U
   r::Vector{T}
+  a::Vector{T}          # squared column norms; NaN until computed
 
-  CDLeastSquaresLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, r::Vector{T}) where {T,S,U} =
-    new(y,X,r)
+  CDLeastSquaresLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, r::Vector{T}, a::Vector{T}) where {T,S,U} =
+    new(y,X,r,a)
 end
 
 function CDLeastSquaresLoss(y::AbstractVector{T}, X::AbstractMatrix{T}) where {T<:AbstractFloat}
   length(y) == size(X, 1) || throw(DimensionMismatch())
-  CDLeastSquaresLoss{T, typeof(y), typeof(X)}(y,X,copy(y))
+  CDLeastSquaresLoss{T, typeof(y), typeof(X)}(y,X,copy(y),fill(T(NaN), size(X, 2)))
 end
 
 numCoordinates(f::CDLeastSquaresLoss) = size(f.X, 2)
 
 function initialize!(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
-  # compute residuals for the loss
-
-  X = f.X
-  y = f.y
-  r = f.r
-
-  n = size(X, 1)
-
-  @simd for i=1:n
-    @inbounds r[i] = y[i] - A_mul_B_row(X, x, i)
-  end
+  _residuals!(f.r, f.y, f.X, x)
+  fill!(f.a, T(NaN))          # X may have changed in place
   nothing
 end
 
@@ -110,22 +126,30 @@ function descendCoordinate!(
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
-  y = f.y
   X = f.X
   r = f.r
   n = length(f.y)
 
-  a = zero(T)
+  a = f.a[k]
   b = zero(T)
-  @inbounds @simd for i=1:n
-    a += X[i, k] * X[i, k]
-    b += r[i] * X[i, k]
+  if isnan(a)
+    a = zero(T)
+    @inbounds @simd for i=1:n
+      a += X[i, k] * X[i, k]
+      b += r[i] * X[i, k]
+    end
+    f.a[k] = a
+  else
+    @inbounds @simd for i=1:n
+      b += r[i] * X[i, k]
+    end
   end
 
   oldVal = x[k]
-  x[k] += b / a
-  newVal = cdprox!(g, x, k, n / a)
+  newVal = _cdshrink(g, oldVal + b / a, k, n / a)
   h = newVal - oldVal
+  iszero(h) && return h      # x and the residuals do not change
+  x[k] = newVal
 
   # update internals -- residuls = y - X * xnew
   @inbounds @simd for i=1:n
@@ -144,7 +168,7 @@ end
     CDWeightedLSLoss(y, X, w)
 
 The weighted least squares loss `f(β) = ∑ᵢ wᵢ (yᵢ - Xᵢ'β)² / (2n)`. Caches the
-residuals `r = y - Xβ`.
+residuals `r = y - Xβ` and the weighted squared column norms.
 
 `y`, `X` and `w` are stored by reference, so changing them in place (as
 [`locpolyl1`](@ref) does) changes the loss; call `initialize!` afterwards.
@@ -154,30 +178,22 @@ struct CDWeightedLSLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunct
   X::U
   w::S
   r::Vector{T}
+  a::Vector{T}          # weighted squared column norms; NaN until computed
 
-  CDWeightedLSLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, w::AbstractVector{T}, r::Vector{T}) where {T,S,U} =
-    new(y,X,w,r)
+  CDWeightedLSLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, w::AbstractVector{T}, r::Vector{T}, a::Vector{T}) where {T,S,U} =
+    new(y,X,w,r,a)
 end
 
 function CDWeightedLSLoss(y::AbstractVector{T}, X::AbstractMatrix{T}, w::AbstractVector{T}) where {T<:AbstractFloat}
   length(y) == size(X, 1) == length(w) || throw(DimensionMismatch())
-  CDWeightedLSLoss{T, typeof(y), typeof(X)}(y,X,w,copy(y))
+  CDWeightedLSLoss{T, typeof(y), typeof(X)}(y,X,w,copy(y),fill(T(NaN), size(X, 2)))
 end
 
 numCoordinates(f::CDWeightedLSLoss) = size(f.X, 2)
 
 function initialize!(f::CDWeightedLSLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
-  # compute residuals for the loss
-
-  X = f.X
-  y = f.y
-  r = f.r
-
-  n = size(X, 1)
-
-  @simd for i=1:n
-    @inbounds r[i] = y[i] - A_mul_B_row(X, x, i)
-  end
+  _residuals!(f.r, f.y, f.X, x)
+  fill!(f.a, T(NaN))          # X and w may have changed in place
   nothing
 end
 
@@ -202,23 +218,31 @@ function descendCoordinate!(
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
-  y = f.y
   X = f.X
   r = f.r
   w = f.w
   n = length(f.y)
 
-  a = zero(T)
+  a = f.a[k]
   b = zero(T)
-  @inbounds @simd for i=1:n
-    a += X[i, k] * X[i, k] * w[i]
-    b += r[i] * X[i, k] * w[i]
+  if isnan(a)
+    a = zero(T)
+    @inbounds @simd for i=1:n
+      a += X[i, k] * X[i, k] * w[i]
+      b += r[i] * X[i, k] * w[i]
+    end
+    f.a[k] = a
+  else
+    @inbounds @simd for i=1:n
+      b += r[i] * X[i, k] * w[i]
+    end
   end
 
   oldVal = x[k]
-  x[k] += b / a
-  newVal = cdprox!(g, x, k, n / a)
+  newVal = _cdshrink(g, oldVal + b / a, k, n / a)
   h = newVal - oldVal
+  iszero(h) && return h      # x and the residuals do not change
+  x[k] = newVal
 
   # update internals -- residuls = y - X * xnew
   @inbounds @simd for i=1:n
@@ -261,17 +285,7 @@ end
 numCoordinates(f::CDSqrtLassoLoss) = size(f.X, 2)
 
 function initialize!(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
-  # compute residuals for the loss
-
-  X = f.X
-  y = f.y
-  r = f.r
-
-  n, p = size(f.X)
-
-  @simd for i=1:n
-    @inbounds r[i] = y[i] - A_mul_B_row(X, x, i)
-  end
+  _residuals!(f.r, f.y, f.X, x)
   nothing
 end
 
@@ -290,14 +304,16 @@ function descendCoordinate!(
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
-  y = f.y
   X = f.X
   r = f.r
   n = length(f.y)
 
   # partial residuals with coordinate k removed: r = y - X*x + X[:,k]*x[k]
-  @inbounds @simd for i=1:n
-    r[i] += X[i, k] * x[k]
+  oldVal = x[k]
+  if !iszero(oldVal)
+    @inbounds @simd for i=1:n
+      r[i] += X[i, k] * oldVal
+    end
   end
 
   s = zero(T)
@@ -319,21 +335,25 @@ function descendCoordinate!(
 
   # closed-form minimizer of ‖r - X[:,k] t‖ + λ|t| over t; zero when the
   # subgradient condition |X[:,k]'r| ≤ λ‖r‖ holds
-  oldVal = x[k]
   if abs(s) <= λ * sqrt(rsqr)
-    x[k] = zero(T)
+    newVal = zero(T)
   elseif s > λ * sqrt(rsqr)
-    x[k] = ( s - λ / sqrt(1 - λ^2 / xsqr) * sqrt(rsqr - s^2/xsqr) ) / xsqr
+    newVal = ( s - λ / sqrt(1 - λ^2 / xsqr) * sqrt(rsqr - s^2/xsqr) ) / xsqr
   else
-    x[k] = ( s + λ / sqrt(1 - λ^2 / xsqr) * sqrt(rsqr - s^2/xsqr) ) / xsqr
+    newVal = ( s + λ / sqrt(1 - λ^2 / xsqr) * sqrt(rsqr - s^2/xsqr) ) / xsqr
   end
 
   # update internals -- residuls = y - X * xnew
-  @inbounds @simd for i=1:n
-    r[i] -= X[i, k] * x[k]
+  if !iszero(newVal)
+    @inbounds @simd for i=1:n
+      r[i] -= X[i, k] * newVal
+    end
+  end
+  if newVal != oldVal
+    x[k] = newVal
   end
 
-  x[k] - oldVal
+  newVal - oldVal
 end
 
 
@@ -363,13 +383,18 @@ function CDQuadraticLoss(A::AbstractMatrix{T}, b::AbstractVector{T}) where {T<:A
 end
 
 numCoordinates(f::CDQuadraticLoss) = length(f.b)
-function initialize!(f::CDQuadraticLoss, x::SparseIterate) 
+function initialize!(f::CDQuadraticLoss, x::SparseIterate)
+  # Ax accumulated over the columns of the stored entries of x
   Ax = f.Ax
   A = f.A
-  p = length(Ax)
-
-  @simd for i=1:p
-    @inbounds Ax[i] = A_mul_B_row(A, x, i)
+  fill!(Ax, zero(eltype(Ax)))
+  @inbounds for j = 1:nnz(x)
+    k = x.nzval2ind[j]
+    v = x.nzval[j]
+    iszero(v) && continue
+    @simd for i in eachindex(Ax)
+      Ax[i] += A[i, k] * v
+    end
   end
   nothing
 end
@@ -387,9 +412,10 @@ function descendCoordinate!(
 
   oldVal = x[k]
   a = one(T) / a
-  x[k] -= b * a
-  newVal = cdprox!(g, x, k, a)
+  newVal = _cdshrink(g, oldVal - b * a, k, a)
   h = newVal - oldVal
+  iszero(h) && return h      # x and Ax do not change
+  x[k] = newVal
 
   # update Ax
   Ax = f.Ax

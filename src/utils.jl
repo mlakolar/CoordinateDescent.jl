@@ -29,11 +29,11 @@ struct CDOptions
 end
 
 CDOptions(;
-  maxIter::Int64=100_000,
-  optTol::Float64=1e-7,
+  maxIter::Real=100_000,
+  optTol::Real=1e-7,
   randomize::Bool=true,
   warmStart::Bool=true,
-  numSteps::Int=50) = CDOptions(maxIter, optTol, randomize, warmStart, numSteps)
+  numSteps::Real=50) = CDOptions(Int(maxIter), Float64(optTol), randomize, warmStart, Int(numSteps))
 
 
 """
@@ -84,12 +84,13 @@ struct IterLassoOptions
 end
 
 IterLassoOptions(;
-  maxIter::Int64=20,
-  optTol::Float64=1e-2,
+  maxIter::Real=20,
+  optTol::Real=1e-2,
   initProcedure::Symbol=:Screening,
-  sinit::Int64=5,
-  σinit::Float64=1.,
-  optionsCD::CDOptions=CDOptions()) = IterLassoOptions(maxIter, optTol, initProcedure, sinit, σinit, optionsCD)
+  sinit::Real=5,
+  σinit::Real=1.,
+  optionsCD::CDOptions=CDOptions()) =
+  IterLassoOptions(Int(maxIter), Float64(optTol), initProcedure, Int(sinit), Float64(σinit), optionsCD)
 
 
 
@@ -98,6 +99,14 @@ IterLassoOptions(;
 # helper functions
 #
 ####################################
+
+
+# The floating point type T of real data X and y, and X and y converted to it;
+# an array that already has element type T is not copied
+function _float_data(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real})
+  T = float(promote_type(eltype(X), eltype(y)))
+  T, convert(AbstractMatrix{T}, X), convert(AbstractVector{T}, y)
+end
 
 
 # Initial estimate of σ for the scaled lasso:
