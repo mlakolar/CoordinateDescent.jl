@@ -11,7 +11,8 @@ updates cheap, and implements
 - `descendCoordinate!(f, g, x, k)`: update `x[k]` and the cache
 
 and optionally `coordinateScale(f, k)` and `responseScale(f)`, which make the
-stopping rule independent of the units of the data (see [`CDOptions`](@ref)).
+stopping rule independent of the units of the data (see [`CDOptions`](@ref)),
+and `fullGradient!(grad, f, x)`, a faster way to compute the whole gradient.
 These functions are not exported; extend them as
 `CoordinateDescent.initialize!` and so on.
 """
@@ -73,6 +74,21 @@ for example with `responseScale(f) = ‖y‖ / √n`. Defaults to `1`, which wit
 default `coordinateScale` gives the absolute rule `max_k |Δxₖ| < optTol`.
 """
 responseScale(f) = 1
+
+"""
+    fullGradient!(grad, f, x)
+
+Write the gradient of `f` at `x` into `grad`, from the cache of `f`, which must
+be current for `x`, and return `grad`. Used to check the optimality conditions
+when screening (see [`LassoPath`](@ref)). Defaults to `gradient(f, x, k)` for
+every coordinate.
+"""
+function fullGradient!(grad, f, x)
+  for k in eachindex(grad)
+    grad[k] = gradient(f, x, k)
+  end
+  grad
+end
 
 
 # The value cdprox!(g, x, k, γ) would give x[k] if x[k] were v, without writing
@@ -207,6 +223,12 @@ function gradient(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) where
   b = At_mul_B_row(f.X, f.r, j)
   iszero(f.xbar[j]) || (b -= f.xbar[j] * sum(f.r))
   - b / size(f.X, 1)
+end
+
+# -(X - 1x̄')' r / n with one product
+function fullGradient!(grad::AbstractVector{T}, f::CDLeastSquaresLoss{T}, ::SparseIterate{T}) where {T<:AbstractFloat}
+  mul!(grad, transpose(f.X), f.r)
+  grad .= (f.xbar .* sum(f.r) .- grad) ./ size(f.X, 1)
 end
 
 # ‖X[:, k] - x̄ₖ‖² from the cache, computed and cached if needed
@@ -434,6 +456,11 @@ function gradient(f::CDSqrtLassoLoss{T}, x::SparseIterate{T}, j::Int64) where {T
   - b / norm(f.r)
 end
 
+function fullGradient!(grad::AbstractVector{T}, f::CDSqrtLassoLoss{T}, ::SparseIterate{T}) where {T<:AbstractFloat}
+  mul!(grad, transpose(f.X), f.r)
+  grad .= (f.xbar .* sum(f.r) .- grad) ./ norm(f.r)
+end
+
 # ‖X[:, k] - x̄ₖ‖² from the cache, computed and cached if needed
 function _sqnorm!(f::CDSqrtLassoLoss{T}, k::Int) where {T<:AbstractFloat}
   a = f.a[k]
@@ -582,6 +609,8 @@ function initialize!(f::CDQuadraticLoss, x::SparseIterate)
 end
 gradient(f::CDQuadraticLoss{T}, ::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
   f.Ax[j] + f.b[j]
+fullGradient!(grad::AbstractVector{T}, f::CDQuadraticLoss{T}, ::SparseIterate{T}) where {T<:AbstractFloat} =
+  grad .= f.Ax .+ f.b
 
 # With A = X'X/n and b = -X'y/n, √A[k,k] = ‖X[:, k]‖ / √n, and
 # maxₖ |bₖ| / √A[k,k] is a lower bound on ‖y‖ / √n.

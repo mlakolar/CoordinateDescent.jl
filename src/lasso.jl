@@ -381,8 +381,8 @@ feasibleLasso!(
 ######################################################################
 
 """
-    LassoPath(X, y, λpath, options=CDOptions(); max_hat_s=Inf, standardizeX=true, intercept=false)
-    LassoPath(X, y, options=CDOptions(); nλ=100, λminratio, max_hat_s=Inf, standardizeX=true, intercept=false)
+    LassoPath(X, y, λpath, options=CDOptions(); max_hat_s=Inf, standardizeX=true, intercept=false, screening=true)
+    LassoPath(X, y, options=CDOptions(); nλ=100, λminratio, kwargs...)
 
 Lasso solutions `β0path[k]` and `βpath[k]` of
 
@@ -399,6 +399,14 @@ Without `λpath`, the path has `nλ` values spaced evenly on the log scale from
 `λminratio` defaults to `0.01` when `X` has more columns than rows and to
 `1e-4` otherwise.
 
+With `screening`, each λ is solved first over the coordinates kept by the
+sequential strong rule of Tibshirani et al. (2012), and the optimality
+conditions of the others are checked afterwards; coordinates that violate them
+are added and the problem solved again. `kktChecks[k]` is the number of checks
+at `λpath[k]`: one when the rule kept every coordinate it should have, zero
+without screening. Screening needs warm starts, so it is off when
+`options.warmStart` is false.
+
 The path stops early, after the first solution with more than `max_hat_s`
 nonzero coefficients; the returned `λpath` then contains only the values that
 were solved for. The solutions are stored as `SparseVector`s, so a path takes
@@ -412,6 +420,7 @@ struct LassoPath{T<:AbstractFloat}
   β0path::Vector{T}
   iterations::Vector{Int}
   converged::Vector{Bool}
+  kktChecks::Vector{Int}
   intercept::Bool
 end
 
@@ -448,29 +457,50 @@ function LassoPath(
   Y::StridedVector{T},
   λpath::Vector{T},
   options=CDOptions();
-  max_hat_s=Inf, standardizeX::Bool=true, intercept::Bool=false) where {T<:AbstractFloat}
+  max_hat_s=Inf, standardizeX::Bool=true, intercept::Bool=false,
+  screening::Bool=true) where {T<:AbstractFloat}
 
   p = size(X, 2)
   x = SparseIterate(T, p)
   f = CDLeastSquaresLoss(Y, X; intercept)
   stdX = standardizeX ? _loadings(f) : ones(T, p)
 
+  screen = screening && options.warmStart
+  if screen
+    initialize!(f, x)
+    coef_iterator = options.randomize ? RandomIterator(x) : OrderedIterator(x)
+    grad = Vector{T}(undef, p)
+    fullGradient!(grad, f, x)
+    inS = falses(p)
+    λprev = _findLambdaMax(x, f, ProxL1(one(T), stdX))
+  end
+
   βpath = Vector{SparseVector{T, Int}}()
   β0path = T[]
-  iterations, converged = Int[], Bool[]
+  iterations, converged, kktChecks = Int[], Bool[], Int[]
   info = CDInfo()
   for λ in λpath
-    coordinateDescent!(x, f, ProxL1(λ, stdX), options, info)
+    g = ProxL1(λ, stdX)
+    if screen
+      initialize!(f, x)       # no drift of the residuals along the path
+      checks = _screenedSolve!(x, f, g, λprev, grad, coef_iterator, options, info, inS)
+      _warn_not_converged(info, options)
+      λprev = λ
+    else
+      coordinateDescent!(x, f, g, options, info)
+      checks = 0
+    end
     push!(βpath, _sparsevec(x))
     push!(β0path, _intercept(f, x))
     push!(iterations, info.iterations)
     push!(converged, info.converged)
+    push!(kktChecks, checks)
     if nnz(x) > max_hat_s
       break
     end
   end
 
-  LassoPath{T}(λpath[1:length(βpath)], βpath, β0path, iterations, converged, intercept)
+  LassoPath{T}(λpath[1:length(βpath)], βpath, β0path, iterations, converged, kktChecks, intercept)
 end
 
 function LassoPath(

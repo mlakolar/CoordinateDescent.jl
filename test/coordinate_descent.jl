@@ -8,6 +8,7 @@ using ProximalBase
 using Random
 using LinearAlgebra
 using SparseArrays
+using Statistics
 
 Random.seed!(1)
 
@@ -409,6 +410,47 @@ end
     coordinateDescent!(x, f, g, CDOptions(;optTol=1e-12, warmStart=false))
     @test Vector(x) ≈ X \ Y atol=1e-6
   end
+end
+
+@testset "full gradient" begin
+  n, p = 50, 20
+  X = randn(n, p) .+ 1
+  Y = X * randn(p) + randn(n)
+  w = rand(n)
+  x = SparseIterate(sprandn(p, 0.3))
+  for f in (CDLeastSquaresLoss(Y, X), CDLeastSquaresLoss(Y, X; intercept=true), CDWeightedLSLoss(Y, X, w),
+            CDSqrtLassoLoss(Y, X), CDSqrtLassoLoss(Y, X; intercept=true), CDQuadraticLoss(X'X / n, -X'Y / n))
+    CoordinateDescent.initialize!(f, x)
+    grad = CoordinateDescent.fullGradient!(zeros(p), f, x)
+    @test grad ≈ [CoordinateDescent.gradient(f, x, k) for k in 1:p]
+  end
+  f = CDLeastSquaresLoss(Y, X; intercept=true)
+  CoordinateDescent.initialize!(f, x)
+  Xc = X .- mean(X, dims=1)
+  @test CoordinateDescent.fullGradient!(zeros(p), f, x) ≈ -Xc' * (Y .- mean(Y) - Xc * Vector(x)) / n
+end
+
+@testset "screening corrects the strong rule" begin
+  # with a strong set that is too small, the violators are found and added
+  n, p = 100, 500
+  X = randn(n, p)
+  Y = X[:,1:20] * ones(20) + randn(n)
+  f = CDLeastSquaresLoss(Y, X)
+  x = SparseIterate(p)
+  CoordinateDescent.initialize!(f, x)
+  grad = CoordinateDescent.fullGradient!(zeros(p), f, x)
+  g = ProximalBase.ProxL1(0.2 * maximum(abs, grad))
+  info = CDInfo()
+  opt = CDOptions(;optTol=1e-12)
+
+  # λprev = 0 keeps only the coordinates with |∇ₖf| ≥ 2λ at zero
+  checks = CoordinateDescent._screenedSolve!(x, f, g, 0.0, grad, CoordinateDescent.OrderedIterator(x), opt, info, falses(p))
+  @test checks > 1
+  @test info.converged
+  x2 = SparseIterate(p)
+  coordinateDescent!(x2, CDLeastSquaresLoss(Y, X), g, opt)
+  @test Vector(x) ≈ Vector(x2) atol=1e-8
+  @test grad ≈ -X'*(Y - X*x) / n                  # the gradient at the solution
 end
 
 @testset "dense starting point" begin

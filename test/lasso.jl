@@ -524,6 +524,25 @@ end
   @test LassoPath(Int.(round.(X)), Y; nλ=3) isa LassoPath{Float64}
 end
 
+@testset "lasso path screening" begin
+  n, p = 100, 2000
+  X = randn(n, p)
+  Y = X[:,1:10] * ones(10) + randn(n)
+  opt = CDOptions(;optTol=1e-10)
+  for intercept in (false, true)
+    p1 = LassoPath(X, Y, opt; nλ=30, intercept=intercept)
+    p2 = LassoPath(X, Y, p1.λpath, opt; intercept=intercept, screening=false)
+    @test all(>=(1), p1.kktChecks)
+    @test all(iszero, p2.kktChecks)
+    @test all(p1.converged)
+    @test maximum(maximum(abs, Vector(p1.βpath[k]) - Vector(p2.βpath[k])) for k in eachindex(p1.λpath)) < 1e-6
+    @test p1.β0path ≈ p2.β0path atol=1e-6
+  end
+  # screening needs warm starts
+  path = LassoPath(X[:, 1:100], Y, [0.5, 0.3], CDOptions(;warmStart=false))
+  @test all(iszero, path.kktChecks)
+end
+
 @testset "refit lasso path" begin
   n, p, s = 200, 30, 5
   X = randn(n, p)
