@@ -531,4 +531,183 @@ end
   @test Vector(x) ≈ Vector(x2) atol=1e-8
 end
 
+
+@testset "group lasso" begin
+  # groups of sizes 1 to 5, four of them in the model; f(x) = ‖y - Xx‖² / (2n)
+  sizes = repeat(1:5, 8)
+  groups = [(e - s + 1):e for (s, e) in zip(sizes, cumsum(sizes))]
+  n, p = 100, sum(sizes)
+  X = randn(n, p)
+  β = zeros(p)
+  model = [2, 7, 13, 30]
+  for k in model
+    β[groups[k]] = randn(sizes[k]) .+ 2 .* sign.(randn(sizes[k]))
+  end
+  y = X * β + 0.5 * randn(n)
+  w = sqrt.(sizes)
+  λmax = maximum(norm(X[:, G]' * y / n) / w[k] for (k, G) in enumerate(groups))   # x = 0 is optimal for λ ≥ λmax
+  λ = 0.2 * λmax
+  g = ProxGroupL2(λ, groups)
+  opt = CDOptions(; optTol = 1e-10)
+
+  # largest violation of the optimality conditions at x with gradient grad:
+  # grad[G] = -λw x[G] / ‖x[G]‖ for a nonzero group, ‖grad[G]‖ ≤ λw for a zero one
+  function kkt_residual(x, grad, λw)
+    r = 0.
+    for (k, G) in enumerate(groups)
+      nx = norm(x[G])
+      r = max(r, iszero(nx) ? norm(grad[G]) - λw[k] : norm(grad[G] + λw[k] * x[G] / nx))
+    end
+    r
+  end
+  ls_gradient(x) = -X' * (y - X * x) / n
+  nonzero_groups(x) = findall(G -> !iszero(x[G]), groups)
+  active_groups(x) = sort!([activeCoordinate(x, a) for a in 1:numActive(x)])
+
+  x_ref = Vector(coordinateDescent!(AtomIterate(p, g), CDLeastSquaresLoss(y, X), g, opt))
+
+  @testset "least squares" begin
+    @test kkt_residual(x_ref, ls_gradient(x_ref), λ * w) < 1e-8
+    @test issubset(model, nonzero_groups(x_ref))
+
+    # with and without the path from λmax, in both orders
+    for warmStart in (true, false), randomize in (true, false)
+      x, info = AtomIterate(p, g), CDInfo()
+      coordinateDescent!(x, CDLeastSquaresLoss(y, X), g, CDOptions(; optTol = 1e-10, warmStart, randomize), info)
+      @test info.converged
+      @test active_groups(x) == nonzero_groups(Vector(x))     # no zero group stays active
+      @test Vector(x) ≈ x_ref atol = 1e-7
+    end
+
+    # warm started from a solution, one full pass confirms it
+    x, info = AtomIterate(x_ref, g), CDInfo()
+    coordinateDescent!(x, CDLeastSquaresLoss(y, X), g, opt, info)
+    @test info.iterations == 1
+    @test Vector(x) ≈ x_ref atol = 1e-8
+  end
+
+  @testset "quadratic loss" begin
+    x = AtomIterate(p, g)
+    coordinateDescent!(x, CDQuadraticLoss(X'X / n, -X'y / n), g, CDOptions(; optTol = 1e-10, warmStart = false))
+    @test Vector(x) ≈ x_ref atol = 1e-7
+  end
+
+  @testset "intercept" begin
+    # the intercept fit is the fit to the centered data
+    y1 = y .+ 3
+    Xc, yc = X .- mean(X; dims = 1), y1 .- mean(y1)
+    x1, x2 = AtomIterate(p, g), AtomIterate(p, g)
+    coordinateDescent!(x1, CDLeastSquaresLoss(y1, X; intercept = true), g, opt)
+    coordinateDescent!(x2, CDLeastSquaresLoss(yc, Xc), g, opt)
+    @test Vector(x1) ≈ Vector(x2) atol = 1e-7
+    @test kkt_residual(Vector(x1), -Xc' * (yc - Xc * Vector(x1)) / n, λ * w) < 1e-8
+  end
+
+  @testset "groups of one coordinate give the lasso" begin
+    # the same steps, passes and screening as for ProxL1
+    singletons = [[i] for i in 1:p]
+    for warmStart in (true, false)
+      o = CDOptions(; optTol = 1e-10, warmStart, randomize = false)
+      xa, xs, ia, is = AtomIterate(p, singletons), SparseIterate(p), CDInfo(), CDInfo()
+      coordinateDescent!(xa, CDLeastSquaresLoss(y, X), ProxGroupL2(λ, singletons, ones(p)), o, ia)
+      coordinateDescent!(xs, CDLeastSquaresLoss(y, X), ProximalBase.ProxL1(λ), o, is)
+      @test Vector(xa) ≈ Vector(xs) atol = 1e-12
+      @test ia.iterations == is.iterations
+    end
+  end
+
+  @testset "zero solution" begin
+    # λ ≥ λmax: x stays at zero
+    for warmStart in (true, false)
+      x = AtomIterate(p, g)
+      coordinateDescent!(x, CDLeastSquaresLoss(y, X), ProxGroupL2(λmax, groups), CDOptions(; warmStart))
+      @test numActive(x) == 0
+    end
+
+    # just below λmax, the group that attains λmax enters
+    x = AtomIterate(p, g)
+    coordinateDescent!(x, CDLeastSquaresLoss(y, X), ProxGroupL2(0.99 * λmax, groups), CDOptions(; warmStart = false))
+    kmax = argmax([norm(X[:, G]' * y) / w[k] for (k, G) in enumerate(groups)])
+    @test active_groups(x) == [kmax]
+  end
+
+  @testset "unpenalized group" begin
+    # a group with zero weight is not penalized and is left out of λmax
+    w0 = copy(w)
+    w0[1] = 0
+    g0 = ProxGroupL2(λ, groups, w0)
+    for warmStart in (true, false)
+      x = AtomIterate(p, g0)
+      coordinateDescent!(x, CDLeastSquaresLoss(y, X), g0, CDOptions(; optTol = 1e-10, warmStart))
+      xv = Vector(x)
+      @test 1 in nonzero_groups(xv)
+      @test kkt_residual(xv, ls_gradient(xv), λ * w0) < 1e-8
+    end
+  end
+
+  @testset "zero columns" begin
+    # a zero column in a group of the model stays at zero, and a group of zero
+    # columns stays zero, though its curvature is zero
+    i, k0 = groups[13][1], 5
+    X0 = copy(X)
+    X0[:, i] .= 0
+    X0[:, groups[k0]] .= 0
+    for f in (CDLeastSquaresLoss(y, X0), CDQuadraticLoss(X0'X0 / n, -X0'y / n))
+      x = AtomIterate(p, g)
+      coordinateDescent!(x, f, g, CDOptions(; optTol = 1e-10, warmStart = false))
+      xv = Vector(x)
+      @test xv[i] == 0
+      @test 13 in nonzero_groups(xv)
+      @test !(k0 in nonzero_groups(xv))
+      @test !any(isnan, xv)
+      @test kkt_residual(xv, -X0' * (y - X0 * xv) / n, λ * w) < 1e-8
+    end
+  end
+
+  @testset "Float32" begin
+    X32, y32 = Float32.(X), Float32.(y)
+    g32 = ProxGroupL2(Float32(λ), groups)
+    x = AtomIterate(Float32, p, g32)
+    coordinateDescent!(x, CDLeastSquaresLoss(y32, X32), g32, CDOptions(; optTol = 1e-6, warmStart = false))
+    @test eltype(x) == Float32
+    @test Vector(x) ≈ x_ref atol = 1e-3
+  end
+
+  @testset "dense starting point" begin
+    x = zeros(p)
+    @test coordinateDescent!(x, CDLeastSquaresLoss(y, X), g, opt) === x
+    @test x ≈ x_ref atol = 1e-8
+  end
+
+  @testset "caches" begin
+    # the curvatures of the groups, the residuals and Ax match their definitions;
+    # a curvature is computed only for a group that leaves zero, so the path,
+    # which screens the groups, computes few
+    Xc = X .- mean(X; dims = 1)
+    f = CDLeastSquaresLoss(y, X; intercept = true)
+    x = AtomIterate(p, g)
+    coordinateDescent!(x, f, g, CDOptions(; optTol = 1e-10, warmStart = false))
+    computed = .!isnan.(f.L)
+    @test issubset(nonzero_groups(Vector(x)), findall(computed))
+    @test count(computed) < length(groups)
+    @test f.L[computed] ≈ [eigmax(Symmetric(Xc[:, G]' * Xc[:, G])) / n for G in groups[computed]]
+    @test f.r ≈ y .- mean(y) .- Xc * Vector(x)
+
+    A = X'X / n
+    f = CDQuadraticLoss(A, -X'y / n)
+    x = AtomIterate(p, g)
+    coordinateDescent!(x, f, g, CDOptions(; optTol = 1e-10, warmStart = false))
+    computed = .!isnan.(f.L)
+    @test issubset(nonzero_groups(Vector(x)), findall(computed))
+    @test f.L[computed] ≈ [eigmax(Symmetric(A[G, G])) for G in groups[computed]]
+    @test f.Ax ≈ A * Vector(x)
+  end
+
+  @testset "argument checks" begin
+    # the groups of x must be those of g, and x must match the loss
+    @test_throws ArgumentError coordinateDescent!(AtomIterate(p, 10), CDLeastSquaresLoss(y, X), g)
+    @test_throws DimensionMismatch coordinateDescent!(AtomIterate(p, g), CDLeastSquaresLoss(y, X[:, 1:end-1]), g)
+  end
+end
+
 end

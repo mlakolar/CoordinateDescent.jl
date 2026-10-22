@@ -6,10 +6,11 @@
 
 Implements coordinate descent for a smooth function plus a penalty that decomposes across coordinates.
 
-Currently a naive version of the active-set coordinate descent is implemented that works for the L1 and weighted L1 penalty.
+Currently a naive version of the active-set coordinate descent is implemented that works for the L1 and weighted L1 penalty, and a block version for the group lasso, whose coordinates are groups.
 
 Examples:
 * Lasso
+* Group lasso
 * Sqrt-Lasso
 * Scaled-Lasso
 * Feasible (heteroscedastic) Lasso
@@ -42,6 +43,20 @@ g = ProxL1(0.1)
 info = CDInfo()
 coordinateDescent!(x, f, g, CDOptions(; optTol=1e-8), info)
 info.converged, info.iterations
+```
+
+For the group lasso, `g(β) = λ Σₖ wₖ ‖β[Gₖ]‖₂`, the iterate is an
+`AtomIterate` whose coordinates are the groups, which must cover all
+coefficients; each step updates one group, with the largest eigenvalue of
+`X[:, G]'X[:, G] / n` as the curvature (Yang and Zou, 2015):
+
+```julia
+using LinearAlgebra
+groups = [1:5, 6:10, 11:20, 21:50]
+g = ProxGroupL2(0.1, groups)         # weights wₖ = √|Gₖ| by default
+x = AtomIterate(p, g)
+coordinateDescent!(x, CDLeastSquaresLoss(y, X), g)
+[norm(x[G]) for G in groups]         # the first group is selected
 ```
 
 Coordinate descent stops when no coordinate changes by more than `optTol` in a

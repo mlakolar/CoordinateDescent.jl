@@ -15,6 +15,10 @@ stopping rule independent of the units of the data (see [`CDOptions`](@ref)),
 and `fullGradient!(grad, f, x)`, a faster way to compute the whole gradient.
 These functions are not exported; extend them as
 `CoordinateDescent.initialize!` and so on.
+
+[`CDLeastSquaresLoss`](@ref) and [`CDQuadraticLoss`](@ref) also update whole
+groups of coordinates of an `AtomIterate`, for the group lasso (see
+[`coordinateDescent!`](@ref)).
 """
 abstract type CoordinateDifferentiableFunction end
 
@@ -154,19 +158,43 @@ end
   r
 end
 
-# r = y - ȳ - (X - 1x̄') x, accumulated over the columns of the stored entries
+# the entries of the active coordinates of x: the stored entries of a
+# SparseIterate, the entries of the active groups of an AtomIterate
+_activeEntries(x::SparseIterate) = (x.nzval2ind[j] for j in 1:nnz(x))
+_activeEntries(x::AtomIterate) =
+  Iterators.flatten(x.groups[ProximalBase.activeCoordinate(x, a)] for a in 1:ProximalBase.numActive(x))
+
+# r = y - ȳ - (X - 1x̄') x, accumulated over the columns of the active entries
 # of x; without xbar the columns are not centered
-function _residuals!(r::AbstractVector{T}, y::AbstractVector{T}, X::AbstractMatrix{T}, x::SparseIterate{T},
+function _residuals!(r::AbstractVector{T}, y::AbstractVector{T}, X::AbstractMatrix{T},
+                     x::Union{SparseIterate{T}, AtomIterate{T}},
                      xbar::Union{Nothing, AbstractVector{T}}=nothing, ybar::T=zero(T)) where {T}
   r .= y .- ybar
-  @inbounds for j = 1:nnz(x)
-    k = x.nzval2ind[j]
-    v = x.nzval[j]
+  for k in _activeEntries(x)
+    v = x[k]
     iszero(v) && continue
     _column_axpy!(r, X, k, xbar === nothing ? zero(T) : xbar[k], v)
   end
   r
 end
+
+# the factor max(1 - c / (L ‖u‖), 0) by which the proximal operator of c‖⋅‖₂
+# with step 1/L shrinks a vector u, given nu = ‖u‖. With L = 0 the loss does not
+# depend on the group, which then goes to zero if it is penalized and keeps its
+# values otherwise
+function _groupShrinkFactor(nu::T, c::T, L::T) where {T<:AbstractFloat}
+  iszero(L) && return iszero(c) ? one(T) : zero(T)
+  nu > c / L ? one(T) - c / (L * nu) : zero(T)
+end
+
+# the change of an entry in the stopping rule, scaled as in _cdPass!
+_scaledChange(f, j::Int, h, scaled::Bool) = scaled ? abs(h) * coordinateScale(f, j) : abs(h)
+
+# the cache of group constants, one per group of an AtomIterate, unknown (NaN)
+# until computed; a SparseIterate needs none
+_resetGroupCache!(L::Vector{T}, ::SparseIterate) where {T} = L
+_resetGroupCache!(L::Vector{T}, x::AtomIterate) where {T} =
+  fill!(resize!(L, ProximalBase.numCoordinates(x)), T(NaN))
 
 
 ####################################
@@ -188,6 +216,10 @@ With `intercept`, the loss is minimized over an unpenalized intercept as well,
 the column means `x̄ = f.xbar` and the mean `ȳ = f.ybar` of `y`. The columns
 and `y` are centered on the fly, so `X` is not copied, and the residuals are
 `y - β₀ - Xβ`.
+
+On an `AtomIterate`, for the group lasso, a group `G` is updated at once, with
+the largest eigenvalue of the centered `X[:, G]'X[:, G] / n` as the curvature;
+it is computed when the group first leaves zero after `initialize!`.
 """
 struct CDLeastSquaresLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   y::S
@@ -196,10 +228,11 @@ struct CDLeastSquaresLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFun
   a::Vector{T}          # squared norms of the centered columns; NaN until computed
   xbar::Vector{T}       # column means with an intercept, otherwise zeros
   ybar::T               # mean of y with an intercept, otherwise zero
+  L::Vector{T}          # curvatures of the groups of an AtomIterate; NaN until computed
 
   CDLeastSquaresLoss{T, S, U}(y::AbstractVector{T}, X::AbstractMatrix{T}, r::Vector{T}, a::Vector{T},
                               xbar::Vector{T}, ybar::T) where {T,S,U} =
-    new(y,X,r,a,xbar,ybar)
+    new(y,X,r,a,xbar,ybar,T[])
 end
 
 function CDLeastSquaresLoss(y::AbstractVector{T}, X::AbstractMatrix{T}; intercept::Bool=false) where {T<:AbstractFloat}
@@ -212,9 +245,10 @@ end
 
 numCoordinates(f::CDLeastSquaresLoss) = size(f.X, 2)
 
-function initialize!(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
+function initialize!(f::CDLeastSquaresLoss{T}, x::Union{SparseIterate{T}, AtomIterate{T}}) where {T<:AbstractFloat}
   _residuals!(f.r, f.y, f.X, x, f.xbar, f.ybar)
   fill!(f.a, T(NaN))          # X may have changed in place
+  _resetGroupCache!(f.L, x)
   nothing
 end
 
@@ -226,7 +260,7 @@ function gradient(f::CDLeastSquaresLoss{T}, x::SparseIterate{T}, j::Int64) where
 end
 
 # -(X - 1x̄')' r / n with one product
-function fullGradient!(grad::AbstractVector{T}, f::CDLeastSquaresLoss{T}, ::SparseIterate{T}) where {T<:AbstractFloat}
+function fullGradient!(grad::AbstractVector{T}, f::CDLeastSquaresLoss{T}, ::Union{SparseIterate{T}, AtomIterate{T}}) where {T<:AbstractFloat}
   mul!(grad, transpose(f.X), f.r)
   grad .= (f.xbar .* sum(f.r) .- grad) ./ size(f.X, 1)
 end
@@ -283,6 +317,75 @@ function descendCoordinate!(
   # update internals -- residuls = y - X * xnew
   _column_axpy!(r, X, k, c, h)
   h
+end
+
+# the curvature of f over group k of x, λmax((X[:, G] - 1x̄_G')'(X[:, G] - 1x̄_G') / n),
+# from the cache, computed and cached if needed
+function _groupCurvature!(f::CDLeastSquaresLoss{T}, x::AtomIterate{T}, k::Int) where {T<:AbstractFloat}
+  L = f.L[k]
+  if isnan(L)
+    G = x.groups[k]
+    n = length(f.y)
+    if length(G) == 1
+      L = _sqnorm!(f, first(G)) / n
+    else
+      XG = f.X[:, G] .- transpose(f.xbar[G])
+      L = max(eigmax(Symmetric(XG' * XG)) / n, zero(T))
+    end
+    f.L[k] = L
+  end
+  L
+end
+
+# group k of x ← the proximal operator of λ0 λₖ ‖⋅‖₂ with step 1/L at
+# x[G] - ∇_G f(x) / L, where L is the curvature of f over G, so that the
+# quadratic with curvature L majorizes f over the group (groupwise majorization
+# descent, Yang and Zou, 2015); a group of one coordinate gets the step of
+# descendCoordinate!. A group at zero stays there if ‖∇_G f(x)‖ ≤ λ0 λₖ,
+# whatever L, which is then not needed. Returns the largest change of an entry,
+# scaled with scaled; u is a buffer of at least |G| entries.
+function _descendGroup!(
+  f::CDLeastSquaresLoss{T},
+  g::ProxGroupL2{T},
+  x::AtomIterate{T},
+  k::Int,
+  scaled::Bool,
+  u::Vector{T}) where {T<:AbstractFloat}
+
+  X, r, n = f.X, f.r, length(f.y)
+  G = x.groups[k]
+  c = g.λ0 * g.λ[k]
+
+  # u = -n ∇_G f(x), where ∇ⱼf(x) = -(X[:, j] - x̄ⱼ)' r / n
+  s = zero(T)
+  for (i, j) in enumerate(G)
+    a, b = _column_dot(X, r, j, f.xbar[j], f.a[j])
+    f.a[j] = a
+    u[i] = b
+    s += b * b
+  end
+  !ProximalBase.isActive(x, k) && sqrt(s) <= n * c && return zero(T)
+
+  # u = x[G] - ∇_G f(x) / L
+  L = _groupCurvature!(f, x, k)
+  s = zero(T)
+  for (i, j) in enumerate(G)
+    v = iszero(L) ? x[j] : x[j] + u[i] / (n * L)
+    u[i] = v
+    s += v * v
+  end
+
+  t = _groupShrinkFactor(sqrt(s), c, L)
+  maxH = zero(T)
+  for (i, j) in enumerate(G)
+    newVal = t * u[i]
+    h = newVal - x[j]
+    iszero(h) && continue
+    x[j] = newVal
+    _column_axpy!(r, X, j, f.xbar[j], h)
+    maxH = max(maxH, _scaledChange(f, j, h, scaled))
+  end
+  maxH
 end
 
 ################################################################################
@@ -578,38 +681,43 @@ end
 The quadratic `f(x) = x'Ax / 2 + b'x` with symmetric `A`. Caches `Ax`, so a
 coordinate update costs `O(p)`. With `A = X'X/n` and `b = -X'y/n` it gives the
 same minimizer as [`CDLeastSquaresLoss`](@ref).
+
+On an `AtomIterate`, for the group lasso, a group `G` is updated at once, with
+the largest eigenvalue of `A[G, G]` as the curvature; it is computed when the
+group first leaves zero after `initialize!`.
 """
 struct CDQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   A::S
   b::U
   Ax::Vector{T}
+  L::Vector{T}          # curvatures of the groups of an AtomIterate; NaN until computed
 end
 
 function CDQuadraticLoss(A::AbstractMatrix{T}, b::AbstractVector{T}) where {T<:AbstractFloat}
   issymmetric(A) || throw(ArgumentError("A must be symmetric"))
   length(b) == size(A, 2) || throw(ArgumentError("length of b must equal the number of columns of A"))
-  CDQuadraticLoss{T, typeof(A), typeof(b)}(A, b, zeros(T, length(b)))
+  CDQuadraticLoss{T, typeof(A), typeof(b)}(A, b, zeros(T, length(b)), T[])
 end
 
 numCoordinates(f::CDQuadraticLoss) = length(f.b)
-function initialize!(f::CDQuadraticLoss, x::SparseIterate)
-  # Ax accumulated over the columns of the stored entries of x
+function initialize!(f::CDQuadraticLoss, x::Union{SparseIterate, AtomIterate})
+  # Ax accumulated over the columns of the active entries of x
   Ax = f.Ax
   A = f.A
   fill!(Ax, zero(eltype(Ax)))
-  @inbounds for j = 1:nnz(x)
-    k = x.nzval2ind[j]
-    v = x.nzval[j]
+  for k in _activeEntries(x)
+    v = x[k]
     iszero(v) && continue
-    @simd for i in eachindex(Ax)
+    @inbounds @simd for i in eachindex(Ax)
       Ax[i] += A[i, k] * v
     end
   end
+  _resetGroupCache!(f.L, x)
   nothing
 end
 gradient(f::CDQuadraticLoss{T}, ::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
   f.Ax[j] + f.b[j]
-fullGradient!(grad::AbstractVector{T}, f::CDQuadraticLoss{T}, ::SparseIterate{T}) where {T<:AbstractFloat} =
+fullGradient!(grad::AbstractVector{T}, f::CDQuadraticLoss{T}, ::Union{SparseIterate{T}, AtomIterate{T}}) where {T<:AbstractFloat} =
   grad .= f.Ax .+ f.b
 
 # With A = X'X/n and b = -X'y/n, √A[k,k] = ‖X[:, k]‖ / √n, and
@@ -651,4 +759,64 @@ function descendCoordinate!(
   end
 
   h
+end
+
+# the curvature of f over group k of x, λmax(A[G, G]), from the cache, computed
+# and cached if needed
+function _groupCurvature!(f::CDQuadraticLoss{T}, x::AtomIterate{T}, k::Int) where {T<:AbstractFloat}
+  L = f.L[k]
+  if isnan(L)
+    G = x.groups[k]
+    L = length(G) == 1 ? f.A[first(G), first(G)] : eigmax(Symmetric(f.A[G, G]))
+    L = max(L, zero(T))
+    f.L[k] = L
+  end
+  L
+end
+
+# group k of x ← the proximal operator of λ0 λₖ ‖⋅‖₂ with step 1/L at
+# x[G] - ∇_G f(x) / L, as for CDLeastSquaresLoss
+function _descendGroup!(
+  f::CDQuadraticLoss{T},
+  g::ProxGroupL2{T},
+  x::AtomIterate{T},
+  k::Int,
+  scaled::Bool,
+  u::Vector{T}) where {T<:AbstractFloat}
+
+  A, Ax, b = f.A, f.Ax, f.b
+  G = x.groups[k]
+  c = g.λ0 * g.λ[k]
+
+  # u = ∇_G f(x) = (Ax + b)[G]; a group at zero stays there if ‖u‖ ≤ c
+  s = zero(T)
+  for (i, j) in enumerate(G)
+    v = Ax[j] + b[j]
+    u[i] = v
+    s += v * v
+  end
+  !ProximalBase.isActive(x, k) && sqrt(s) <= c && return zero(T)
+
+  # u = x[G] - ∇_G f(x) / L
+  L = _groupCurvature!(f, x, k)
+  s = zero(T)
+  for (i, j) in enumerate(G)
+    v = iszero(L) ? x[j] : x[j] - u[i] / L
+    u[i] = v
+    s += v * v
+  end
+
+  t = _groupShrinkFactor(sqrt(s), c, L)
+  maxH = zero(T)
+  for (i, j) in enumerate(G)
+    newVal = t * u[i]
+    h = newVal - x[j]
+    iszero(h) && continue
+    x[j] = newVal
+    @inbounds @simd for l in eachindex(Ax)
+      Ax[l] += A[l, j] * h
+    end
+    maxH = max(maxH, _scaledChange(f, j, h, scaled))
+  end
+  maxH
 end
