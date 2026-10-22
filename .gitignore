@@ -3,5 +3,7 @@
 *.jl.mem
 /Manifest*.toml
 /test/Manifest*.toml
+/examples/Manifest*.toml
+/benchmark/Manifest*.toml
 /docs/build/
 .vscode/

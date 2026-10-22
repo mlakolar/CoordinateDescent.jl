@@ -59,3 +59,20 @@ jobs:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+  examples:
+    # the examples environment loads this checkout through [sources], which
+    # needs Julia 1.11 or later
+    name: Examples
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v3
+      - run: julia --project=examples -e 'using Pkg; Pkg.instantiate()'
+      - run: julia --project=examples examples/run_all.jl

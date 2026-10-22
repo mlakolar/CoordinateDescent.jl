@@ -16,6 +16,12 @@ and `fullGradient!(grad, f, x)`, a faster way to compute the whole gradient.
 These functions are not exported; extend them as
 `CoordinateDescent.initialize!` and so on.
 
+The penalty `g` enters only through `descendCoordinate!`. A loss whose step
+ends with the proximal operator of `g` on coordinate `k`,
+`ProximalBase.cdprox!(g, x, k, γ)`, works with every penalty that implements
+it: `ProxL1`, `ProxZero` and user-defined penalties (see
+[`coordinateDescent!`](@ref)).
+
 [`CDLeastSquaresLoss`](@ref) and [`CDQuadraticLoss`](@ref) also update whole
 groups of coordinates of an `AtomIterate`, for the group lasso (see
 [`coordinateDescent!`](@ref)).
@@ -55,8 +61,13 @@ Update coordinate `k` of `x` to decrease `f(x) + g(x)`, and return the change
 Usually `h = argmin_h f(x + h eₖ) + g(x + h eₖ)`, but an implementation may
 instead minimize a local quadratic approximation of `f`. The function must also
 update the cache of `f` so that it is current for the new `x`.
+
+If `a` bounds `∂²f/∂xₖ²` along coordinate `k`, a step that does not increase
+`f + g` is `x[k] -= gradient(f, x, k) / a` followed by `cdprox!(g, x, k, 1 / a)`,
+the proximal operator of the penalty with step `1 / a`; it works for every
+penalty that implements `cdprox!`.
 """
-descendCoordinate!(f, g, x, k) = error("descendCoordinate not implemented for $(typeof(f))")
+descendCoordinate!(f, g, x, k) = error("descendCoordinate! not implemented for $(typeof(f)) and $(typeof(g))")
 
 """
     coordinateScale(f, k)
@@ -95,12 +106,19 @@ function fullGradient!(grad, f, x)
 end
 
 
-# The value cdprox!(g, x, k, γ) would give x[k] if x[k] were v, without writing
-# x: the built-in losses write x[k] only when it changes, so a coordinate that
-# stays at zero never becomes a stored entry.
-_cdshrink(g::ProxL1{T, Nothing}, v::T, ::Int, γ::T) where {T} = shrink(v, g.λ0 * γ)
-_cdshrink(g::ProxL1{T, S}, v::T, k::Int, γ::T) where {T, S <: AbstractArray} = shrink(v, g.λ[k] * γ * g.λ0)
-_cdshrink(::ProxZero, v, ::Int, _) = v
+# The value cdprox!(g, x, k, γ) would give x[k] if x[k] were v. For ProxL1 and
+# ProxZero it is computed without writing x: the built-in losses write x[k] only
+# when it changes, so a coordinate that stays at zero never becomes a stored
+# entry. Other penalties go through cdprox!, which writes x[k]; a stored zero
+# that this leaves is dropped after the pass.
+_cdshrink(g::ProxL1{T, Nothing}, x, v::T, ::Int, γ::T) where {T} = shrink(v, g.λ0 * γ)
+_cdshrink(g::ProxL1{T, S}, x, v::T, k::Int, γ::T) where {T, S <: AbstractArray} = shrink(v, g.λ[k] * γ * g.λ0)
+_cdshrink(::ProxZero, x, v, ::Int, _) = v
+function _cdshrink(g::ProximableFunction, x, v, k::Int, γ)
+  x[k] = v
+  cdprox!(g, x, k, γ)
+  x[k]
+end
 
 # Columns centered at c, where c is the column mean when a loss fits an
 # intercept and zero otherwise; a zero c takes the plain loops.
@@ -296,7 +314,7 @@ _intercept(f::CDLeastSquaresLoss, x::SparseIterate) = f.ybar - dot(f.xbar, x)
 # with the columns centered at their means when the loss fits an intercept
 function descendCoordinate!(
   f::CDLeastSquaresLoss{T},
-  g::Union{ProxL1{T}, ProxZero},
+  g::ProximableFunction,
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
@@ -309,7 +327,7 @@ function descendCoordinate!(
   f.a[k] = a
 
   oldVal = x[k]
-  newVal = _cdshrink(g, oldVal + b / a, k, n / a)
+  newVal = _cdshrink(g, x, oldVal + b / a, k, n / a)
   h = newVal - oldVal
   iszero(h) && return h      # x and the residuals do not change
   x[k] = newVal
@@ -467,7 +485,7 @@ end
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
 function descendCoordinate!(
   f::CDWeightedLSLoss{T},
-  g::Union{ProxL1{T}, ProxZero},
+  g::ProximableFunction,
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
@@ -492,7 +510,7 @@ function descendCoordinate!(
   end
 
   oldVal = x[k]
-  newVal = _cdshrink(g, oldVal + b / a, k, n / a)
+  newVal = _cdshrink(g, x, oldVal + b / a, k, n / a)
   h = newVal - oldVal
   iszero(h) && return h      # x and the residuals do not change
   x[k] = newVal
@@ -736,7 +754,7 @@ end
 
 function descendCoordinate!(
   f::CDQuadraticLoss{T},
-  g::Union{ProxL1{T}, ProxZero},
+  g::ProximableFunction,
   x::SparseIterate{T},
   k::Int64) where {T<:AbstractFloat}
 
@@ -745,7 +763,7 @@ function descendCoordinate!(
 
   oldVal = x[k]
   a = one(T) / a
-  newVal = _cdshrink(g, oldVal - b * a, k, a)
+  newVal = _cdshrink(g, x, oldVal - b * a, k, a)
   h = newVal - oldVal
   iszero(h) && return h      # x and Ax do not change
   x[k] = newVal
