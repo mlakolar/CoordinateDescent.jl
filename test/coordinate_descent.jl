@@ -827,4 +827,104 @@ end
   end
 end
 
+@testset "coordinate order" begin
+  @test CDOptions().order === :random
+  @test CDOptions(;randomize=false).order === :cyclic
+  @test CDOptions(;randomize=true).order === :random
+  @test CDOptions(;order=:active).randomize
+  @test !CDOptions(;order=:cyclic).randomize
+  @test :randomize in propertynames(CDOptions())
+  @test CDOptions(100, 1e-7, false, true, 50, true) == CDOptions(;maxIter=100, order=:cyclic)
+  @test_throws ArgumentError CDOptions(;order=:shuffled)
+  @test_throws ArgumentError CDOptions(;order=:cyclic, randomize=false)
+
+  # every order gives the same solution
+  n, p, s = 200, 500, 10
+  X = randn(n, p)
+  Y = X[:, 1:s] * ones(s) + randn(n)
+  g = ProxL1(0.05 * maximum(abs, X'Y) / n)
+  f = CDLeastSquaresLoss(Y, X)
+  xref = SparseIterate(p)
+  coordinateDescent!(xref, f, g, CDOptions(;order=:cyclic, optTol=1e-12))
+  for order in (:random, :active), warmStart in (true, false)
+    x = SparseIterate(p)
+    info = CDInfo()
+    coordinateDescent!(x, f, g, CDOptions(;order, optTol=1e-12, warmStart), info)
+    @test info.converged
+    @test Vector(x) ≈ Vector(xref) atol=1e-8
+  end
+end
+
+@testset "Anderson acceleration" begin
+  @test CDOptions(;order=:cyclic, anderson=5).anderson == 5
+  @test CDOptions(;randomize=false, anderson=5).anderson == 5
+  @test_throws ArgumentError CDOptions(;anderson=5)                 # needs the cyclic order
+  @test_throws ArgumentError CDOptions(;order=:active, anderson=5)
+  @test_throws ArgumentError CDOptions(;order=:cyclic, anderson=-1)
+
+  # strongly correlated columns and more columns than rows, where coordinate
+  # descent needs many passes
+  n, p, s = 200, 800, 20
+  X = randn(n, p)
+  for j in 2:p
+    @views X[:, j] .= 0.8 .* X[:, j-1] .+ 0.6 .* X[:, j]
+  end
+  Y = X[:, 1:s] * randn(s) + randn(n)
+  w = 0.5 .+ rand(n)
+  λ = 0.02 * maximum(abs, X'Y) / n
+  λs = 0.2 * maximum(abs, X'Y) / norm(Y)
+  plain = CDOptions(;order=:cyclic, optTol=1e-10)
+  accelerated = CDOptions(;order=:cyclic, optTol=1e-10, anderson=5)
+
+  # the same solution in fewer passes, for every built-in loss
+  for (f, g, F) in ((CDLeastSquaresLoss(Y, X), ProxL1(λ), x -> sum(abs2, Y - X*x) / 2n + λ * norm(x, 1)),
+                    (CDLeastSquaresLoss(Y, X; intercept=true), ProxL1(λ), x -> sum(abs2, (r = Y - X*x; r .- mean(r))) / 2n + λ * norm(x, 1)),
+                    (CDWeightedLSLoss(Y, X, w), ProxL1(λ), x -> sum(w .* (Y - X*x).^2) / 2n + λ * norm(x, 1)),
+                    (CDQuadraticLoss(X'X/n, -X'Y/n), ProxL1(λ), x -> sum(abs2, Y - X*x) / 2n + λ * norm(x, 1)),
+                    (CDSqrtLassoLoss(Y, X), ProxL1(λs), x -> norm(Y - X*x) + λs * norm(x, 1)),
+                    (CDLeastSquaresLoss(Y, X), ProxL1(λ, rand(p)), nothing))
+    x0, info0 = SparseIterate(p), CDInfo()
+    coordinateDescent!(x0, f, g, plain, info0)
+    x1, info1 = SparseIterate(p), CDInfo()
+    coordinateDescent!(x1, f, g, accelerated, info1)
+    @test info1.converged
+    @test info1.iterations < info0.iterations / 1.5
+    @test Vector(x1) ≈ Vector(x0) atol=1e-6
+    F === nothing || @test F(Vector(x1)) ≈ F(Vector(x0)) rtol=1e-10
+    # value is f at x, from the cache
+    F === nothing || f isa CDQuadraticLoss ||
+      @test ProximalBase.value(f, x1) + g.λ0 * norm(Vector(x1), 1) ≈ F(Vector(x1))
+  end
+  f = CDQuadraticLoss(X'X/n, -X'Y/n)
+  x = SparseIterate(sprand(p, 0.1))
+  CoordinateDescent.initialize!(f, x)
+  @test ProximalBase.value(f, x) ≈ dot(Vector(x), X'X/n * Vector(x)) / 2 - dot(X'Y/n, Vector(x))
+
+  # without a penalty, from a path of penalties, and along LassoPath
+  Xs, Ys = X[:, 1:100], Y
+  x0, x1 = SparseIterate(100), SparseIterate(100)
+  coordinateDescent!(x0, CDLeastSquaresLoss(Ys, Xs), ProxZero(), plain)
+  coordinateDescent!(x1, CDLeastSquaresLoss(Ys, Xs), ProxZero(), accelerated)
+  @test Vector(x1) ≈ Vector(x0) atol=1e-6
+  f = CDLeastSquaresLoss(Y, X)
+  x0, x1 = SparseIterate(p), SparseIterate(p)
+  coordinateDescent!(x0, f, ProxL1(λ), CDOptions(;order=:cyclic, optTol=1e-10, warmStart=false))
+  coordinateDescent!(x1, f, ProxL1(λ), CDOptions(;order=:cyclic, optTol=1e-10, warmStart=false, anderson=5))
+  @test Vector(x1) ≈ Vector(x0) atol=1e-6
+  λpath = [0.2, 0.1, 0.05, 0.02] .* (maximum(abs, X'Y) / n)
+  path0 = LassoPath(X, Y, λpath, plain; standardizeX=false)
+  path1 = LassoPath(X, Y, λpath, accelerated; standardizeX=false)
+  @test all(path1.converged)
+  @test sum(path1.iterations) < sum(path0.iterations)
+  for k in eachindex(λpath)
+    @test Vector(path1.βpath[k]) ≈ Vector(path0.βpath[k]) atol=1e-6
+  end
+
+  # it needs a SparseIterate, and the value of the loss and of the penalty
+  gg = ProxGroupL2(λ, [((k-1)*8+1):(k*8) for k in 1:100])
+  @test_throws ArgumentError coordinateDescent!(AtomIterate(p, gg), f, gg, accelerated)
+  @test_throws ArgumentError coordinateDescent!(SparseIterate(3), SeparableLoss([1., -2., 3.]), ProxL1(0.5), accelerated)
+  @test_throws ArgumentError coordinateDescent!(SparseIterate(p), f, ElasticNetPenalty(λ, 0.5), accelerated)
+end
+
 end

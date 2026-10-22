@@ -466,7 +466,7 @@ function LassoPath(
   screen = screening && options.warmStart
   if screen
     initialize!(f, x)
-    coef_iterator = options.randomize ? RandomIterator(x) : OrderedIterator(x)
+    coef_iterator = _passIterator(x, options)
     grad = Vector{T}(undef, p)
     fullGradient!(grad, f, x)
     inS = falses(p)

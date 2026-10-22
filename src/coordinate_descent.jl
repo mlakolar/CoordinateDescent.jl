@@ -61,6 +61,20 @@ user-defined loss whose `descendCoordinate!` calls `cdprox!` (see
 [`CoordinateDifferentiableFunction`](@ref)). Such a penalty has no path of
 penalty levels: with `warmStart = false`, the descent starts from zero and
 solves at `g` directly.
+
+# Anderson acceleration
+
+With `anderson = K` in [`CDOptions`](@ref), which needs `order = :cyclic`, the
+passes over the active set are accelerated (Bertrand and Massias, *Anderson
+acceleration of coordinate descent*, 2021). After `K + 1` passes over an
+unchanged active set, the next point is extrapolated from them, `Σᵢ cᵢ xᵢ` over
+the last `K` with weights that minimize `‖Σᵢ cᵢ (xᵢ - xᵢ₋₁)‖` subject to
+`Σᵢ cᵢ = 1`, and kept if it lowers the objective. It needs a `SparseIterate`,
+`ProximalBase.value(f, x)` for the loss, which the built-in losses define, and,
+for another penalty than `ProxL1` and `ProxZero`, `ProximalBase.value(g, x)`.
+It pays off when coordinate descent needs many passes, as at small penalties
+and with correlated columns. It keeps the weakness of the cyclic order when the
+columns share a strong common factor, where `order = :random` is much faster.
 """
 function coordinateDescent!(
   x::Union{SparseIterate,SymmetricSparseIterate},
@@ -75,7 +89,7 @@ function coordinateDescent!(
   end
   _check_penalty(g)
 
-  coef_iterator = options.randomize ? RandomIterator(x) : OrderedIterator(x)
+  coef_iterator = _passIterator(x, options)
 
   if options.warmStart
     initialize!(f, x)
@@ -136,7 +150,7 @@ function coordinateDescent!(
 
   ProximalBase.numCoordinates(x) == numCoordinates(f) || throw(DimensionMismatch())
 
-  coef_iterator = options.randomize ? RandomIterator(x) : OrderedIterator(x)
+  coef_iterator = _passIterator(x, options)
 
   if options.warmStart
     initialize!(f, x)
@@ -170,7 +184,7 @@ function coordinateDescent!(
   x.groups === g.groups || x.groups == g.groups ||
     throw(ArgumentError("The groups of x must be the groups of g, as in AtomIterate(x, g)."))
 
-  coef_iterator = options.randomize ? RandomIterator(x) : OrderedIterator(x)
+  coef_iterator = _passIterator(x, options)
 
   if options.warmStart
     initialize!(f, x)
@@ -231,8 +245,9 @@ _iterate(x::Vector, g::ProxGroupL2) = AtomIterate(x, g)
 # that the active set is checked against all coordinates before stopping.
 # With options.relativeTol the changes are scaled by coordinateScale and the
 # tolerance by responseScale; a zero response scale falls back to the absolute
-# rule. Records the passes made and whether it stopped in info.
-# Assumes that f is initialized before the call here.
+# rule. With options.anderson > 0, passes over an unchanged active set are
+# accelerated (see anderson.jl). Records the passes made and whether it stopped
+# in info. Assumes that f is initialized before the call here.
 function _coordinateDescent!(
   x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
   f::CoordinateDifferentiableFunction,
@@ -244,6 +259,7 @@ function _coordinateDescent!(
   sy = options.relativeTol ? responseScale(f) : 1
   scaled = options.relativeTol && sy > 0
   tol = scaled ? options.optTol * sy : options.optTol
+  acc = _andersonState(x, f, g, options.anderson)
 
   prev_converged = false
   converged = true
@@ -252,7 +268,8 @@ function _coordinateDescent!(
 
     # a full pass after convergence on the active set, otherwise a pass over
     # the nonzero coordinates
-    reset!(coef_iterator, converged)
+    fullPass = converged
+    reset!(coef_iterator, fullPass)
     maxH = _cdPass!(x, f, g, coef_iterator, scaled)
     prev_converged = converged
     info.iterations, info.maxChange = iter, maxH
@@ -263,6 +280,16 @@ function _coordinateDescent!(
     if prev_converged && converged
       info.converged = true
       break
+    end
+
+    # extrapolation from the passes over the active set; the history starts
+    # again after a full pass, and when the next pass will be a full one
+    if acc !== nothing
+      if fullPass || converged
+        acc.filled = 0
+      elseif _record!(acc, x)
+        _extrapolate!(acc, x, f, g)
+      end
     end
   end
   x

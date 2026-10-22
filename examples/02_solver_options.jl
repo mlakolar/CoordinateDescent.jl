@@ -75,19 +75,37 @@ for relativeTol in (true, false), scale in (1, 1000)
           info.iterations, norm(x / scale - xstar, Inf) / norm(xstar, Inf))
 end
 
-println("\n== randomize: the order of the coordinates")
+println("\n== order and anderson: the order of the coordinates")
 
-# randomize = true (the default) visits the coordinates in a new random order
+# order = :random (the default) visits the coordinates in a new random order
 # in every pass, drawn from the global random number generator (seed it with
-# Random.seed! to reproduce a run). randomize = false visits them in the order
-# 1, 2, …, p, which is a little faster on independent columns but much slower
-# when the columns share a common factor.
+# Random.seed! to reproduce a run). order = :cyclic visits them in the order
+# 1, 2, …, p, which is faster on independent columns but much slower when the
+# columns share a common factor. order = :active shuffles only the passes over
+# the active set; the full passes, which mostly check that the zero
+# coefficients stay at zero, go in the order 1, 2, …, p. The older option
+# randomize = true or false means order = :random or :cyclic.
+#
+# With order = :cyclic, anderson = K extrapolates from the last K + 1 passes
+# over an unchanged active set (Anderson acceleration), and keeps the result
+# when it lowers the objective. It saves passes where coordinate descent needs
+# many, as at small penalties with correlated columns, but it keeps the
+# weakness of the cyclic order under a common factor.
 Xiid, yiid = simulate(500, 200, 0.0)
-println("  design               randomize  passes  time (ms)")
-for (name, Xd, yd) in (("independent columns", Xiid, yiid), ("common factor", X, y)),
-    randomize in (true, false)
-  _, info, t = solve(Xd, yd, λ, CDOptions(; randomize))
-  @printf("  %-19s  %-9s  %6d  %9.2f\n", name, randomize, info.iterations, 1000t)
+Xar = randn(200, 1000)
+for j in 2:1000
+  @views Xar[:, j] .= 0.8 .* Xar[:, j-1] .+ 0.6 .* Xar[:, j]
+end
+yar = Xar[:, 1:10:100] * ones(10) + randn(200)
+λar = 0.02 * maximum(abs, Xar' * yar) / 200
+println("  design               options               passes  time (ms)")
+for (name, Xd, yd, λd) in (("independent columns", Xiid, yiid, λ), ("common factor", X, y, λ),
+                           ("AR(1) 0.8, p > n", Xar, yar, λar)),
+    (oname, opts) in (("order = :random", CDOptions()), ("order = :cyclic", CDOptions(; order = :cyclic)),
+                      ("order = :active", CDOptions(; order = :active)),
+                      ("cyclic, anderson = 5", CDOptions(; order = :cyclic, anderson = 5)))
+  _, info, t = solve(Xd, yd, λd, opts)
+  @printf("  %-19s  %-20s  %6d  %9.2f\n", name, oname, info.iterations, 1000t)
 end
 
 println("\n== warmStart and numSteps: where to start")

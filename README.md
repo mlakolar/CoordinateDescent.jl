@@ -66,6 +66,20 @@ false)` measures it in the units of the coefficients). It also stops after
 `maxIter` passes (default 100 000), and then warns that the solution may be
 inaccurate.
 
+Each pass visits the coordinates in a new random order by default
+(`order = :random`). `order = :cyclic` visits them in the order `1, 2, …`,
+which is faster on most designs but much slower when the columns share a
+common factor. With the cyclic order, `anderson = 5` adds Anderson
+acceleration: it extrapolates from the last passes over the active set, and
+needs several times fewer passes at small penalties. On the designs without a
+common factor in [benchmark/README.md](benchmark/README.md), it computes a 50-λ
+path 4.7–6.2 times faster than the default; with a common factor, keep the
+random order.
+
+```julia
+sol = lasso(X, y, 0.01, CDOptions(; order = :cyclic, anderson = 5))
+```
+
 ## Examples
 
 The scripts in [examples](examples) go through the package and its options;
