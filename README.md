@@ -25,12 +25,19 @@ y = X[:, 1:5] * ones(5) + randn(n)
 
 sol = lasso(X, y, 0.1)          # minimize ‖y - Xβ‖² / (2n) + 0.1 ‖β‖₁
 sol.x                           # sparse coefficient vector
+sol.converged, sol.iterations   # stopping rule met?, passes over the coordinates
 
 # lower-level interface
 x = SparseIterate(p)
 f = CDLeastSquaresLoss(y, X)
 g = ProxL1(0.1)
-coordinateDescent!(x, f, g, CDOptions(; optTol=1e-8))
+info = CDInfo()
+coordinateDescent!(x, f, g, CDOptions(; optTol=1e-8), info)
+info.converged, info.iterations
 ```
+
+Coordinate descent stops when no coordinate changes by more than `optTol` in a
+pass, or after `maxIter` passes (default 100 000); in the second case it warns
+that the solution may be inaccurate.
 
 Package depends on [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl).

@@ -427,4 +427,52 @@ end
   end
 end
 
+@testset "convergence reporting" begin
+  n, p, s = 200, 50, 5
+  X = randn(n, p)
+  Y = X[:,1:s] * ones(s) + randn(n)
+  λ = 0.05
+
+  # lasso and sqrt-lasso report the passes of coordinate descent
+  for sol in (lasso(X, Y, λ), lasso(X, Y, λ, ones(p)), sqrtLasso(X, Y, 0.5), sqrtLasso(X, Y, 0.5, ones(p)))
+    @test sol.converged
+    @test sol.iterations >= 2
+  end
+
+  # too few passes: a warning, and the solution says it did not converge
+  sol = @test_logs (:warn, r"did not converge") lasso(X, Y, λ, CDOptions(;maxIter=1))
+  @test !sol.converged
+  @test sol.iterations == 1
+
+  # LassoPath: one entry per λ, warm starts make later λ values cheap
+  λpath = [0.3, 0.1, 0.1]
+  path = @test_logs LassoPath(X, Y, λpath)
+  @test length(path.iterations) == length(path.converged) == length(λpath)
+  @test all(path.converged)
+  @test path.iterations[3] <= 2                   # restarted at its own solution
+  path = @test_logs (:warn, r"did not converge") match_mode=:any LassoPath(X, Y, λpath, CDOptions(;maxIter=1))
+  @test !any(path.converged)
+
+  # scaled and feasible lasso: inner passes are summed, and the outer
+  # iteration is checked too
+  opt = IterLassoOptions(;maxIter=100, optTol=1e-6, optionsCD=CDOptions(;optTol=1e-10))
+  sol = @test_logs scaledLasso(X, Y, λ, ones(p), opt)
+  @test sol.converged
+  @test sol.iterations >= 2
+  sol = @test_logs feasibleLasso!(SparseIterate(p), X, Y, λ, opt)
+  @test sol.converged
+  @test sol.iterations >= 2
+
+  opt = IterLassoOptions(;maxIter=1, optTol=1e-12)
+  sol = @test_logs (:warn, r"scaledLasso! did not converge") scaledLasso(X, Y, λ, ones(p), opt)
+  @test !sol.converged
+  sol = @test_logs (:warn, r"feasibleLasso! did not converge") feasibleLasso!(SparseIterate(p), X, Y, λ, opt)
+  @test !sol.converged
+
+  # a coordinate descent that stops early makes the whole fit unconverged
+  opt = IterLassoOptions(;maxIter=100, optTol=1e-2, optionsCD=CDOptions(;maxIter=1))
+  sol = @test_logs (:warn, r"coordinate descent did not converge") match_mode=:any scaledLasso(X, Y, λ, ones(p), opt)
+  @test !sol.converged
+end
+
 end

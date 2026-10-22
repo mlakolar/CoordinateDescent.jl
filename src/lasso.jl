@@ -16,17 +16,23 @@ Result returned by [`lasso`](@ref), [`sqrtLasso`](@ref),
 - `penalty::ProxL1`: the penalty at which `x` was computed
 - `σ`: an estimate of the noise level (see the documentation of each solver),
   or `nothing`
+- `iterations::Int`: passes of coordinate descent over the coordinates, summed
+  over all the lasso fits the solver made
+- `converged::Bool`: whether coordinate descent met its stopping rule within
+  `maxIter` passes and, for [`scaledLasso!`](@ref) and [`feasibleLasso!`](@ref),
+  the outer iteration met its stopping rule within its `maxIter` iterations
 """
 struct LassoSolution{T, S}
   x::SparseIterate{T}
   residuals::Vector{T}
   penalty::S
   σ::Union{T, Nothing}
+  iterations::Int
+  converged::Bool
 
-  LassoSolution{T, S}(x::SparseIterate{T}, residuals::AbstractVector{T}, penalty::ProxL1{T}, σ::T) where {T, S} =
-    new(x, residuals, penalty, σ)
-  LassoSolution{T, S}(x::SparseIterate{T}, residuals::AbstractVector{T}, penalty::ProxL1{T}) where {T, S} =
-    new(x, residuals, penalty, nothing)
+  LassoSolution{T, S}(x::SparseIterate{T}, residuals::AbstractVector{T}, penalty::ProxL1{T}, σ::T,
+                      iterations::Integer, converged::Bool) where {T, S} =
+    new(x, residuals, penalty, σ, iterations, converged)
 end
 
 
@@ -57,9 +63,10 @@ function lasso(
   x = SparseIterate(T, size(X, 2))
   f = CDLeastSquaresLoss(y, X)
   g = ProxL1(λ)
-  coordinateDescent!(x, f, g, options)
+  info = CDInfo()
+  coordinateDescent!(x, f, g, options, info)
 
-  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r))
+  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), info.iterations, info.converged)
 end
 
 function lasso(
@@ -72,9 +79,10 @@ function lasso(
   x = SparseIterate(T, size(X, 2))
   f = CDLeastSquaresLoss(y, X)
   g = ProxL1(λ, ω)
-  coordinateDescent!(x, f, g, options)
+  info = CDInfo()
+  coordinateDescent!(x, f, g, options, info)
 
-  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r))
+  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), info.iterations, info.converged)
 end
 
 ######################################################################
@@ -114,9 +122,10 @@ function sqrtLasso(
   else
     g = ProxL1(λ)
   end
-  coordinateDescent!(x, f, g, options)
+  info = CDInfo()
+  coordinateDescent!(x, f, g, options, info)
 
-  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r))
+  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), info.iterations, info.converged)
 end
 
 function sqrtLasso(
@@ -130,9 +139,10 @@ function sqrtLasso(
   x = SparseIterate(T, p)
   f = CDSqrtLassoLoss(y, X)
   g = ProxL1(λ, ω)
-  coordinateDescent!(x, f, g, options)
+  info = CDInfo()
+  coordinateDescent!(x, f, g, options, info)
 
-  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r))
+  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), info.iterations, info.converged)
 end
 
 
@@ -152,7 +162,7 @@ noise level jointly. It alternates between the lasso
     β̂ = argmin  ‖y - Xβ‖² / (2n) + λ σ̂ ∑ⱼ ωⱼ |βⱼ|
 
 and the update `σ̂ = ‖y - Xβ̂‖ / √n` until the relative change in `σ̂` is below
-`options.optTol` or `options.maxIter` iterations are done.
+`options.optTol`, or warns after `options.maxIter` iterations.
 
 The initial `σ̂` is chosen by `options.initProcedure` (see
 [`IterLassoOptions`](@ref)). `scaledLasso!` starts coordinate descent from and
@@ -184,18 +194,24 @@ function scaledLasso!(
   end
 
   g = ProxL1(λ * σ, ω)
+  info = CDInfo()
+  iterations, σconverged, change = 0, false, NaN
   for iter=1:options.maxIter
-    coordinateDescent!(x, f, g, options.optionsCD)
+    coordinateDescent!(x, f, g, options.optionsCD, info)
+    iterations += info.iterations
     σnew = sqrt( sum(abs2, f.r) / n )
 
-    if abs(σnew - σ) / σ < options.optTol
+    change = abs(σnew - σ) / σ
+    if change < options.optTol
+      σconverged = true
       break
     end
     σ = σnew
     g = ProxL1(λ * σ, ω)
   end
+  σconverged || @warn "scaledLasso! did not converge in maxIter = $(options.maxIter) iterations (relative change of the noise level in the last iteration $(round(change; sigdigits = 3)) > optTol = $(options.optTol)). Increase maxIter in IterLassoOptions."
 
-  LassoSolution{T, typeof(g)}(x, f.r, g, sqrt( sum(abs2, f.r) / n ))
+  LassoSolution{T, typeof(g)}(x, f.r, g, sqrt( sum(abs2, f.r) / n ), iterations, σconverged && info.converged)
 end
 
 """
@@ -228,8 +244,8 @@ lasso
     β̂ = argmin  ‖y - Xβ‖² / (2n) + λ0 ∑ⱼ Γⱼ |βⱼ|
 
 and the update of the loadings `Γⱼ = sqrt(∑ᵢ Xᵢⱼ² rᵢ² / n)` from the residuals
-`r = y - Xβ̂`, until the relative change in `Γ` is below `options.optTol` or
-`options.maxIter` iterations are done.
+`r = y - Xβ̂`, until the relative change in `Γ` is below `options.optTol`, or
+warns after `options.maxIter` iterations.
 
 The initial residuals are chosen by `options.initProcedure` (see
 [`IterLassoOptions`](@ref)); with `:InitStd` they come from a lasso with
@@ -251,13 +267,17 @@ function feasibleLasso!(
   Γ = Array{T}(undef, p)              # stores loadings
   Γold = Array{T}(undef, p)
 
+  info = CDInfo()
+  iterations = 0
+
   # initialize residuals
   if options.initProcedure == :Screening
     _findInitResiduals!(X, y, options.sinit, f.r)
   elseif options.initProcedure == :InitStd
     σ = options.σinit
     _stdX!(Γ, X)
-    coordinateDescent!(x, f, ProxL1(λ0*σ, Γ), options.optionsCD)
+    coordinateDescent!(x, f, ProxL1(λ0*σ, Γ), options.optionsCD, info)
+    iterations += info.iterations
   elseif options.initProcedure == :WarmStart
     initialize!(f, x)
   else
@@ -267,18 +287,23 @@ function feasibleLasso!(
 
   # g holds a reference to Γ, so updating Γ in place updates the penalty
   g = ProxL1(λ0, Γ)
+  Γconverged, change = false, NaN
   for iter=1:options.maxIter
     copyto!(Γold, Γ)
 
-    coordinateDescent!(x, f, g, options.optionsCD)
+    coordinateDescent!(x, f, g, options.optionsCD, info)
+    iterations += info.iterations
     _getLoadings!(Γ, X, f.r)
 
-    if maximum(abs.(Γold  - Γ)) / maximum(Γ) < options.optTol
+    change = maximum(abs.(Γold  - Γ)) / maximum(Γ)
+    if change < options.optTol
+      Γconverged = true
       break
     end
   end
+  Γconverged || @warn "feasibleLasso! did not converge in maxIter = $(options.maxIter) iterations (relative change of the penalty loadings in the last iteration $(round(change; sigdigits = 3)) > optTol = $(options.optTol)). Increase maxIter in IterLassoOptions."
 
-  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r))
+  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), iterations, Γconverged && info.converged)
 end
 
 ######################################################################
@@ -300,11 +325,15 @@ and `ωⱼ = 1` otherwise.
 
 The path stops early, after the first solution with more than `max_hat_s`
 nonzero coefficients; the returned `λpath` then contains only the values that
-were solved for. See also [`refitLassoPath`](@ref).
+were solved for. `iterations[k]` and `converged[k]` are the passes of
+coordinate descent at `λpath[k]` and whether it met its stopping rule. See also
+[`refitLassoPath`](@ref).
 """
 struct LassoPath{T<:AbstractFloat}
   λpath::Vector{T}
   βpath::Vector{SparseIterate{T,1}}
+  iterations::Vector{Int}
+  converged::Vector{Bool}
 end
 
 """
@@ -353,13 +382,17 @@ function LassoPath(
   f = CDLeastSquaresLoss(Y, X)
 
   βpath = Vector{SparseIterate{T,1}}()
+  iterations, converged = Int[], Bool[]
+  info = CDInfo()
   for λ in λpath
-    coordinateDescent!(x, f, ProxL1(λ, stdX), options)
+    coordinateDescent!(x, f, ProxL1(λ, stdX), options, info)
     push!(βpath, copy(x))
+    push!(iterations, info.iterations)
+    push!(converged, info.converged)
     if nnz(x) > max_hat_s
       break
     end
   end
 
-  LassoPath{T}(λpath[1:length(βpath)], βpath)
+  LassoPath{T}(λpath[1:length(βpath)], βpath, iterations, converged)
 end
