@@ -245,6 +245,14 @@ end
     @test nnz(x) == 2
   end
 
+  # other iterates are not screened along the path of warmStart = false
+  c = [3., -0.5, 0.2, -2., 1.5, 0.7]
+  for warmStart in (true, false)
+    x = SymmetricSparseIterate(3)
+    coordinateDescent!(x, SeparableLoss(c), ProximalBase.ProxL1(1.), CDOptions(;warmStart=warmStart))
+    @test [x[k] for k in 1:6] ≈ [2., 0., 0., -1., 0.5, 0.]
+  end
+
   struct IncompleteLoss <: CoordinateDifferentiableFunction end
   @test_throws ErrorException CoordinateDescent.initialize!(IncompleteLoss(), SparseIterate(2))
   @test_throws ErrorException CoordinateDescent.gradient(IncompleteLoss(), SparseIterate(2), 1)
