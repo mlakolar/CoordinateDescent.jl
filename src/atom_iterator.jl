@@ -2,12 +2,13 @@
 #
 # With fullPass = true they produce the candidate coordinates: all of
 # 1:numCoordinates(iterate), unless setCandidates! restricted them (screening);
-# otherwise only the coordinates stored in the sparse iterate (the active set).
+# otherwise only the active coordinates of the iterate (the active set): the
+# stored entries of a sparse iterate, the active groups of an AtomIterate.
 # reset! switches between the two and, for RandomIterator, draws a new order.
 abstract type AtomIterator end
 
 Base.eltype(::AtomIterator) = Int64
-Base.length(x::AtomIterator) = x.fullPass ? _numCandidates(x) : nnz(x.iterate)
+Base.length(x::AtomIterator) = x.fullPass ? _numCandidates(x) : ProximalBase.numActive(x.iterate)
 
 _numCandidates(x::AtomIterator) = x.candidates === nothing ? ProximalBase.numCoordinates(x.iterate) : length(x.candidates)
 _candidate(x::AtomIterator, i::Int) = x.candidates === nothing ? i : x.candidates[i]
@@ -35,11 +36,11 @@ OrderedIterator(iterate) = OrderedIterator{typeof(iterate)}(iterate, true)
 Base.iterate(x::OrderedIterator) = iterate(x, 1)
 function Base.iterate(x::OrderedIterator, i)
     # check if done
-    done = x.fullPass ? i > _numCandidates(x) : i > nnz(x.iterate)
+    done = x.fullPass ? i > _numCandidates(x) : i > ProximalBase.numActive(x.iterate)
     if done
         return nothing
     end
-    x.fullPass ? (_candidate(x, i), i + 1) : (x.iterate.nzval2ind[i], i + 1)
+    x.fullPass ? (_candidate(x, i), i + 1) : (ProximalBase.activeCoordinate(x.iterate, i), i + 1)
 end
 
 function reset!(x::OrderedIterator, fullPass::Bool)
@@ -66,7 +67,7 @@ RandomIterator(iterate::Union{SparseIterate,SymmetricSparseIterate,AtomIterate})
 # coordinates of the next pass
 function reset!(x::RandomIterator, fullPass::Bool)
   x.fullPass = fullPass
-  newLength = fullPass ? _numCandidates(x) : nnz(x.iterate)
+  newLength = fullPass ? _numCandidates(x) : ProximalBase.numActive(x.iterate)
   @inbounds for i=1:newLength
     x.order[i] = i
   end
@@ -81,9 +82,9 @@ end
 Base.iterate(x::RandomIterator) = iterate(x, 1)
 function Base.iterate(x::RandomIterator, i)
     # check if done
-    done = x.fullPass ? i > _numCandidates(x) : i > nnz(x.iterate)
+    done = x.fullPass ? i > _numCandidates(x) : i > ProximalBase.numActive(x.iterate)
     if done
         return nothing
     end
-    x.fullPass ? (_candidate(x, x.order[i]), i + 1) : (x.iterate.nzval2ind[x.order[i]], i + 1)
+    x.fullPass ? (_candidate(x, x.order[i]), i + 1) : (ProximalBase.activeCoordinate(x.iterate, x.order[i]), i + 1)
 end

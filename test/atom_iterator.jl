@@ -105,6 +105,24 @@ end
     @test collect(it) == [4, 2, 6]
 end
 
+@testset "AtomIterate" begin
+    # the coordinates are the groups, and active passes visit the active groups
+    x = AtomIterate(10, [1:2, 3:5, 6:6, 7:10])
+    x[7] = 1.
+    x[4] = 2.
+    for it in (CoordinateDescent.OrderedIterator(x), CoordinateDescent.RandomIterator(x))
+        CoordinateDescent.reset!(it, true)
+        @test sort(collect(it)) == 1:4
+        @test length(it) == 4
+        CoordinateDescent.reset!(it, false)
+        @test sort(collect(it)) == [2, 4]
+        @test length(it) == 2
+    end
+    it = CoordinateDescent.OrderedIterator(x)
+    CoordinateDescent.reset!(it, false)
+    @test collect(it) == [4, 2]           # in the order the groups became active
+end
+
 
 
 end
