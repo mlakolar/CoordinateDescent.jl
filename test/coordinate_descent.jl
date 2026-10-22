@@ -271,6 +271,50 @@ end
   @test_throws ErrorException CoordinateDescent.descendCoordinate!(IncompleteLoss(), ProxZero(), SparseIterate(2), 1)
 end
 
+# a user-defined penalty, the elastic net λ (α ‖x‖₁ + (1 - α) ‖x‖² / 2), through
+# its proximal operator on one coordinate
+struct ElasticNetPenalty <: ProximableFunction
+  λ::Float64
+  α::Float64
+end
+ProximalBase.cdprox!(g::ElasticNetPenalty, x::SparseIterate{Float64}, k::Int, γ::Float64) =
+  x[k] = shrink(x[k], γ * g.λ * g.α) / (1 + γ * g.λ * (1 - g.α))
+
+@testset "user-defined penalty" begin
+  n, p, s = 100, 20, 5
+  X = randn(n, p)
+  Y = X[:, 1:s] * ones(s) + randn(n)
+  λ, α = 0.1, 0.5
+  g = ElasticNetPenalty(λ, α)
+
+  # the elastic net is the lasso on the data augmented with √(nλ(1 - α)) I,
+  # whose loss divides by n + p instead of n
+  Xa = [X; Matrix(sqrt(n * λ * (1 - α)) * I, p, p)]
+  Ya = [Y; zeros(p)]
+  xa = SparseIterate(p)
+  coordinateDescent!(xa, CDLeastSquaresLoss(Ya, Xa), ProxL1(n / (n + p) * λ * α), CDOptions(;optTol=1e-12))
+  @test 0 < nnz(xa) < p
+
+  for f in (CDLeastSquaresLoss(Y, X), CDWeightedLSLoss(Y, X, ones(n)), CDQuadraticLoss(X'X / n, -X'Y / n)),
+      warmStart in (true, false), randomize in (true, false)
+    x = SparseIterate(sprand(p, 0.5))
+    info = CDInfo()
+    coordinateDescent!(x, f, g, CDOptions(;optTol=1e-12, warmStart=warmStart, randomize=randomize), info)
+    @test info.converged
+    @test Vector(x) ≈ Vector(xa) atol=1e-8
+    @test nnz(x) == nnz(xa)                  # no stored zeros
+  end
+
+  x = zeros(p)
+  coordinateDescent!(x, CDLeastSquaresLoss(Y, X), g, CDOptions(;optTol=1e-12))
+  @test x ≈ Vector(xa) atol=1e-8
+
+  # the square-root lasso loss takes the ℓ1 penalty only, and the group lasso
+  # penalty needs an AtomIterate
+  @test_throws ErrorException coordinateDescent!(SparseIterate(p), CDSqrtLassoLoss(Y, X), g)
+  @test_throws ArgumentError coordinateDescent!(SparseIterate(p), CDLeastSquaresLoss(Y, X), ProxGroupL2(0.1, [1:10, 11:20]))
+end
+
 @testset "maxIter" begin
   n, p = 100, 20
   X = randn(n, p)

@@ -4,7 +4,8 @@
 Minimize `f(x) + g(x)` by coordinate descent and store the solution in `x`,
 where `f` is a [`CoordinateDifferentiableFunction`](@ref), `g` is a
 [`ProxL1`](@ref ProximalBase.ProxL1) or [`ProxZero`](@ref ProximalBase.ProxZero)
-penalty and `x` is a `SparseIterate`, or `g` is a group lasso penalty
+penalty, or another penalty that separates across coordinates (see below), and
+`x` is a `SparseIterate`, or `g` is a group lasso penalty
 [`ProxGroupL2`](@ref ProximalBase.ProxGroupL2) and `x` an `AtomIterate` (see
 below).
 
@@ -47,6 +48,19 @@ penalized groups, and the strong rule keeps the groups with
 `‖∇_G f‖₂ ≥ (2λ - λprev) λₖ`. Groups with zero weight are not penalized, and the
 groups must cover all coordinates, so a coordinate that is not penalized needs
 a group of its own with zero weight.
+
+# Other penalties
+
+A penalty `g(x) = Σₖ gₖ(xₖ)` of another type, a subtype of
+`ProximableFunction`, needs the proximal operator of one coordinate,
+`ProximalBase.cdprox!(g, x::SparseIterate, k, γ)`, which replaces `x[k]` with
+`argmin_z gₖ(z) + (z - x[k])² / (2γ)`. [`CDLeastSquaresLoss`](@ref),
+[`CDWeightedLSLoss`](@ref) and [`CDQuadraticLoss`](@ref) take this proximal
+step on the quadratic in `x[k]`, so they accept such a penalty, and so does a
+user-defined loss whose `descendCoordinate!` calls `cdprox!` (see
+[`CoordinateDifferentiableFunction`](@ref)). Such a penalty has no path of
+penalty levels: with `warmStart = false`, the descent starts from zero and
+solves at `g` directly.
 """
 function coordinateDescent!(
   x::Union{SparseIterate,SymmetricSparseIterate},
@@ -111,10 +125,11 @@ function coordinateDescent!(
   x
 end
 
+# ProxZero and the other separable penalties, which have no path of penalty levels
 function coordinateDescent!(
   x::Union{SparseIterate,SymmetricSparseIterate},
   f::CoordinateDifferentiableFunction,
-  g::ProxZero,
+  g::ProximableFunction,
   options::CDOptions=CDOptions(),
   info::CDInfo=CDInfo())
 
@@ -134,6 +149,14 @@ function coordinateDescent!(
   _warn_not_converged(info, options)
   x
 end
+
+coordinateDescent!(
+  ::Union{SparseIterate,SymmetricSparseIterate},
+  ::CoordinateDifferentiableFunction,
+  ::ProxGroupL2,
+  options::CDOptions=CDOptions(),
+  info::CDInfo=CDInfo()) =
+  throw(ArgumentError("ProxGroupL2 needs an AtomIterate with its groups, as in AtomIterate(p, g)."))
 
 function coordinateDescent!(
   x::AtomIterate,
@@ -188,7 +211,7 @@ end
 function coordinateDescent!(
   x::Vector{T},
   f::CoordinateDifferentiableFunction,
-  g::Union{ProxL1, ProxZero, ProxGroupL2},
+  g::ProximableFunction,
   options::CDOptions=CDOptions(),
   info::CDInfo=CDInfo()) where {T<:AbstractFloat}
 
@@ -197,7 +220,7 @@ function coordinateDescent!(
   copyto!(x, xs)
 end
 
-_iterate(x::Vector, ::Union{ProxL1, ProxZero}) = SparseIterate(x)
+_iterate(x::Vector, ::ProximableFunction) = SparseIterate(x)
 _iterate(x::Vector, g::ProxGroupL2) = AtomIterate(x, g)
 
 
@@ -212,7 +235,7 @@ _iterate(x::Vector, g::ProxGroupL2) = AtomIterate(x, g)
 function _coordinateDescent!(
   x::Union{SparseIterate,SymmetricSparseIterate,AtomIterate},
   f::CoordinateDifferentiableFunction,
-  g::Union{ProxL1, ProxZero, ProxGroupL2},
+  g::ProximableFunction,
   coef_iterator::AtomIterator,
   options::CDOptions,
   info::CDInfo)
@@ -308,7 +331,7 @@ _warn_not_converged(info::CDInfo, options::CDOptions) =
 function _cdPass!(
   x::Union{SparseIterate,SymmetricSparseIterate},
   f::CoordinateDifferentiableFunction,
-  g::Union{ProxL1, ProxZero},
+  g::ProximableFunction,
   coef_iterator::AtomIterator,
   scaled::Bool
   )
