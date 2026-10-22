@@ -260,13 +260,64 @@ end
 
   # a single pass is one sweep of coordinate updates
   x1 = SparseIterate(p)
-  coordinateDescent!(x1, f, g, CDOptions(;maxIter=1, randomize=false))
+  info = CDInfo()
+  @test_logs (:warn, r"did not converge in maxIter = 1 passes") coordinateDescent!(x1, f, g, CDOptions(;maxIter=1, randomize=false), info)
   x2 = SparseIterate(p)
   CoordinateDescent.initialize!(f, x2)
   for k=1:p
     CoordinateDescent.descendCoordinate!(f, g, x2, k)
   end
   @test Vector(x1) == Vector(x2)
+  @test info.iterations == 1
+  @test !info.converged
+end
+
+@testset "convergence info" begin
+  n, p = 100, 20
+  X = randn(n, p)
+  Y = X * randn(p) + randn(n)
+  g = ProximalBase.ProxL1(0.05)
+
+  for f in (CDLeastSquaresLoss(Y, X), CDQuadraticLoss(X'X/n, -X'Y/n)), warmStart in (true, false)
+    opt = CDOptions(;optTol=1e-10, warmStart=warmStart)
+
+    info = CDInfo()
+    x = SparseIterate(p)
+    @test_logs coordinateDescent!(x, f, g, opt, info)
+    @test info.converged
+    @test info.iterations >= 2          # a pass that moves x and one that confirms it
+    @test info.maxChange < 1e-10
+    @test maximum(abs.(X'*(Y - X*x) / n)) ≈ 0.05 atol=1e-8
+
+    # stopped by maxIter: reported and warned about; with warmStart = false the
+    # passes of the numSteps path steps are counted too (the first step, at
+    # λmax, stops after one pass)
+    opt = CDOptions(;maxIter=2, optTol=1e-10, warmStart=warmStart)
+    x = SparseIterate(p)
+    @test_logs (:warn, r"did not converge") coordinateDescent!(x, f, g, opt, info)
+    @test !info.converged
+    if warmStart
+      @test info.iterations == 2
+    else
+      @test opt.numSteps < info.iterations <= 2 * (opt.numSteps + 1)
+    end
+    @test info.maxChange > 1e-10
+  end
+
+  # ProxZero, and an info object can be reused
+  info = CDInfo()
+  x = SparseIterate(p)
+  @test_logs coordinateDescent!(x, CDLeastSquaresLoss(Y, X), ProxZero(), CDOptions(;optTol=1e-10), info)
+  @test info.converged
+  @test Vector(x) ≈ X \ Y atol=1e-6
+end
+
+@testset "default options" begin
+  opt = CDOptions()
+  @test opt.maxIter == 100_000
+  @test opt.optTol == 1e-7
+  @test opt.randomize
+  @test opt.warmStart
 end
 
 end

@@ -30,7 +30,7 @@ export
   # CD
   CoordinateDifferentiableFunction,
   CDLeastSquaresLoss, CDWeightedLSLoss, CDQuadraticLoss, CDSqrtLassoLoss,
-  CDOptions,
+  CDOptions, CDInfo,
   coordinateDescent!,
 
   # var coef

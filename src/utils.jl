@@ -5,13 +5,17 @@
 ####################################
 
 """
-    CDOptions(; maxIter=2000, optTol=1e-7, randomize=true, warmStart=true, numSteps=50)
+    CDOptions(; maxIter=100_000, optTol=1e-7, randomize=true, warmStart=true, numSteps=50)
 
 Options for [`coordinateDescent!`](@ref).
 
-- `maxIter`: maximum number of passes over the coordinates
+- `maxIter`: maximum number of passes over the coordinates; reaching it without
+  convergence gives a warning
 - `optTol`: convergence tolerance on the largest change of a coordinate in a pass
-- `randomize`: visit the coordinates in a random order in each pass
+- `randomize`: visit the coordinates in a random order in each pass, drawn from
+  the global random number generator; otherwise in the order `1, 2, …`. The
+  fixed order can be faster on some designs but much slower when the columns
+  are strongly correlated with each other
 - `warmStart`: start from the supplied iterate; otherwise start from zero and
   follow a path of decreasing penalties
 - `numSteps`: number of penalty levels on that path when `warmStart` is false
@@ -25,11 +29,31 @@ struct CDOptions
 end
 
 CDOptions(;
-  maxIter::Int64=2000,
+  maxIter::Int64=100_000,
   optTol::Float64=1e-7,
   randomize::Bool=true,
   warmStart::Bool=true,
   numSteps::Int=50) = CDOptions(maxIter, optTol, randomize, warmStart, numSteps)
+
+
+"""
+    CDInfo()
+
+Convergence information that [`coordinateDescent!`](@ref) fills in when it is
+passed as the last argument.
+
+- `iterations`: number of passes over the coordinates, including those on the
+  path of penalties when `warmStart` is false
+- `converged`: whether the stopping rule was met before `maxIter` passes
+- `maxChange`: largest change of a coordinate in the last pass
+"""
+mutable struct CDInfo
+  iterations::Int64
+  converged::Bool
+  maxChange::Float64
+end
+
+CDInfo() = CDInfo(0, false, NaN)
 
 
 """
