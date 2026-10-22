@@ -489,7 +489,7 @@ end
 
   path = LassoPath(X, Y, opt; nλ=20, intercept=true)
   @test length(path.λpath) == length(path.βpath) == length(path.β0path) == 20
-  @test path.λpath[1] ≈ maximum(abs.(Xc'Yc) ./ (n .* sd))   # the smallest λ with zero solution
+  @test path.λpath[1] ≈ maximum(abs.(Xc'Yc) ./ (n .* sd)) rtol=1e-6   # the smallest λ with zero solution
   @test path.λpath[end] ≈ 0.01 * path.λpath[1]              # default ratio when n < p
   @test issorted(path.λpath; rev=true)
   @test nnz(path.βpath[1]) == 0
@@ -515,7 +515,8 @@ end
   # options of the grid
   path = LassoPath(X[:, 1:50], Y; nλ=5, standardizeX=false)
   @test path.λpath[end] ≈ 1e-4 * path.λpath[1]              # n > p
-  @test path.λpath[1] ≈ maximum(abs.(X[:, 1:50]'Y)) / n
+  @test path.λpath[1] ≈ maximum(abs.(X[:, 1:50]'Y)) / n rtol=1e-6
+  @test nnz(path.βpath[1]) == 0
   @test length(LassoPath(X, Y; nλ=1).λpath) == 1
   λs = LassoPath(X, Y; nλ=3, λminratio=0.5).λpath
   @test λs ≈ λs[1] .* [1, sqrt(0.5), 0.5]

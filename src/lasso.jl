@@ -397,7 +397,8 @@ solution. The intercept `β₀` is not penalized, and it is zero unless
 Without `λpath`, the path has `nλ` values spaced evenly on the log scale from
 `λmax`, the smallest value whose solution is zero, down to `λminratio ⋅ λmax`;
 `λminratio` defaults to `0.01` when `X` has more columns than rows and to
-`1e-4` otherwise.
+`1e-4` otherwise. The first value is `λmax` times `1 + √eps`, so that rounding
+cannot make the first solution nonzero.
 
 With `screening`, each λ is solved first over the coordinates kept by the
 sequential strong rule of Tibshirani et al. (2012), and the optimality
@@ -520,7 +521,7 @@ function LassoPath(
   ω = standardizeX ? _loadings(f) : ones(T, p)
   x = SparseIterate(T, p)
   initialize!(f, x)
-  λmax = _findLambdaMax(x, f, ProxL1(one(T), ω))
+  λmax = _findLambdaMax(x, f, ProxL1(one(T), ω)) * (1 + sqrt(eps(T)))
   λpath = nλ == 1 ? [λmax] : [λmax * T(λminratio)^(T(k) / (nλ - 1)) for k in 0:nλ-1]
   LassoPath(X, Y, λpath, options; standardizeX, intercept, kwargs...)
 end
