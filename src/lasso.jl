@@ -375,13 +375,14 @@ and `ωⱼ = 1` otherwise.
 
 The path stops early, after the first solution with more than `max_hat_s`
 nonzero coefficients; the returned `λpath` then contains only the values that
-were solved for. `iterations[k]` and `converged[k]` are the passes of
-coordinate descent at `λpath[k]` and whether it met its stopping rule. See also
-[`refitLassoPath`](@ref).
+were solved for. The solutions are stored as `SparseVector`s, so a path takes
+memory proportional to the number of nonzero coefficients. `iterations[k]` and
+`converged[k]` are the passes of coordinate descent at `λpath[k]` and whether it
+met its stopping rule. See also [`refitLassoPath`](@ref).
 """
 struct LassoPath{T<:AbstractFloat}
   λpath::Vector{T}
-  βpath::Vector{SparseIterate{T,1}}
+  βpath::Vector{SparseVector{T, Int}}
   iterations::Vector{Int}
   converged::Vector{Bool}
 end
@@ -431,12 +432,12 @@ function LassoPath(
   x = SparseIterate(T, p)
   f = CDLeastSquaresLoss(Y, X)
 
-  βpath = Vector{SparseIterate{T,1}}()
+  βpath = Vector{SparseVector{T, Int}}()
   iterations, converged = Int[], Bool[]
   info = CDInfo()
   for λ in λpath
     coordinateDescent!(x, f, ProxL1(λ, stdX), options, info)
-    push!(βpath, copy(x))
+    push!(βpath, _sparsevec(x))
     push!(iterations, info.iterations)
     push!(converged, info.converged)
     if nnz(x) > max_hat_s

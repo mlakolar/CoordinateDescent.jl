@@ -412,6 +412,23 @@ end
   @test all(nnz(path.βpath[k]) <= 10 for k=1:K-1)
 end
 
+@testset "lasso path storage" begin
+  # the solutions are stored sparsely: memory grows with the nonzeros, not with p
+  n, p = 50, 20_000
+  X = randn(n, p)
+  Y = X[:,1:3] * ones(3) + 0.1 * randn(n)
+  λmax = maximum(abs.(X'Y)) / n
+  opt = CDOptions(;optTol=1e-8)
+  path = LassoPath(X, Y, λmax .* [0.9, 0.7, 0.5], opt; standardizeX=false)
+
+  @test eltype(path.βpath) == SparseVector{Float64, Int}
+  @test all(nnz(β) == count(!iszero, β) > 0 for β in path.βpath)   # no stored zeros
+  @test Base.summarysize(path.βpath) < 10_000                       # dense: 1.4 MB
+  x = SparseIterate(p)
+  coordinateDescent!(x, CDLeastSquaresLoss(Y, X), ProximalBase.ProxL1(0.5 * λmax), opt)
+  @test Vector(path.βpath[end]) ≈ Vector(x) atol=1e-6
+end
+
 @testset "refit lasso path" begin
   n, p, s = 200, 30, 5
   X = randn(n, p)

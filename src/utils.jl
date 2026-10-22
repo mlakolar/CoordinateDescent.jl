@@ -101,6 +101,16 @@ IterLassoOptions(;
 ####################################
 
 
+# the nonzero entries of x as a SparseVector
+function _sparsevec(x::SparseIterate{T, 1}) where {T}
+  k = nnz(x)
+  ind = x.nzval2ind[1:k]
+  val = x.nzval[1:k]
+  keep = .!iszero.(val)
+  sparsevec(ind[keep], val[keep], length(x))
+end
+
+
 # The floating point type T of real data X and y, and X and y converted to it;
 # an array that already has element type T is not copied
 function _float_data(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real})
