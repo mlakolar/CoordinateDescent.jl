@@ -1,5 +1,6 @@
 """
-    coordinateDescent!(x, f, g, options=CDOptions(), info=CDInfo())
+    coordinateDescent!(x, f, g, options=CDOptions(); rng=Random.default_rng(), kwargs...)
+    solve!(x, f, g, options::CDOptions; rng=Random.default_rng(), kwargs...)
 
 Minimize `f(x) + g(x)` by coordinate descent and store the solution in `x`. The
 loss `f` is one of [`CDLeastSquaresLoss`](@ref), [`CDWeightedLSLoss`](@ref),
@@ -31,8 +32,20 @@ left out when finding that `λ0`. For a `SparseIterate` or an `AtomIterate`, eac
 penalty level is screened with the sequential strong rule, as in
 [`LassoPath`](@ref).
 
-The number of passes and whether the stopping rule was met are stored in `info`
-(see [`CDInfo`](@ref)). Returns `x`.
+The keyword arguments `kwargs` are fields of [`CDOptions`](@ref) that replace
+those of `options`, as in `coordinateDescent!(x, f, g; optTol=1e-8)`. With
+`order = :random`, the coordinates are visited in an order drawn from `rng`;
+pass a seeded generator, such as `Xoshiro(1)`, for reproducible passes without
+reseeding the global one.
+
+`coordinateDescent!` returns `x`. `solve!` (a method of `ProximalSolvers.solve!`)
+does the same and returns a `ProximalSolvers.CDResults`: the number of `passes`
+(including those on the path of penalties when `warmStart` is false), whether
+the stopping rule was met (`converged`), the largest scaled change of a
+coordinate in the last pass (`maxchange`) and the `tolerance` it was compared
+with, and the objective `minimum`. Passing a [`CDInfo`](@ref) as the fifth
+argument of `coordinateDescent!`, to be filled in with this information, is
+deprecated.
 
 A dense `Vector` `x` is also accepted; it is converted to a `SparseIterate`, or
 to an `AtomIterate` for `GroupNormL2`, and overwritten with the solution.
@@ -104,11 +117,37 @@ function coordinateDescent!(
   x::Union{SparseIterate, SymmetricSparseIterate, AtomIterate, Vector{<:AbstractFloat}},
   f::Union{CDModel, AbstractFunction, CoordinateDifferentiableFunction},
   g::AbstractFunction,
-  options::CDOptions=CDOptions(),
-  info::CDInfo=CDInfo())
+  options::CDOptions=CDOptions();
+  kwargs...)
 
-  _record!(info, _solve!(x, _model(f, x), g, options))
+  solve!(x, f, g, options; kwargs...)
   x
+end
+
+function coordinateDescent!(
+  x::Union{SparseIterate, SymmetricSparseIterate, AtomIterate, Vector{<:AbstractFloat}},
+  f::Union{CDModel, AbstractFunction, CoordinateDifferentiableFunction},
+  g::AbstractFunction,
+  options::CDOptions,
+  info::CDInfo;
+  kwargs...)
+
+  Base.depwarn("coordinateDescent!(x, f, g, options, info) is deprecated: use `r = solve!(x, f, g, options)`, " *
+               "which returns the convergence information in a ProximalSolvers.CDResults " *
+               "(r.passes, r.converged, r.maxchange, r.tolerance).", :coordinateDescent!)
+  _record!(info, solve!(x, f, g, options; kwargs...))
+  x
+end
+
+function ProximalSolvers.solve!(
+  x::Union{SparseIterate, SymmetricSparseIterate, AtomIterate, Vector{<:AbstractFloat}},
+  f::Union{CDModel, AbstractFunction, CoordinateDifferentiableFunction},
+  g::AbstractFunction,
+  options::CDOptions;
+  rng::AbstractRNG=default_rng(),
+  kwargs...)
+
+  _solve!(x, _model(f, x), g, _options(options, kwargs); rng)
 end
 
 # what ProximalSolvers's solve! takes for f: a loss of ProximalBase or a model, as

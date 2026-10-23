@@ -137,7 +137,9 @@ stopping rule independent of the units of the data (see [`CDOptions`](@ref)),
 `fullGradient!(grad, f, x)`, a faster way to compute the whole gradient, and
 `f(x)`, the value of `f` at `x` from the cache, which Anderson acceleration
 needs (`anderson` in [`CDOptions`](@ref)). These functions are not exported;
-extend them as `CoordinateDescent.initialize!` and so on.
+extend them as `CoordinateDescent.initialize!` and so on. The four required
+functions have no methods of their own, so a missing method raises a
+`MethodError` that lists the methods that exist.
 
 The penalty `g` enters only through `descendCoordinate!`. A loss whose step
 ends with the proximal operator of `g` on coordinate `k`,
@@ -156,7 +158,7 @@ abstract type CoordinateDifferentiableFunction end
 Set the internal cache of `f` (for example the residuals) for the iterate `x`.
 Called by [`coordinateDescent!`](@ref) before the first pass.
 """
-initialize!(f, x) = error("initialize! not implemented for $(typeof(f))")
+function initialize! end
 
 """
     gradient(f, x, k)
@@ -164,7 +166,7 @@ initialize!(f, x) = error("initialize! not implemented for $(typeof(f))")
 Coordinate `k` of the gradient of `f` at `x`, computed from the cache of `f`,
 which must be current for `x`.
 """
-gradient(f, x, k) = error("gradient not implemented for $(typeof(f))")
+function gradient end
 
 """
     numCoordinates(f)
@@ -172,7 +174,7 @@ gradient(f, x, k) = error("gradient not implemented for $(typeof(f))")
 Number of coordinates (or blocks of coordinates) over which coordinate descent
 iterates.
 """
-numCoordinates(f) = error("numCoordinates not implemented for $(typeof(f))")
+function numCoordinates end
 
 """
     descendCoordinate!(f, g, x, k)
@@ -180,7 +182,7 @@ numCoordinates(f) = error("numCoordinates not implemented for $(typeof(f))")
 Update coordinate `k` of `x` to decrease `f(x) + g(x)`, and return the change
 of the coordinate. The cache of `f` must be updated for the new `x`.
 """
-descendCoordinate!(f, g, x, k) = error("descendCoordinate! not implemented for $(typeof(f)) and $(typeof(g))")
+function descendCoordinate! end
 
 """
     coordinateScale(f, k)

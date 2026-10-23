@@ -830,4 +830,96 @@ end
   end
 end
 
+@testset "keyword options" begin
+  n, p, s = 100, 30, 4
+  X = randn(n, p)
+  Y = X[:, 1:s] * ones(s) + randn(n)
+  λ = 0.05
+
+  # copies with changes keep every other field
+  o = CDOptions(; maxIter = 500, optTol = 1e-9, order = :cyclic, warmStart = false, numSteps = 7,
+                relativeTol = false, anderson = 3)
+  o2 = CDOptions(o; maxIter = 1)
+  @test o2.maxIter == 1
+  @test all(getfield(o2, k) == getfield(o, k) for k in fieldnames(CDOptions) if k !== :maxIter)
+  @test CDOptions(o) == o
+  @test CDOptions(o; anderson = 0, randomize = true).order === :random      # randomize replaces order
+  @test CDOptions(CDOptions(; momentum = false); optTol = 1e-3).momentum === false
+  @test_throws ArgumentError CDOptions(o; maxiter = 1)                       # not a field
+  @test_throws ArgumentError CDOptions(o; momentum = true)                   # momentum needs order = :random
+  @test CoordinateDescent._withWarmStart(o) == CDOptions(o; warmStart = true)
+  io = IterLassoOptions(; maxIter = 7, optTol = 1e-4, initProcedure = :InitStd, sinit = 2, σinit = 0.5,
+                        optionsCD = o)
+  io2 = IterLassoOptions(io; σinit = 2.0)
+  @test io2.σinit == 2.0
+  @test all(getfield(io2, k) == getfield(io, k) for k in fieldnames(IterLassoOptions) if k !== :σinit)
+  @test_throws ArgumentError IterLassoOptions(io; optionsCD = o, order = :cyclic)
+  @test_throws ArgumentError IterLassoOptions(io; sinit = 0)
+
+  # the estimators take the fields as keywords, which change the options passed
+  cyc = CDOptions(; order = :cyclic, optTol = 1e-10)
+  same(a, b) = Vector(a.x) == Vector(b.x) && a.iterations == b.iterations && a.converged == b.converged
+  @test same(lasso(X, Y, λ; order = :cyclic, optTol = 1e-10), lasso(X, Y, λ, cyc))
+  @test same(lasso(X, Y, λ, CDOptions(; order = :cyclic); optTol = 1e-10), lasso(X, Y, λ, cyc))
+  @test same(lasso(X, Y, λ, ones(p); order = :cyclic, optTol = 1e-10, intercept = true),
+             lasso(X, Y, λ, ones(p), cyc; intercept = true))
+  @test same(sqrtLasso(X, Y, 1.0; order = :cyclic, optTol = 1e-10), sqrtLasso(X, Y, 1.0, cyc))
+  @test same(sqrtLasso(X, Y, 1.0, ones(p); order = :cyclic, optTol = 1e-10), sqrtLasso(X, Y, 1.0, ones(p), cyc))
+  @test (@test_logs (:warn, r"did not converge") lasso(X, Y, λ; maxIter = 1)).iterations == 1
+  @test_throws ArgumentError lasso(X, Y, λ; maxiter = 10)                    # a misspelled field
+  path1 = LassoPath(X, Y; nλ = 10, order = :cyclic, optTol = 1e-10, intercept = true)
+  path2 = LassoPath(X, Y, cyc; nλ = 10, intercept = true)
+  @test path1.λpath == path2.λpath && path1.βpath == path2.βpath && path1.iterations == path2.iterations
+  path1 = LassoPath(X, Y, path2.λpath; warmStart = false, numSteps = 3, order = :cyclic)
+  path2 = LassoPath(X, Y, path2.λpath, CDOptions(; warmStart = false, numSteps = 3, order = :cyclic))
+  @test path1.βpath == path2.βpath && path1.iterations == path2.iterations
+  iopt = IterLassoOptions(; maxIter = 50, optTol = 1e-6, optionsCD = cyc)
+  @test same(scaledLasso(X, Y, λ, ones(p); maxIter = 50, optTol = 1e-6, optionsCD = cyc),
+             scaledLasso(X, Y, λ, ones(p), iopt))
+  @test same(feasibleLasso!(SparseIterate(p), X, Y, λ; maxIter = 50, optTol = 1e-6, optionsCD = cyc),
+             feasibleLasso!(SparseIterate(p), X, Y, λ, iopt))
+  @test same(feasibleLasso!(SparseIterate(p), X, Y, λ, iopt; initProcedure = :InitStd),
+             feasibleLasso!(SparseIterate(p), X, Y, λ, IterLassoOptions(iopt; initProcedure = :InitStd)))
+  @test_throws ArgumentError feasibleLasso!(SparseIterate(p), X, Y, λ; numSteps = 3)   # a field of CDOptions
+  f = CDSqrtQuadraticLoss(X'X / n, -X'Y / n, dot(Y, Y) / n)
+  @test same(scaledLasso!(SparseIterate(p), f, λ, ones(p); order = :cyclic, optTol = 1e-10),
+             scaledLasso!(SparseIterate(p), f, λ, ones(p), cyc))
+  x1, x2 = SparseIterate(p), SparseIterate(p)
+  coordinateDescent!(x1, CDLeastSquaresLoss(Y, X), NormL1(λ); order = :cyclic, optTol = 1e-10)
+  r = solve!(x2, CDLeastSquaresLoss(Y, X), NormL1(λ), CDOptions(; order = :cyclic); optTol = 1e-10)
+  @test Vector(x1) == Vector(x2) && r.converged
+end
+
+@testset "random number generator" begin
+  n, p, s = 100, 60, 4
+  X = randn(n, p)
+  Y = X[:, 1:s] * ones(s) + randn(n)
+  λ = 0.02
+  run(rng) = (sol = lasso(X, Y, λ; rng); (Vector(sol.x), sol.iterations))
+
+  # a generator of its own makes the passes reproducible, without reseeding the
+  # global one
+  @test run(Xoshiro(1)) == run(Xoshiro(1))
+  Random.seed!(3); u = rand()
+  Random.seed!(3); run(Xoshiro(1)); @test rand() == u
+  # the default draws from the global generator, as before
+  @test (Random.seed!(5); run(Random.default_rng())) == (Random.seed!(5); sol = lasso(X, Y, λ); (Vector(sol.x), sol.iterations))
+
+  # every estimator passes it on
+  path(rng) = (P = LassoPath(X, Y; nλ = 20, rng); (P.βpath, P.iterations))
+  @test path(Xoshiro(2)) == path(Xoshiro(2))
+  cold(rng) = (P = LassoPath(X, Y, [0.2, 0.05]; warmStart = false, rng); (P.βpath, P.iterations))
+  @test cold(Xoshiro(2)) == cold(Xoshiro(2))
+  sq(rng) = (sol = sqrtLasso(X, Y, 1.0; rng); (Vector(sol.x), sol.iterations))
+  @test sq(Xoshiro(3)) == sq(Xoshiro(3))
+  sc(rng) = (sol = scaledLasso(X, Y, λ, ones(p); rng); (Vector(sol.x), sol.iterations))
+  @test sc(Xoshiro(4)) == sc(Xoshiro(4))
+  fe(rng) = (sol = feasibleLasso!(SparseIterate(p), X, Y, λ; initProcedure = :InitStd, rng); (Vector(sol.x), sol.iterations))
+  @test fe(Xoshiro(5)) == fe(Xoshiro(5))
+  cdrun(rng) = (x = SparseIterate(p); r = solve!(x, CDLeastSquaresLoss(Y, X), NormL1(λ), CDOptions(); rng); (Vector(x), r.passes))
+  @test cdrun(Xoshiro(6)) == cdrun(Xoshiro(6))
+  Random.seed!(3); path(Xoshiro(2)); cold(Xoshiro(2)); sq(Xoshiro(3)); sc(Xoshiro(4)); fe(Xoshiro(5)); cdrun(Xoshiro(6))
+  @test rand() == u
+end
+
 end
