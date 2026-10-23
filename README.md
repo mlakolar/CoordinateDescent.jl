@@ -67,23 +67,27 @@ false)` measures it in the units of the coefficients). It also stops after
 inaccurate.
 
 Each pass visits the coordinates in a new random order by default
-(`order = :random`). Two options accelerate the passes over the active set,
-which make up most of the passes at small penalties:
+(`order = :random`). The passes over the active set, which make up most of the
+passes at small penalties, can be accelerated in two ways:
 
-- `momentum = true`, with a random order, starts each pass from an
-  extrapolated point (Nesterov momentum).
-  - On every design in [benchmark/README.md](benchmark/README.md) it is at least
-    as fast as the default, and it computes a 50-λ path 2.7–6.5 times faster.
-  - That includes designs whose columns share a common factor.
-  - On easy problems that converge in a few dozen passes it can be a little
-    slower.
-- `anderson = 5`, with `order = :cyclic`, extrapolates from the last passes
-  (Anderson acceleration).
+- **Momentum.** Each such pass starts from a point extrapolated from the last
+  two (Nesterov momentum).
+  - It is on by default with a random order, a `SparseIterate` and a built-in
+    loss.
+  - On the designs in [benchmark/README.md](benchmark/README.md) it computes
+    50-λ paths 2.7–6.5 times faster than the plain random order, including
+    designs whose columns share a common factor. Short solves take about as
+    long either way.
+  - `momentum = false` gives the plain random order of versions before 0.6.
+- **Anderson acceleration.** `anderson = 5`, with `order = :cyclic`,
+  extrapolates from the last passes.
   - It is faster than momentum when few passes are needed, and when n ≫ p.
   - Under a common factor it is much slower, like the cyclic order.
 
 ```julia
-sol = lasso(X, y, 0.01, CDOptions(; order = :active, momentum = true))
+sol = lasso(X, y, 0.01)                                     # random order, momentum
+sol = lasso(X, y, 0.01, CDOptions(; momentum = false))       # plain random order
+sol = lasso(X, y, 0.01, CDOptions(; order = :cyclic, anderson = 5))
 ```
 
 ## Examples

@@ -446,6 +446,8 @@ end
   @test opt.randomize
   @test opt.warmStart
   @test opt.relativeTol
+  @test opt.anderson == 0
+  @test opt.momentum === nothing
 end
 
 @testset "scale-free stopping rule" begin
@@ -953,8 +955,10 @@ end
 
 
 @testset "momentum" begin
-  @test !CDOptions().momentum
+  @test CDOptions().momentum === nothing           # used where it is known to help
   @test CDOptions(;momentum=true).momentum
+  @test CDOptions(;momentum=false).momentum === false
+  @test CDOptions(;order=:cyclic).momentum === nothing
   @test CDOptions(;order=:active, momentum=true).momentum
   @test_throws ArgumentError CDOptions(;order=:cyclic, momentum=true)   # can stall
   @test_throws ArgumentError CDOptions(;order=:cyclic, anderson=5, momentum=true)
@@ -969,7 +973,7 @@ end
   w = 0.5 .+ rand(n)
   λ = 0.02 * maximum(abs, X'Y) / n
   λs = 0.2 * maximum(abs, X'Y) / norm(Y)
-  plain = CDOptions(;optTol=1e-10)
+  plain = CDOptions(;optTol=1e-10, momentum=false)
   mom = CDOptions(;optTol=1e-10, momentum=true)
 
   # the same solution, in fewer passes over all losses together; WrappedLS has
@@ -1020,6 +1024,23 @@ end
   # it needs a SparseIterate
   gg = ProxGroupL2(λ, [((k-1)*10+1):(k*10) for k in 1:100])
   @test_throws ArgumentError coordinateDescent!(AtomIterate(p, gg), f, gg, mom)
+
+  # by default it is used with a random order, a SparseIterate and a built-in
+  # loss, and not otherwise: the same runs as momentum = true or false
+  passes(f, g, x, o; seed = 7) = (Random.seed!(seed); info = CDInfo(); coordinateDescent!(x, f, g, o, info); info.iterations)
+  auto = CDOptions(;optTol=1e-10)
+  for o in (auto, CDOptions(;optTol=1e-10, order=:active))
+    on = CDOptions(;optTol=1e-10, order=o.order, momentum=true)
+    off = CDOptions(;optTol=1e-10, order=o.order, momentum=false)
+    @test passes(f, ProxL1(λ), SparseIterate(p), o) == passes(f, ProxL1(λ), SparseIterate(p), on)
+    @test passes(f, ProxL1(λ), SparseIterate(p), o) != passes(f, ProxL1(λ), SparseIterate(p), off)
+  end
+  wf = WrappedLS(CDLeastSquaresLoss(Y, X))
+  @test passes(wf, ProxL1(λ), SparseIterate(p), auto) == passes(wf, ProxL1(λ), SparseIterate(p), plain)
+  cyc = CDOptions(;optTol=1e-10, order=:cyclic)
+  @test passes(f, ProxL1(λ), SparseIterate(p), cyc) ==
+        passes(f, ProxL1(λ), SparseIterate(p), CDOptions(;optTol=1e-10, order=:cyclic, momentum=false))
+  @test passes(f, gg, AtomIterate(p, gg), auto) == passes(f, gg, AtomIterate(p, gg), plain)
 end
 
 end

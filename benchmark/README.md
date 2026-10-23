@@ -7,7 +7,8 @@ folder, which loads CoordinateDescent from this checkout:
 julia --project=benchmark -e 'using Pkg; Pkg.instantiate()'
 julia --project=benchmark benchmark/locpoly_bench.jl    # about a minute
 julia --project=benchmark benchmark/cd_bench.jl         # about 20 minutes
-julia --project=benchmark benchmark/order_anderson_bench.jl   # about 5 minutes
+julia --project=benchmark benchmark/order_anderson_bench.jl    # about 6 minutes
+julia --project=benchmark benchmark/momentum_default_bench.jl  # about 2 minutes
 ```
 
 The checkout is found through `[sources]` in `Project.toml`, which Julia 1.11
@@ -88,14 +89,16 @@ Compares the orders of the coordinates, Anderson acceleration (issue #9) and
 momentum (issue #20) on the lasso `‖y - Xβ‖² / (2n) + λ‖β‖₁`, solved from β = 0
 with the default stopping rule (`optTol = 1e-7`):
 
-- `order = :cyclic`, `:random` (the default) and `:active`;
+- `order = :cyclic`, and `:random` and `:active` without momentum (the default
+  before version 0.6 was `:random` without momentum);
 - `order = :cyclic` with `anderson = 5`;
-- `order = :random` with `momentum = true`.
+- `order = :random` with `momentum = true`, which is the default since 0.6 for
+  these built-in losses.
 
-The designs are those of the lasso benchmark of ProximalOPT.jl, with three
-more: two more correlated ones and one with three common factors. They have
-Gaussian columns scaled to ‖Xⱼ‖² = n, s coefficients ±1 and a signal-to-noise
-ratio of 4.
+The designs, defined in `common.jl`, are those of the lasso benchmark of
+ProximalOPT.jl, with three more: two more correlated ones and one with three
+common factors. They have Gaussian columns scaled to ‖Xⱼ‖² = n, s coefficients
+±1 and a signal-to-noise ratio of 4.
 
 | design | n | p | s | correlation between columns |
 |---|---:|---:|---:|---|
@@ -165,10 +168,10 @@ at `maxIter = 100 000` for E' at 0.01 λmax.
 
 ### What the numbers say
 
-- **Momentum** (`order = :random, momentum = true`)
-  - It is never slower than the default random order; the two tie on E at 0.1 λmax. At 0.02 λmax and below it is 1.6–6.2 times faster, except when n ≫ p (C), where it is 7–11% faster.
-  - On paths it is 2.7–6.5 times faster than the default.
-  - Under a common factor (E, E' and F) it is the fastest option at 0.02 λmax and below. There it is 1.6–3.4 times faster than the default and 6–68 times faster than Anderson acceleration; it also computes the paths of E and F 9–25 times faster than Anderson acceleration.
+- **Momentum** (`order = :random, momentum = true`, the default since 0.6)
+  - It is never slower than the random order without momentum; the two tie on E at 0.1 λmax. At 0.02 λmax and below it is 1.6–6.2 times faster, except when n ≫ p (C), where it is 7–11% faster.
+  - On paths it is 2.7–6.5 times faster than without momentum.
+  - Under a common factor (E, E' and F) it is the fastest option at 0.02 λmax and below. There it is 1.6–3.4 times faster than without momentum and 6–68 times faster than Anderson acceleration; it also computes the paths of E and F 9–25 times faster than Anderson acceleration.
   - Without a common factor, at 0.02 λmax and below, it is up to 30% faster than Anderson acceleration on A, B and D (D at 0.01 λmax is the exception, 9% slower), and on paths within 9% of it.
   - It is slower than Anderson acceleration when few passes are needed: by 20–67% at 0.1 λmax, by 29% on B' at 0.02 λmax, and by 22–33% when n ≫ p (C). In those cases the cyclic order needs fewer passes than any random one.
   - With `order = :active`, which visits the coordinates of the full passes in the order 1, 2, …, momentum was 2–23% faster than with `order = :random` at 0.1 λmax. Elsewhere it was within 11%, in a separate comparison on A–F and on paths.
@@ -179,3 +182,44 @@ at `maxIter = 100 000` for E' at 0.01 λmax.
 - **Memory K:** K = 3, 5 and 10 are within 10% of each other.
 - **Extrapolations are often rejected while the active set settles, and accepted in runs once it has.** Stopping after a few rejections in a row, as planned in issue #9, prevented any acceleration: in a solve on A, the first three attempts were all rejected.
 - **`order = :active`** without momentum is within -27% to +17% of `order = :random`. It never shows the cyclic order's blow-up.
+- **Timing under load.** A rerun of this script with other processes loading the machine gave times up to 50% longer. The ratios between the deterministic solvers (minimum of the runs) and the random ones (median) also moved in favor of the deterministic ones. The tables above are from a run on a quiet machine.
+
+## momentum_default_bench.jl
+
+Compares the default options, which use momentum with the random order since
+version 0.6, with `momentum = false`, the default before. It times the
+high-level solvers and `CDQuadraticLoss` on designs A, E and F, and
+`locpolyl1` on the varying-coefficient model of
+`examples/07_varying_coefficient.jl`. Each case runs the two settings in turn,
+until each has half a second of runs and at least 5 runs; the table gives
+median times on the M3 Pro.
+
+| case | momentum = false (ms) | default (ms) | speedup |
+|---|---:|---:|---:|
+| A: `lasso`, 0.05 λmax, intercept, standardized | 59.5 | 28.4 | 2.10 |
+| A: `sqrtLasso`, λ = 1.1 √(2 log p / n) | 6.5 | 6.5 | 1.00 |
+| A: `scaledLasso`, λ = √(2 log p / n) | 2.2 | 2.3 | 0.99 |
+| A: `feasibleLasso!`, λ0 = 2 √(2 log p / n) | 1.9 | 1.9 | 1.01 |
+| A: `LassoPath`, 100 λ, intercept, standardized | 3443.0 | 840.2 | 4.10 |
+| A: `CDQuadraticLoss(X'X/n, -X'y/n)`, 0.02 λmax | 1831.6 | 473.3 | 3.87 |
+| E: `lasso`, 0.05 λmax, intercept, standardized | 6.5 | 4.3 | 1.49 |
+| E: `sqrtLasso`, λ = 1.1 √(2 log p / n) | 15.1 | 13.3 | 1.13 |
+| E: `scaledLasso`, λ = √(2 log p / n) | 2.0 | 2.0 | 1.01 |
+| E: `feasibleLasso!`, λ0 = 2 √(2 log p / n) | 5.1 | 5.3 | 0.97 |
+| E: `LassoPath`, 100 λ, intercept, standardized | 702.2 | 258.5 | 2.72 |
+| E: `CDQuadraticLoss(X'X/n, -X'y/n)`, 0.02 λmax | 130.0 | 60.4 | 2.15 |
+| F: `lasso`, 0.05 λmax, intercept, standardized | 12.9 | 5.9 | 2.18 |
+| F: `sqrtLasso`, λ = 1.1 √(2 log p / n) | 29.0 | 20.6 | 1.41 |
+| F: `scaledLasso`, λ = √(2 log p / n) | 3.3 | 3.1 | 1.08 |
+| F: `feasibleLasso!`, λ0 = 2 √(2 log p / n) | 6.0 | 5.6 | 1.07 |
+| F: `LassoPath`, 100 λ, intercept, standardized | 1040.1 | 325.5 | 3.20 |
+| F: `CDQuadraticLoss(X'X/n, -X'y/n)`, 0.02 λmax | 190.9 | 81.0 | 2.36 |
+| `locpolyl1`, n = 500, p = 50, degree 1, 5 grid points | 0.6 | 0.6 | 0.95 |
+
+- **Paths and small penalties gain the most.**
+  - `LassoPath` with an intercept and standardized columns is 2.7–4.1 times faster.
+  - `CDQuadraticLoss` at 0.02 λmax is 2.2–3.9 times faster.
+  - `lasso` at 0.05 λmax is 1.5–2.2 times faster.
+- **Solves that need few passes take about as long either way.** That covers the scaled and feasible lasso at theory-driven penalties, `sqrtLasso` on A, and the small `locpolyl1` problem (0.6 ms both ways). The largest slowdown, 3–5%, is within the noise of the timing.
+- **The default leaves some cases unchanged.** It uses momentum only with a random order, a `SparseIterate` and a built-in loss. User-defined losses, `SymmetricSparseIterate`s (CovSel, DiffPrecTest), the group lasso on `AtomIterate`s, and `order = :cyclic` run as before.
+

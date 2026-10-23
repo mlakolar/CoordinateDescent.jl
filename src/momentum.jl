@@ -23,11 +23,20 @@ end
 
 MomentumState{T}() where {T} = MomentumState{T}(T[], T[], T[], T[], T[], 0, 1, false)
 
-# the state of the momentum, or nothing without it
-function _momentumState(x, momentum::Bool)
-  momentum || return nothing
-  x isa SparseIterate ||
-    throw(ArgumentError("momentum needs a SparseIterate, not a $(typeof(x))."))
+# the state of the momentum, or nothing without it. By default (momentum =
+# nothing) it is used where it is known to help: with a random order, a
+# SparseIterate and a loss whose cache moves with the point, the built-in ones;
+# initializing another loss at every extrapolated point can cost more than the
+# momentum saves
+function _momentumState(x, f, options::CDOptions)
+  momentum = options.momentum
+  momentum === false && return nothing
+  if momentum === nothing
+    options.order !== :cyclic && x isa SparseIterate && _cache(f) !== nothing || return nothing
+  else
+    x isa SparseIterate ||
+      throw(ArgumentError("momentum needs a SparseIterate, not a $(typeof(x))."))
+  end
   MomentumState{eltype(x)}()
 end
 

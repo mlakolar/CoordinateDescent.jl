@@ -79,7 +79,8 @@ println("\n== order and anderson: the order of the coordinates")
 
 # order = :random (the default) visits the coordinates in a new random order
 # in every pass, drawn from the global random number generator (seed it with
-# Random.seed! to reproduce a run). order = :cyclic visits them in the order
+# Random.seed! to reproduce a run), and by default with momentum (see below).
+# order = :cyclic visits them in the order
 # 1, 2, …, p, which is faster on independent columns but much slower when the
 # columns share a common factor. order = :active shuffles only the passes over
 # the active set; the full passes, which mostly check that the zero
@@ -91,9 +92,10 @@ println("\n== order and anderson: the order of the coordinates")
 # when it lowers the objective. It saves passes where coordinate descent needs
 # many, as at small penalties with correlated columns, but it keeps the
 # weakness of the cyclic order under a common factor. With order = :random or
-# :active, momentum = true starts each pass over the active set from an
-# extrapolated point (Nesterov momentum); it works with the random order, so
-# it also helps under a common factor.
+# :active, each pass over the active set starts from an extrapolated point
+# (Nesterov momentum), by default for the built-in losses; it works with the
+# random order, so it also helps under a common factor. momentum = false turns
+# it off.
 Xiid, yiid = simulate(500, 200, 0.0)
 Xar = randn(200, 1000)
 for j in 2:1000
@@ -101,15 +103,16 @@ for j in 2:1000
 end
 yar = Xar[:, 1:10:100] * ones(10) + randn(200)
 λar = 0.02 * maximum(abs, Xar' * yar) / 200
-println("  design               options               passes  time (ms)")
+println("  design               options                   passes  time (ms)")
 for (name, Xd, yd, λd) in (("independent columns", Xiid, yiid, λ), ("common factor", X, y, λ),
                            ("AR(1) 0.8, p > n", Xar, yar, λar)),
-    (oname, opts) in (("order = :random", CDOptions()), ("order = :cyclic", CDOptions(; order = :cyclic)),
+    (oname, opts) in (("order = :random", CDOptions()),
+                      ("random, momentum = false", CDOptions(; momentum = false)),
                       ("order = :active", CDOptions(; order = :active)),
-                      ("cyclic, anderson = 5", CDOptions(; order = :cyclic, anderson = 5)),
-                      ("random, momentum", CDOptions(; momentum = true)))
+                      ("order = :cyclic", CDOptions(; order = :cyclic)),
+                      ("cyclic, anderson = 5", CDOptions(; order = :cyclic, anderson = 5)))
   _, info, t = solve(Xd, yd, λd, opts)
-  @printf("  %-19s  %-20s  %6d  %9.2f\n", name, oname, info.iterations, 1000t)
+  @printf("  %-19s  %-24s  %6d  %9.2f\n", name, oname, info.iterations, 1000t)
 end
 
 println("\n== warmStart and numSteps: where to start")
