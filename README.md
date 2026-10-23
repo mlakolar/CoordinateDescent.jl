@@ -120,11 +120,11 @@ julia --project=examples examples/01_lasso.jl
 julia --project=examples examples/run_all.jl      # all of them, about 20 seconds
 ```
 
-The environment loads the package from this checkout, and ProximalBase 0.5 and
-ProximalOPT 0.2 from GitHub until they are registered, through `[sources]` in
+The environment loads the package from this checkout, and ProximalOPT 0.2 from
+GitHub until it is registered, through `[sources]` in
 [examples/Project.toml](examples/Project.toml), which Julia 1.11 and later
-read. On Julia 1.10, develop the checkout and add the two packages by URL in
-that environment first, in one `Pkg.add` call.
+read. On Julia 1.10, develop the checkout and add ProximalOPT by URL in that
+environment first.
 
 ## Writing your own loss or penalty
 

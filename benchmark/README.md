@@ -11,9 +11,9 @@ julia --project=benchmark benchmark/order_anderson_bench.jl    # about 4 minutes
 ```
 
 The checkout is found through `[sources]` in `Project.toml`, which Julia 1.11
-and later read, as are ProximalBase 0.5 and ProximalOPT 0.2 until they are
-registered. Julia 1.10 ignores `[sources]`: develop the checkout and add the
-two packages by URL in that environment first.
+and later read, as is ProximalOPT 0.2 until it is registered. Julia 1.10
+ignores `[sources]`: develop the checkout and add ProximalOPT by URL in that
+environment first.
 
 `compare/` compares this version with version 0.6.0 (see below).
 
