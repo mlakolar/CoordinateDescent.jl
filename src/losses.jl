@@ -76,7 +76,8 @@ minimizer as [`CDLeastSquaresLoss`](@ref).
 
 A coordinate with `A[k, k] = 0`, which `f` does not depend on when `A` is
 positive semidefinite, goes to the minimizer of the penalty nearest zero. `A`
-and `b` must not contain `NaN` or `Inf`; `A` is copied into a dense matrix.
+and `b` must not contain `NaN` or `Inf`. A dense `Matrix` `A` is used as it
+is, as in version 0.6; any other matrix is copied into one.
 
 On an `AtomIterate`, for the group lasso, a group `G` is updated at once, with
 the largest eigenvalue of `A[G, G]` as the curvature.

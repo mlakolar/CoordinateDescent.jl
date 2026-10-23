@@ -246,6 +246,9 @@ end
   @test_throws DimensionMismatch CDSqrtLassoLoss(randn(n+1), X)
   @test_throws ArgumentError CDQuadraticLoss(randn(p, p) + triu(ones(p, p)), randn(p))
   @test_throws DimensionMismatch CDQuadraticLoss(Matrix(1.0I, p, p), randn(p+1))
+  # a dense matrix is used as it is, as in 0.6
+  A = X'X / n
+  @test CDQuadraticLoss(A, -X'Y / n).A === A
 
   f = CDLeastSquaresLoss(Y, X)
   @test_throws DimensionMismatch coordinateDescent!(SparseIterate(p+1), f, NormL1(0.1))
