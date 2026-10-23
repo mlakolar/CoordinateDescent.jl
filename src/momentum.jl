@@ -72,6 +72,7 @@ function _momentumStep!(s::MomentumState{T}, x::SparseIterate{T}, f) where {T}
     @inbounds @simd for i in eachindex(c)
       c[i] = s.ccur[i] + β * (s.ccur[i] - s.cprev[i])
     end
+    _cacheMoved!(f, x)
     s.moved = true
   end
   s

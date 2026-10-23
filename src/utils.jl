@@ -128,9 +128,11 @@ CDInfo() = CDInfo(0, false, NaN, NaN)
     IterLassoOptions(; maxIter=20, optTol=1e-2, initProcedure=:Screening,
                        sinit=5, σinit=1.0, optionsCD=CDOptions())
 
-Options for the iterative procedures [`scaledLasso!`](@ref) and
-[`feasibleLasso!`](@ref), which alternate a lasso fit with an update of the
-noise level or of the penalty loadings.
+Options for [`feasibleLasso!`](@ref), which alternates a lasso fit with an
+update of the penalty loadings, and for [`scaledLasso!`](@ref), which uses only
+`optionsCD` (since version 0.6.1 it solves the square-root lasso in one run of
+coordinate descent instead of alternating a lasso fit with an update of the
+noise level).
 
 - `maxIter`: maximum number of outer iterations
 - `optTol`: tolerance on the relative change of the noise level or loadings
@@ -227,19 +229,6 @@ function _wls(X::AbstractMatrix{T}, w::AbstractVector{T}, y::AbstractVector{T}) 
   qr(sw .* X, ColumnNorm()) \ (sw .* y)
 end
 
-
-# Initial estimate of σ for the scaled lasso:
-#
-# * the s columns of X most correlated with y are found
-# * y is regressed on those s columns, and on a constant with an intercept
-# * σ is the standard deviation of the residuals, which tends to overestimate
-#   the true σ
-_findInitSigma!(
-  X::AbstractMatrix{T},
-  y::AbstractVector{T},
-  s::Int,
-  storage::Vector{T};
-  intercept::Bool=false) where {T <: AbstractFloat} =  std(_findInitResiduals!(X, y, s, storage; intercept))
 
 # residuals of the least squares fit of y on the s columns of X most correlated
 # with y (both centered with an intercept), and on a constant with an

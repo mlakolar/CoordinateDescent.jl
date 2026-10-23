@@ -12,7 +12,8 @@ Estimators:
 * Lasso
 * Group lasso
 * Sqrt-Lasso
-* Scaled-Lasso
+* Scaled-Lasso, from the data or from sufficient statistics (`X'X/n`, `X'y/n`,
+  `y'y/n`, or a covariance matrix, one variable on the others)
 * Feasible (heteroscedastic) Lasso
 * Lasso path and refitting
 * Varying-coefficient models via local polynomial regression with an L1 penalty
@@ -198,8 +199,9 @@ coordinateDescent!(x, CDLeastSquaresLoss(y, X), ElasticNet(0.1, 0.5))
 ```
 
 `CDLeastSquaresLoss`, `CDWeightedLSLoss`, `CDQuadraticLoss` and every loss whose
-`descendCoordinate!` calls `cdprox!` accept such a penalty; `CDSqrtLassoLoss`,
-whose update is the exact minimizer for the ℓ1 norm, does not. The path from
+`descendCoordinate!` calls `cdprox!` accept such a penalty; `CDSqrtLassoLoss`
+and `CDSqrtQuadraticLoss`, whose updates are the exact minimizers for the ℓ1
+norm, do not. The path from
 λmax and the screening need to know the penalty, so for other penalties
 `warmStart = false` starts from zero and solves at `g` directly; a path is then
 a loop over decreasing penalties in which each fit starts from the previous

@@ -188,20 +188,38 @@ end
 """
     scaledLasso!(x, X, y, λ, ω, options=IterLassoOptions(); intercept=false)
     scaledLasso(X, y, λ, ω, options=IterLassoOptions(); intercept=false)
+    scaledLasso!(x, f::CDSqrtQuadraticLoss, λ, ω, options=CDOptions())
 
 Scaled lasso of Sun and Zhang (2012), which estimates the coefficients and the
-noise level jointly. It alternates between the lasso
+noise level jointly:
 
-    β̂ = argmin  ‖y - β₀ - Xβ‖² / (2n) + λ σ̂ ∑ⱼ ωⱼ |βⱼ|
+    minimize  ‖y - β₀ - Xβ‖² / (2nσ) + σ/2 + λ ∑ⱼ ωⱼ |βⱼ|   over β and σ > 0.
 
-and the update `σ̂ = ‖y - β̂₀ - Xβ̂‖ / √n` until the relative change in `σ̂` is
-below `options.optTol`, or warns after `options.maxIter` iterations. The
-intercept `β₀` is not penalized, and it is zero unless `intercept` is true.
+The intercept `β₀` is not penalized, and it is zero unless `intercept` is true.
+The minimum over `σ` is at `σ̂ = ‖y - β₀ - Xβ‖ / √n`, so `β̂` solves the
+square-root lasso of Belloni, Chernozhukov and Wang (2011),
 
-The initial `σ̂` is chosen by `options.initProcedure` (see
-[`IterLassoOptions`](@ref)). `scaledLasso!` starts coordinate descent from and
-overwrites `x`. Returns a [`LassoSolution`](@ref) whose `σ` is the final noise
-estimate `‖y - Xβ̂‖ / √n`.
+    minimize  ‖y - β₀ - Xβ‖ / √n + λ ∑ⱼ ωⱼ |βⱼ|,
+
+which one run of coordinate descent solves (on [`CDSqrtLassoLoss`](@ref), with
+the penalty level `√n λ`), with the options `options.optionsCD`; the other
+fields of [`IterLassoOptions`](@ref) are not used. Coordinate descent starts
+from and overwrites `x` (unless `options.optionsCD.warmStart` is false).
+Returns a [`LassoSolution`](@ref) whose `σ` is `σ̂`, and whose penalty is that of
+the lasso that `β̂` solves, `ProxL1(λσ̂, ω)`.
+
+The third form solves the same problem from sufficient statistics: with the
+loss [`CDSqrtQuadraticLoss`](@ref)`(A, b, c)`, `A = X'X/n`, `b = -X'y/n` and
+`c = y'y/n`, it needs neither `X` nor `y`, and a coordinate update costs `O(p)`
+instead of `O(n)`. With `A = S`, `b = -S[:, j]`, `c = S[j, j]` and `ω[j] = Inf`
+it is the scaled lasso of variable `j` on the others from their covariance
+matrix `S`, as in the precision matrix estimator of Sun and Zhang (2013); for
+all the variables, check `S` once and build the losses with `check = false`.
+Its solution has no residuals (an empty vector) and no intercept.
+
+Before version 0.6.1, `scaledLasso!` alternated lasso fits with updates of `σ̂`
+until the relative change of `σ̂` was below `options.optTol` (by default 1e-2),
+which stopped short of the solution and solved a lasso at every iteration.
 """
 function scaledLasso!(
   x::SparseIterate{T},
@@ -214,38 +232,12 @@ function scaledLasso!(
   )  where {T<:AbstractFloat}
 
   n = size(X, 1)
-  f = CDLeastSquaresLoss(y, X; intercept)
-
-  # initialize σ; IterLassoOptions allows only these three procedures
-  if options.initProcedure == :Screening
-    σ = _findInitSigma!(X, y, options.sinit, f.r; intercept)
-  elseif options.initProcedure == :InitStd
-    σ = options.σinit
-  else    # :WarmStart
-    initialize!(f, x)
-    σ = sqrt( sum(abs2, f.r) / n )      # as in the update, so a solution is a fixed point
-  end
-
-  g = ProxL1(λ * σ, ω)
+  f = CDSqrtLassoLoss(y, X; intercept)
   info = CDInfo()
-  iterations, σconverged, change = 0, false, NaN
-  for iter=1:options.maxIter
-    coordinateDescent!(x, f, g, options.optionsCD, info)
-    iterations += info.iterations
-    σnew = sqrt( sum(abs2, f.r) / n )
-
-    change = abs(σnew - σ) / σ
-    if change < options.optTol
-      σconverged = true
-      break
-    end
-    σ = σnew
-    g = ProxL1(λ * σ, ω)
-  end
-  σconverged || @warn "scaledLasso! did not converge in maxIter = $(options.maxIter) iterations (relative change of the noise level in the last iteration $(round(change; sigdigits = 3)) > optTol = $(options.optTol)). Increase maxIter in IterLassoOptions."
-
-  LassoSolution{T, typeof(g)}(x, f.r, g, sqrt( sum(abs2, f.r) / n ), iterations, σconverged && info.converged,
-                              _intercept(f, x))
+  coordinateDescent!(x, f, ProxL1(sqrt(T(n)) * λ, ω), options.optionsCD, info)
+  σ = norm(f.r) / sqrt(T(n))
+  g = ProxL1(λ * σ, ω)
+  LassoSolution{T, typeof(g)}(x, f.r, g, σ, info.iterations, info.converged, _intercept(f, x))
 end
 
 scaledLasso!(
@@ -259,6 +251,24 @@ scaledLasso!(
   ) where {T<:AbstractFloat} =
   scaledLasso!(x, convert(AbstractMatrix{T}, X), convert(AbstractVector{T}, y), T(λ),
                convert(AbstractVector{T}, ω), options; kwargs...)
+
+function scaledLasso!(
+  x::SparseIterate{T},
+  f::CDSqrtQuadraticLoss{T},
+  λ::T,
+  ω::AbstractVector{T},
+  options::CDOptions=CDOptions()) where {T<:AbstractFloat}
+
+  info = CDInfo()
+  coordinateDescent!(x, f, ProxL1(λ, ω), options, info)
+  σ = sqrt(max(f.q, zero(T)))
+  g = ProxL1(λ * σ, ω)
+  LassoSolution{T, typeof(g)}(x, T[], g, σ, info.iterations, info.converged, zero(T))
+end
+
+scaledLasso!(x::SparseIterate{T}, f::CDSqrtQuadraticLoss{T}, λ::Real, ω::AbstractVector{<:Real},
+             options::CDOptions=CDOptions()) where {T<:AbstractFloat} =
+  scaledLasso!(x, f, T(λ), convert(AbstractVector{T}, ω), options)
 
 """
     scaledLasso(X, y, λ, ω, options=IterLassoOptions())
