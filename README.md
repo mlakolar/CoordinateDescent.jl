@@ -45,18 +45,21 @@ using CoordinateDescent, ProximalBase
 n, p = 200, 50
 X = randn(n, p)
 y = X[:, 1:5] * ones(5) + randn(n)
+Xnew = randn(3, p)              # new observations
 
 sol = lasso(X, y, 0.1)          # minimize ‖y - Xβ‖² / (2n) + 0.1 ‖β‖₁
 sol.x                           # sparse coefficient vector
 sol.converged, sol.iterations   # stopping rule met?, passes over the coordinates
+coef(sol), predict(sol, Xnew)   # StatsAPI: also residuals, nobs, dof, deviance
 
 # an unpenalized intercept (sol.intercept) and penalties scaled by the
 # standard deviations of the columns
 sol = lasso(X, y, 0.1; intercept=true, standardizeX=true)
 
 # solutions along 50 values of λ, from the smallest one with a zero solution
-path = LassoPath(X, y; nλ=50, intercept=true)
+path = LassoPath(X, y; nλ=50, intercept=true)    # or fit(LassoPath, X, y; ...)
 path.λpath, path.βpath, path.β0path
+coef(path), coef(path, 0.1), predict(path, Xnew)  # coefficients and fitted values along the path
 
 # lower-level interface: solve! (or coordinateDescent!, which returns x)
 x = SparseIterate(p)

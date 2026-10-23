@@ -18,7 +18,8 @@ module CoordinateDescent
 
 using ProximalBase
 using ProximalSolvers
-using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel, residuals
+using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel
+using StatsAPI: StatsAPI, coef, deviance, dof, fit, nobs, predict, residuals
 using Random: AbstractRNG, default_rng
 using SparseArrays
 using Statistics
@@ -28,6 +29,9 @@ export
   lasso, sqrtLasso, feasibleLasso!, scaledLasso, scaledLasso!,
   LassoPath, refitLassoPath,
   IterLassoOptions,
+
+  # the StatsAPI interface of the solutions
+  coef, predict, residuals, nobs, dof, deviance, fit,
 
   # CD
   CoordinateDifferentiableFunction,
@@ -43,6 +47,7 @@ include("utils.jl")
 include("losses.jl")
 include("coordinate_descent.jl")
 include("lasso.jl")
+include("statsapi.jl")
 include("varying_coefficient_lasso.jl")
 
 include("precompile.jl")

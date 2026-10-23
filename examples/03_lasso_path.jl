@@ -120,10 +120,8 @@ function cvlasso(X, y, λpath; K = 5)
   mse = zeros(length(λpath), K)
   for k in 1:K
     train, test = fold .!= k, fold .== k
-    fit = LassoPath(X[train, :], y[train], λpath; intercept = true)
-    for i in eachindex(λpath)
-      mse[i, k] = mean(abs2, y[test] .- fit.β0path[i] .- X[test, :] * fit.βpath[i])
-    end
+    pathk = fit(LassoPath, X[train, :], y[train], λpath; intercept = true)
+    mse[:, k] = vec(mean(abs2, y[test] .- predict(pathk, X[test, :]); dims = 1))
   end
   vec(mean(mse; dims = 2)), vec(std(mse; dims = 2)) / sqrt(K)
 end
@@ -147,9 +145,9 @@ refits = refitLassoPath(path, X, y)
 println(length(refits), " distinct supports along the path")
 
 S = findall(!iszero, path.βpath[i1se])
-fit = refits[S]
+βS = refits[S]
 βrefit = zeros(p)
-βrefit[S] = fit[2:end]
+βrefit[S] = βS[2:end]
 @printf("on the %d variables selected with one standard error: ‖β̂ - β‖ = %.3f for the lasso, %.3f refit\n",
         length(S), norm(path.βpath[i1se] - β), norm(βrefit - β))
 println("true      ", round.(β[1:s]; digits = 2))

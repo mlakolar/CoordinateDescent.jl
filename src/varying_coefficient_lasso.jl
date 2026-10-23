@@ -228,7 +228,7 @@ function lvocv_locpolyl1(
     β = SparseIterate(T, ep)
     σcur = Ref(zero(T))
     function update(g, β, m)
-      σnew = _getSigma(w, residuals(m))
+      σnew = _getSigma(w, ProximalSolvers.residuals(m))
       change = abs(σnew - σcur[]) / σcur[]
       σcur[] = σnew
       NormL1(λ0 * σnew, stdX), change
