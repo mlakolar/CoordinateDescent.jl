@@ -80,10 +80,97 @@ function _loadings(X::SparseMatrixCSC{T}, intercept::Bool) where {T}
   ω
 end
 
-# the solution of a lasso fit by the model m at the penalty g
-function _lassoSolution(x::SparseIterate{T}, m, g, r::CDResults, intercept::Bool) where {T}
-  res = ProximalSolvers.residuals(m)
-  LassoSolution{T, typeof(g)}(x, res, g, std(res), r.passes, r.converged, ProximalSolvers.intercept(m, x), intercept)
+# whether to solve on the Gram matrix: gram is true, false or :auto, which picks
+# it for dense data with at least twice as many rows as columns and not too
+# many columns (more along a path, which takes more passes than one λ)
+const _GRAM_PMAX = 500
+const _GRAM_PMAX_PATH = 2000
+
+function _usegram(gram, X::AbstractMatrix, path::Bool)
+  gram isa Bool && return gram
+  gram === :auto || throw(ArgumentError("gram must be true, false or :auto, but it is $gram."))
+  n, p = size(X)
+  !issparse(X) && n >= 2p && p <= (path ? _GRAM_PMAX_PATH : _GRAM_PMAX)
+end
+
+# A = (X - 1x̄')'(X - 1x̄')/n, the Gram matrix of the centered columns, formed from
+# blocks of rows so that the centered data are never copied whole, and from X
+# itself without centering
+function _gram(X::AbstractMatrix{T}, xbar::Vector{T}) where {T}
+  n, p = size(X)
+  A = zeros(T, p, p)
+  blas = T <: LinearAlgebra.BlasFloat
+  if issparse(X)
+    A .= Matrix(transpose(X) * X)
+    any(!iszero, xbar) && (A .-= n .* (xbar .* transpose(xbar)))
+  elseif blas && X isa StridedMatrix && all(iszero, xbar)
+    BLAS.syrk!('U', 'T', one(T), X, zero(T), A)
+  else
+    rows = max(1, min(n, 2^20 ÷ max(p, 1)))
+    B = Matrix{T}(undef, rows, p)
+    for i0 in 1:rows:n
+      Bv = view(B, 1:min(rows, n - i0 + 1), :)
+      Bv .= view(X, i0:i0+size(Bv, 1)-1, :) .- transpose(xbar)
+      blas ? BLAS.syrk!('U', 'T', one(T), Bv, one(T), A) : mul!(A, transpose(Bv), Bv, one(T), one(T))
+    end
+  end
+  if blas && !issparse(X)       # syrk! fills the upper triangle
+    for j in 1:p, i in j+1:p
+      A[i, j] = A[j, i]
+    end
+  end
+  A ./= n
+end
+
+# The least squares loss ‖y - β₀ - Xβ‖² / (2n), or with squareroot its square
+# root ‖y - β₀ - Xβ‖, as coordinate descent takes it. On the residuals (the
+# models of CDLeastSquaresLoss and CDSqrtLassoLoss) a coordinate step costs O(n).
+# With gram, on A = (X - 1x̄')'(X - 1x̄')/n and b = -X'(y - ȳ)/n, a step costs
+# O(p) after O(np²) to form A: the quadratic β'Aβ/2 + b'β + c, whose constant
+# c = ‖y - ȳ‖²/(2n) makes it the same loss with the same stopping rule, or
+# √(β'Aβ + 2b'β + 2c) = ‖y - β₀ - Xβ‖ / √n. Returns the model, the factor by
+# which the penalty is divided (√n for the square root on the Gram matrix, 1
+# otherwise), and for the Gram form the column means and the mean of y, which
+# give the intercept and the residuals (nothing otherwise).
+function _lsmodel(X::AbstractMatrix{T}, y::AbstractVector{T}, intercept::Bool, gram::Bool;
+                  squareroot::Bool = false) where {T}
+  if !gram
+    m = squareroot ? CDSqrtLassoLoss(y, X; intercept) : CDLeastSquaresLoss(y, X; intercept)
+    return m, one(T), nothing
+  end
+  _check_finite(y, "y")
+  _check_finite(X, "X")
+  n, p = size(X)
+  xbar = intercept ? _column_means(X) : zeros(T, p)
+  ybar = intercept ? mean(y) : zero(T)
+  yc = y .- ybar
+  A = _gram(X, xbar)
+  b = (transpose(X) * yc) ./ (-n)          # (X - 1x̄')'(y - ȳ) = X'(y - ȳ)
+  c = sum(abs2, yc) / (2n)
+  m = squareroot ? cdmodel(SqrtQuadraticFunction(A, b, 2c; check = false), nothing) :
+                   cdmodel(QuadraticFunction(A, b, c), nothing)
+  m, squareroot ? sqrt(T(n)) : one(T), (xbar, ybar)
+end
+
+# the intercept β₀ = ȳ - x̄'β of the Gram form, from its column means and mean of y
+function _gramintercept((xbar, ybar), x::SparseIterate{T}) where {T}
+  v = ybar
+  for k in activecoordinates(x)
+    v -= xbar[k] * x[k]
+  end
+  v
+end
+
+# the intercept of a fit by the model m, which gd describes for the Gram form
+_intercept(m, x, ::Nothing) = ProximalSolvers.intercept(m, x)
+_intercept(m, x, gd) = _gramintercept(gd, x)
+
+# the solution of a lasso fit by the model m at the penalty g; the Gram form
+# (gd, see _lsmodel) has no residuals, which are computed from X and y
+function _lassoSolution(x::SparseIterate{T}, m, g, r::CDResults, intercept::Bool, X, y, gd) where {T}
+  β0 = _intercept(m, x, gd)
+  res = gd === nothing ? ProximalSolvers.residuals(m) : y .- β0 .- Vector(X * _sparsevec(x))
+  LassoSolution{T, typeof(g)}(x, res, g, std(res), r.passes, r.converged, β0, intercept)
 end
 
 
@@ -94,8 +181,8 @@ end
 ######################################################################
 
 """
-    lasso(X, y, λ, options=CDOptions(); intercept=false, standardizeX=false, rng=Random.default_rng(), kwargs...)
-    lasso(X, y, λ, ω, options=CDOptions(); intercept=false, rng=Random.default_rng(), kwargs...)
+    lasso(X, y, λ, options=CDOptions(); intercept=false, standardizeX=false, gram=:auto, rng=Random.default_rng(), kwargs...)
+    lasso(X, y, λ, ω, options=CDOptions(); intercept=false, gram=:auto, rng=Random.default_rng(), kwargs...)
 
 Solve the lasso
 
@@ -119,6 +206,15 @@ sparse; coordinate descent still reads its columns entry by entry, so for now
 it is slower than the dense matrix. Any other matrix, such as a transpose or a
 view of selected rows, is copied once into a `Matrix` (a `SparseMatrixCSC` if
 it is sparse). The same holds for every solver of this package.
+
+With `gram = true`, coordinate descent works on the Gram matrix of the
+(centered) columns, `A = X'X / n`, instead of the residuals. Each coordinate
+step then costs `O(p)` instead of `O(n)`, after `O(np²)` operations and `p²`
+numbers of memory to form `A`. The loss, the stopping rule and so the
+solution are the same, to the tolerance. It pays off when `n` is much larger
+than `p`, more along a path than at one `λ`. The default, `gram = :auto`, uses
+it for a dense `X` with `n ≥ 2p` and `p ≤ $(_GRAM_PMAX)`
+(`p ≤ $(_GRAM_PMAX_PATH)` for [`LassoPath`](@ref)).
 """
 function lasso(
   X::AbstractMatrix{T},
@@ -127,15 +223,16 @@ function lasso(
   options::CDOptions=CDOptions();
   intercept::Bool=false,
   standardizeX::Bool=false,
+  gram::Union{Bool, Symbol}=:auto,
   rng::AbstractRNG=default_rng(),
   kwargs...) where {T<:AbstractFloat}
 
   options = _options(options, kwargs)
   X, y = _design(X), _response(y)
   x = SparseIterate(T, size(X, 2))
-  m = CDLeastSquaresLoss(y, X; intercept)
+  m, _, gd = _lsmodel(X, y, intercept, _usegram(gram, X, false))
   g = standardizeX ? NormL1(λ, _loadings(X, intercept)) : NormL1(λ)
-  _lassoSolution(x, m, g, _solve!(x, m, g, options; rng), intercept)
+  _lassoSolution(x, m, g, _solve!(x, m, g, options; rng), intercept, X, y, gd)
 end
 
 function lasso(
@@ -145,15 +242,16 @@ function lasso(
   ω::Array{T},
   options::CDOptions=CDOptions();
   intercept::Bool=false,
+  gram::Union{Bool, Symbol}=:auto,
   rng::AbstractRNG=default_rng(),
   kwargs...) where {T<:AbstractFloat}
 
   options = _options(options, kwargs)
   X, y = _design(X), _response(y)
   x = SparseIterate(T, size(X, 2))
-  m = CDLeastSquaresLoss(y, X; intercept)
+  m, _, gd = _lsmodel(X, y, intercept, _usegram(gram, X, false))
   g = NormL1(λ, ω)
-  _lassoSolution(x, m, g, _solve!(x, m, g, options; rng), intercept)
+  _lassoSolution(x, m, g, _solve!(x, m, g, options; rng), intercept, X, y, gd)
 end
 
 function lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real,
@@ -175,8 +273,8 @@ end
 ######################################################################
 
 """
-    sqrtLasso(X, y, λ, options=CDOptions(); intercept=false, standardizeX=true, rng=Random.default_rng(), kwargs...)
-    sqrtLasso(X, y, λ, ω, options=CDOptions(); intercept=false, rng=Random.default_rng(), kwargs...)
+    sqrtLasso(X, y, λ, options=CDOptions(); intercept=false, standardizeX=true, gram=:auto, rng=Random.default_rng(), kwargs...)
+    sqrtLasso(X, y, λ, ω, options=CDOptions(); intercept=false, gram=:auto, rng=Random.default_rng(), kwargs...)
 
 Solve the square-root lasso of Belloni, Chernozhukov and Wang (2011)
 
@@ -188,7 +286,8 @@ by coordinate descent, with an unpenalized intercept `β₀` that is zero unless
 (centered only with an intercept) and `ωⱼ = 1` otherwise. The optimal `λ`
 does not depend on the noise level. Returns a [`LassoSolution`](@ref) whose
 `σ` is the sample standard deviation of the residuals. The keyword arguments
-`kwargs` and `rng` are as for [`lasso`](@ref).
+`kwargs`, `gram` and `rng` are as for [`lasso`](@ref); on the Gram matrix the
+loss is the square root of a quadratic (as in [`CDSqrtQuadraticLoss`](@ref)).
 """
 function sqrtLasso(
   X::AbstractMatrix{T},
@@ -197,15 +296,25 @@ function sqrtLasso(
   options::CDOptions=CDOptions();
   intercept::Bool=false,
   standardizeX::Bool=true,
+  gram::Union{Bool, Symbol}=:auto,
   rng::AbstractRNG=default_rng(),
   kwargs...) where {T<:AbstractFloat}
 
   options = _options(options, kwargs)
   X, y = _design(X), _response(y)
+  ω = standardizeX ? _loadings(X, intercept) : nothing
+  _sqrtLasso(X, y, λ, ω, options, intercept, gram, rng)
+end
+
+# the square-root lasso with loadings ω (nothing for none); on the Gram matrix
+# the loss is divided by √n, and so is the penalty level
+function _sqrtLasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T, ω, options::CDOptions,
+                    intercept::Bool, gram, rng::AbstractRNG) where {T}
   x = SparseIterate(T, size(X, 2))
-  m = CDSqrtLassoLoss(y, X; intercept)
-  g = standardizeX ? NormL1(λ, _loadings(X, intercept)) : NormL1(λ)
-  _lassoSolution(x, m, g, _solve!(x, m, g, options; rng), intercept)
+  m, s, gd = _lsmodel(X, y, intercept, _usegram(gram, X, false); squareroot = true)
+  penalty(l) = ω === nothing ? NormL1(l) : NormL1(l, ω)
+  r = _solve!(x, m, penalty(λ / s), options; rng)
+  _lassoSolution(x, m, penalty(λ), r, intercept, X, y, gd)
 end
 
 function sqrtLasso(
@@ -215,15 +324,13 @@ function sqrtLasso(
   ω::Array{T},
   options::CDOptions=CDOptions();
   intercept::Bool=false,
+  gram::Union{Bool, Symbol}=:auto,
   rng::AbstractRNG=default_rng(),
   kwargs...) where {T<:AbstractFloat}
 
   options = _options(options, kwargs)
   X, y = _design(X), _response(y)
-  x = SparseIterate(T, size(X, 2))
-  m = CDSqrtLassoLoss(y, X; intercept)
-  g = NormL1(λ, ω)
-  _lassoSolution(x, m, g, _solve!(x, m, g, options; rng), intercept)
+  _sqrtLasso(X, y, λ, ω, options, intercept, gram, rng)
 end
 
 function sqrtLasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real,
@@ -467,7 +574,7 @@ feasibleLasso!(
 
 """
     LassoPath(X, y, λpath, options=CDOptions(); max_hat_s=Inf, standardizeX=true, intercept=false, screening=true,
-              rng=Random.default_rng(), kwargs...)
+              gram=:auto, rng=Random.default_rng(), kwargs...)
     LassoPath(X, y, options=CDOptions(); nλ=100, λminratio, kwargs...)
 
 Lasso solutions `β0path[k]` and `βpath[k]` of
@@ -503,7 +610,8 @@ met its stopping rule. See also [`refitLassoPath`](@ref).
 
 The keyword arguments `kwargs` that are not listed are fields of
 [`CDOptions`](@ref) that replace those of `options`, and the random order of
-coordinate descent is drawn from `rng`. `fit(LassoPath, X, y, ...)` is the same
+coordinate descent is drawn from `rng`. With `gram`, the path is solved on the
+Gram matrix of the columns, as described for [`lasso`](@ref). `fit(LassoPath, X, y, ...)` is the same
 as `LassoPath(X, y, ...)`. The functions of StatsAPI apply to the path:
 [`coef`](@ref), [`predict`](@ref) and [`nobs`](@ref); `nobs` is the number of
 observations, also stored as `nobs`.
@@ -558,33 +666,39 @@ function LassoPath(
   λpath::Vector{T},
   options=CDOptions();
   max_hat_s=Inf, standardizeX::Bool=true, intercept::Bool=false,
-  screening::Bool=true, rng::AbstractRNG=default_rng(), kwargs...) where {T<:AbstractFloat}
+  screening::Bool=true, gram::Union{Bool, Symbol}=:auto, rng::AbstractRNG=default_rng(),
+  kwargs...) where {T<:AbstractFloat}
 
   options = _options(options, kwargs)
   all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
   X, Y = _design(X), _response(Y)
-  p = size(X, 2)
-  x = SparseIterate(T, p)
-  m = CDLeastSquaresLoss(Y, X; intercept)
-  ω = standardizeX ? _loadings(X, intercept) : ones(T, p)
-  options.warmStart || return _coldLassoPath(x, m, ω, λpath, options, max_hat_s, intercept, size(X, 1); rng)
+  m, _, gd = _lsmodel(X, Y, intercept, _usegram(gram, X, true))
+  ω = standardizeX ? _loadings(X, intercept) : ones(T, size(X, 2))
+  _lassopath(m, gd, ω, λpath, options, size(X, 1), max_hat_s, intercept, screening, rng)
+end
 
+# the path along λpath for the model m (gd for the Gram form, see _lsmodel) and
+# the loadings ω, of n observations
+function _lassopath(m, gd, ω::Vector{T}, λpath::Vector{T}, options::CDOptions, n::Int, max_hat_s,
+                    intercept::Bool, screening::Bool, rng::AbstractRNG) where {T}
+  x = SparseIterate(T, length(ω))
+  options.warmStart || return _coldLassoPath(x, m, gd, ω, λpath, options, max_hat_s, intercept, n; rng)
   β0path = T[]
   path = solve_path(m, NormL1(one(T), ω), λpath, _solver(options; rng); x, screening, maxnnz = max_hat_s,
-                    callback = (k, λ, x, m) -> (push!(β0path, ProximalSolvers.intercept(m, x)); false))
-  LassoPath{T}(path.λ, path.solutions, β0path, path.passes, path.converged, path.kkt_checks, intercept, size(X, 1))
+                    callback = (k, λ, x, m) -> (push!(β0path, _intercept(m, x, gd)); false))
+  LassoPath{T}(path.λ, path.solutions, β0path, path.passes, path.converged, path.kkt_checks, intercept, n)
 end
 
 # the path with warmStart = false: each level solved from zero along its own
 # path of options.numSteps levels, without screening
-function _coldLassoPath(x::SparseIterate{T}, m, ω, λpath::Vector{T}, options::CDOptions, max_hat_s,
+function _coldLassoPath(x::SparseIterate{T}, m, gd, ω, λpath::Vector{T}, options::CDOptions, max_hat_s,
                         intercept::Bool, n::Int; rng::AbstractRNG = default_rng()) where {T}
   βpath = SparseVector{T, Int}[]
   β0path, iterations, converged = T[], Int[], Bool[]
   for λ in λpath
     r = _solve!(x, m, NormL1(λ, ω), options; rng)
     push!(βpath, _sparsevec(x))
-    push!(β0path, ProximalSolvers.intercept(m, x))
+    push!(β0path, _intercept(m, x, gd))
     push!(iterations, r.passes)
     push!(converged, r.converged)
     nnz(x) > max_hat_s && break
@@ -601,17 +715,22 @@ function LassoPath(
   λminratio::Real=(size(X, 1) < size(X, 2) ? 0.01 : 1e-4),
   standardizeX::Bool=true,
   intercept::Bool=false,
+  max_hat_s=Inf,
+  screening::Bool=true,
+  gram::Union{Bool, Symbol}=:auto,
+  rng::AbstractRNG=default_rng(),
   kwargs...) where {T<:AbstractFloat}
 
   nλ >= 1 || throw(ArgumentError("nλ must be positive"))
   0 < λminratio <= 1 || throw(ArgumentError("λminratio must be in (0, 1]"))
+  options = _options(options, kwargs)
   X, Y = _design(X), _response(Y)
   p = size(X, 2)
-  m = CDLeastSquaresLoss(Y, X; intercept)
+  m, _, gd = _lsmodel(X, Y, intercept, _usegram(gram, X, true))
   ω = standardizeX ? _loadings(X, intercept) : ones(T, p)
   λmax = lambda_max(m, NormL1(one(T), ω), SparseIterate(T, p)) * (1 + sqrt(eps(T)))
   λpath = nλ == 1 ? [λmax] : [λmax * T(λminratio)^(T(k) / (nλ - 1)) for k in 0:nλ-1]
-  LassoPath(X, Y, λpath, options; standardizeX, intercept, kwargs...)
+  _lassopath(m, gd, ω, λpath, options, size(X, 1), max_hat_s, intercept, screening, rng)
 end
 
 function LassoPath(
