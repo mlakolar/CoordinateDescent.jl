@@ -5,8 +5,8 @@
 ####################################
 
 """
-    CDOptions(; maxIter=100_000, optTol=1e-7, randomize=true, warmStart=true,
-                numSteps=50, relativeTol=true)
+    CDOptions(; maxIter=100_000, optTol=1e-7, order=:random, warmStart=true,
+                numSteps=50, relativeTol=true, anderson=0)
 
 Options for [`coordinateDescent!`](@ref).
 
@@ -18,40 +18,75 @@ Options for [`coordinateDescent!`](@ref).
   so that the tolerance does not depend on the units of the data; for the
   least squares loss these scales are `‖X[:, k]‖ / √n` and `‖y‖ / √n`.
   Otherwise `|Δxₖ|` is compared with `optTol`
-- `randomize`: visit the coordinates in a random order in each pass, drawn from
-  the global random number generator; otherwise in the order `1, 2, …`. The
-  fixed order can be faster on some designs but much slower when the columns
-  are strongly correlated with each other
+- `order`: the order in which a pass visits the coordinates
+  - `:random`: a new random order in every pass, drawn from the global random
+    number generator
+  - `:cyclic`: the order `1, 2, …`
+  - `:active`: a new random order in every pass over the active set, and the
+    order `1, 2, …` in the full passes, which mostly check that the zero
+    coordinates stay at zero
+  The cyclic order can be faster on some designs, but much slower when the
+  columns are strongly correlated with each other. `randomize = true` and
+  `randomize = false` are the same as `order = :random` and `order = :cyclic`
 - `warmStart`: start from the supplied iterate; otherwise start from zero and
   follow a path of decreasing penalties
 - `numSteps`: number of penalty levels on that path when `warmStart` is false
 - `relativeTol`: see `optTol`; losses that do not define the scales, such as
   user-defined ones, use the absolute rule either way
+- `anderson`: the memory `K` of Anderson acceleration, `0` for none (see
+  [`coordinateDescent!`](@ref)); it needs `order = :cyclic`
 """
 struct CDOptions
   maxIter::Int64
   optTol::Float64
-  randomize::Bool           # coordinate are visitied in a randomized order or not
+  order::Symbol             # :random, :cyclic or :active
   warmStart::Bool           # when running CD, should we do path following or not
   numSteps::Int64           # when pathFollowing, how many points are there on the path
   relativeTol::Bool         # changes measured relative to the scales of the loss
+  anderson::Int64           # memory of Anderson acceleration, 0 for none
 
-  function CDOptions(maxIter, optTol, randomize, warmStart, numSteps, relativeTol)
-    o = new(maxIter, optTol, randomize, warmStart, numSteps, relativeTol)
+  function CDOptions(maxIter, optTol, order::Symbol, warmStart, numSteps, relativeTol, anderson)
+    o = new(maxIter, optTol, order, warmStart, numSteps, relativeTol, anderson)
     o.maxIter >= 0 || throw(ArgumentError("maxIter must be nonnegative, but it is $(o.maxIter)."))
     o.optTol >= 0 || throw(ArgumentError("optTol must be nonnegative, but it is $(o.optTol)."))
+    o.order in (:random, :cyclic, :active) ||
+      throw(ArgumentError("order must be :random, :cyclic or :active, but it is :$(o.order)."))
     o.numSteps >= 0 || throw(ArgumentError("numSteps must be nonnegative, but it is $(o.numSteps)."))
+    o.anderson >= 0 || throw(ArgumentError("anderson must be nonnegative, but it is $(o.anderson)."))
+    o.anderson == 0 || o.order === :cyclic ||
+      throw(ArgumentError("anderson needs order = :cyclic, since the extrapolation assumes the same order in every pass."))
     o
   end
 end
 
-CDOptions(;
+# the positional form of versions before 0.5.5, with randomize in place of order
+CDOptions(maxIter, optTol, randomize::Bool, warmStart, numSteps, relativeTol) =
+  CDOptions(maxIter, optTol, randomize ? :random : :cyclic, warmStart, numSteps, relativeTol, 0)
+
+function CDOptions(;
   maxIter::Real=100_000,
   optTol::Real=1e-7,
-  randomize::Bool=true,
+  order::Union{Symbol, Nothing}=nothing,
+  randomize::Union{Bool, Nothing}=nothing,
   warmStart::Bool=true,
   numSteps::Real=50,
-  relativeTol::Bool=true) = CDOptions(Int(maxIter), Float64(optTol), randomize, warmStart, Int(numSteps), relativeTol)
+  relativeTol::Bool=true,
+  anderson::Real=0)
+
+  order === nothing || randomize === nothing ||
+    throw(ArgumentError("Pass order or randomize, not both."))
+  o = order !== nothing ? order : randomize === false ? :cyclic : :random
+  CDOptions(Int(maxIter), Float64(optTol), o, warmStart, Int(numSteps), relativeTol, Int(anderson))
+end
+
+# randomize, a field before version 0.5.5
+Base.getproperty(o::CDOptions, s::Symbol) =
+  s === :randomize ? getfield(o, :order) !== :cyclic : getfield(o, s)
+Base.propertynames(::CDOptions, private::Bool=false) = (fieldnames(CDOptions)..., :randomize)
+
+# the options with warmStart = true and every other field unchanged
+_withWarmStart(o::CDOptions) =
+  CDOptions(o.maxIter, o.optTol, o.order, true, o.numSteps, o.relativeTol, o.anderson)
 
 
 """

@@ -113,7 +113,7 @@ function locpolyl1(
   # construct inner options because we do not want warmStart = false
   # we want to start from the previous iteration since the points
   # on the grid should be close to each other
-  opt = CDOptions(options.maxIter, options.optTol, options.randomize, true, options.numSteps, options.relativeTol)
+  opt = _withWarmStart(options)
 
   n, p = size(X)
   ep = p * (degree + 1)
@@ -182,7 +182,7 @@ function lvocv_locpolyl1(
     numH = length(hArr)
     MSE = zeros(T, numH)
 
-    opt = CDOptions(options.maxIter, options.optTol, options.randomize, true, options.numSteps, options.relativeTol)
+    opt = _withWarmStart(options)
 
     ep = p * (degree + 1)
     w = Array{T}(undef, n)

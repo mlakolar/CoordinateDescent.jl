@@ -12,9 +12,11 @@ updates cheap, and implements
 
 and optionally `coordinateScale(f, k)` and `responseScale(f)`, which make the
 stopping rule independent of the units of the data (see [`CDOptions`](@ref)),
-and `fullGradient!(grad, f, x)`, a faster way to compute the whole gradient.
-These functions are not exported; extend them as
-`CoordinateDescent.initialize!` and so on.
+`fullGradient!(grad, f, x)`, a faster way to compute the whole gradient, and
+`ProximalBase.value(f, x)`, the value of `f` at `x` from the cache, which
+Anderson acceleration needs (`anderson` in [`CDOptions`](@ref)). These
+functions are not exported; extend them as `CoordinateDescent.initialize!` and
+so on.
 
 The penalty `g` enters only through `descendCoordinate!`. A loss whose step
 ends with the proximal operator of `g` on coordinate `k`,
@@ -310,6 +312,10 @@ function responseScale(f::CDLeastSquaresLoss{T}) where {T<:AbstractFloat}
 end
 
 # the intercept ȳ - x̄'x that goes with x
+# f at x from the residuals, which f.r holds for x
+ProximalBase.value(f::CDLeastSquaresLoss{T}, ::Union{SparseIterate{T}, AtomIterate{T}}) where {T<:AbstractFloat} =
+  sum(abs2, f.r) / (2 * length(f.y))
+
 _intercept(f::CDLeastSquaresLoss, x::SparseIterate) = f.ybar - dot(f.xbar, x)
 
 # a = X[:, k]' X[:, k]
@@ -496,6 +502,10 @@ end
 #
 # h        = arg_min a/(2n) (h-b/a)^2 + λ_k⋅|x_k + h|
 # xnew[k]  = arg_min a/(2n) (xnew_k - (x_k + b/a))^2 + λ_k⋅|xnew_k|
+# f at x from the residuals, which f.r holds for x
+ProximalBase.value(f::CDWeightedLSLoss{T}, ::SparseIterate{T}) where {T<:AbstractFloat} =
+  sum(i -> f.w[i] * f.r[i]^2, eachindex(f.r)) / (2 * length(f.y))
+
 function descendCoordinate!(
   f::CDWeightedLSLoss{T},
   g::ProximableFunction,
@@ -617,6 +627,9 @@ function responseScale(f::CDSqrtLassoLoss{T}) where {T<:AbstractFloat}
   end
   sqrt(s / length(f.y))
 end
+
+# f at x from the residuals, which f.r holds for x
+ProximalBase.value(f::CDSqrtLassoLoss{T}, ::SparseIterate{T}) where {T<:AbstractFloat} = norm(f.r)
 
 _intercept(f::CDSqrtLassoLoss, x::SparseIterate) = f.ybar - dot(f.xbar, x)
 
@@ -774,6 +787,15 @@ function responseScale(f::CDQuadraticLoss{T}) where {T<:AbstractFloat}
     end
   end
   s
+end
+
+# f at x from Ax, which f.Ax holds for x, over the active entries of x
+function ProximalBase.value(f::CDQuadraticLoss{T}, x::Union{SparseIterate{T}, AtomIterate{T}}) where {T<:AbstractFloat}
+  v = zero(T)
+  for k in _activeEntries(x)
+    v += x[k] * (f.Ax[k] / 2 + f.b[k])
+  end
+  v
 end
 
 function descendCoordinate!(

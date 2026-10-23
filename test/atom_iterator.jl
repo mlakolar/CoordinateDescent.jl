@@ -123,6 +123,33 @@ end
     @test collect(it) == [4, 2]           # in the order the groups became active
 end
 
+@testset "random order on the active set only" begin
+    # order = :active: full passes in the order 1, 2, …, passes over the active
+    # set in a new random order each time
+    p = 50
+    x = SparseIterate(p)
+    for k in 1:2:p
+      x[k] = randn()
+    end
+    it = CoordinateDescent.RandomIterator(x, false)
+    orders = Set{Vector{Int}}()
+    for pass in 1:10
+      CoordinateDescent.reset!(it, true)
+      @test collect(it) == 1:p
+      CoordinateDescent.reset!(it, false)
+      active = collect(it)
+      @test sort(active) == 1:2:p
+      push!(orders, active)
+    end
+    @test length(orders) > 1
+    CoordinateDescent.setCandidates!(it, [9, 4, 7])
+    CoordinateDescent.reset!(it, true)
+    @test collect(it) == [9, 4, 7]                  # the candidates, in their order
 
+    # the iterator that each order of CDOptions picks
+    @test CoordinateDescent._passIterator(x, CDOptions(;order=:cyclic)) isa CoordinateDescent.OrderedIterator
+    @test CoordinateDescent._passIterator(x, CDOptions(;order=:random)).shuffleFull
+    @test !CoordinateDescent._passIterator(x, CDOptions(;order=:active)).shuffleFull
+end
 
 end

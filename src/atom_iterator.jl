@@ -4,7 +4,8 @@
 # 1:numCoordinates(iterate), unless setCandidates! restricted them (screening);
 # otherwise only the active coordinates of the iterate (the active set): the
 # stored entries of a sparse iterate, the active groups of an AtomIterate.
-# reset! switches between the two and, for RandomIterator, draws a new order.
+# reset! switches between the two and, for RandomIterator, draws a new order
+# (for a full pass only with shuffleFull).
 abstract type AtomIterator end
 
 Base.eltype(::AtomIterator) = Int64
@@ -55,22 +56,24 @@ mutable struct RandomIterator{T} <: AtomIterator
   order::Vector{Int64}
   fullPass::Bool
   candidates::Union{Nothing, Vector{Int}}
+  shuffleFull::Bool         # full passes in random order too, otherwise in the order 1, 2, …
 
-  RandomIterator{T}(iterate::Union{SparseIterate,SymmetricSparseIterate,AtomIterate}, order, fullPass) where {T} =
-    new(iterate, order, fullPass, nothing)
+  RandomIterator{T}(iterate::Union{SparseIterate,SymmetricSparseIterate,AtomIterate}, order, fullPass, shuffleFull=true) where {T} =
+    new(iterate, order, fullPass, nothing, shuffleFull)
 end
 
-RandomIterator(iterate::Union{SparseIterate,SymmetricSparseIterate,AtomIterate}) =
-  RandomIterator{typeof(iterate)}(iterate, collect(1:ProximalBase.numCoordinates(iterate)), true)
+RandomIterator(iterate::Union{SparseIterate,SymmetricSparseIterate,AtomIterate}, shuffleFull::Bool=true) =
+  RandomIterator{typeof(iterate)}(iterate, collect(1:ProximalBase.numCoordinates(iterate)), true, shuffleFull)
 
 # draws a new uniformly random order (Fisher–Yates shuffle) over the
-# coordinates of the next pass
+# coordinates of the next pass, except for a full pass without shuffleFull
 function reset!(x::RandomIterator, fullPass::Bool)
   x.fullPass = fullPass
   newLength = fullPass ? _numCandidates(x) : ProximalBase.numActive(x.iterate)
   @inbounds for i=1:newLength
     x.order[i] = i
   end
+  fullPass && !x.shuffleFull && return x
   @inbounds for i=1:newLength-1
     j = rand(i:newLength)
     x.order[i], x.order[j] = x.order[j], x.order[i]
@@ -88,3 +91,8 @@ function Base.iterate(x::RandomIterator, i)
     end
     x.fullPass ? (_candidate(x, x.order[i]), i + 1) : (ProximalBase.activeCoordinate(x.iterate, x.order[i]), i + 1)
 end
+
+
+# the iterator over the coordinates of x in the order given by options.order
+_passIterator(x, options::CDOptions) =
+  options.order === :cyclic ? OrderedIterator(x) : RandomIterator(x, options.order === :random)

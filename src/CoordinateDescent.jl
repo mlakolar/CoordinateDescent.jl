@@ -43,6 +43,7 @@ export
 include("utils.jl")
 include("atom_iterator.jl")
 include("cd_differentiable_function.jl")
+include("anderson.jl")
 include("coordinate_descent.jl")
 include("lasso.jl")
 include("varying_coefficient_lasso.jl")
