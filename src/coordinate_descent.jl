@@ -4,18 +4,18 @@
 Minimize `f(x) + g(x)` by coordinate descent and store the solution in `x`. The
 loss `f` is one of [`CDLeastSquaresLoss`](@ref), [`CDWeightedLSLoss`](@ref),
 [`CDSqrtLassoLoss`](@ref) and [`CDQuadraticLoss`](@ref), a loss of ProximalBase
-that ProximalOPT's coordinate descent takes (`LeastSquaresLoss`, a
+that ProximalSolvers's coordinate descent takes (`LeastSquaresLoss`, a
 least-squares `GLMLoss`, `QuadraticFunction`, `KronQuadratic`, possibly scaled
-as in `(1/n) * LeastSquaresLoss(y, X)`), a model of ProximalOPT
-(`ProximalOPT.CDModel`), or a user-defined
+as in `(1/n) * LeastSquaresLoss(y, X)`), a model of ProximalSolvers
+(`ProximalSolvers.CDModel`), or a user-defined
 [`CoordinateDifferentiableFunction`](@ref). The penalty `g` separates across
 coordinates (`NormL1`, `ZeroFunction`, `ElasticNet`, `MCP`, `SCAD`, … from
 ProximalBase, or another penalty, see below) and `x` is a `SparseIterate` or a
 `SymmetricSparseIterate`, or `g` is a group lasso penalty `GroupNormL2` and `x`
 an `AtomIterate` (see below).
 
-The descent is the coordinate descent of ProximalOPT (`ProximalOPT.CDSolver`,
-called through `ProximalOPT.solve!`) with the options of [`CDOptions`](@ref).
+The descent is the coordinate descent of ProximalSolvers (`ProximalSolvers.CDSolver`,
+called through `ProximalSolvers.solve!`) with the options of [`CDOptions`](@ref).
 It alternates between full passes over all coordinates and passes over the
 nonzero coordinates only (the active set). It stops when a full pass is
 followed by a pass in which no coordinate changes by more than
@@ -111,7 +111,7 @@ function coordinateDescent!(
   x
 end
 
-# what ProximalOPT's solve! takes for f: a loss of ProximalBase or a model, as
+# what ProximalSolvers's solve! takes for f: a loss of ProximalBase or a model, as
 # it is, and a user-defined loss through its model
 _model(f::Union{CDModel, AbstractFunction}, x) = f
 _model(f::CoordinateDifferentiableFunction, x) = _LossModel(f, x)

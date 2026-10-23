@@ -5,7 +5,7 @@ const  NUMBER_REPEAT = 1
 using CoordinateDescent
 using Test
 using ProximalBase
-using ProximalOPT
+using ProximalSolvers
 using Random
 using LinearAlgebra
 using SparseArrays
@@ -205,7 +205,7 @@ ProximalBase.prox_entry(g::BoxPenalty, v, i, γ) = clamp(v, g.lo, g.hi)
     x = SparseIterate(p)
     coordinateDescent!(x, f, ZeroFunction(), opt)
     @test x[3] == 0
-    @test [ProximalOPT.intercept(f, x); Vector(x)[keep]] ≈ [ones(n) X[:, keep]] \ Y atol=1e-6
+    @test [ProximalSolvers.intercept(f, x); Vector(x)[keep]] ≈ [ones(n) X[:, keep]] \ Y atol=1e-6
 
     sol = lasso(Xc, Y, 0.01, opt; intercept=true, standardizeX=true)
     @test sol.penalty.w[3] == 0                   # its standard deviation is zero
@@ -543,7 +543,7 @@ end
     coordinateDescent!(x, f, g, CDOptions(;optTol=1e-10))
     @test 0 < nnz(x) < p
     @test nnz(x) == count(!iszero, Vector(x))     # no stored zeros
-    @test ProximalOPT.residuals(f) ≈ Y - X*x
+    @test ProximalSolvers.residuals(f) ≈ Y - X*x
   end
 end
 
@@ -880,7 +880,7 @@ end
   mom = CDOptions(;optTol=1e-10, momentum=true)
 
   # the same solution, in fewer passes over all losses together; UserLS has a
-  # cache that ProximalOPT does not know, and is initialized at the
+  # cache that ProximalSolvers does not know, and is initialized at the
   # extrapolated point instead
   passes0, passes1 = 0, 0
   for (f, g) in ((CDLeastSquaresLoss(Y, X), NormL1(λ)),

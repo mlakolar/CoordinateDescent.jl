@@ -9,7 +9,7 @@
                 numSteps=50, relativeTol=true, anderson=0, momentum=nothing)
 
 Options for [`coordinateDescent!`](@ref) and the lasso solvers, which run the
-coordinate descent of ProximalOPT (`ProximalOPT.CDSolver`) with them.
+coordinate descent of ProximalSolvers (`ProximalSolvers.CDSolver`) with them.
 
 - `maxIter`: maximum number of passes over the coordinates; reaching it without
   convergence gives a warning
@@ -100,12 +100,12 @@ Base.propertynames(::CDOptions, private::Bool=false) = (fieldnames(CDOptions)...
 _withWarmStart(o::CDOptions) =
   CDOptions(o.maxIter, o.optTol, o.order, true, o.numSteps, o.relativeTol, o.anderson, o.momentum)
 
-# the coordinate descent of ProximalOPT with these options
+# the coordinate descent of ProximalSolvers with these options
 _solver(o::CDOptions) =
   CDSolver(; maxpasses = o.maxIter, tol = o.optTol, order = o.order, relative = o.relativeTol,
            anderson = o.anderson, momentum = o.momentum)
 
-# Minimizes f + g by the coordinate descent of ProximalOPT, from x when
+# Minimizes f + g by the coordinate descent of ProximalSolvers, from x when
 # options.warmStart is true. Otherwise x is set to zero and, for NormL1 and
 # GroupNormL2, the problem is solved along options.numSteps penalty levels from
 # λmax down to g. f is a CDModel or a loss of ProximalBase. Returns a CDResults.
@@ -156,9 +156,11 @@ end
     IterLassoOptions(; maxIter=20, optTol=1e-2, initProcedure=:Screening,
                        sinit=5, σinit=1.0, optionsCD=CDOptions())
 
-Options for the iterative procedures [`scaledLasso!`](@ref) and
-[`feasibleLasso!`](@ref), which alternate a lasso fit with an update of the
-noise level or of the penalty loadings.
+Options for [`feasibleLasso!`](@ref), which alternates a lasso fit with an
+update of the penalty loadings, and for [`scaledLasso!`](@ref), which uses only
+`optionsCD` (since version 0.6.1 it solves the square-root lasso in one run of
+coordinate descent instead of alternating a lasso fit with an update of the
+noise level).
 
 - `maxIter`: maximum number of outer iterations
 - `optTol`: tolerance on the relative change of the noise level or loadings
@@ -168,8 +170,9 @@ noise level or of the penalty loadings.
   - `:InitStd`: noise level `σinit`
   - `:WarmStart`: the iterate passed in
 - `sinit`, `σinit`: used by `:Screening` and `:InitStd`
-- `optionsCD`: [`CDOptions`](@ref) for the inner lasso fits, each of which is
-  warm started from the previous one (`warmStart` is not used)
+- `optionsCD`: [`CDOptions`](@ref) for coordinate descent; in
+  `feasibleLasso!` each lasso fit is warm started from the previous one, so its
+  `warmStart` is not used there
 """
 struct IterLassoOptions
   maxIter::Int64
@@ -256,19 +259,6 @@ function _wls(X::AbstractMatrix{T}, w::AbstractVector{T}, y::AbstractVector{T}) 
   qr(sw .* X, ColumnNorm()) \ (sw .* y)
 end
 
-
-# Initial estimate of σ for the scaled lasso:
-#
-# * the s columns of X most correlated with y are found
-# * y is regressed on those s columns, and on a constant with an intercept
-# * σ is the standard deviation of the residuals, which tends to overestimate
-#   the true σ
-_findInitSigma!(
-  X::AbstractMatrix{T},
-  y::AbstractVector{T},
-  s::Int,
-  storage::Vector{T};
-  intercept::Bool=false) where {T <: AbstractFloat} =  std(_findInitResiduals!(X, y, s, storage; intercept))
 
 # residuals of the least squares fit of y on the s columns of X most correlated
 # with y (both centered with an intercept), and on a constant with an

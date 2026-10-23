@@ -7,7 +7,7 @@
 # `order = :cyclic` and `:random` without momentum, `order = :cyclic` with
 # `anderson = 5`, and `order = :random` with `momentum = true`. Version 0.6
 # also had `order = :active`, which version 0.7 removed; see README.md. The
-# designs are those of common.jl, as in the lasso benchmark of ProximalOPT.jl.
+# designs are those of common.jl, as in the lasso benchmark of ProximalSolvers.jl.
 # Prints passes, times and the relative suboptimality of the solution, then the
 # times of 50-λ paths (`LassoPath`, λmax to λmax/100) and a comparison of
 # memories K.

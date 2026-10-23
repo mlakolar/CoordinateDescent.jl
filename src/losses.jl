@@ -4,24 +4,24 @@
 #
 ####################################
 
-# The built-in losses are models of ProximalOPT (ProximalOPT.CDModel), the loss
+# The built-in losses are models of ProximalSolvers (ProximalSolvers.CDModel), the loss
 # together with the cache that makes a coordinate step cheap; the constructors
 # keep the names and the conventions of the earlier versions of this package.
 
 """
     CDLeastSquaresLoss(y, X; intercept=false)
 
-The least squares loss `f(β) = ‖y - Xβ‖² / (2n)`, as the model of ProximalOPT
-for `(1/n) * LeastSquaresLoss(y, X)` (see `ProximalOPT.cdmodel`). It caches the
+The least squares loss `f(β) = ‖y - Xβ‖² / (2n)`, as the model of ProximalSolvers
+for `(1/n) * LeastSquaresLoss(y, X)` (see `ProximalSolvers.cdmodel`). It caches the
 residuals `r = y - Xβ`, so a coordinate update costs `O(n)`, and reads `X` and
 `y` in place.
 
 With `intercept`, the loss is minimized over an unpenalized intercept as well,
 `f(β) = min_β₀ ‖y - β₀ - Xβ‖² / (2n)`, whose minimizer is `β₀ = ȳ - x̄'β` for
 the column means `x̄` and the mean `ȳ` of `y`
-(`ProximalOPT.intercept(f, β)`). The columns and `y` are centered on the fly,
+(`ProximalSolvers.intercept(f, β)`). The columns and `y` are centered on the fly,
 so `X` is not copied, and the residuals are `y - β₀ - Xβ`
-(`ProximalOPT.residuals(f)`).
+(`ProximalSolvers.residuals(f)`).
 
 A column that the loss does not depend on, a zero column or, with
 `intercept`, a constant one, gets the minimizer of the penalty nearest zero.
@@ -37,7 +37,7 @@ CDLeastSquaresLoss(y::AbstractVector, X::AbstractMatrix; intercept::Bool=false) 
     CDWeightedLSLoss(y, X, w)
 
 The weighted least squares loss `f(β) = ∑ᵢ wᵢ (yᵢ - Xᵢ'β)² / (2n)`, as the
-model of ProximalOPT for `(1/n) * GLMLoss(ProximalBase.Squared(), y, X;
+model of ProximalSolvers for `(1/n) * GLMLoss(ProximalBase.Squared(), y, X;
 weights = w)`. It caches the residuals `r = y - Xβ` and the weighted squared
 column norms.
 
@@ -53,8 +53,8 @@ CDWeightedLSLoss(y::AbstractVector, X::AbstractMatrix, w::AbstractVector) =
 """
     CDSqrtLassoLoss(y, X; intercept=false)
 
-The square-root lasso loss `f(β) = ‖y - Xβ‖`, as the model of ProximalOPT for
-`ProximalOPT.SqrtLeastSquaresLoss(y, X)`. It caches the residuals
+The square-root lasso loss `f(β) = ‖y - Xβ‖`, as the model of ProximalSolvers for
+`ProximalSolvers.SqrtLeastSquaresLoss(y, X)`. It caches the residuals
 `r = y - Xβ` and the squared column norms. With `intercept`,
 `f(β) = min_β₀ ‖y - β₀ - Xβ‖`, minimized by `β₀ = ȳ - x̄'β`; as in
 [`CDLeastSquaresLoss`](@ref), the columns and `y` are centered on the fly.
@@ -67,10 +67,36 @@ CDSqrtLassoLoss(y::AbstractVector, X::AbstractMatrix; intercept::Bool=false) =
   cdmodel(SqrtLeastSquaresLoss(y, X), nothing; intercept)
 
 """
+    CDSqrtQuadraticLoss(A, b, c; check=true)
+
+The square-root lasso loss from sufficient statistics,
+`f(x) = √(x'Ax + 2b'x + c)`, with symmetric positive semidefinite `A` and a
+nonnegative quadratic, as the model of ProximalSolvers for
+`ProximalSolvers.SqrtQuadraticFunction(A, b, c; check)`. With `A = X'X/n`,
+`b = -X'y/n` and `c = y'y/n` it is `‖y - Xx‖ / √n`, the loss of
+[`CDSqrtLassoLoss`](@ref) divided by `√n`, without the data: it caches `Ax` and
+the value of the quadratic, so a coordinate update costs `O(p)` instead of
+`O(n)`, and checking a coordinate that does not move costs `O(1)`. It pays off
+when n > p, and when many fits share `A`. It also solves the scaled lasso of one
+variable on the others from their covariance matrix `S`: `A = S`,
+`b = -S[:, j]` and `c = S[j, j]`, with an infinite penalty weight on coordinate
+`j`, which keeps it at zero (see [`scaledLasso!`](@ref)).
+
+As for [`CDSqrtLassoLoss`](@ref), coordinate descent minimizes `f + g` over a
+coordinate exactly, for `NormL1` only. `A`, `b` and `c` must not contain `NaN`
+or `Inf`, and `A` must be symmetric; checking `A` costs `O(p²)`, as much as a
+few passes, so `check = false` skips it when many losses share a checked `A`,
+as the columns of a covariance matrix do. A dense `Matrix` `A` is used as it
+is.
+"""
+CDSqrtQuadraticLoss(A::AbstractMatrix, b::AbstractVector, c::Real; check::Bool=true) =
+  cdmodel(SqrtQuadraticFunction(A, b, c; check), nothing)
+
+"""
     CDQuadraticLoss(A, b)
 
 The quadratic `f(x) = x'Ax / 2 + b'x` with symmetric `A`, as the model of
-ProximalOPT for `QuadraticFunction(A, b)`. It caches `Ax`, so a coordinate
+ProximalSolvers for `QuadraticFunction(A, b)`. It caches `Ax`, so a coordinate
 update costs `O(p)`. With `A = X'X/n` and `b = -X'y/n` it gives the same
 minimizer as [`CDLeastSquaresLoss`](@ref).
 
@@ -118,8 +144,8 @@ ends with the proximal operator of `g` on coordinate `k`,
 `ProximalBase.prox_coordinate!(x, g, k, γ)`, works with every separable penalty
 of ProximalBase and with user-defined ones (see [`coordinateDescent!`](@ref)).
 
-Coordinate descent runs on ProximalOPT, which takes such a loss through a
-model (`ProximalOPT.CDModel`); a loss written for ProximalOPT directly, as a
+Coordinate descent runs on ProximalSolvers, which takes such a loss through a
+model (`ProximalSolvers.CDModel`); a loss written for ProximalSolvers directly, as a
 `CDModel`, is also accepted.
 """
 abstract type CoordinateDifferentiableFunction end
@@ -187,7 +213,7 @@ function fullGradient!(grad, f, x)
   grad
 end
 
-# The model of ProximalOPT for a user-defined loss: each coordinate step is the
+# The model of ProximalSolvers for a user-defined loss: each coordinate step is the
 # loss's descendCoordinate!, and the optional functions give the scales of the
 # stopping rule, the value and the gradient
 struct _LossModel{T, F<:CoordinateDifferentiableFunction} <: CDModel{T}
@@ -196,30 +222,30 @@ end
 
 _LossModel(f::CoordinateDifferentiableFunction, x) = _LossModel{float(eltype(x)), typeof(f)}(f)
 
-function ProximalOPT.initialize!(m::_LossModel, x)
+function ProximalSolvers.initialize!(m::_LossModel, x)
   numCoordinates(m.f) == ncoordinates(x) || throw(DimensionMismatch(
     "the loss has $(numCoordinates(m.f)) coordinates and the iterate $(ncoordinates(x))"))
   initialize!(m.f, x)
   m
 end
 
-ProximalOPT.coordinate_step!(m::_LossModel{T}, g, x::SparseIterate{T}, k::Int) where {T} =
+ProximalSolvers.coordinate_step!(m::_LossModel{T}, g, x::SparseIterate{T}, k::Int) where {T} =
   descendCoordinate!(m.f, g, x, k)
-ProximalOPT.coordinate_step!(m::_LossModel{T}, g, x::SymmetricSparseIterate{T}, k::Int) where {T} =
+ProximalSolvers.coordinate_step!(m::_LossModel{T}, g, x::SymmetricSparseIterate{T}, k::Int) where {T} =
   descendCoordinate!(m.f, g, x, k)
 
-ProximalOPT.coordinate_scale(m::_LossModel{T}, x, k::Int) where {T} = T(coordinateScale(m.f, k))
-ProximalOPT.response_scale(m::_LossModel{T}, x) where {T} = T(responseScale(m.f))
+ProximalSolvers.coordinate_scale(m::_LossModel{T}, x, k::Int) where {T} = T(coordinateScale(m.f, k))
+ProximalSolvers.response_scale(m::_LossModel{T}, x) where {T} = T(responseScale(m.f))
 
 # the value from the cache when the loss is callable, NaN otherwise
-ProximalOPT.loss_value(m::_LossModel{T}, x) where {T} = applicable(m.f, x) ? T(m.f(x)) : T(NaN)
+ProximalSolvers.loss_value(m::_LossModel{T}, x) where {T} = applicable(m.f, x) ? T(m.f(x)) : T(NaN)
 
-ProximalOPT.gradient!(G::AbstractVector, m::_LossModel, x::SparseIterate) = fullGradient!(G, m.f, x)
+ProximalSolvers.gradient!(G::AbstractVector, m::_LossModel, x::SparseIterate) = fullGradient!(G, m.f, x)
 
 # the gradient over the entries of the p × p matrix, from the coordinates of
 # the lower triangle: λmax compares |G[r, c]| with the weight of (r, c), as
 # |gradient(f, x, k)| was compared with the weight of coordinate k before
-function ProximalOPT.gradient!(G::AbstractMatrix, m::_LossModel, x::SymmetricSparseIterate)
+function ProximalSolvers.gradient!(G::AbstractMatrix, m::_LossModel, x::SymmetricSparseIterate)
   for k in 1:ncoordinates(x)
     r, c = tril_cartesian(x.p, k)
     G[r, c] = G[c, r] = gradient(m.f, x, k)

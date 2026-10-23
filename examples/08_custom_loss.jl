@@ -14,15 +14,15 @@
 # rule in the units of the problem, and fullGradient!(grad, f, x), a faster
 # way to compute the whole gradient. These functions are not exported: extend
 # them as CoordinateDescent.initialize! and so on. Coordinate descent itself is
-# ProximalOPT's, which calls descendCoordinate! for each step.
+# ProximalSolvers's, which calls descendCoordinate! for each step.
 #
 # The logistic loss is built into ProximalBase as well (MyLogisticLoss, a
-# GLMLoss), and ProximalOPT minimizes it by coordinate descent or by proximal
+# GLMLoss), and ProximalSolvers minimizes it by coordinate descent or by proximal
 # Newton; the last section checks the loss written here against them.
 #
 #     julia --project=examples examples/08_custom_loss.jl
 
-using CoordinateDescent, ProximalBase, ProximalOPT
+using CoordinateDescent, ProximalBase, ProximalSolvers
 using LinearAlgebra, Printf, Random, Statistics
 
 sigmoid(t) = 1 / (1 + exp(-t))
@@ -171,8 +171,8 @@ println("Newton             ", round.(bn; digits = 3))
 println("\n== The built-in logistic loss")
 
 # (1/n) * LogisticLoss(y, X1) is the loss above. coordinateDescent! takes it
-# too, and runs ProximalOPT's coordinate descent with the same curvature bound.
-# ProximalOPT's proximal Newton instead fits a weighted lasso to a quadratic
+# too, and runs ProximalSolvers's coordinate descent with the same curvature bound.
+# ProximalSolvers's proximal Newton instead fits a weighted lasso to a quadratic
 # model of the loss at each step, as glmnet does.
 x = SparseIterate(p + 1)
 coordinateDescent!(x, f, NormL1(λ, ω), CDOptions(; optTol = 1e-10))

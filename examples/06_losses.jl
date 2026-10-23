@@ -6,7 +6,7 @@
 # NormL1(λ) for λ ‖x‖₁, NormL1(λ, ω) for λ ∑ⱼ ωⱼ |xⱼ|, ZeroFunction() for no
 # penalty, and GroupNormL2 for the group lasso (05_group_lasso.jl). x is a
 # SparseIterate, or a dense Vector that is overwritten with the solution. The
-# losses, models of ProximalOPT, whose coordinate descent does the work, are
+# losses, models of ProximalSolvers, whose coordinate descent does the work, are
 #
 #     CDLeastSquaresLoss(y, X; intercept)   ‖y - Xβ‖² / (2n)
 #     CDWeightedLSLoss(y, X, w)             ∑ᵢ wᵢ (yᵢ - Xᵢ'β)² / (2n)
@@ -20,7 +20,7 @@
 #
 #     julia --project=examples examples/06_losses.jl
 
-using CoordinateDescent, ProximalBase, ProximalOPT
+using CoordinateDescent, ProximalBase, ProximalSolvers
 using LinearAlgebra, Printf, Random, Statistics
 
 Random.seed!(6)
@@ -56,11 +56,11 @@ coordinateDescent!(x, f, NormL1(5.0, ω))
 println("NormL1(5.0, ω) with ω₁ = 0 keeps ", support(x))
 
 # with an intercept, the columns and y are centered on the fly; the intercept
-# that goes with x is ProximalOPT.intercept(f, x), ȳ - x̄'x
+# that goes with x is ProximalSolvers.intercept(f, x), ȳ - x̄'x
 fi = CDLeastSquaresLoss(y .+ 5, X; intercept = true)
 x = SparseIterate(p)
 coordinateDescent!(x, fi, NormL1(0.1))
-@printf("with intercept = true: β̂₀ = %.2f, selects %s\n", ProximalOPT.intercept(fi, x), support(x))
+@printf("with intercept = true: β̂₀ = %.2f, selects %s\n", ProximalSolvers.intercept(fi, x), support(x))
 
 # a dense starting point is converted, and overwritten with the solution
 xd = zeros(p)

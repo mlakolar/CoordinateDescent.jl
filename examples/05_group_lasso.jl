@@ -10,7 +10,7 @@
 #
 #     julia --project=examples examples/05_group_lasso.jl
 
-using CoordinateDescent, ProximalBase, ProximalOPT
+using CoordinateDescent, ProximalBase, ProximalSolvers
 using LinearAlgebra, Printf, Random, Statistics
 
 Random.seed!(5)
@@ -39,7 +39,7 @@ f = CDLeastSquaresLoss(y, X; intercept = true)
 x = AtomIterate(p, groups)
 info = CDInfo()
 coordinateDescent!(x, f, g, CDOptions(), info)
-β₀ = ProximalOPT.intercept(f, x)              # the intercept ȳ - x̄'β̂
+β₀ = ProximalSolvers.intercept(f, x)              # the intercept ȳ - x̄'β̂
 println("selected variables ", selected(x), " in $(info.iterations) passes; β̂₀ = ", round(β₀; digits = 2))
 println("norms of the groups ", round.([norm(x[G]) for G in groups[1:6]]; digits = 2), " …")
 
@@ -82,7 +82,7 @@ end
 println("\n== Choosing λ on a validation set")
 
 # A loop over decreasing λ starts each fit from the previous solution, as
-# ProximalOPT's solve_path does (with screening, and a callback for a
+# ProximalSolvers's solve_path does (with screening, and a callback for a
 # validation error). Here λ is chosen by the error on 100 held-out
 # observations.
 train, valid = 1:200, 201:300
@@ -95,7 +95,7 @@ best = (Inf, 0.0)
 for λk in λmax * exp10.(range(0, -2.5; length = 15))
   gk = GroupNormL2(λk, groups)
   coordinateDescent!(xt, ft, gk)                  # warm start from the previous λ
-  pred = ProximalOPT.intercept(ft, xt) .+ X[valid, :] * xt
+  pred = ProximalSolvers.intercept(ft, xt) .+ X[valid, :] * xt
   err = mean(abs2, y[valid] - pred)
   @printf("  %6.4f  %6d  %16.4f\n", λk, length(selected(xt)), err)
   err < best[1] && (global best = (err, λk))

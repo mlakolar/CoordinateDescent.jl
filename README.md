@@ -7,7 +7,7 @@
 Lasso estimators computed by coordinate descent. The coordinate descent
 itself (the passes over the coordinates and the active set, the penalty paths
 with screening, the reweighting of the scaled and feasible lasso) is that of
-[ProximalOPT.jl](https://github.com/mlakolar/ProximalOPT.jl), on the losses and
+[ProximalSolvers.jl](https://github.com/mlakolar/ProximalSolvers.jl), on the losses and
 penalties of [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl). It
 works for the ℓ1 and weighted ℓ1 penalty and for other penalties that separate
 across coordinates (see [Writing your own loss or penalty](#writing-your-own-loss-or-penalty)),
@@ -17,7 +17,8 @@ Estimators:
 * Lasso
 * Group lasso
 * Sqrt-Lasso
-* Scaled-Lasso
+* Scaled-Lasso, from the data or from sufficient statistics (`X'X/n`, `X'y/n`,
+  `y'y/n`, or a covariance matrix, one variable on the others)
 * Feasible (heteroscedastic) Lasso
 * Lasso path and refitting
 * Varying-coefficient models via local polynomial regression with an L1 penalty
@@ -120,22 +121,22 @@ julia --project=examples examples/01_lasso.jl
 julia --project=examples examples/run_all.jl      # all of them, about 20 seconds
 ```
 
-The environment loads the package from this checkout, and ProximalOPT 0.2 from
-GitHub until it is registered, through `[sources]` in
+The environment loads the package from this checkout, and ProximalSolvers from
+GitHub until its version 0.1.1 is registered, through `[sources]` in
 [examples/Project.toml](examples/Project.toml), which Julia 1.11 and later
-read. On Julia 1.10, develop the checkout and add ProximalOPT by URL in that
+read. On Julia 1.10, develop the checkout and add ProximalSolvers by URL in that
 environment first.
 
 ## Writing your own loss or penalty
 
 `coordinateDescent!(x, f, g)` minimizes `f(x) + g(x)` one coordinate at a
-time, by ProximalOPT's coordinate descent: it does the passes over the
+time, by ProximalSolvers's coordinate descent: it does the passes over the
 coordinates, the active set and the stopping rule, and for `NormL1` and
 `GroupNormL2` also the path of penalty levels from λmax (`warmStart = false`)
 and the screening with the strong rule. The loss `f` makes each coordinate
 update, and the penalty `g` enters it through its proximal operator on that
-coordinate. Both can be your own. A loss can also be written for ProximalOPT
-directly, as a `ProximalOPT.CDModel` (see its documentation); the interface
+coordinate. Both can be your own. A loss can also be written for ProximalSolvers
+directly, as a `ProximalSolvers.CDModel` (see its documentation); the interface
 below adapts to it.
 
 ### A loss
@@ -214,17 +215,18 @@ coordinateDescent!(x, CDLeastSquaresLoss(y, X), MyElasticNet(0.1, 0.5))
 ProximalBase has this one built in, as `ElasticNet(λα, λ(1 - α))`, with
 `MCP`, `SCAD`, `NormL1Nonneg` and `IndBox`. `CDLeastSquaresLoss`,
 `CDWeightedLSLoss`, `CDQuadraticLoss` and every loss whose `descendCoordinate!`
-calls `prox_entry` accept such a penalty; `CDSqrtLassoLoss`, whose update is
-the exact minimizer for the ℓ1 norm, does not. The path from λmax and the
-screening need to know the penalty, so for other penalties `warmStart = false`
-starts from zero and solves at `g` directly; a path is then a loop over
-decreasing penalties in which each fit starts from the previous solution. The
-proximal operator of a nonconvex penalty must be defined for the steps
-`γ = 1/a` of the loss: `n / ‖X[:, k]‖²` for least squares.
+calls `prox_entry` accept such a penalty; `CDSqrtLassoLoss` and
+`CDSqrtQuadraticLoss`, whose updates are the exact minimizers for the ℓ1 norm,
+do not. The path from λmax and the screening need to know the penalty, so for
+other penalties `warmStart = false` starts from zero and solves at `g`
+directly; a path is then a loop over decreasing penalties in which each fit
+starts from the previous solution. The proximal operator of a nonconvex
+penalty must be defined for the steps `γ = 1/a` of the loss: `n / ‖X[:, k]‖²`
+for least squares.
 [examples/09_custom_penalty.jl](examples/09_custom_penalty.jl) implements the
 elastic net and the minimax concave penalty (MCP). A penalty on groups of
 coordinates needs a block update on an `AtomIterate`, which is implemented for
 `GroupNormL2` only.
 
 Package depends on [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl)
-and [ProximalOPT.jl](https://github.com/mlakolar/ProximalOPT.jl).
+and [ProximalSolvers.jl](https://github.com/mlakolar/ProximalSolvers.jl).

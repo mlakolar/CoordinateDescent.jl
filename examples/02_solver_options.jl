@@ -2,7 +2,7 @@
 #
 # Every solver takes a CDOptions: the high-level ones (lasso, sqrtLasso,
 # LassoPath) as their last positional argument, coordinateDescent! as its
-# fourth. They run the coordinate descent of ProximalOPT (CDSolver) with these
+# fourth. They run the coordinate descent of ProximalSolvers (CDSolver) with these
 # options. coordinateDescent! reports how the run went in a CDInfo, its fifth
 # argument.
 #

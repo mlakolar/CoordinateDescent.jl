@@ -51,15 +51,16 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v3
-      # ProximalOPT 0.2 is not registered yet (ProximalOPT PR #11). Julia 1.11
-      # and later take it from [sources] in Project.toml; Julia 1.10 ignores
-      # [sources]. Remove this step and [sources] once it is registered.
-      - name: Add ProximalOPT 0.2 from GitHub on Julia 1.10
+      # ProximalSolvers is not registered yet: 0.1.0 is General PR #173068, and
+      # SqrtQuadraticFunction comes in 0.1.1, now its branch sqrt-quadratic.
+      # Julia 1.11 and later take it from [sources] in Project.toml; Julia 1.10
+      # ignores [sources]. Remove this step and [sources] once 0.1.1 is registered.
+      - name: Add ProximalSolvers from GitHub on Julia 1.10
         if: matrix.version == 'lts'
         shell: julia --color=yes --project=. {0}
         run: |
           using Pkg
-          Pkg.add(url="https://github.com/mlakolar/ProximalOPT.jl", rev="generic-solvers")
+          Pkg.add(url="https://github.com/mlakolar/ProximalSolvers.jl", rev="sqrt-quadratic")
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1

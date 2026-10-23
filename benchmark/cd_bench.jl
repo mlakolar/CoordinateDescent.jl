@@ -18,7 +18,7 @@ x = ProximalBase.SparseIterate(p)
 @time CoordinateDescent.scaledLasso!(x, X, Y, λ, stdX, options)
 
 
-@show σinit = CoordinateDescent._findInitSigma!(X, Y, 30, zeros(n))
+@show σinit = std(CoordinateDescent._findInitResiduals!(X, Y, 30, zeros(n)))
 options = CoordinateDescent.IterLassoOptions(;optTol=1e-2, maxIter=10, initProcedure=:InitStd, σinit=σinit)
 x = ProximalBase.SparseIterate(p)
 λ = sqrt(2. * log(p) / n)

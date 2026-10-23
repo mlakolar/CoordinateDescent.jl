@@ -66,9 +66,11 @@ fit = sqrtLasso(X, y .- 3.0, λsqrt, ones(p), CDOptions(; optTol = 1e-10))
 
 println("\n== Scaled lasso")
 
-# scaledLasso(X, y, λ, ω) alternates the lasso with penalty λ σ̂ ∑ⱼ ωⱼ |βⱼ| and
-# the update σ̂ = ‖y - Xβ̂‖ / √n, so λ is the penalty for unit noise, here
-# √(2 log(p) / n), and sol.σ is the estimate of σ.
+# scaledLasso(X, y, λ, ω) minimizes ‖y - Xβ‖² / (2nσ) + σ/2 + λ ∑ⱼ ωⱼ |βⱼ| over
+# β and σ. The minimum over σ is at σ̂ = ‖y - Xβ‖ / √n, which leaves the
+# square-root lasso ‖y - Xβ‖ / √n + λ ∑ⱼ ωⱼ |βⱼ|, solved by one run of
+# coordinate descent. λ is the penalty for unit noise, here √(2 log(p) / n), and
+# sol.σ is the estimate of σ.
 ω = ones(p)
 println("    σ     σ̂  nonzeros  ‖β̂ - β‖")
 for σ in (0.25, 1.0, 2.0)
@@ -77,29 +79,30 @@ for σ in (0.25, 1.0, 2.0)
   @printf("%5.2f  %5.3f  %8d  %7.3f\n", σ, est.σ, nonzeros(est.x), norm(est.x - β))
 end
 
-# IterLassoOptions controls the outer iteration:
-# - maxIter and optTol: at most 20 iterations, until the relative change of σ̂
-#   is below 1e-2 (the defaults);
-# - initProcedure: the first σ̂, from least squares on the sinit = 5 columns
-#   most correlated with y (:Screening, the default), σinit (:InitStd), or the
-#   residuals of the x passed to scaledLasso! (:WarmStart);
-# - optionsCD: the CDOptions of the lasso fits.
-# sol.iterations counts the passes of coordinate descent over all lasso fits.
+# Of IterLassoOptions, scaledLasso uses only optionsCD, the CDOptions of the
+# coordinate descent; sol.iterations counts its passes.
 y = X * β + randn(n)
 println("\n  options                       σ̂         passes  converged")
 for (name, options) in (("defaults", IterLassoOptions()),
-                        ("sinit = 20", IterLassoOptions(; sinit = 20)),
-                        (":InitStd, σinit = 10", IterLassoOptions(; initProcedure = :InitStd, σinit = 10)),
-                        ("optTol = 1e-8, maxIter = 100", IterLassoOptions(; optTol = 1e-8, maxIter = 100)))
+                        ("optTol = 1e-10", IterLassoOptions(; optionsCD = CDOptions(; optTol = 1e-10))))
   est = scaledLasso(X, y, λlasso, ω, options)
   @printf("  %-28s  %.6f  %6d  %s\n", name, est.σ, est.iterations, est.converged)
 end
 
 # a warm start from a previous solution takes fewer passes
-fit = scaledLasso(X, y, λlasso, ω, IterLassoOptions(; optTol = 1e-8, maxIter = 100))
+fit = scaledLasso(X, y, λlasso, ω)
 x = copy(fit.x)
-warm = scaledLasso!(x, X, y, λlasso, ω, IterLassoOptions(; initProcedure = :WarmStart, optTol = 1e-8))
-@printf("  %-28s  %.6f  %6d  %s\n", ":WarmStart from that", warm.σ, warm.iterations, warm.converged)
+warm = scaledLasso!(x, X, y, λlasso, ω)
+@printf("  %-28s  %.6f  %6d  %s\n", "warm start from that", warm.σ, warm.iterations, warm.converged)
+
+# From the sufficient statistics A = X'X/n, b = -X'y/n and c = y'y/n, without
+# the data: a coordinate update costs O(p) instead of O(n), which pays off when
+# n is large or when A is shared, as in the precision matrix estimator of Sun
+# and Zhang (2013), where it is the covariance matrix and each variable is
+# regressed on the others (see the docstring of scaledLasso!).
+suff = scaledLasso!(SparseIterate(p), CDSqrtQuadraticLoss(X'X / n, -X'y / n, dot(y, y) / n), λlasso, ω)
+@printf("  %-28s  %.6f  %6d  %s   (largest difference %.1e)\n", "from A, b and c", suff.σ,
+        suff.iterations, suff.converged, maximum(abs, Vector(suff.x) - Vector(fit.x)))
 
 println("\n== Feasible lasso for heteroscedastic noise")
 
@@ -129,7 +132,7 @@ println("  variable j           ", join(lpad.(1:8, 6)))
 println("  loading Γⱼ           ", join(lpad.(round.(fit.penalty.w[1:8]; digits = 2), 6)))
 println("  oracle loading       ", join(lpad.(round.(oracle[1:8]; digits = 2), 6)))
 
-# The options are those of the scaled lasso: the first residuals come from
+# IterLassoOptions controls the outer iteration: the first residuals come from
 # least squares on the sinit columns most correlated with y (:Screening, the
 # default), from a lasso with penalty λ0 σinit ∑ⱼ sⱼ |βⱼ|, sⱼ the standard
 # deviation of X[:, j] (:InitStd), or from the x passed in (:WarmStart); the

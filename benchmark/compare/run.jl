@@ -1,7 +1,7 @@
 # The cases of momentum_default_bench.jl, run by the version of
 # CoordinateDescent in the active environment: old/ (0.6.0, on ProximalBase
 # 0.4, with its default momentum and with momentum = false) or new/ (this
-# checkout, on ProximalOPT). Each setting of a case runs in turn with the
+# checkout, on ProximalSolvers). Each setting of a case runs in turn with the
 # others, after one run to compile, until each has half a second of runs and at
 # least 5; every run starts from the same seed. Writes the median times, the
 # passes and the solutions to results/<side>_<stamp>.jls; compare.jl compares
