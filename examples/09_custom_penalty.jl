@@ -1,36 +1,42 @@
 # A penalty of your own: the elastic net and the minimax concave penalty
 #
 # A penalty g(x) = ∑ₖ gₖ(xₖ) that separates across coordinates plugs into
-# coordinateDescent! as a subtype of ProximalBase.ProximableFunction with a
-# method for its proximal operator on one coordinate,
+# coordinateDescent! as a subtype of ProximalBase.AbstractFunction that says it
+# is separable and has the proximal operator of one entry, and the value of
+# the penalty, g(x):
 #
-#     ProximalBase.cdprox!(g, x, k, γ):   x[k] ← argmin_z gₖ(z) + (z - x[k])² / (2γ)
+#     ProximalBase.isseparable(::Type{<:G}) = true
+#     ProximalBase.prox_entry(g, v, k, γ):   argmin_z gₖ(z) + (z - v)² / (2γ)
 #
 # CDLeastSquaresLoss, CDWeightedLSLoss and CDQuadraticLoss take a proximal
-# step with it, and so does any loss whose coordinate step calls cdprox!, such
-# as the logistic loss of 08_custom_loss.jl. A method for ProximalBase.value,
-# the value of the penalty, is optional; it is used here to report the
-# objective. Path following from λmax (warmStart = false) and screening are
-# implemented for ProxL1 and ProxGroupL2 only: with another penalty,
-# warmStart = false starts from zero and solves at g directly, and a path is a
-# loop over penalties with warm starts, as below.
+# step with it, and so does any loss whose coordinate step calls prox_entry,
+# such as the logistic loss of 08_custom_loss.jl. Path following from λmax
+# (warmStart = false) and screening are implemented for NormL1 and GroupNormL2
+# only: with another penalty, warmStart = false starts from zero and solves at
+# g directly, and a path is a loop over penalties with warm starts, as below.
+#
+# ProximalBase has both penalties of this example built in, ElasticNet and
+# MCP; the example checks the ones written here against them.
 #
 #     julia --project=examples examples/09_custom_penalty.jl
 
 using CoordinateDescent, ProximalBase
+import ProximalBase: isseparable, isproximable, prox_entry
 using LinearAlgebra, Printf, Random, Statistics
 
 # --- The elastic net, λ (α ‖x‖₁ + (1 - α) ‖x‖² / 2) ----------------------------
 
-struct ElasticNet{T<:AbstractFloat} <: ProximableFunction
+struct MyElasticNet{T<:AbstractFloat} <: ProximalBase.AbstractFunction
   λ::T
   α::T
 end
 
+isseparable(::Type{<:MyElasticNet}) = true
+isproximable(::Type{<:MyElasticNet}) = true
+
 # soft-thresholding followed by a shrinkage
-ProximalBase.cdprox!(g::ElasticNet, x::SparseIterate, k::Int, γ) =
-  x[k] = shrink(x[k], γ * g.λ * g.α) / (1 + γ * g.λ * (1 - g.α))
-ProximalBase.value(g::ElasticNet, x) = g.λ * (g.α * norm(x, 1) + (1 - g.α) * sum(abs2, x) / 2)
+prox_entry(g::MyElasticNet, v, k, γ) = shrink(v, γ * g.λ * g.α) / (1 + γ * g.λ * (1 - g.α))
+(g::MyElasticNet)(x) = g.λ * (g.α * norm(x, 1) + (1 - g.α) * sum(abs2, x) / 2)
 
 # --- The minimax concave penalty of Zhang (2010) ------------------------------
 #
@@ -42,19 +48,20 @@ ProximalBase.value(g::ElasticNet, x) = g.λ * (g.α * norm(x, 1) + (1 - g.α) * 
 # γλ, and v beyond. The step of the least squares loss is n / ‖X[:, k]‖², so
 # with columns scaled to ‖X[:, k]‖² = n it is 1, and γ = 3 is a common choice.
 
-struct MCP{T<:AbstractFloat} <: ProximableFunction
+struct MyMCP{T<:AbstractFloat} <: ProximalBase.AbstractFunction
   λ::T
   γ::T
 end
 
-function ProximalBase.cdprox!(g::MCP, x::SparseIterate, k::Int, t)
+isseparable(::Type{<:MyMCP}) = true
+isproximable(::Type{<:MyMCP}) = true
+
+function prox_entry(g::MyMCP, v, k, t)
   t < g.γ || throw(ArgumentError("the MCP needs γ > $(round(t; sigdigits = 3)), the step of coordinate descent"))
-  v = x[k]
-  x[k] = abs(v) <= t * g.λ ? zero(v) :
-         abs(v) <= g.γ * g.λ ? sign(v) * (abs(v) - t * g.λ) / (1 - t / g.γ) : v
+  abs(v) <= t * g.λ ? zero(v) :
+    abs(v) <= g.γ * g.λ ? sign(v) * (abs(v) - t * g.λ) / (1 - t / g.γ) : v
 end
-ProximalBase.value(g::MCP, x) =
-  sum(z -> abs(z) <= g.γ * g.λ ? g.λ * abs(z) - z^2 / (2 * g.γ) : g.γ * g.λ^2 / 2, x)
+(g::MyMCP)(x) = sum(z -> abs(z) <= g.γ * g.λ ? g.λ * abs(z) - z^2 / (2 * g.γ) : g.γ * g.λ^2 / 2, x)
 
 # --- The elastic net on correlated predictors ---------------------------------
 
@@ -83,7 +90,7 @@ f = CDLeastSquaresLoss(y, X)
 println("  α   nonzeros  of the 15  β̂[1:5]                          sd of β̂[1:15]")
 for α in (1.0, 0.5, 0.1)
   x = SparseIterate(p)
-  coordinateDescent!(x, f, ElasticNet(0.3, α))
+  coordinateDescent!(x, f, MyElasticNet(0.3, α))
   @printf("  %.1f  %8d  %9d  %-30s  %13.3f\n", α, count(!iszero, x), count(!iszero, x[1:15]),
           string(round.(x[1:5]; digits = 2)), std(x[1:15]))
 end
@@ -92,17 +99,22 @@ end
 # whose loss divides by n + p instead of n: a check of the proximal operator
 λ, α = 0.3, 0.5
 xe = SparseIterate(p)
-coordinateDescent!(xe, f, ElasticNet(λ, α), CDOptions(; optTol = 1e-12))
+coordinateDescent!(xe, f, MyElasticNet(λ, α), CDOptions(; optTol = 1e-12))
 xa = SparseIterate(p)
 coordinateDescent!(xa, CDLeastSquaresLoss([y; zeros(p)], [X; sqrt(n * λ * (1 - α)) * I(p)]),
-                   ProxL1(n / (n + p) * λ * α), CDOptions(; optTol = 1e-12))
+                   NormL1(n / (n + p) * λ * α), CDOptions(; optTol = 1e-12))
 @printf("the lasso on augmented data agrees to %.1e\n", norm(xe - xa, Inf))
 
 # the quadratic loss takes the penalty too
 xq = SparseIterate(p)
-coordinateDescent!(xq, CDQuadraticLoss(X' * X / n, -X' * y / n), ElasticNet(λ, α), CDOptions(; optTol = 1e-12))
+coordinateDescent!(xq, CDQuadraticLoss(X' * X / n, -X' * y / n), MyElasticNet(λ, α), CDOptions(; optTol = 1e-12))
 @printf("so does CDQuadraticLoss(X'X / n, -X'y / n): %.1e\n", norm(xq - xa, Inf))
-@printf("objective at the solution: %.6f\n", sum(abs2, y - X * xe) / (2n) + value(ElasticNet(λ, α), xe))
+@printf("objective at the solution: %.6f\n", sum(abs2, y - X * xe) / (2n) + MyElasticNet(λ, α)(xe))
+
+# ProximalBase's ElasticNet(λ1, λ2) is λ1 ‖x‖₁ + (λ2/2) ‖x‖²
+xb = SparseIterate(p)
+coordinateDescent!(xb, f, ElasticNet(λ * α, λ * (1 - α)), CDOptions(; optTol = 1e-12))
+@printf("ProximalBase's ElasticNet agrees to %.1e\n", norm(xb - xe, Inf))
 
 println("\n== The minimax concave penalty")
 
@@ -123,8 +135,8 @@ xl, xm = SparseIterate(p), SparseIterate(p)
 kept = nothing
 println("       λ   lasso: nonzeros  ‖β̂ - β‖   MCP: nonzeros  ‖β̂ - β‖")
 for (k, λk) in enumerate(λs)
-  coordinateDescent!(xl, f, ProxL1(λk))
-  coordinateDescent!(xm, f, MCP(λk, 3.0))
+  coordinateDescent!(xl, f, NormL1(λk))
+  coordinateDescent!(xm, f, MyMCP(λk, 3.0))
   @printf("  %6.3f  %15d  %8.3f  %13d  %8.3f\n", λk, count(!iszero, xl), norm(xl - β),
           count(!iszero, xm), norm(xm - β))
   k == 6 && (global kept = (λk, Vector(xl), Vector(xm)))
@@ -133,10 +145,18 @@ end
 @printf("at λ = %.3f: lasso %s, MCP %s, least squares on 1:4 %s\n", λk, round.(bl[1:4]; digits = 2),
         round.(bm[1:4]; digits = 2), round.(X[:, 1:4] \ y; digits = 2))
 
-# a step longer than γ makes the proximal operator undefined, which cdprox!
-# reports: here the columns are scaled by 1/2, so the step is 4 > γ = 3
+# ProximalBase's MCP(λ, a) is the same penalty with γ = a, along the same path
+xb = SparseIterate(p)
+for λj in λs[1:6]
+  coordinateDescent!(xb, f, MCP(λj, 3.0))
+end
+@printf("ProximalBase's MCP agrees to %.1e\n", norm(Vector(xb) - bm, Inf))
+
+# a step longer than γ makes firm thresholding undefined, which prox_entry
+# above reports: here the columns are scaled by 1/2, so the step is 4 > γ = 3.
+# ProximalBase's MCP takes the global minimizer of the nonconvex step instead.
 try
-  coordinateDescent!(SparseIterate(p), CDLeastSquaresLoss(y, X / 2), MCP(0.1, 3.0))
+  coordinateDescent!(SparseIterate(p), CDLeastSquaresLoss(y, X / 2), MyMCP(0.1, 3.0))
 catch err
   println("with ‖X[:, k]‖² = n / 4: ", sprint(showerror, err))
 end

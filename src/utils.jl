@@ -34,7 +34,7 @@ coordinate descent of ProximalOPT (`ProximalOPT.CDSolver`) with them.
 - `anderson`: the memory `K` of Anderson acceleration, `0` for none (see
   [`coordinateDescent!`](@ref)); it needs `order = :cyclic`
 - `momentum`: Nesterov momentum on the passes over the active set, the default
-  of versions 0.6. ProximalOPT's coordinate descent does not have it yet:
+  of version 0.6. ProximalOPT's coordinate descent does not have it yet:
   `nothing` (the default) and `false` run without it, and `true` throws an
   `ArgumentError`
 """
@@ -167,7 +167,8 @@ noise level or of the penalty loadings.
   - `:InitStd`: noise level `σinit`
   - `:WarmStart`: the iterate passed in
 - `sinit`, `σinit`: used by `:Screening` and `:InitStd`
-- `optionsCD`: [`CDOptions`](@ref) for the inner lasso fits
+- `optionsCD`: [`CDOptions`](@ref) for the inner lasso fits, each of which is
+  warm started from the previous one (`warmStart` is not used)
 """
 struct IterLassoOptions
   maxIter::Int64

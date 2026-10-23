@@ -51,6 +51,18 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v3
+      # ProximalBase 0.5 and ProximalOPT 0.2 are not registered yet (ProximalBase
+      # PR #23, ProximalOPT PR #11). Julia 1.11 and later take them from
+      # [sources] in Project.toml; Julia 1.10 ignores [sources], and resolves
+      # each Pkg.add with the whole project, so both are added in one call.
+      # Remove this step and [sources] once both are registered.
+      - name: Add ProximalBase 0.5 and ProximalOPT 0.2 from GitHub on Julia 1.10
+        if: matrix.version == 'lts'
+        shell: julia --color=yes --project=. {0}
+        run: |
+          using Pkg
+          Pkg.add([PackageSpec(url="https://github.com/mlakolar/ProximalBase.jl", rev="proximalbase-0.5"),
+                   PackageSpec(url="https://github.com/mlakolar/ProximalOPT.jl", rev="generic-solvers")])
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1

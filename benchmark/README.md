@@ -7,18 +7,15 @@ folder, which loads CoordinateDescent from this checkout:
 julia --project=benchmark -e 'using Pkg; Pkg.instantiate()'
 julia --project=benchmark benchmark/locpoly_bench.jl    # about a minute
 julia --project=benchmark benchmark/cd_bench.jl         # about 20 minutes
-julia --project=benchmark benchmark/order_anderson_bench.jl    # about 6 minutes
-julia --project=benchmark benchmark/momentum_default_bench.jl  # about 2 minutes
+julia --project=benchmark benchmark/order_anderson_bench.jl    # about 4 minutes
 ```
 
 The checkout is found through `[sources]` in `Project.toml`, which Julia 1.11
-and later read. Julia 1.10 ignores it and looks for this version of
-CoordinateDescent in the registry, so `Pkg.instantiate()` fails there. Develop
-the checkout instead, which does not change `Project.toml`:
+and later read, as are ProximalBase 0.5 and ProximalOPT 0.2 until they are
+registered. Julia 1.10 ignores `[sources]`: develop the checkout and add the
+two packages by URL in that environment first.
 
-```
-julia +lts --project=benchmark -e 'using Pkg; Pkg.develop(path = "."); Pkg.instantiate()'
-```
+`compare/` compares this version with version 0.6.0 (see below).
 
 ## locpoly_bench.jl
 
@@ -84,6 +81,12 @@ first three solves at λ = 0.001 take 44,000 to 53,000 passes to meet the
 default stopping rule.
 
 ## order_anderson_bench.jl
+
+The tables of this section are from version 0.6, whose own coordinate descent
+also had `order = :active` and momentum. Version 0.7 runs ProximalOPT's
+coordinate descent, which has neither yet, and the script now times the cyclic
+and random orders and Anderson acceleration only; the other columns record
+what momentum gave, for its move to ProximalOPT.
 
 Compares the orders of the coordinates, Anderson acceleration (issue #9) and
 momentum (issue #20) on the lasso `‖y - Xβ‖² / (2n) + λ‖β‖₁`, solved from β = 0
@@ -184,42 +187,63 @@ at `maxIter = 100 000` for E' at 0.01 λmax.
 - **`order = :active`** without momentum is within -27% to +17% of `order = :random`. It never shows the cyclic order's blow-up.
 - **Timing under load.** A rerun of this script with other processes loading the machine gave times up to 50% longer. The ratios between the deterministic solvers (minimum of the runs) and the random ones (median) also moved in favor of the deterministic ones. The tables above are from a run on a quiet machine.
 
-## momentum_default_bench.jl
+## compare/
 
-Compares the default options, which use momentum with the random order since
-version 0.6, with `momentum = false`, the default before. It times the
-high-level solvers and `CDQuadraticLoss` on designs A, E and F, and
-`locpolyl1` on the varying-coefficient model of
-`examples/07_varying_coefficient.jl`. Each case runs the two settings in turn,
-until each has half a second of runs and at least 5 runs; the table gives
-median times on the M3 Pro.
+Compares this version, which runs ProximalOPT's coordinate descent, with
+version 0.6.0, on the cases of the momentum benchmark of 0.6:
+- the lasso at 0.05 λmax with an intercept and standardized columns;
+- the square-root, scaled and feasible lasso at theory-driven penalties;
+- `LassoPath` with 100 λ, an intercept and standardized columns;
+- `CDQuadraticLoss(X'X/n, -X'y/n)` at 0.02 λmax;
+- each on designs A, E and F, and `locpolyl1` on the model of
+  `examples/07_varying_coefficient.jl`.
 
-| case | momentum = false (ms) | default (ms) | speedup |
-|---|---:|---:|---:|
-| A: `lasso`, 0.05 λmax, intercept, standardized | 59.5 | 28.4 | 2.10 |
-| A: `sqrtLasso`, λ = 1.1 √(2 log p / n) | 6.5 | 6.5 | 1.00 |
-| A: `scaledLasso`, λ = √(2 log p / n) | 2.2 | 2.3 | 0.99 |
-| A: `feasibleLasso!`, λ0 = 2 √(2 log p / n) | 1.9 | 1.9 | 1.01 |
-| A: `LassoPath`, 100 λ, intercept, standardized | 3443.0 | 840.2 | 4.10 |
-| A: `CDQuadraticLoss(X'X/n, -X'y/n)`, 0.02 λmax | 1831.6 | 473.3 | 3.87 |
-| E: `lasso`, 0.05 λmax, intercept, standardized | 6.5 | 4.3 | 1.49 |
-| E: `sqrtLasso`, λ = 1.1 √(2 log p / n) | 15.1 | 13.3 | 1.13 |
-| E: `scaledLasso`, λ = √(2 log p / n) | 2.0 | 2.0 | 1.01 |
-| E: `feasibleLasso!`, λ0 = 2 √(2 log p / n) | 5.1 | 5.3 | 0.97 |
-| E: `LassoPath`, 100 λ, intercept, standardized | 702.2 | 258.5 | 2.72 |
-| E: `CDQuadraticLoss(X'X/n, -X'y/n)`, 0.02 λmax | 130.0 | 60.4 | 2.15 |
-| F: `lasso`, 0.05 λmax, intercept, standardized | 12.9 | 5.9 | 2.18 |
-| F: `sqrtLasso`, λ = 1.1 √(2 log p / n) | 29.0 | 20.6 | 1.41 |
-| F: `scaledLasso`, λ = √(2 log p / n) | 3.3 | 3.1 | 1.08 |
-| F: `feasibleLasso!`, λ0 = 2 √(2 log p / n) | 6.0 | 5.6 | 1.07 |
-| F: `LassoPath`, 100 λ, intercept, standardized | 1040.1 | 325.5 | 3.20 |
-| F: `CDQuadraticLoss(X'X/n, -X'y/n)`, 0.02 λmax | 190.9 | 81.0 | 2.36 |
-| `locpolyl1`, n = 500, p = 50, degree 1, 5 grid points | 0.6 | 0.6 | 0.95 |
+The old side, in `old/`, is CoordinateDescent 0.6.0 from the registry on
+ProximalBase 0.4.1. It runs with its default options, which use momentum, and
+with `momentum = false`. The new side, in `new/`, is this checkout on
+ProximalBase 0.5 and ProximalOPT 0.2.
 
-- **Paths and small penalties gain the most.**
-  - `LassoPath` with an intercept and standardized columns is 2.7–4.1 times faster.
-  - `CDQuadraticLoss` at 0.02 λmax is 2.2–3.9 times faster.
-  - `lasso` at 0.05 λmax is 1.5–2.2 times faster.
-- **Solves that need few passes take about as long either way.** That covers the scaled and feasible lasso at theory-driven penalties, `sqrtLasso` on A, and the small `locpolyl1` problem (0.6 ms both ways). The largest slowdown, 3–5%, is within the noise of the timing.
-- **The default leaves some cases unchanged.** It uses momentum only with a random order, a `SparseIterate` and a built-in loss. User-defined losses, `SymmetricSparseIterate`s (CovSel, DiffPrecTest), the group lasso on `AtomIterate`s, and `order = :cyclic` run as before.
+```
+julia --project=benchmark/compare/old -e 'using Pkg; Pkg.instantiate()'
+julia --project=benchmark/compare/new -e 'using Pkg; Pkg.instantiate()'
+benchmark/compare/ab.sh 3
+```
 
+`ab.sh` runs the two sides in turn, each in a fresh process, and every run
+starts from the same seed. `compare.jl` takes the fastest median time of each
+case over the rounds, since load on the machine only adds time. The table is
+from three rounds on the M3 Pro on 23 October 2026, with Julia 1.13.2 and one
+BLAS thread.
+
+| case | 0.6 (ms) | 0.6, momentum = false (ms) | 0.7 (ms) | 0.7 / 0.6 | 0.7 / 0.6 without momentum | passes, 0.6 without momentum / 0.7 | largest difference |
+|---|---:|---:|---:|---:|---:|---|---:|
+| A CDQuadraticLoss | 220.1 | 929.2 | 922.3 | 4.19 | 0.99 | 5524 / 5524 | 0e+00 |
+| A LassoPath | 486.4 | 2199.4 | 2186.3 | 4.49 | 0.99 | 31986 / 31986 | 1e-14 |
+| A feasibleLasso! | 1.5 | 1.5 | 1.5 | 1.00 | 0.99 | 2 / 2 | 0e+00 |
+| A lasso | 25.1 | 54.8 | 54.6 | 2.17 | 1.00 | 934 / 934 | 1e-14 |
+| A scaledLasso | 1.9 | 2.1 | 2.1 | 1.08 | 0.97 | 29 / 29 | 0e+00 |
+| A sqrtLasso | 6.0 | 5.8 | 5.8 | 0.96 | 1.00 | 11 / 11 | 0e+00 |
+| E CDQuadraticLoss | 43.8 | 109.3 | 110.5 | 2.53 | 1.01 | 946 / 946 | 0e+00 |
+| E LassoPath | 173.6 | 464.9 | 459.5 | 2.65 | 0.99 | 10594 / 10594 | 1e-14 |
+| E feasibleLasso! | 4.7 | 4.5 | 4.4 | 0.92 | 0.98 | 151 / 151 | 2e-15 |
+| E lasso | 3.9 | 5.0 | 5.0 | 1.28 | 1.01 | 173 / 173 | 5e-15 |
+| E scaledLasso | 1.9 | 1.6 | 1.6 | 0.83 | 0.98 | 76 / 76 | 0e+00 |
+| E sqrtLasso | 8.9 | 10.4 | 10.3 | 1.16 | 0.99 | 23 / 23 | 0e+00 |
+| F CDQuadraticLoss | 54.5 | 146.1 | 147.1 | 2.70 | 1.01 | 1282 / 1282 | 0e+00 |
+| F LassoPath | 225.6 | 720.3 | 705.5 | 3.13 | 0.98 | 18205 / 18205 | 2e-14 |
+| F feasibleLasso! | 4.7 | 4.9 | 4.8 | 1.01 | 0.97 | 501 / 501 | 7e-15 |
+| F lasso | 5.2 | 8.8 | 8.8 | 1.71 | 1.01 | 344 / 344 | 8e-15 |
+| F scaledLasso | 2.2 | 2.9 | 2.8 | 1.29 | 0.98 | 277 / 277 | 1e-15 |
+| F sqrtLasso | 13.0 | 19.8 | 19.4 | 1.49 | 0.98 | 51 / 51 | 0e+00 |
+| locpolyl1 | 0.6 | 0.5 | 0.6 | 0.94 | 1.03 | 0 / 0 | 9e-16 |
+
+- **The coordinate descent moved without a change.** Against 0.6.0 without
+  momentum, every case takes the same passes and the solutions agree to 2e-14.
+  The times are within 3% (0.97–1.03).
+- **Momentum has not moved.** Against the default of 0.6.0, which uses
+  momentum, this version is slower where momentum helps:
+  - `LassoPath`: 2.7–4.5 times as long;
+  - `CDQuadraticLoss`: 2.5–4.2 times as long;
+  - `lasso`: 1.3–2.2 times as long.
+  The scaled, feasible and square-root lasso at theory-driven penalties take
+  0.83–1.49 times as long.

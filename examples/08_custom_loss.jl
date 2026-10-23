@@ -13,36 +13,41 @@
 # and optionally coordinateScale(f, k) and responseScale(f), for a stopping
 # rule in the units of the problem, and fullGradient!(grad, f, x), a faster
 # way to compute the whole gradient. These functions are not exported: extend
-# them as CoordinateDescent.initialize! and so on.
+# them as CoordinateDescent.initialize! and so on. Coordinate descent itself is
+# ProximalOPT's, which calls descendCoordinate! for each step.
+#
+# The logistic loss is built into ProximalBase as well (MyLogisticLoss, a
+# GLMLoss), and ProximalOPT minimizes it by coordinate descent or by proximal
+# Newton; the last section checks the loss written here against them.
 #
 #     julia --project=examples examples/08_custom_loss.jl
 
-using CoordinateDescent, ProximalBase
+using CoordinateDescent, ProximalBase, ProximalOPT
 using LinearAlgebra, Printf, Random, Statistics
 
 sigmoid(t) = 1 / (1 + exp(-t))
 
-struct LogisticLoss{T<:AbstractFloat} <: CoordinateDifferentiableFunction
+struct MyLogisticLoss{T<:AbstractFloat} <: CoordinateDifferentiableFunction
   y::Vector{T}          # responses in {0, 1}
   X::Matrix{T}
   η::Vector{T}          # the cache: the linear predictor Xx
   a::Vector{T}          # curvature bounds ‖X[:, k]‖² / (4n), see descendCoordinate!
 end
 
-LogisticLoss(y::Vector{T}, X::Matrix{T}) where {T} =
-  LogisticLoss(y, X, zeros(T, length(y)), vec(sum(abs2, X; dims = 1)) / (4 * length(y)))
+MyLogisticLoss(y::Vector{T}, X::Matrix{T}) where {T} =
+  MyLogisticLoss(y, X, zeros(T, length(y)), vec(sum(abs2, X; dims = 1)) / (4 * length(y)))
 
-CoordinateDescent.numCoordinates(f::LogisticLoss) = size(f.X, 2)
+CoordinateDescent.numCoordinates(f::MyLogisticLoss) = size(f.X, 2)
 
 # coordinateDescent! calls initialize! before its first pass, and x need not
 # be zero
-function CoordinateDescent.initialize!(f::LogisticLoss, x)
+function CoordinateDescent.initialize!(f::MyLogisticLoss, x)
   f.η .= f.X * x
   nothing
 end
 
 # ∂f/∂xₖ = X[:, k]'(σ(η) - y) / n
-function CoordinateDescent.gradient(f::LogisticLoss{T}, x, k) where {T}
+function CoordinateDescent.gradient(f::MyLogisticLoss{T}, x, k) where {T}
   s = zero(T)
   @inbounds for i in eachindex(f.η)
     s += f.X[i, k] * (sigmoid(f.η[i]) - f.y[i])
@@ -54,16 +59,15 @@ end
 # a = ‖X[:, k]‖² / (4n) that touches it at x, because σ' ≤ 1/4. The step
 # minimizes that quadratic plus the penalty, a proximal step
 # x[k] ← prox(x[k] - ∂f/∂xₖ / a) with step 1/a, so it never increases the
-# objective. cdprox! applies the proximal operator of the penalty to x[k],
-# which makes the loss work with every penalty that implements it: ProxL1,
-# ProxZero, and those of 09_custom_penalty.jl.
-function CoordinateDescent.descendCoordinate!(f::LogisticLoss, g, x, k)
+# objective. prox_entry is the proximal operator of the penalty on one entry,
+# which makes the loss work with every separable penalty: NormL1,
+# ZeroFunction, ElasticNet, MCP, …, and those of 09_custom_penalty.jl.
+function CoordinateDescent.descendCoordinate!(f::MyLogisticLoss, g, x, k)
   a = f.a[k]
   old = x[k]
-  x[k] = old - CoordinateDescent.gradient(f, x, k) / a
-  cdprox!(g, x, k, 1 / a)
-  h = x[k] - old
-  if !iszero(h)                         # keep the cache current: η += h X[:, k]
+  h = prox_entry(g, old - CoordinateDescent.gradient(f, x, k) / a, k, 1 / a) - old
+  if !iszero(h)                         # write x[k], and keep the cache current: η += h X[:, k]
+    x[k] = old + h
     @inbounds for i in eachindex(f.η)
       f.η[i] += h * f.X[i, k]
     end
@@ -75,11 +79,11 @@ end
 # |Δxₖ| coordinateScale(f, k) and compared with optTol responseScale(f).
 # ‖X[:, k]‖ / √n is the root mean square change of η, and the default
 # responseScale(f) = 1 compares it with optTol on the scale of the log-odds.
-CoordinateDescent.coordinateScale(f::LogisticLoss, k) = sqrt(4 * f.a[k])
+CoordinateDescent.coordinateScale(f::MyLogisticLoss, k) = sqrt(4 * f.a[k])
 
 # the whole gradient X'(σ(η) - y) / n in one product, used by the screening
 # and to find λmax when warmStart = false
-function CoordinateDescent.fullGradient!(grad, f::LogisticLoss, x)
+function CoordinateDescent.fullGradient!(grad, f::MyLogisticLoss, x)
   mul!(grad, transpose(f.X), sigmoid.(f.η) .- f.y)
   grad ./= length(f.η)
 end
@@ -100,11 +104,11 @@ X1 = [ones(n) X]
 
 println("== One λ")
 
-f = LogisticLoss(y, X1)
+f = MyLogisticLoss(y, X1)
 λ = 0.05
 x = SparseIterate(p + 1)
 info = CDInfo()
-coordinateDescent!(x, f, ProxL1(λ, ω), CDOptions(), info)
+coordinateDescent!(x, f, NormL1(λ, ω), CDOptions(), info)
 println("selects ", findall(!iszero, x[2:end]), " in $(info.iterations) passes; intercept ", round(x[1]; digits = 2))
 
 # the solution satisfies |∂f/∂βⱼ| ≤ λωⱼ where βⱼ = 0, and ∂f/∂βⱼ = -λωⱼ sign(βⱼ)
@@ -117,7 +121,7 @@ kkt = maximum(j -> iszero(x[j]) ? max(abs(grad[j]) - λ * ω[j], 0.0) : abs(grad
 # it finds with gradient, and screens each level with the strong rule, which
 # uses fullGradient!: a user-defined loss gets both
 xp = SparseIterate(p + 1)
-coordinateDescent!(xp, f, ProxL1(λ, ω), CDOptions(; warmStart = false), info)
+coordinateDescent!(xp, f, NormL1(λ, ω), CDOptions(; warmStart = false), info)
 @printf("from zero along a path: %d passes, solutions differ by %.1e\n", info.iterations, norm(xp - x, Inf))
 
 println("\n== Choosing λ on a validation set")
@@ -137,7 +141,7 @@ CoordinateDescent.initialize!(f, x)
 println("       λ  nonzeros  validation log-loss")
 best = (Inf, 0.0)
 for λk in λmax * exp10.(range(0, -2; length = 12))
-  coordinateDescent!(x, f, ProxL1(λk, ω))
+  coordinateDescent!(x, f, NormL1(λk, ω))
   ll = logloss(x[1] .+ Xv * x[2:end], yv)
   @printf("  %6.4f  %8d  %19.4f\n", λk, count(!iszero, x[2:end]), ll)
   ll < best[1] && (global best = (ll, λk))
@@ -146,7 +150,7 @@ println("smallest validation log-loss at λ = ", round(best[2]; digits = 4))
 
 println("\n== No penalty, checked against Newton's method")
 
-# On the five relevant variables and the intercept, ProxZero() gives the
+# On the five relevant variables and the intercept, ZeroFunction() gives the
 # maximum likelihood estimate, which Newton's method also finds
 function newton(X, y; iterations = 25)
   b = zeros(size(X, 2))
@@ -158,8 +162,22 @@ function newton(X, y; iterations = 25)
 end
 Xs = X1[:, 1:6]
 xs = SparseIterate(6)
-coordinateDescent!(xs, LogisticLoss(y, Xs), ProxZero(), CDOptions(; optTol = 1e-10))
+coordinateDescent!(xs, MyLogisticLoss(y, Xs), ZeroFunction(), CDOptions(; optTol = 1e-10))
 bn = newton(Xs, y)
 println("coordinate descent ", round.(Vector(xs); digits = 3))
 println("Newton             ", round.(bn; digits = 3))
 @printf("difference %.1e\n", norm(xs - bn, Inf))
+
+println("\n== The built-in logistic loss")
+
+# (1/n) * LogisticLoss(y, X1) is the loss above. coordinateDescent! takes it
+# too, and runs ProximalOPT's coordinate descent with the same curvature bound.
+# ProximalOPT's proximal Newton instead fits a weighted lasso to a quadratic
+# model of the loss at each step, as glmnet does.
+x = SparseIterate(p + 1)
+coordinateDescent!(x, f, NormL1(λ, ω), CDOptions(; optTol = 1e-10))
+xb = SparseIterate(p + 1)
+coordinateDescent!(xb, (1 / n) * LogisticLoss(y, X1), NormL1(λ, ω), CDOptions(; optTol = 1e-10))
+xn = SparseIterate(p + 1)
+solve!(xn, (1 / n) * LogisticLoss(y, X1), NormL1(λ, ω), ProxNewton())
+@printf("built-in loss: difference %.1e; proximal Newton: difference %.1e\n", norm(xb - x, Inf), norm(xn - x, Inf))

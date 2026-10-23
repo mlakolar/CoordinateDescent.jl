@@ -110,7 +110,7 @@ println("\n== Feasible lasso for heteroscedastic noise")
 # too large for others. feasibleLasso! penalizes λ0 ∑ⱼ Γⱼ |βⱼ| with loadings
 # Γⱼ = √(∑ᵢ Xᵢⱼ² rᵢ² / n) estimated from the residuals r, alternating the lasso
 # with the update of Γ, and λ0 = 1.1 Φ⁻¹(1 - γ / (2p)) / √n with
-# γ = 0.1 / log(n). sol.penalty.λ holds the loadings.
+# γ = 0.1 / log(n). sol.penalty.w holds the loadings.
 #
 # Here the noise is large when |X[:, 6]| is large, although variable 6 does
 # not enter the mean, so its score varies more than those of the other
@@ -126,7 +126,7 @@ fit = feasibleLasso!(SparseIterate(p), X, y, λ0)
 oracle = vec(sqrt.(mean(abs2, X .* σi; dims = 1)))
 println("selects ", findall(!iszero, fit.x), " with λ0 = ", round(λ0; digits = 3))
 println("  variable j           ", join(lpad.(1:8, 6)))
-println("  loading Γⱼ           ", join(lpad.(round.(fit.penalty.λ[1:8]; digits = 2), 6)))
+println("  loading Γⱼ           ", join(lpad.(round.(fit.penalty.w[1:8]; digits = 2), 6)))
 println("  oracle loading       ", join(lpad.(round.(oracle[1:8]; digits = 2), 6)))
 
 # The options are those of the scaled lasso: the first residuals come from

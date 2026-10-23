@@ -1,11 +1,11 @@
-# Coordinate orders, Anderson acceleration (issue #9) and momentum (issue #20)
-# on the lasso
+# Coordinate orders and Anderson acceleration (issue #9) on the lasso
 #
 #     minimize  ‖y - Xβ‖² / (2n) + λ‖β‖₁,
 #
 # solved from β = 0 with the default stopping rule (optTol = 1e-7), for
-# `order = :cyclic`, `:random` and `:active` without momentum, `order = :cyclic`
-# with `anderson = 5`, and `order = :random` with `momentum = true`. The designs
+# `order = :cyclic`, `:random`, and `order = :cyclic` with `anderson = 5`.
+# Version 0.6 also had `order = :active` and momentum (issue #20), which the
+# coordinate descent of ProximalOPT does not have yet; see README.md. The designs
 # are those of common.jl, as in the lasso benchmark of ProximalOPT.jl. Prints
 # passes, times and the relative suboptimality of the solution, then the times
 # of 50-λ paths (`LassoPath`, λmax to λmax/100) and a comparison of memories K.
@@ -19,11 +19,9 @@
 include("common.jl")
 
 const SOLVERS = [          # name, options, random order
-  ("cyclic",   CDOptions(; order = :cyclic),                  false),
-  ("random",   CDOptions(; order = :random, momentum = false), true),
-  ("active",   CDOptions(; order = :active, momentum = false), true),
-  ("Anderson", CDOptions(; order = :cyclic, anderson = 5),     false),
-  ("momentum", CDOptions(; order = :random, momentum = true),  true),
+  ("cyclic",   CDOptions(; order = :cyclic),              false),
+  ("random",   CDOptions(; order = :random),              true),
+  ("Anderson", CDOptions(; order = :cyclic, anderson = 5), false),
 ]
 
 objective(X, y, β, λ) = sum(abs2, y - X * β) / (2 * size(X, 1)) + λ * sum(abs, β)
@@ -31,7 +29,7 @@ objective(X, y, β, λ) = sum(abs2, y - X * β) / (2 * size(X, 1)) + λ * sum(ab
 function solve(X, y, λ, opts)
   x = SparseIterate(size(X, 2))
   info = CDInfo()
-  coordinateDescent!(x, CDLeastSquaresLoss(y, X), ProxL1(λ), opts, info)
+  coordinateDescent!(x, CDLeastSquaresLoss(y, X), NormL1(λ), opts, info)
   x, info.iterations
 end
 
