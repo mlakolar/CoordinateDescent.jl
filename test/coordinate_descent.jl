@@ -652,10 +652,12 @@ end
   end
 
   @testset "zero solution" begin
-    # λ ≥ λmax: x stays at zero
+    # λ ≥ λmax: x stays at zero. At λmax itself the group that attains it is
+    # on the boundary, and the gradient computed in another order can exceed
+    # λmax in the last bit, so the test takes λmax (1 + √eps), as LassoPath does
     for warmStart in (true, false)
       x = AtomIterate(p, groups)
-      coordinateDescent!(x, CDLeastSquaresLoss(y, X), GroupNormL2(λmax, groups), CDOptions(; warmStart))
+      coordinateDescent!(x, CDLeastSquaresLoss(y, X), GroupNormL2(λmax * (1 + sqrt(eps())), groups), CDOptions(; warmStart))
       @test nactive(x) == 0
     end
 
