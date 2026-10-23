@@ -8,7 +8,8 @@
     CDOptions(; maxIter=100_000, optTol=1e-7, order=:random, warmStart=true,
                 numSteps=50, relativeTol=true, anderson=0, momentum=nothing)
 
-Options for [`coordinateDescent!`](@ref).
+Options for [`coordinateDescent!`](@ref) and the lasso solvers, which run the
+coordinate descent of ProximalOPT (`ProximalOPT.CDSolver`) with them.
 
 - `maxIter`: maximum number of passes over the coordinates; reaching it without
   convergence gives a warning
@@ -22,9 +23,6 @@ Options for [`coordinateDescent!`](@ref).
   - `:random`: a new random order in every pass, drawn from the global random
     number generator
   - `:cyclic`: the order `1, 2, …`
-  - `:active`: a new random order in every pass over the active set, and the
-    order `1, 2, …` in the full passes, which mostly check that the zero
-    coordinates stay at zero
   The cyclic order can be faster on some designs, but much slower when the
   columns are strongly correlated with each other. `randomize = true` and
   `randomize = false` are the same as `order = :random` and `order = :cyclic`
@@ -35,34 +33,35 @@ Options for [`coordinateDescent!`](@ref).
   user-defined ones, use the absolute rule either way
 - `anderson`: the memory `K` of Anderson acceleration, `0` for none (see
   [`coordinateDescent!`](@ref)); it needs `order = :cyclic`
-- `momentum`: Nesterov momentum on the passes over the active set (see
-  [`coordinateDescent!`](@ref)). The default, `nothing`, uses it where it is
-  known to help: with `order = :random` or `:active`, a `SparseIterate` and a
-  built-in loss. `true` asks for it with any loss, and needs `order = :random`
-  or `:active`; `false` turns it off
+- `momentum`: Nesterov momentum on the passes over the active set, the default
+  of versions 0.6. ProximalOPT's coordinate descent does not have it yet:
+  `nothing` (the default) and `false` run without it, and `true` throws an
+  `ArgumentError`
 """
 struct CDOptions
   maxIter::Int64
   optTol::Float64
-  order::Symbol             # :random, :cyclic or :active
+  order::Symbol             # :random or :cyclic
   warmStart::Bool           # when running CD, should we do path following or not
   numSteps::Int64           # when pathFollowing, how many points are there on the path
   relativeTol::Bool         # changes measured relative to the scales of the loss
   anderson::Int64           # memory of Anderson acceleration, 0 for none
-  momentum::Union{Bool, Nothing}   # Nesterov momentum; nothing uses it where it is known to help
+  momentum::Union{Bool, Nothing}   # Nesterov momentum, not available yet
 
   function CDOptions(maxIter, optTol, order::Symbol, warmStart, numSteps, relativeTol, anderson, momentum)
     o = new(maxIter, optTol, order, warmStart, numSteps, relativeTol, anderson, momentum)
     o.maxIter >= 0 || throw(ArgumentError("maxIter must be nonnegative, but it is $(o.maxIter)."))
     o.optTol >= 0 || throw(ArgumentError("optTol must be nonnegative, but it is $(o.optTol)."))
-    o.order in (:random, :cyclic, :active) ||
-      throw(ArgumentError("order must be :random, :cyclic or :active, but it is :$(o.order)."))
+    o.order === :active &&
+      throw(ArgumentError("order = :active was removed in version 0.7; use order = :random."))
+    o.order in (:random, :cyclic) ||
+      throw(ArgumentError("order must be :random or :cyclic, but it is :$(o.order)."))
     o.numSteps >= 0 || throw(ArgumentError("numSteps must be nonnegative, but it is $(o.numSteps)."))
     o.anderson >= 0 || throw(ArgumentError("anderson must be nonnegative, but it is $(o.anderson)."))
     o.anderson == 0 || o.order === :cyclic ||
       throw(ArgumentError("anderson needs order = :cyclic, since the extrapolation assumes the same order in every pass."))
-    o.momentum === true && o.order === :cyclic &&
-      throw(ArgumentError("momentum needs order = :random or :active; with the cyclic order it can stall far from the minimizer."))
+    o.momentum === true &&
+      throw(ArgumentError("momentum is not available: ProximalOPT's coordinate descent does not have it yet."))
     o
   end
 end
@@ -100,6 +99,26 @@ Base.propertynames(::CDOptions, private::Bool=false) = (fieldnames(CDOptions)...
 _withWarmStart(o::CDOptions) =
   CDOptions(o.maxIter, o.optTol, o.order, true, o.numSteps, o.relativeTol, o.anderson, o.momentum)
 
+# the coordinate descent of ProximalOPT with these options
+_solver(o::CDOptions) =
+  CDSolver(; maxpasses = o.maxIter, tol = o.optTol, order = o.order, relative = o.relativeTol,
+           anderson = o.anderson)
+
+# Minimizes f + g by the coordinate descent of ProximalOPT, from x when
+# options.warmStart is true. Otherwise x is set to zero and, for NormL1 and
+# GroupNormL2, the problem is solved along options.numSteps penalty levels from
+# λmax down to g. f is a CDModel or a loss of ProximalBase. Returns a CDResults.
+function _solve!(x, f, g, options::CDOptions)
+  s = _solver(options)
+  options.warmStart && return solve!(x, f, g, s)
+  fill!(x, zero(eltype(x)))
+  if g isa Union{NormL1, GroupNormL2} && options.numSteps > 0
+    solve!(x, f, g, s; continuation = options.numSteps)
+  else
+    solve!(x, f, g, s)
+  end
+end
+
 
 """
     CDInfo()
@@ -122,6 +141,14 @@ mutable struct CDInfo
 end
 
 CDInfo() = CDInfo(0, false, NaN, NaN)
+
+function _record!(info::CDInfo, r::CDResults)
+  info.iterations = r.passes
+  info.converged = r.converged
+  info.maxChange = r.maxchange
+  info.tolerance = r.tolerance
+  info
+end
 
 
 """

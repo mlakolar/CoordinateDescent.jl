@@ -47,7 +47,7 @@ Random.seed!(1)
       beta = lasso(X, Y, 1., λ, CDOptions(;optTol=1e-12))
 
       f = CDQuadraticLoss(X'X/n, -X'Y/n)
-      g = ProximalBase.ProxL1(1., λ)
+      g = NormL1(1., λ)
       x1 = SparseIterate( p )
       coordinateDescent!(x1, f, g, CDOptions(;optTol=1e-12))
       @test beta.x ≈ x1 atol=1e-5
@@ -85,7 +85,7 @@ end
     β = randn(s)
     Y = X[:,1:s] * β + 0.1 * randn(n)
 
-    g = ProximalBase.ProxL1(0.2)
+    g = NormL1(0.2)
     f1 = CDQuadraticLoss(X'X/n, -X'Y/n)
     f2 = CDLeastSquaresLoss(Y, X)
 
@@ -115,7 +115,7 @@ end
       Y = X[:,1:s] * β + randn(n)
 
       λ = 2.8
-      g = ProximalBase.ProxL1(λ)
+      g = NormL1(λ)
       f = CDSqrtLassoLoss(Y, X)
 
       x1 = SparseIterate(p)
@@ -146,7 +146,7 @@ end
       x4 = SparseIterate(sprand(p, 0.6))
 
       λ = 1.5
-      g = ProximalBase.ProxL1(λ)
+      g = NormL1(λ)
       f = CDSqrtLassoLoss(Y, X)
 
       coordinateDescent!(x1, f, g, opt1)
@@ -237,7 +237,7 @@ end
   sol = sqrtLasso(X, Y, λ, CDOptions(;maxIter=5000, optTol=1e-10))
   stdX = vec(sqrt.(sum(abs2, X, dims=1) / n))
   r = Y - X*sol.x
-  @test sol.penalty.λ ≈ stdX
+  @test sol.penalty.w ≈ stdX
   @test maximum(abs.(X'*r) ./ (norm(r) * λ * stdX)) ≈ 1. atol=1e-4
 end
 
@@ -268,10 +268,10 @@ end
     # the loadings are Γ_j = sqrt(∑ X_ij^2 r_i^2 / n) evaluated at the solution
     r = Y - X*sol.x
     Γ = vec(sqrt.(sum(abs2, X .* r, dims=1) / n))
-    @test sol.penalty.λ ≈ Γ rtol=1e-3
+    @test sol.penalty.w ≈ Γ rtol=1e-3
 
     # KKT for the final penalty
-    @test maximum(abs.(X'*r / n) ./ (λ0 * sol.penalty.λ)) ≈ 1. atol=1e-6
+    @test maximum(abs.(X'*r / n) ./ (λ0 * sol.penalty.w)) ≈ 1. atol=1e-6
   end
 
   @test_throws ArgumentError feasibleLasso!(SparseIterate(p), X, Y, λ0, IterLassoOptions(;initProcedure=:Foo))
@@ -430,7 +430,7 @@ end
   @test all(nnz(β) == count(!iszero, β) > 0 for β in path.βpath)   # no stored zeros
   @test Base.summarysize(path.βpath) < 10_000                       # dense: 1.4 MB
   x = SparseIterate(p)
-  coordinateDescent!(x, CDLeastSquaresLoss(Y, X), ProximalBase.ProxL1(0.5 * λmax), opt)
+  coordinateDescent!(x, CDLeastSquaresLoss(Y, X), NormL1(0.5 * λmax), opt)
   @test Vector(path.βpath[end]) ≈ Vector(x) atol=1e-6
 end
 
@@ -460,7 +460,7 @@ end
   @test Vector(lasso(X, Y, λ, ω, opt; intercept=true).x) ≈ Vector(lasso(Xc, Yc, λ, ω, opt).x) atol=1e-8
   sd = vec(std(X, dims=1, corrected=false))
   sol = lasso(X, Y, λ, opt; intercept=true, standardizeX=true)
-  @test sol.penalty.λ ≈ sd
+  @test sol.penalty.w ≈ sd
   @test Vector(sol.x) ≈ Vector(lasso(Xc, Yc, λ, sd, opt).x) atol=1e-8
 
   opt = CDOptions(;optTol=1e-10)
@@ -480,7 +480,7 @@ end
     f1 = feasibleLasso!(SparseIterate(p), X, Y, λ, iopt; intercept=true)
     f2 = feasibleLasso!(SparseIterate(p), Xc, Yc, λ, iopt)
     @test Vector(f1.x) ≈ Vector(f2.x) atol=1e-6
-    @test f1.penalty.λ ≈ f2.penalty.λ rtol=1e-6
+    @test f1.penalty.w ≈ f2.penalty.w rtol=1e-6
   end
 end
 

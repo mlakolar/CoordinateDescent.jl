@@ -104,7 +104,8 @@ function locpolyl1(
   refit::Bool,
   options::CDOptions=CDOptions()) where {T <: AbstractFloat}
 
-  # the weighted loss below does not check its data, which it reads in place
+  # the weighted loss below checks its data only when it is built, and then
+  # reads it in place
   _check_finite(X, "X")
   _check_finite(z, "z")
   _check_finite(y, "y")
@@ -120,13 +121,12 @@ function locpolyl1(
   out = spzeros(T, ep, length(zgrid))
   outR = spzeros(T, ep, length(zgrid))
 
-  # temporary storage
-  w = Array{T}(undef, n)
-  expandX = Array{T}(undef, n, ep)
+  # temporary storage, initialized since the loss and the penalty check it
+  w = zeros(T, n)
+  expandX = zeros(T, n, ep)
   S = BitArray(undef, ep)
-  stdX = Array{T}(undef, ep)
-  f = CDWeightedLSLoss(y, expandX, w)        # inner parts of f will be modified in a loop
-  g = ProxL1(λ0, stdX)
+  stdX = zeros(T, ep)
+  m = CDWeightedLSLoss(y, expandX, w)        # reads expandX and w, which change in the loop
   β = SparseIterate(T, ep)
 
   ind = 0
@@ -139,7 +139,7 @@ function locpolyl1(
     _stdX!(stdX, w, expandX)
 
     # solve for β
-    coordinateDescent!(β, f, g, opt)
+    _solve!(β, m, NormL1(λ0, stdX), opt)
     out[:, ind] = β
 
     if refit
@@ -173,7 +173,8 @@ function lvocv_locpolyl1(
     λ0::T,
     options::CDOptions=CDOptions()) where {T <: AbstractFloat}
 
-    # the weighted loss below does not check its data, which it reads in place
+    # the weighted loss below checks its data only when it is built, and then
+    # reads it in place
     _check_finite(X, "X")
     _check_finite(z, "z")
     _check_finite(y, "y")
@@ -185,13 +186,22 @@ function lvocv_locpolyl1(
     opt = _withWarmStart(options)
 
     ep = p * (degree + 1)
-    w = Array{T}(undef, n)
-    wX = Array{T}(undef, n, ep)
-    stdX = Array{T}(undef, ep)
+    w = zeros(T, n)
+    wX = zeros(T, n, ep)
+    stdX = zeros(T, ep)
+    r0 = Vector{T}(undef, n)
     S = BitArray(undef, ep)
 
-    f = CDWeightedLSLoss(y, wX, w)
+    m = CDWeightedLSLoss(y, wX, w)             # reads wX and w, which change in the loop
+    solver = _solver(opt)
     β = SparseIterate(T, ep)
+    σcur = Ref(zero(T))
+    function update(g, β, m)
+      σnew = _getSigma(w, residuals(m))
+      change = abs(σnew - σcur[]) / σcur[]
+      σcur[] = σnew
+      NormL1(λ0 * σnew, stdX), change
+    end
 
     for indH = 1:numH
         kernel = createKernel(kernelType, hArr[indH])
@@ -202,20 +212,11 @@ function lvocv_locpolyl1(
             w[i] = zero(T)
             _expand_X!(wX, X, z, z0, degree)
             _stdX!(stdX, w, wX)
-            _findInitResiduals!(w, wX, y, min(10, ep), f.r)
+            _findInitResiduals!(w, wX, y, min(10, ep), r0)
 
             # alternate between the lasso fit and the noise level
-            σ = _getSigma(w, f.r)
-            g = ProxL1(λ0 * σ, stdX)
-            for iter=1:10
-              coordinateDescent!(β, f, g, opt)
-              σnew = _getSigma(w, f.r)
-              if abs(σnew - σ) / σ < 1e-2
-                break
-              end
-              σ = σnew
-              g = ProxL1(λ0 * σ, stdX)
-            end
+            σcur[] = _getSigma(w, r0)
+            reweight!(β, m, NormL1(λ0 * σcur[], stdX), update, solver; maxiter = 10, tol = 1e-2)
 
             # refit and make prediction
             get_nonzero_coordinates!(S, β, p, degree, true)

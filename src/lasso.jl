@@ -13,7 +13,7 @@ Result returned by [`lasso`](@ref), [`sqrtLasso`](@ref),
 # Fields
 - `x::SparseIterate`: the estimated coefficients
 - `residuals::Vector`: `y - intercept - X * x`
-- `penalty::ProxL1`: the penalty at which `x` was computed
+- `penalty::NormL1`: the penalty at which `x` was computed
 - `σ`: an estimate of the noise level (see the documentation of each solver),
   or `nothing`
 - `iterations::Int`: passes of coordinate descent over the coordinates, summed
@@ -33,14 +33,34 @@ struct LassoSolution{T, S}
   converged::Bool
   intercept::T
 
-  LassoSolution{T, S}(x::SparseIterate{T}, residuals::AbstractVector{T}, penalty::ProxL1{T}, σ::T,
+  LassoSolution{T, S}(x::SparseIterate{T}, residuals::AbstractVector{T}, penalty::NormL1{T}, σ::T,
                       iterations::Integer, converged::Bool, intercept::T) where {T, S} =
     new(x, residuals, penalty, σ, iterations, converged, intercept)
 end
 
-# the penalty loadings of standardized columns: the standard deviations of the
-# columns, centered when f fits an intercept
-_loadings(f::CoordinateDifferentiableFunction) = [coordinateScale(f, k) for k in 1:numCoordinates(f)]
+# the penalty loadings of standardized columns: the standard deviations
+# sqrt(∑ᵢ (Xᵢⱼ - x̄ⱼ)² / n) of the columns, centered at their means x̄ⱼ with an
+# intercept and at zero otherwise
+function _loadings(X::AbstractMatrix{T}, intercept::Bool) where {T}
+  n, p = size(X)
+  xbar = intercept ? _column_means(X) : zeros(T, p)
+  ω = Vector{T}(undef, p)
+  @inbounds for k in 1:p
+    c = xbar[k]
+    a = zero(T)
+    @simd for i in 1:n
+      a += (X[i, k] - c) * (X[i, k] - c)
+    end
+    ω[k] = sqrt(a / n)
+  end
+  ω
+end
+
+# the solution of a lasso fit by the model m at the penalty g
+function _lassoSolution(x::SparseIterate{T}, m, g, r::CDResults) where {T}
+  res = residuals(m)
+  LassoSolution{T, typeof(g)}(x, res, g, std(res), r.passes, r.converged, ProximalOPT.intercept(m, x))
+end
 
 
 ######################################################################
@@ -74,12 +94,9 @@ function lasso(
   standardizeX::Bool=false) where {T<:AbstractFloat}
 
   x = SparseIterate(T, size(X, 2))
-  f = CDLeastSquaresLoss(y, X; intercept)
-  g = standardizeX ? ProxL1(λ, _loadings(f)) : ProxL1(λ)
-  info = CDInfo()
-  coordinateDescent!(x, f, g, options, info)
-
-  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), info.iterations, info.converged, _intercept(f, x))
+  m = CDLeastSquaresLoss(y, X; intercept)
+  g = standardizeX ? NormL1(λ, _loadings(X, intercept)) : NormL1(λ)
+  _lassoSolution(x, m, g, _solve!(x, m, g, options))
 end
 
 function lasso(
@@ -91,12 +108,9 @@ function lasso(
   intercept::Bool=false) where {T<:AbstractFloat}
 
   x = SparseIterate(T, size(X, 2))
-  f = CDLeastSquaresLoss(y, X; intercept)
-  g = ProxL1(λ, ω)
-  info = CDInfo()
-  coordinateDescent!(x, f, g, options, info)
-
-  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), info.iterations, info.converged, _intercept(f, x))
+  m = CDLeastSquaresLoss(y, X; intercept)
+  g = NormL1(λ, ω)
+  _lassoSolution(x, m, g, _solve!(x, m, g, options))
 end
 
 function lasso(X::StridedMatrix{<:Real}, y::StridedVector{<:Real}, λ::Real,
@@ -141,12 +155,9 @@ function sqrtLasso(
   standardizeX::Bool=true) where {T<:AbstractFloat}
 
   x = SparseIterate(T, size(X, 2))
-  f = CDSqrtLassoLoss(y, X; intercept)
-  g = standardizeX ? ProxL1(λ, _loadings(f)) : ProxL1(λ)
-  info = CDInfo()
-  coordinateDescent!(x, f, g, options, info)
-
-  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), info.iterations, info.converged, _intercept(f, x))
+  m = CDSqrtLassoLoss(y, X; intercept)
+  g = standardizeX ? NormL1(λ, _loadings(X, intercept)) : NormL1(λ)
+  _lassoSolution(x, m, g, _solve!(x, m, g, options))
 end
 
 function sqrtLasso(
@@ -158,12 +169,9 @@ function sqrtLasso(
   intercept::Bool=false) where {T<:AbstractFloat}
 
   x = SparseIterate(T, size(X, 2))
-  f = CDSqrtLassoLoss(y, X; intercept)
-  g = ProxL1(λ, ω)
-  info = CDInfo()
-  coordinateDescent!(x, f, g, options, info)
-
-  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), info.iterations, info.converged, _intercept(f, x))
+  m = CDSqrtLassoLoss(y, X; intercept)
+  g = NormL1(λ, ω)
+  _lassoSolution(x, m, g, _solve!(x, m, g, options))
 end
 
 function sqrtLasso(X::StridedMatrix{<:Real}, y::StridedVector{<:Real}, λ::Real,
@@ -195,12 +203,14 @@ noise level jointly. It alternates between the lasso
     β̂ = argmin  ‖y - β₀ - Xβ‖² / (2n) + λ σ̂ ∑ⱼ ωⱼ |βⱼ|
 
 and the update `σ̂ = ‖y - β̂₀ - Xβ̂‖ / √n` until the relative change in `σ̂` is
-below `options.optTol`, or warns after `options.maxIter` iterations. The
-intercept `β₀` is not penalized, and it is zero unless `intercept` is true.
+below `options.optTol` (by `ProximalOPT.reweight!`), or warns after
+`options.maxIter` iterations. The intercept `β₀` is not penalized, and it is
+zero unless `intercept` is true.
 
 The initial `σ̂` is chosen by `options.initProcedure` (see
 [`IterLassoOptions`](@ref)). `scaledLasso!` starts coordinate descent from and
-overwrites `x`. Returns a [`LassoSolution`](@ref) whose `σ` is the final noise
+overwrites `x`, and each lasso fit is warm started from the previous one.
+Returns a [`LassoSolution`](@ref) whose `σ` is the final noise
 estimate `‖y - Xβ̂‖ / √n`.
 """
 function scaledLasso!(
@@ -214,38 +224,42 @@ function scaledLasso!(
   )  where {T<:AbstractFloat}
 
   n = size(X, 1)
-  f = CDLeastSquaresLoss(y, X; intercept)
+  m = CDLeastSquaresLoss(y, X; intercept)
 
   # initialize σ; IterLassoOptions allows only these three procedures
   if options.initProcedure == :Screening
-    σ = _findInitSigma!(X, y, options.sinit, f.r; intercept)
+    σ = _findInitSigma!(X, y, options.sinit, Vector{T}(undef, n); intercept)
   elseif options.initProcedure == :InitStd
-    σ = options.σinit
+    σ = T(options.σinit)
   else    # :WarmStart
-    initialize!(f, x)
-    σ = sqrt( sum(abs2, f.r) / n )      # as in the update, so a solution is a fixed point
+    ProximalOPT.initialize!(m, x)
+    σ = sqrt( sum(abs2, residuals(m)) / n )      # as in the update, so a solution is a fixed point
   end
 
-  g = ProxL1(λ * σ, ω)
-  info = CDInfo()
-  iterations, σconverged, change = 0, false, NaN
-  for iter=1:options.maxIter
-    coordinateDescent!(x, f, g, options.optionsCD, info)
-    iterations += info.iterations
-    σnew = sqrt( sum(abs2, f.r) / n )
-
-    change = abs(σnew - σ) / σ
-    if change < options.optTol
-      σconverged = true
-      break
-    end
-    σ = σnew
-    g = ProxL1(λ * σ, ω)
+  # alternate the lasso at λσ with the update of σ from its residuals
+  σcur = Ref(σ)
+  function update(g, x, m)
+    σnew = sqrt( sum(abs2, residuals(m)) / n )
+    change = abs(σnew - σcur[]) / σcur[]
+    σcur[] = σnew
+    NormL1(λ * σnew, ω), change
   end
-  σconverged || @warn "scaledLasso! did not converge in maxIter = $(options.maxIter) iterations (relative change of the noise level in the last iteration $(round(change; sigdigits = 3)) > optTol = $(options.optTol)). Increase maxIter in IterLassoOptions."
+  res = _reweight!(x, m, NormL1(λ * σ, ω), update, options)
+  res.converged || @warn "scaledLasso! did not converge in maxIter = $(options.maxIter) iterations (relative change of the noise level in the last iteration $(round(res.change; sigdigits = 3)) > optTol = $(options.optTol)). Increase maxIter in IterLassoOptions."
 
-  LassoSolution{T, typeof(g)}(x, f.r, g, sqrt( sum(abs2, f.r) / n ), iterations, σconverged && info.converged,
-                              _intercept(f, x))
+  r = residuals(m)
+  LassoSolution{T, typeof(res.penalty)}(x, r, res.penalty, sqrt( sum(abs2, r) / n ), res.passes,
+                                        res.converged && res.cd_converged, ProximalOPT.intercept(m, x))
+end
+
+# reweight! with the options of the iterative procedures, warm starting each
+# lasso fit from the previous one; with maxIter = 0 there is no fit
+function _reweight!(x, m, g, update, options::IterLassoOptions)
+  if options.maxIter == 0
+    ProximalOPT.initialize!(m, x)
+    return ReweightResults(x, g, g, 0, false, NaN, 0, true)
+  end
+  reweight!(x, m, g, update, _solver(options.optionsCD); maxiter = options.maxIter, tol = options.optTol)
 end
 
 scaledLasso!(
@@ -298,16 +312,17 @@ lasso
 
 and the update of the loadings `Γⱼ = sqrt(∑ᵢ (Xᵢⱼ - x̄ⱼ)² rᵢ² / n)` from the
 residuals `r = y - β̂₀ - Xβ̂`, until the relative change in `Γ` is below
-`options.optTol`, or warns after `options.maxIter` iterations. The intercept
-`β₀` is not penalized; it and the column means `x̄ⱼ` are zero unless
-`intercept` is true.
+`options.optTol` (by `ProximalOPT.reweight!`), or warns after
+`options.maxIter` iterations. The intercept `β₀` is not penalized; it and the
+column means `x̄ⱼ` are zero unless `intercept` is true.
 
 The initial residuals are chosen by `options.initProcedure` (see
 [`IterLassoOptions`](@ref)); with `:InitStd` they come from a lasso with
 penalty `λ0 σinit ∑ⱼ sⱼ |βⱼ|`, `sⱼ = sqrt(∑ᵢ (Xᵢⱼ - x̄ⱼ)² / n)`. Coordinate descent
-starts from and overwrites `x`. Returns a [`LassoSolution`](@ref) whose
-`penalty.λ` holds the loadings and whose `σ` is the sample standard deviation of
-the residuals.
+starts from and overwrites `x`, and each lasso fit is warm started from the
+previous one. Returns a [`LassoSolution`](@ref) whose `penalty.w` holds the
+loadings of the last fit and whose `σ` is the sample standard deviation of the
+residuals.
 """
 function feasibleLasso!(
   x::SparseIterate{T},
@@ -318,46 +333,37 @@ function feasibleLasso!(
   intercept::Bool=false
   )  where {T<:AbstractFloat}
 
-  p = size(X, 2)
-  f = CDLeastSquaresLoss(y, X; intercept)
-  Γ = Array{T}(undef, p)              # stores loadings
-  Γold = Array{T}(undef, p)
+  n, p = size(X)
+  m = CDLeastSquaresLoss(y, X; intercept)
+  xbar = intercept ? _column_means(X) : zeros(T, p)
+  passes, cd_converged = 0, true
 
-  info = CDInfo()
-  iterations = 0
-
-  # initialize residuals; IterLassoOptions allows only these three procedures
+  # initial residuals; IterLassoOptions allows only these three procedures
   if options.initProcedure == :Screening
-    _findInitResiduals!(X, y, options.sinit, f.r; intercept)
+    r0 = _findInitResiduals!(X, y, options.sinit, Vector{T}(undef, n); intercept)
   elseif options.initProcedure == :InitStd
-    σ = options.σinit
-    Γ .= _loadings(f)
-    coordinateDescent!(x, f, ProxL1(λ0*σ, Γ), options.optionsCD, info)
-    iterations += info.iterations
+    σ = T(options.σinit)
+    r = _solve!(x, m, NormL1(λ0 * σ, _loadings(X, intercept)), options.optionsCD)
+    passes, cd_converged = r.passes, r.converged
+    r0 = residuals(m)
   else    # :WarmStart
-    initialize!(f, x)
+    ProximalOPT.initialize!(m, x)
+    r0 = residuals(m)
   end
-  _getLoadings!(Γ, X, f.r, f.xbar)
 
-  # g holds a reference to Γ, so updating Γ in place updates the penalty
-  g = ProxL1(λ0, Γ)
-  Γconverged, change = false, NaN
-  for iter=1:options.maxIter
-    copyto!(Γold, Γ)
-
-    coordinateDescent!(x, f, g, options.optionsCD, info)
-    iterations += info.iterations
-    _getLoadings!(Γ, X, f.r, f.xbar)
-
-    change = maximum(abs.(Γold  - Γ)) / maximum(Γ)
-    if change < options.optTol
-      Γconverged = true
-      break
-    end
+  # alternate the lasso with loadings Γ with the update of Γ from its residuals
+  Γ = _getLoadings!(Vector{T}(undef, p), X, r0, xbar)
+  function update(g, x, m)
+    Γnew = _getLoadings!(Vector{T}(undef, p), X, residuals(m), xbar)
+    NormL1(λ0, Γnew), maximum(abs.(g.w .- Γnew)) / maximum(Γnew)
   end
-  Γconverged || @warn "feasibleLasso! did not converge in maxIter = $(options.maxIter) iterations (relative change of the penalty loadings in the last iteration $(round(change; sigdigits = 3)) > optTol = $(options.optTol)). Increase maxIter in IterLassoOptions."
+  res = _reweight!(x, m, NormL1(λ0, Γ), update, options)
+  res.converged || @warn "feasibleLasso! did not converge in maxIter = $(options.maxIter) iterations (relative change of the penalty loadings in the last iteration $(round(res.change; sigdigits = 3)) > optTol = $(options.optTol)). Increase maxIter in IterLassoOptions."
 
-  LassoSolution{T, typeof(g)}(x, f.r, g, std(f.r), iterations, Γconverged && info.converged, _intercept(f, x))
+  r = residuals(m)
+  LassoSolution{T, typeof(res.penalty)}(x, r, res.penalty, std(r), passes + res.passes,
+                                        res.converged && res.cd_converged && cd_converged,
+                                        ProximalOPT.intercept(m, x))
 end
 
 feasibleLasso!(
@@ -385,7 +391,7 @@ Lasso solutions `β0path[k]` and `βpath[k]` of
     minimize  ‖y - β₀ - Xβ‖² / (2n) + λpath[k] ∑ⱼ ωⱼ |βⱼ|
 
 along a decreasing sequence `λpath`, each one warm started from the previous
-solution. The intercept `β₀` is not penalized, and it is zero unless
+solution, by `ProximalOPT.solve_path`. The intercept `β₀` is not penalized, and it is zero unless
 `intercept` is true. The loadings are the standard deviations
 `ωⱼ = sqrt(∑ᵢ (Xᵢⱼ - x̄ⱼ)² / n)` of the columns when `standardizeX` is true
 (centered only with an intercept) and `ωⱼ = 1` otherwise.
@@ -401,8 +407,8 @@ sequential strong rule of Tibshirani et al. (2012), and the optimality
 conditions of the others are checked afterwards; coordinates that violate them
 are added and the problem solved again. `kktChecks[k]` is the number of checks
 at `λpath[k]`: one when the rule kept every coordinate it should have, zero
-without screening. Screening needs warm starts, so it is off when
-`options.warmStart` is false.
+without screening. When `options.warmStart` is false, each value is solved
+from zero along its own path of `options.numSteps` levels, without screening.
 
 The path stops early, after the first solution with more than `max_hat_s`
 nonzero coefficients; the returned `λpath` then contains only the values that
@@ -460,45 +466,32 @@ function LassoPath(
   all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
   p = size(X, 2)
   x = SparseIterate(T, p)
-  f = CDLeastSquaresLoss(Y, X; intercept)
-  stdX = standardizeX ? _loadings(f) : ones(T, p)
+  m = CDLeastSquaresLoss(Y, X; intercept)
+  ω = standardizeX ? _loadings(X, intercept) : ones(T, p)
+  options.warmStart || return _coldLassoPath(x, m, ω, λpath, options, max_hat_s, intercept)
 
-  screen = screening && options.warmStart
-  if screen
-    initialize!(f, x)
-    coef_iterator = _passIterator(x, options)
-    grad = Vector{T}(undef, p)
-    fullGradient!(grad, f, x)
-    inS = falses(p)
-    λprev = _findLambdaMax(x, f, ProxL1(one(T), stdX))
-  end
-
-  βpath = Vector{SparseVector{T, Int}}()
   β0path = T[]
-  iterations, converged, kktChecks = Int[], Bool[], Int[]
-  info = CDInfo()
-  for λ in λpath
-    g = ProxL1(λ, stdX)
-    if screen
-      initialize!(f, x)       # no drift of the residuals along the path
-      checks = _screenedSolve!(x, f, g, λprev, grad, coef_iterator, options, info, inS)
-      _warn_not_converged(info, options)
-      λprev = λ
-    else
-      coordinateDescent!(x, f, g, options, info)
-      checks = 0
-    end
-    push!(βpath, _sparsevec(x))
-    push!(β0path, _intercept(f, x))
-    push!(iterations, info.iterations)
-    push!(converged, info.converged)
-    push!(kktChecks, checks)
-    if nnz(x) > max_hat_s
-      break
-    end
-  end
+  path = solve_path(m, NormL1(one(T), ω), λpath, _solver(options); x, screening, maxnnz = max_hat_s,
+                    callback = (k, λ, x, m) -> (push!(β0path, ProximalOPT.intercept(m, x)); false))
+  LassoPath{T}(path.λ, path.solutions, β0path, path.passes, path.converged, path.kkt_checks, intercept)
+end
 
-  LassoPath{T}(λpath[1:length(βpath)], βpath, β0path, iterations, converged, kktChecks, intercept)
+# the path with warmStart = false: each level solved from zero along its own
+# path of options.numSteps levels, without screening
+function _coldLassoPath(x::SparseIterate{T}, m, ω, λpath::Vector{T}, options::CDOptions, max_hat_s,
+                        intercept::Bool) where {T}
+  βpath = SparseVector{T, Int}[]
+  β0path, iterations, converged = T[], Int[], Bool[]
+  for λ in λpath
+    r = _solve!(x, m, NormL1(λ, ω), options)
+    push!(βpath, _sparsevec(x))
+    push!(β0path, ProximalOPT.intercept(m, x))
+    push!(iterations, r.passes)
+    push!(converged, r.converged)
+    nnz(x) > max_hat_s && break
+  end
+  k = length(βpath)
+  LassoPath{T}(λpath[1:k], βpath, β0path, iterations, converged, zeros(Int, k), intercept)
 end
 
 function LassoPath(
@@ -514,11 +507,9 @@ function LassoPath(
   nλ >= 1 || throw(ArgumentError("nλ must be positive"))
   0 < λminratio <= 1 || throw(ArgumentError("λminratio must be in (0, 1]"))
   p = size(X, 2)
-  f = CDLeastSquaresLoss(Y, X; intercept)
-  ω = standardizeX ? _loadings(f) : ones(T, p)
-  x = SparseIterate(T, p)
-  initialize!(f, x)
-  λmax = _findLambdaMax(x, f, ProxL1(one(T), ω)) * (1 + sqrt(eps(T)))
+  m = CDLeastSquaresLoss(Y, X; intercept)
+  ω = standardizeX ? _loadings(X, intercept) : ones(T, p)
+  λmax = lambda_max(m, NormL1(one(T), ω), SparseIterate(T, p)) * (1 + sqrt(eps(T)))
   λpath = nλ == 1 ? [λmax] : [λmax * T(λminratio)^(T(k) / (nλ - 1)) for k in 0:nλ-1]
   LassoPath(X, Y, λpath, options; standardizeX, intercept, kwargs...)
 end
