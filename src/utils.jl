@@ -269,6 +269,19 @@ function _float_data(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real})
   T, convert(AbstractMatrix{T}, X), convert(AbstractVector{T}, y)
 end
 
+# The design matrix as coordinate descent reads it, column by column: a strided
+# matrix (a Matrix, or a view of a range of rows or of some columns) or a
+# SparseMatrixCSC as it is, and any other matrix (a transpose, a view of
+# selected rows, …) copied once, into a SparseMatrixCSC if it is sparse and into
+# a Matrix otherwise
+_design(X::Union{StridedMatrix, SparseMatrixCSC}) = X
+_design(X::AbstractMatrix) = issparse(X) ? sparse(X) : Matrix(X)
+
+# the response as the losses read it: a strided vector as it is, any other
+# vector (a range, a view of selected entries, a SparseVector, …) copied once
+_response(y::StridedVector) = y
+_response(y::AbstractVector) = Vector(y)
+
 
 # NaN or Inf in the data would give a meaningless solution that is reported as
 # converged: shrinking a NaN gives zero, so a coordinate with a NaN gradient
@@ -285,6 +298,29 @@ function _column_means(X::AbstractMatrix{T}) where {T}
   for k in axes(X, 2)
     c = X[1, k]
     all(==(c), view(X, :, k)) && (xbar[k] = c)
+  end
+  xbar
+end
+
+# the same over the stored entries: a column is constant when it is all zero
+# (whatever it stores) or stores n equal values
+function _column_means(X::SparseMatrixCSC{T}) where {T}
+  n, p = size(X)
+  xbar = zeros(T, p)
+  n > 0 || return xbar
+  vals = nonzeros(X)
+  for k in 1:p
+    r = nzrange(X, k)
+    a = zero(T)
+    for j in r
+      a += vals[j]
+    end
+    xbar[k] = a / n
+    if all(j -> iszero(vals[j]), r)
+      xbar[k] = zero(T)
+    elseif length(r) == n && all(j -> vals[j] == vals[first(r)], r)
+      xbar[k] = vals[first(r)]
+    end
   end
   xbar
 end
@@ -312,11 +348,11 @@ function _findInitResiduals!(
 
   if intercept
     S = _findLargestCorrelations(X, y .- mean(y), s)
-    Z = [ones(T, length(y)) X[:, S]]
+    Z = [ones(T, length(y)) Matrix(X[:, S])]
     mul!(storage, Z, Z \ y)
   else
     S = _findLargestCorrelations(X, y, s)
-    Xs = view(X, :, S)
+    Xs = issparse(X) ? Matrix(X[:, S]) : view(X, :, S)
     mul!(storage, Xs, Xs \ y)
   end
   @. storage = y - storage
@@ -417,6 +453,25 @@ function _getLoadings!(out::Vector{T}, X::AbstractMatrix{T}, e::AbstractVector{T
       v += abs2((X[i, j] - c) * e[i])
     end
     out[j] = sqrt(v / n)
+  end
+  out
+end
+
+# the same over the stored entries: the entries that are not stored contribute
+# (x̄[j] e[i])², which is x̄[j]² ∑ᵢ e[i]² less what the stored rows took
+function _getLoadings!(out::Vector{T}, X::SparseMatrixCSC{T}, e::AbstractVector{T},
+                       xbar::AbstractVector{T}=zeros(T, size(X, 2))) where {T <: AbstractFloat}
+  n, p = size(X)
+  rows, vals = rowvals(X), nonzeros(X)
+  E2 = sum(abs2, e)
+  @inbounds for j=1:p
+    c = xbar[j]
+    v = c * c * E2
+    for k in nzrange(X, j)
+      i = rows[k]
+      v += abs2((vals[k] - c) * e[i]) - abs2(c * e[i])
+    end
+    out[j] = sqrt(max(v, zero(T)) / n)
   end
   out
 end

@@ -65,6 +65,16 @@ function evaluate(k::EpanechnikovKernel{T}, x::T, y::T) where {T <: AbstractFloa
     abs(u) >= 1 ? zero(T) : T(0.75) * (1 - abs2(u)) / k.h
 end
 
+# the kernel, and the kernel type, with a bandwidth of type T, for the methods
+# that convert the data to T
+_kernel(::Type{T}, k::GaussianKernel) where {T} = GaussianKernel{T}(T(k.h))
+_kernel(::Type{T}, k::EpanechnikovKernel) where {T} = EpanechnikovKernel{T}(T(k.h))
+_kernel(::Type{T}, k::SmoothingKernel) where {T} =
+  k isa SmoothingKernel{T} ? k : throw(ArgumentError("the kernel has a bandwidth of type $(typeof(k).parameters[1]), but the data are $T."))
+_kerneltype(::Type{T}, ::Type{<:GaussianKernel}) where {T} = GaussianKernel{T}
+_kerneltype(::Type{T}, ::Type{<:EpanechnikovKernel}) where {T} = EpanechnikovKernel{T}
+_kerneltype(::Type{T}, K::Type{<:SmoothingKernel}) where {T} = K
+
 
 ############################################################
 #
@@ -94,6 +104,10 @@ column `k` of `BR` holds the weighted least squares refit on the selected
 variables (all `degree + 1` coefficients of a variable are refit when any of
 them is nonzero, and the refit of minimum norm is taken when it is not
 unique); otherwise `BR` is zero.
+
+`X`, `z`, `y` and `zgrid` can be arrays of any type with real entries, such as
+views or ranges; they are converted to the floating point type of `X`, `z` and
+`y`, and so are the kernel and `λ0`.
 """
 function locpolyl1(
   X::Matrix{T}, z::Vector{T}, y::Vector{T},
@@ -150,6 +164,20 @@ function locpolyl1(
   out, outR
 end
 
+function locpolyl1(
+  X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
+  zgrid::AbstractVector{<:Real},
+  degree::Integer,
+  kernel::SmoothingKernel,
+  λ0::Real,
+  refit::Bool,
+  options::CDOptions=CDOptions())
+
+  T = float(promote_type(eltype(X), eltype(z), eltype(y)))
+  locpolyl1(convert(Matrix{T}, X), convert(Vector{T}, z), convert(Vector{T}, y), convert(Vector{T}, zgrid),
+            Int64(degree), _kernel(T, kernel), T(λ0), refit, options)
+end
+
 """
     lvocv_locpolyl1(X, z, y, degree, hArr, KernelType, λ0, options=CDOptions())
 
@@ -164,6 +192,9 @@ norm when it is not unique, and used to predict `yᵢ`. As in `locpolyl1`, `λ0`
 is on the scale of the kernel.
 
 Returns the vector of summed squared prediction errors, one per bandwidth.
+As for `locpolyl1`, the data can be arrays of any type with real entries.
+`KernelType` can be given with or without its parameter, as
+`GaussianKernel{Float64}` or `GaussianKernel`.
 """
 function lvocv_locpolyl1(
     X::Matrix{T}, z::Vector{T}, y::Vector{T},
@@ -204,7 +235,7 @@ function lvocv_locpolyl1(
     end
 
     for indH = 1:numH
-        kernel = createKernel(kernelType, hArr[indH])
+        kernel = createKernel(_kerneltype(T, kernelType), hArr[indH])
         for i = 1:n
             # update variables
             z0 = z[i]
@@ -225,6 +256,19 @@ function lvocv_locpolyl1(
         end
     end
     MSE
+end
+
+function lvocv_locpolyl1(
+    X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
+    degree::Integer,
+    hArr::AbstractVector{<:Real},
+    kernelType::Type{<:SmoothingKernel},
+    λ0::Real,
+    options::CDOptions=CDOptions())
+
+    T = float(promote_type(eltype(X), eltype(z), eltype(y)))
+    lvocv_locpolyl1(convert(Matrix{T}, X), convert(Vector{T}, z), convert(Vector{T}, y), Int64(degree),
+                    convert(Vector{T}, hArr), _kerneltype(T, kernelType), T(λ0), options)
 end
 
 """
@@ -291,6 +335,10 @@ At `z0` it solves the weighted least squares problem
 with `X̃ᵢ = Xᵢ ⊗ [1, (zᵢ - z0), ..., (zᵢ - z0)^degree]`. Returns the coefficient
 vector of length `p(degree + 1)`, or a matrix with one such column per grid
 point. Coefficient `(j-1)(degree+1) + 1` is the estimate of `βⱼ(z0)`.
+
+The data can be arrays of any type with real entries, such as views, and
+`zgrid` a range; they are converted to the floating point type of `X`, `z` and
+`y`, and so is the kernel.
 """
 locpoly(
   X::AbstractMatrix{T}, z::Vector{T}, y::Vector{T},
@@ -315,6 +363,22 @@ function locpoly(
     out[:, ind] = _locpoly!(wX, w, X, z, y, z0, degree, kernel)
   end
   out
+end
+
+function locpoly(
+  X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
+  z0::Real, degree::Integer, kernel::SmoothingKernel=GaussianKernel(1.0))
+  T = float(promote_type(eltype(X), eltype(z), eltype(y)))
+  locpoly(convert(AbstractMatrix{T}, X), convert(Vector{T}, z), convert(Vector{T}, y), T(z0), Int64(degree),
+          _kernel(T, kernel))
+end
+
+function locpoly(
+  X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
+  zgrid::AbstractVector{<:Real}, degree::Integer, kernel::SmoothingKernel=GaussianKernel(1.0))
+  T = float(promote_type(eltype(X), eltype(z), eltype(y)))
+  locpoly(convert(AbstractMatrix{T}, X), convert(Vector{T}, z), convert(Vector{T}, y), convert(Vector{T}, zgrid),
+          Int64(degree), _kernel(T, kernel))
 end
 
 """
@@ -429,7 +493,7 @@ function lvocv_locpoly(
     indOut = BitArray(undef, n)
 
     for indH = 1:numH
-        kernel = createKernel(kernelType, hArr[indH])
+        kernel = createKernel(_kerneltype(T, kernelType), hArr[indH])
         for i = 1:n
             fill!(indOut, true)
             indOut[i] = false
@@ -470,7 +534,7 @@ function split_locpoly(
     βhati = zeros(T, ep)
 
     for indH = 1:numH
-        kernel = createKernel(kernelType, hArr[indH])
+        kernel = createKernel(_kerneltype(T, kernelType), hArr[indH])
         βhat = locpoly(X, z, y, zgrid, degree, kernel)
         for i = 1:length(ytest)
             get_beta!(βhati, zgrid, βhat, ztest[i])
