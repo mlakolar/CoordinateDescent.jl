@@ -9,6 +9,7 @@ julia --project=benchmark benchmark/locpoly_bench.jl    # about a minute
 julia --project=benchmark benchmark/cd_bench.jl         # about 20 minutes
 julia --project=benchmark benchmark/order_anderson_bench.jl    # about 6 minutes
 julia --project=benchmark benchmark/momentum_default_bench.jl  # about 2 minutes
+julia --project=benchmark benchmark/scaledlasso_bench.jl       # about 10 minutes
 ```
 
 The checkout is found through `[sources]` in `Project.toml`, which Julia 1.11

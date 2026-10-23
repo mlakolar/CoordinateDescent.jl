@@ -32,7 +32,7 @@ export
 
   # CD
   CoordinateDifferentiableFunction,
-  CDLeastSquaresLoss, CDWeightedLSLoss, CDQuadraticLoss, CDSqrtLassoLoss,
+  CDLeastSquaresLoss, CDWeightedLSLoss, CDQuadraticLoss, CDSqrtLassoLoss, CDSqrtQuadraticLoss,
   CDOptions, CDInfo,
   coordinateDescent!,
 

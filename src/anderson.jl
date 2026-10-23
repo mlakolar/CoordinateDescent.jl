@@ -49,11 +49,16 @@ _penaltyValue(g, x) = ProximalBase.value(g, x)
 
 _objective(f, g, x) = ProximalBase.value(f, x) + _penaltyValue(g, x)
 
-# the cache of a built-in loss, copied to undo an extrapolation; the cache of
-# another loss is computed again with initialize!
+# the cache of a built-in loss, copied to undo an extrapolation and moved by
+# momentum; the cache of another loss is computed again with initialize!. The
+# caches are affine in x; what a loss derives from its cache is computed again
+# by _cacheMoved! after the cache moved
 _cache(f::Union{CDLeastSquaresLoss, CDWeightedLSLoss, CDSqrtLassoLoss}) = f.r
-_cache(f::CDQuadraticLoss) = f.Ax
+_cache(f::Union{CDQuadraticLoss, CDSqrtQuadraticLoss}) = f.Ax
 _cache(f) = nothing
+
+_cacheMoved!(f, x) = nothing
+_cacheMoved!(f::CDSqrtQuadraticLoss, x::SparseIterate) = (f.q = _quadraticValue(f, x); nothing)
 
 # records the active values of x after a pass over its active set; returns
 # whether K + 1 passes are recorded
@@ -105,6 +110,11 @@ function _extrapolate!(a::AndersonState{T}, x::SparseIterate{T}, f, g) where {T}
   initialize!(f, x)
   _objective(f, g, x) < F0 && return true
   copyto!(view(x.nzval, 1:m), xold)
-  cache === nothing ? initialize!(f, x) : copyto!(cache, a.cache)
+  if cache === nothing
+    initialize!(f, x)
+  else
+    copyto!(cache, a.cache)
+    _cacheMoved!(f, x)
+  end
   false
 end

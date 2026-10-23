@@ -828,6 +828,127 @@ function descendCoordinate!(
   h
 end
 
+####################################
+#
+# square root of a quadratic √(x'Ax + 2b'x + c)
+#
+####################################
+
+"""
+    CDSqrtQuadraticLoss(A, b, c)
+
+The square-root lasso loss from sufficient statistics,
+`f(x) = √(x'Ax + 2b'x + c)`, with symmetric positive semidefinite `A` and a
+nonnegative quadratic. With `A = X'X/n`, `b = -X'y/n` and `c = y'y/n` it is
+`‖y - Xx‖ / √n`, the loss of [`CDSqrtLassoLoss`](@ref) divided by `√n`, without
+the data: it caches `Ax` and the value of the quadratic, so a coordinate update
+costs `O(p)` instead of `O(n)`, and checking a coordinate that does not move
+costs `O(1)`. It also solves the scaled lasso of one variable on the others
+from their covariance matrix `S`: `A = S`, `b = -S[:, j]` and `c = S[j, j]`,
+with an infinite penalty weight on coordinate `j`, which keeps it at zero (see
+[`scaledLasso!`](@ref)).
+
+As for [`CDSqrtLassoLoss`](@ref), `descendCoordinate!` minimizes `f + g` over
+a coordinate exactly, and is implemented for
+[`ProxL1`](@ref ProximalBase.ProxL1) only. `A`, `b` and `c` must not contain
+`NaN` or `Inf`.
+"""
+mutable struct CDSqrtQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
+  const A::S
+  const b::U
+  const c::T
+  const Ax::Vector{T}
+  q::T                  # x'Ax + 2b'x + c at the iterate f is current for
+end
+
+function CDSqrtQuadraticLoss(A::AbstractMatrix{T}, b::AbstractVector{T}, c::Real) where {T<:AbstractFloat}
+  _check_finite(A, "A")
+  _check_finite(b, "b")
+  isfinite(c) || throw(ArgumentError("c must be finite, but it is $c."))
+  issymmetric(A) || throw(ArgumentError("A must be symmetric"))
+  length(b) == size(A, 2) || throw(ArgumentError("length of b must equal the number of columns of A"))
+  CDSqrtQuadraticLoss{T, typeof(A), typeof(b)}(A, b, T(c), zeros(T, length(b)), T(c))
+end
+
+numCoordinates(f::CDSqrtQuadraticLoss) = length(f.b)
+
+# x'Ax + 2b'x + c over the active entries of x, from Ax
+function _quadraticValue(f::CDSqrtQuadraticLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
+  q = f.c
+  for k in _activeEntries(x)
+    q += x[k] * (f.Ax[k] + 2 * f.b[k])
+  end
+  q
+end
+
+function initialize!(f::CDSqrtQuadraticLoss{T}, x::SparseIterate{T}) where {T<:AbstractFloat}
+  Ax, A = f.Ax, f.A
+  fill!(Ax, zero(T))
+  for k in _activeEntries(x)
+    v = x[k]
+    iszero(v) && continue
+    @inbounds @simd for i in eachindex(Ax)
+      Ax[i] += A[i, k] * v
+    end
+  end
+  f.q = _quadraticValue(f, x)
+  nothing
+end
+
+gradient(f::CDSqrtQuadraticLoss{T}, ::SparseIterate{T}, j::Int64) where {T<:AbstractFloat} =
+  (f.Ax[j] + f.b[j]) / sqrt(f.q)
+fullGradient!(grad::AbstractVector{T}, f::CDSqrtQuadraticLoss{T}, ::SparseIterate{T}) where {T<:AbstractFloat} =
+  grad .= (f.Ax .+ f.b) ./ sqrt(f.q)
+
+# as for CDQuadraticLoss, √A[k,k] = ‖X[:, k]‖ / √n, and √c = ‖y‖ / √n
+coordinateScale(f::CDSqrtQuadraticLoss, k::Int) = sqrt(f.A[k, k])
+responseScale(f::CDSqrtQuadraticLoss{T}) where {T<:AbstractFloat} = sqrt(max(f.c, zero(T)))
+
+ProximalBase.value(f::CDSqrtQuadraticLoss{T}, ::SparseIterate{T}) where {T<:AbstractFloat} = sqrt(max(f.q, zero(T)))
+
+# the exact minimizer over coordinate k: with xₖ = t and the other coordinates
+# fixed, the quadratic is q₀ - 2st + at², with a = A[k, k], q₀ its value at
+# t = 0 and s = -(Ax + b)ₖ at t = 0, the same form as ‖r - X[:, k] t‖² in
+# CDSqrtLassoLoss, whose closed form this uses
+function descendCoordinate!(
+  f::CDSqrtQuadraticLoss{T},
+  g::ProxL1{T},
+  x::SparseIterate{T},
+  k::Int64) where {T<:AbstractFloat}
+
+  a = f.A[k, k]
+  oldVal = x[k]
+  gk = f.Ax[k] + f.b[k]
+  s = a * oldVal - gk
+  q0 = max(f.q - oldVal * (2 * gk - a * oldVal), zero(T))
+
+  λ = g.λ0
+  if !isa(g, ProxL1{T, Nothing})
+    λ *= g.λ[k]
+  end
+
+  # zero when the subgradient condition |s| ≤ λ √q₀ holds, when the loss does
+  # not depend on the coordinate (a = 0), and for an infinite weight; otherwise
+  # λ² < a, which rounding can break, so it is enforced
+  newVal = zero(T)
+  if a > 0 && isfinite(λ)
+    r = 1 - λ^2 / a
+    if abs(s) > λ * sqrt(q0) && r > 0
+      newVal = (s - copysign(λ / sqrt(r) * sqrt(max(q0 - s^2 / a, zero(T))), s)) / a
+    end
+  end
+
+  h = newVal - oldVal
+  iszero(h) && return h
+  x[k] = newVal
+  f.q = max(q0 + newVal * (a * newVal - 2 * s), zero(T))
+  Ax, A = f.Ax, f.A
+  @inbounds @simd for i in eachindex(Ax)
+    Ax[i] += A[i, k] * h
+  end
+  h
+end
+
 # the curvature of f over group k of x, λmax(A[G, G]), from the cache, computed
 # and cached if needed
 function _groupCurvature!(f::CDQuadraticLoss{T}, x::AtomIterate{T}, k::Int) where {T<:AbstractFloat}

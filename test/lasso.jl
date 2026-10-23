@@ -399,6 +399,104 @@ end
   @test sol3.converged
 end
 
+@testset "CDSqrtQuadraticLoss" begin
+  n, p, s = 300, 40, 5
+  X = randn(n, p) .* (0.5 .+ rand(1, p))
+  Y = X[:,1:s] * ones(s) + randn(n)
+  λ = 1.2
+  tight = CDOptions(;maxIter=10_000, optTol=1e-12)
+
+  # the square-root lasso from the data, with the loss ‖r‖ and the penalty λ
+  xd = SparseIterate(p)
+  coordinateDescent!(xd, CDSqrtLassoLoss(Y, X), ProxL1(λ), tight)
+
+  # from A = X'X/n, b = -X'y/n, c = y'y/n the loss is ‖r‖/√n, so the penalty is λ/√n
+  A, b, c = X'X / n, -X'Y / n, dot(Y, Y) / n
+  f = CDSqrtQuadraticLoss(A, b, c)
+  xg = SparseIterate(p)
+  coordinateDescent!(xg, f, ProxL1(λ / sqrt(n)), tight)
+  @test Vector(xg) ≈ Vector(xd) atol=1e-8
+  @test ProximalBase.value(f, xg) ≈ norm(Y - X * xg) / sqrt(n)
+  grad = zeros(p)
+  CoordinateDescent.fullGradient!(grad, f, xg)
+  @test grad ≈ -X' * (Y - X * xg) / (n * norm(Y - X * xg) / sqrt(n))
+
+  # momentum on and off, the cyclic order with Anderson acceleration, and the
+  # path from zero give the same solution
+  for o in (CDOptions(;maxIter=10_000, optTol=1e-12, momentum=false),
+            CDOptions(;maxIter=10_000, optTol=1e-12, momentum=true),
+            CDOptions(;maxIter=10_000, optTol=1e-12, order=:cyclic, anderson=5),
+            CDOptions(;maxIter=10_000, optTol=1e-12, warmStart=false))
+    x = SparseIterate(p)
+    coordinateDescent!(x, CDSqrtQuadraticLoss(A, b, c), ProxL1(λ / sqrt(n)), o)
+    @test Vector(x) ≈ Vector(xd) atol=1e-8
+  end
+
+  # an infinite weight keeps a coordinate at zero; a coordinate the loss does
+  # not depend on goes to zero
+  ω = ones(p)
+  ω[1] = Inf
+  x = SparseIterate(p)
+  coordinateDescent!(x, CDSqrtQuadraticLoss(A, b, c), ProxL1(λ / sqrt(n), ω), tight)
+  @test iszero(x[1])
+  A0 = copy(A)
+  A0[2, :] .= 0
+  A0[:, 2] .= 0
+  b0 = copy(b)
+  b0[2] = 0
+  x = SparseIterate(p)
+  coordinateDescent!(x, CDSqrtQuadraticLoss(A0, b0, c), ProxL1(λ / sqrt(n)), tight)
+  @test iszero(x[2])
+
+  @test_throws ArgumentError CDSqrtQuadraticLoss(A, b, Inf)
+  @test_throws ArgumentError CDSqrtQuadraticLoss(A, b[1:end-1], c)
+  @test_throws ArgumentError CDSqrtQuadraticLoss(A + triu(ones(p, p), 1), b, c)
+end
+
+@testset "scaled lasso from sufficient statistics" begin
+  n, p, s = 400, 60, 6
+  X = randn(n, p) .* (0.5 .+ rand(1, p))
+  Y = X[:,1:s] * randn(s) + 0.7 * randn(n)
+  λ = sqrt(2 * log(p) / n)
+  w = vec(sqrt.(sum(abs2, X; dims=1) / n))
+
+  sol = scaledLasso(X, Y, λ, w, IterLassoOptions(;optionsCD=CDOptions(;optTol=1e-12)))
+  r = Y - X * sol.x
+  @test sol.σ ≈ norm(r) / sqrt(n)
+  # the optimality conditions of the lasso at the penalty λσ̂
+  c = X' * r / n
+  act = findall(!iszero, Vector(sol.x))
+  @test maximum(abs.(c) ./ w) ≤ λ * sol.σ * (1 + 1e-8)
+  @test c[act] ≈ λ * sol.σ * w[act] .* sign.(Vector(sol.x)[act]) rtol=1e-6
+
+  # from the sufficient statistics, the same solution
+  f = CDSqrtQuadraticLoss(X'X / n, -X'Y / n, dot(Y, Y) / n)
+  solg = scaledLasso!(SparseIterate(p), f, λ, w, CDOptions(;optTol=1e-12))
+  @test Vector(solg.x) ≈ Vector(sol.x) atol=1e-8
+  @test solg.σ ≈ sol.σ rtol=1e-8
+  @test solg.penalty.λ0 ≈ λ * solg.σ
+  @test isempty(solg.residuals)
+
+  # a column of a precision matrix: the scaled lasso of variable j on the
+  # others from the covariance matrix, with an infinite weight on j
+  S = X'X / n
+  j = 3
+  ωj = sqrt.(diag(S))
+  ωj[j] = Inf
+  solj = scaledLasso!(SparseIterate(p), CDSqrtQuadraticLoss(S, -S[:, j], S[j, j]), λ, ωj,
+                      CDOptions(;optTol=1e-12))
+  @test iszero(solj.x[j])
+  others = [1:j-1; j+1:p]
+  ref = scaledLasso(X[:, others], X[:, j], λ, sqrt.(diag(S))[others],
+                    IterLassoOptions(;optionsCD=CDOptions(;optTol=1e-12)))
+  @test Vector(solj.x)[others] ≈ Vector(ref.x) atol=1e-8
+  @test solj.σ ≈ ref.σ rtol=1e-8
+
+  # real arguments of other types are converted
+  sol32 = scaledLasso!(SparseIterate(p), f, 1 // 10, ones(Int, p))
+  @test sol32.penalty.λ0 ≈ sol32.σ / 10
+end
+
 @testset "lasso path early stop" begin
   n, p, s = 200, 100, 20
   X = randn(n, p)
@@ -591,7 +689,7 @@ end
   @test !any(path.converged)
 
   # scaled and feasible lasso: inner passes are summed, and the outer
-  # iteration is checked too
+  # iteration of feasibleLasso! is checked too
   opt = IterLassoOptions(;maxIter=100, optTol=1e-6, optionsCD=CDOptions(;optTol=1e-10))
   sol = @test_logs scaledLasso(X, Y, λ, ones(p), opt)
   @test sol.converged
@@ -600,9 +698,11 @@ end
   @test sol.converged
   @test sol.iterations >= 2
 
+  # scaledLasso solves the square-root lasso in one run of coordinate descent,
+  # so the outer maxIter and optTol do not matter
   opt = IterLassoOptions(;maxIter=1, optTol=1e-12)
-  sol = @test_logs (:warn, r"scaledLasso! did not converge") scaledLasso(X, Y, λ, ones(p), opt)
-  @test !sol.converged
+  sol = @test_logs scaledLasso(X, Y, λ, ones(p), opt)
+  @test sol.converged
   sol = @test_logs (:warn, r"feasibleLasso! did not converge") feasibleLasso!(SparseIterate(p), X, Y, λ, opt)
   @test !sol.converged
 
