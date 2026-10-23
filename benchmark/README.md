@@ -84,16 +84,18 @@ default stopping rule.
 
 ## order_anderson_bench.jl
 
-Compares the orders of the coordinates and Anderson acceleration (issue #9) on
-the lasso `‖y - Xβ‖² / (2n) + λ‖β‖₁`, solved from β = 0 with the default
-stopping rule (`optTol = 1e-7`):
+Compares the orders of the coordinates, Anderson acceleration (issue #9) and
+momentum (issue #20) on the lasso `‖y - Xβ‖² / (2n) + λ‖β‖₁`, solved from β = 0
+with the default stopping rule (`optTol = 1e-7`):
 
 - `order = :cyclic`, `:random` (the default) and `:active`;
-- `order = :cyclic` with `anderson = 5`.
+- `order = :cyclic` with `anderson = 5`;
+- `order = :random` with `momentum = true`.
 
-The designs are those of the lasso benchmark of ProximalOPT.jl, with two more
-correlated ones: Gaussian columns scaled to ‖Xⱼ‖² = n, s coefficients ±1 and
-a signal-to-noise ratio of 4.
+The designs are those of the lasso benchmark of ProximalOPT.jl, with three
+more: two more correlated ones and one with three common factors. They have
+Gaussian columns scaled to ‖Xⱼ‖² = n, s coefficients ±1 and a signal-to-noise
+ratio of 4.
 
 | design | n | p | s | correlation between columns |
 |---|---:|---:|---:|---|
@@ -104,67 +106,76 @@ a signal-to-noise ratio of 4.
 | D | 200 | 10,000 | 20 | none |
 | E | 500 | 2,500 | 50 | 0.5 between every pair (a common factor) |
 | E' | 500 | 2,500 | 50 | 0.9 between every pair |
+| F | 500 | 2,500 | 50 | three common factors with Gaussian loadings |
 
-Each case runs until it has half a second of runs, and at least 3 runs (5 for
-the random orders). For the random orders the table gives the median passes
-and time; for the deterministic ones, the shortest time. The results below are
-from an Apple M3 Pro with Julia 1.13.2 and one BLAS thread. Every solution is
-as accurate as the cyclic one, except that the cyclic order stops at
-`maxIter = 100 000` for E' at 0.01 λmax.
+Other processes load the machine unevenly, so every case runs the solvers in
+turn. Each solver runs until it has half a second of runs, and at least 3 runs
+(5 for the random orders). For the random orders the tables give the median
+passes and time; for the deterministic ones, the shortest time. The results
+below are from an Apple M3 Pro with Julia 1.13.2 and one BLAS thread. Every
+solution is as accurate as the cyclic one, except that the cyclic order stops
+at `maxIter = 100 000` for E' at 0.01 λmax.
 
 ### One λ: milliseconds (passes)
 
-| design | λ/λmax | cyclic | random | active | Anderson |
-|---|---:|---:|---:|---:|---:|
-| A | 0.1 | 8.5 (179) | 12.8 (255) | 12.0 (248) | **5.4** (97) |
-| A | 0.02 | 212 (3,120) | 318 (4,435) | 326 (4,477) | **93** (1,231) |
-| A | 0.01 | 800 (10,965) | 944 (12,442) | 1,013 (13,511) | **275** (3,391) |
-| B | 0.1 | 11.7 (333) | 16.7 (465) | 16.1 (452) | **7.2** (172) |
-| B | 0.02 | 203 (3,169) | 283 (4,116) | 307 (4,663) | **91** (1,240) |
-| B | 0.01 | 586 (8,164) | 783 (10,760) | 834 (11,277) | **202** (2,579) |
-| B' | 0.1 | 10.6 (568) | 19.6 (1,019) | 19.1 (980) | **5.4** (232) |
-| B' | 0.02 | 114 (2,364) | 175 (3,499) | 180 (3,505) | **38** (717) |
-| B' | 0.01 | 458 (7,541) | 668 (10,405) | 702 (9,895) | **134** (2,002) |
-| C | 0.1 | **2.5** (16) | 4.5 (35) | 4.2 (33) | **2.5** (14) |
-| C | 0.02 | 15.5 (54) | 19.5 (66) | 19.5 (66) | **14.8** (49) |
-| C | 0.01 | 24.2 (58) | 33.8 (77) | 30.8 (75) | **22.3** (51) |
-| D | 0.1 | 11.9 (835) | 19.5 (1,017) | 14.2 (923) | **7.4** (363) |
-| D | 0.02 | 131 (8,855) | 162 (9,067) | 189 (12,050) | **43** (2,511) |
-| D | 0.01 | 525 (35,655) | 712 (30,892) | 605 (37,808) | **78** (4,537) |
-| E | 0.1 | 6.5 (949) | 1.9 (81) | **1.6** (80) | 2.9 (248) |
-| E | 0.02 | 1,464 (36,940) | 37.6 (767) | **35.5** (750) | 465 (10,510) |
-| E | 0.01 | 3,499 (66,494) | **140** (2,260) | 159 (2,596) | 1,491 (24,962) |
-| E' | 0.1 | 36.1 (9,581) | 3.6 (593) | **3.3** (625) | 9.7 (1,278) |
-| E' | 0.02 | 191 (25,164) | 5.8 (539) | **5.5** (530) | 36.3 (3,676) |
-| E' | 0.01 | 2,316 (100,000) | **42.6** (1,409) | 45.6 (1,523) | 1,051 (36,694) |
+| design | λ/λmax | cyclic | random | active | Anderson | momentum |
+|---|---:|---:|---:|---:|---:|---:|
+| A | 0.1 | 8.1 (179) | 12.1 (256) | 11.4 (249) | **5.0** (97) | 8.0 (150) |
+| A | 0.02 | 203 (3,120) | 301 (4,390) | 320 (4,667) | 89.5 (1,231) | **82.2** (1,152) |
+| A | 0.01 | 767 (10,965) | 1,114 (14,748) | 1,018 (13,931) | 263 (3,391) | **202** (2,634) |
+| B | 0.1 | 11.4 (333) | 16.6 (472) | 16.2 (471) | **7.1** (172) | 8.5 (211) |
+| B | 0.02 | 201 (3,169) | 267 (3,965) | 286 (4,263) | 85.7 (1,240) | **77.3** (1,113) |
+| B | 0.01 | 553 (8,164) | 718 (10,267) | 764 (11,033) | 194 (2,579) | **167** (2,272) |
+| B' | 0.1 | 10.4 (568) | 20.1 (1,067) | 18.1 (941) | **5.3** (232) | 8.2 (360) |
+| B' | 0.02 | 109 (2,364) | 176 (3,624) | 177 (3,689) | **37.1** (717) | 47.8 (875) |
+| B' | 0.01 | 443 (7,541) | 640 (9,913) | 674 (10,750) | 130 (2,002) | **120** (1,862) |
+| C | 0.1 | 2.5 (16) | 4.2 (35) | 4.1 (34) | **2.4** (14) | 4.0 (29) |
+| C | 0.02 | 15.3 (54) | 19.0 (67) | 18.5 (65) | **14.5** (49) | 17.7 (58) |
+| C | 0.01 | 23.9 (58) | 32.4 (77) | 31.9 (77) | **22.0** (51) | 29.3 (66) |
+| D | 0.1 | 11.2 (835) | 17.7 (998) | 13.2 (937) | **7.1** (363) | 8.8 (368) |
+| D | 0.02 | 117 (8,855) | 168 (10,946) | 149 (10,308) | 40.3 (2,511) | **36.9** (2,046) |
+| D | 0.01 | 495 (35,655) | 501 (28,447) | 477 (31,709) | **73.5** (4,537) | 80.2 (3,956) |
+| E | 0.1 | 6.4 (949) | 1.7 (81) | **1.5** (80) | 2.9 (248) | 1.7 (68) |
+| E | 0.02 | 1,415 (36,940) | 33.3 (731) | 35.0 (767) | 450 (10,510) | **17.5** (300) |
+| E | 0.01 | 3,348 (66,494) | 131 (2,240) | 147 (2,512) | 1,436 (24,962) | **46.2** (725) |
+| E' | 0.1 | 35.8 (9,581) | 3.5 (586) | 3.3 (626) | 9.7 (1,278) | **2.5** (271) |
+| E' | 0.02 | 212 (25,164) | 5.6 (525) | 5.4 (522) | 35.3 (3,676) | **3.4** (224) |
+| E' | 0.01 | 2,233 (100,000) | 43.6 (1,442) | 43.4 (1,457) | 1,013 (36,694) | **15.0** (428) |
+| F | 0.1 | 7.3 (765) | 3.3 (211) | 3.6 (258) | 4.2 (287) | **2.8** (127) |
+| F | 0.02 | 404 (9,920) | 50.3 (1,095) | 50.1 (1,098) | 138 (2,991) | **22.7** (399) |
+| F | 0.01 | 1,316 (24,067) | 209 (3,505) | 222 (3,590) | 479 (7,915) | **62.1** (961) |
 
 ### Path of 50 λ values, λmax to λmax/100 (`LassoPath`): milliseconds
 
-| design | cyclic | random | active | Anderson |
-|---|---:|---:|---:|---:|
-| A | 1,253 | 1,781 | 1,599 | **346** |
-| B | 1,230 | 1,759 | 1,825 | **372** |
-| D | 575 | 733 | 734 | **118** |
-| E | 8,015 | 368 | **330** | 2,805 |
+| design | cyclic | random | active | Anderson | momentum |
+|---|---:|---:|---:|---:|---:|
+| A | 1,223 | 1,623 | 1,566 | **327** | 342 |
+| B | 1,165 | 1,700 | 1,662 | **343** | 374 |
+| D | 527 | 659 | 693 | 112 | **102** |
+| E | 7,559 | 287 | 308 | 2,634 | **107** |
+| F | 3,409 | 498 | 528 | 1,354 | **144** |
 
 ### Memory K at 0.02 λmax: milliseconds (passes)
 
 | design | K = 3 | K = 5 | K = 10 |
 |---|---:|---:|---:|
-| A | 94.9 (1,217) | 94.7 (1,231) | 95.3 (1,305) |
-| B | 83.8 (1,126) | 90.9 (1,240) | 91.6 (1,334) |
-| D | 45.2 (2,552) | 43.0 (2,511) | 49.0 (2,972) |
+| A | 90.4 (1,217) | 89.7 (1,231) | 90.1 (1,305) |
+| B | 79.2 (1,126) | 84.2 (1,240) | 87.0 (1,334) |
+| D | 42.7 (2,552) | 40.5 (2,511) | 45.3 (2,972) |
 
 ### What the numbers say
 
-- **Anderson acceleration**
-  - Without a common factor (A–D), it is the fastest or tied in every case.
-  - On A, B, B' and D, at 0.02 λmax and below, it is 2.2–6.7 times faster than the cyclic order it accelerates, and 3.1–9.1 times faster than the default random order.
-  - On paths it is 3.3–4.9 times faster than the cyclic order and 4.7–6.2 times faster than the default.
-  - When n ≫ p (C), coordinate descent needs a few dozen passes and acceleration changes little, but it is never slower.
-  - It needs the cyclic order, and keeps that order's weakness under a common factor. On E and E' it is 2.2–5.3 times faster than the cyclic order, but the random orders are faster still: 1.5–3 times at 0.1 λmax, 6–25 times at smaller penalties, and 7.6 times on the path.
-- **Memory:** K = 3, 5 and 10 are within 10% of each other.
+- **Momentum** (`order = :random, momentum = true`)
+  - It is never slower than the default random order; the two tie on E at 0.1 λmax. At 0.02 λmax and below it is 1.6–6.2 times faster, except when n ≫ p (C), where it is 7–11% faster.
+  - On paths it is 2.7–6.5 times faster than the default.
+  - Under a common factor (E, E' and F) it is the fastest option at 0.02 λmax and below. There it is 1.6–3.4 times faster than the default and 6–68 times faster than Anderson acceleration; it also computes the paths of E and F 9–25 times faster than Anderson acceleration.
+  - Without a common factor, at 0.02 λmax and below, it is up to 30% faster than Anderson acceleration on A, B and D (D at 0.01 λmax is the exception, 9% slower), and on paths within 9% of it.
+  - It is slower than Anderson acceleration when few passes are needed: by 20–67% at 0.1 λmax, by 29% on B' at 0.02 λmax, and by 22–33% when n ≫ p (C). In those cases the cyclic order needs fewer passes than any random one.
+  - With `order = :active`, which visits the coordinates of the full passes in the order 1, 2, …, momentum was 2–23% faster than with `order = :random` at 0.1 λmax. Elsewhere it was within 11%, in a separate comparison on A–F and on paths.
+  - It is not offered with the cyclic order: on the equicorrelated design that combination stalled 3–18% above the minimum after 100,000 passes. The cyclic order's slowest modes there are complex, which momentum does not handle.
+- **Anderson acceleration** (`order = :cyclic, anderson = 5`)
+  - Without a common factor (A–D), it is the fastest or close to it in every case. At 0.02 λmax and below on A, B, B' and D, it is 2.3–6.7 times faster than the cyclic order it accelerates.
+  - It keeps the weakness of the cyclic order under a common factor, where it is 1.7–6 times faster than the cyclic order but far slower than the random orders.
+- **Memory K:** K = 3, 5 and 10 are within 10% of each other.
 - **Extrapolations are often rejected while the active set settles, and accepted in runs once it has.** Stopping after a few rejections in a row, as planned in issue #9, prevented any acceleration: in a solve on A, the first three attempts were all rejected.
-- **`order = :active`** never shows the cyclic order's blow-up, but the default stays `:random`.
-  - At 0.1 λmax it is 3–27% faster than `order = :random`.
-  - At smaller penalties it ranges from 15% faster to 17% slower.
+- **`order = :active`** without momentum is within -27% to +17% of `order = :random`. It never shows the cyclic order's blow-up.

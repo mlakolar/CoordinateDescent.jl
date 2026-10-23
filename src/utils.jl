@@ -6,7 +6,7 @@
 
 """
     CDOptions(; maxIter=100_000, optTol=1e-7, order=:random, warmStart=true,
-                numSteps=50, relativeTol=true, anderson=0)
+                numSteps=50, relativeTol=true, anderson=0, momentum=false)
 
 Options for [`coordinateDescent!`](@ref).
 
@@ -35,6 +35,8 @@ Options for [`coordinateDescent!`](@ref).
   user-defined ones, use the absolute rule either way
 - `anderson`: the memory `K` of Anderson acceleration, `0` for none (see
   [`coordinateDescent!`](@ref)); it needs `order = :cyclic`
+- `momentum`: Nesterov momentum on the passes over the active set (see
+  [`coordinateDescent!`](@ref)); it needs `order = :random` or `:active`
 """
 struct CDOptions
   maxIter::Int64
@@ -44,9 +46,10 @@ struct CDOptions
   numSteps::Int64           # when pathFollowing, how many points are there on the path
   relativeTol::Bool         # changes measured relative to the scales of the loss
   anderson::Int64           # memory of Anderson acceleration, 0 for none
+  momentum::Bool            # Nesterov momentum on the passes over the active set
 
-  function CDOptions(maxIter, optTol, order::Symbol, warmStart, numSteps, relativeTol, anderson)
-    o = new(maxIter, optTol, order, warmStart, numSteps, relativeTol, anderson)
+  function CDOptions(maxIter, optTol, order::Symbol, warmStart, numSteps, relativeTol, anderson, momentum)
+    o = new(maxIter, optTol, order, warmStart, numSteps, relativeTol, anderson, momentum)
     o.maxIter >= 0 || throw(ArgumentError("maxIter must be nonnegative, but it is $(o.maxIter)."))
     o.optTol >= 0 || throw(ArgumentError("optTol must be nonnegative, but it is $(o.optTol)."))
     o.order in (:random, :cyclic, :active) ||
@@ -55,13 +58,18 @@ struct CDOptions
     o.anderson >= 0 || throw(ArgumentError("anderson must be nonnegative, but it is $(o.anderson)."))
     o.anderson == 0 || o.order === :cyclic ||
       throw(ArgumentError("anderson needs order = :cyclic, since the extrapolation assumes the same order in every pass."))
+    o.momentum && o.order === :cyclic &&
+      throw(ArgumentError("momentum needs order = :random or :active; with the cyclic order it can stall far from the minimizer."))
     o
   end
 end
 
-# the positional form of versions before 0.5.5, with randomize in place of order
+# the positional forms of versions 0.5.5, without momentum, and before 0.5.5,
+# with randomize in place of order
+CDOptions(maxIter, optTol, order::Symbol, warmStart, numSteps, relativeTol, anderson) =
+  CDOptions(maxIter, optTol, order, warmStart, numSteps, relativeTol, anderson, false)
 CDOptions(maxIter, optTol, randomize::Bool, warmStart, numSteps, relativeTol) =
-  CDOptions(maxIter, optTol, randomize ? :random : :cyclic, warmStart, numSteps, relativeTol, 0)
+  CDOptions(maxIter, optTol, randomize ? :random : :cyclic, warmStart, numSteps, relativeTol, 0, false)
 
 function CDOptions(;
   maxIter::Real=100_000,
@@ -71,12 +79,13 @@ function CDOptions(;
   warmStart::Bool=true,
   numSteps::Real=50,
   relativeTol::Bool=true,
-  anderson::Real=0)
+  anderson::Real=0,
+  momentum::Bool=false)
 
   order === nothing || randomize === nothing ||
     throw(ArgumentError("Pass order or randomize, not both."))
   o = order !== nothing ? order : randomize === false ? :cyclic : :random
-  CDOptions(Int(maxIter), Float64(optTol), o, warmStart, Int(numSteps), relativeTol, Int(anderson))
+  CDOptions(Int(maxIter), Float64(optTol), o, warmStart, Int(numSteps), relativeTol, Int(anderson), momentum)
 end
 
 # randomize, a field before version 0.5.5
@@ -86,7 +95,7 @@ Base.propertynames(::CDOptions, private::Bool=false) = (fieldnames(CDOptions)...
 
 # the options with warmStart = true and every other field unchanged
 _withWarmStart(o::CDOptions) =
-  CDOptions(o.maxIter, o.optTol, o.order, true, o.numSteps, o.relativeTol, o.anderson)
+  CDOptions(o.maxIter, o.optTol, o.order, true, o.numSteps, o.relativeTol, o.anderson, o.momentum)
 
 
 """

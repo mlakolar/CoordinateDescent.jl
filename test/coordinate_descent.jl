@@ -951,4 +951,75 @@ ProximalBase.value(g::ElasticNetPenalty, x::SparseIterate) =
   @test_throws ArgumentError coordinateDescent!(SparseIterate(p), f, BoxPenalty(-1., 1.), accelerated)
 end
 
+
+@testset "momentum" begin
+  @test !CDOptions().momentum
+  @test CDOptions(;momentum=true).momentum
+  @test CDOptions(;order=:active, momentum=true).momentum
+  @test_throws ArgumentError CDOptions(;order=:cyclic, momentum=true)   # can stall
+  @test_throws ArgumentError CDOptions(;order=:cyclic, anderson=5, momentum=true)
+  o = CDOptions(;order=:cyclic, anderson=5)
+  @test CDOptions(o.maxIter, o.optTol, o.order, o.warmStart, o.numSteps, o.relativeTol, o.anderson) == o
+
+  # a common factor between the columns, where the random order is fast and
+  # the momentum makes it faster
+  n, p, s = 300, 1000, 20
+  X = sqrt(0.5) * randn(n) .+ sqrt(0.5) * randn(n, p)
+  Y = X[:, 1:s] * randn(s) + randn(n)
+  w = 0.5 .+ rand(n)
+  λ = 0.02 * maximum(abs, X'Y) / n
+  λs = 0.2 * maximum(abs, X'Y) / norm(Y)
+  plain = CDOptions(;optTol=1e-10)
+  mom = CDOptions(;optTol=1e-10, momentum=true)
+
+  # the same solution, in fewer passes over all losses together; WrappedLS has
+  # a cache that CoordinateDescent does not know, and is initialized at the
+  # extrapolated point instead
+  passes0, passes1 = 0, 0
+  for (f, g) in ((CDLeastSquaresLoss(Y, X), ProxL1(λ)),
+                 (CDLeastSquaresLoss(Y, X; intercept=true), ProxL1(λ)),
+                 (CDWeightedLSLoss(Y, X, w), ProxL1(λ)),
+                 (CDQuadraticLoss(X'X/n, -X'Y/n), ProxL1(λ)),
+                 (CDSqrtLassoLoss(Y, X), ProxL1(λs)),
+                 (CDLeastSquaresLoss(Y, X), ProxL1(λ, rand(p))),
+                 (WrappedLS(CDLeastSquaresLoss(Y, X)), ProxL1(λ)))
+    x0, info0 = SparseIterate(p), CDInfo()
+    coordinateDescent!(x0, f, g, plain, info0)
+    x1, info1 = SparseIterate(p), CDInfo()
+    coordinateDescent!(x1, f, g, mom, info1)
+    @test info1.converged
+    @test Vector(x1) ≈ Vector(x0) atol=1e-6
+    passes0 += info0.iterations
+    passes1 += info1.iterations
+  end
+  @test passes1 < passes0 / 1.3
+
+  # with the order :active, without a penalty, from a path of penalties, and
+  # along LassoPath
+  f = CDLeastSquaresLoss(Y, X)
+  xref = SparseIterate(p)
+  coordinateDescent!(xref, f, ProxL1(λ), plain)
+  for o in (CDOptions(;optTol=1e-10, order=:active, momentum=true),
+            CDOptions(;optTol=1e-10, warmStart=false, momentum=true))
+    x = SparseIterate(p)
+    coordinateDescent!(x, f, ProxL1(λ), o)
+    @test Vector(x) ≈ Vector(xref) atol=1e-6
+  end
+  x0, x1 = SparseIterate(100), SparseIterate(100)
+  coordinateDescent!(x0, CDLeastSquaresLoss(Y, X[:, 1:100]), ProxZero(), plain)
+  coordinateDescent!(x1, CDLeastSquaresLoss(Y, X[:, 1:100]), ProxZero(), mom)
+  @test Vector(x1) ≈ Vector(x0) atol=1e-6
+  λpath = [0.2, 0.1, 0.05, 0.02] .* (maximum(abs, X'Y) / n)
+  path0 = LassoPath(X, Y, λpath, plain; standardizeX=false)
+  path1 = LassoPath(X, Y, λpath, mom; standardizeX=false)
+  @test all(path1.converged)
+  for k in eachindex(λpath)
+    @test Vector(path1.βpath[k]) ≈ Vector(path0.βpath[k]) atol=1e-6
+  end
+
+  # it needs a SparseIterate
+  gg = ProxGroupL2(λ, [((k-1)*10+1):(k*10) for k in 1:100])
+  @test_throws ArgumentError coordinateDescent!(AtomIterate(p, gg), f, gg, mom)
+end
+
 end
