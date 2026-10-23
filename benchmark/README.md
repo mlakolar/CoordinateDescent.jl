@@ -211,38 +211,39 @@ benchmark/compare/ab.sh 3
 `ab.sh` runs the two sides in turn, each in a fresh process, and every run
 starts from the same seed. `compare.jl` takes the fastest median time of each
 case over the rounds, since load on the machine only adds time. The table is
-from three rounds on the M3 Pro on 23 October 2026, with Julia 1.13.2 and one
-BLAS thread.
+from three rounds on USC CARC Discovery on 23 October 2026: one core of an AMD
+EPYC 7513, Julia 1.13.2, one BLAS thread (Slurm job 13326700), with this
+version at `0623e11` on ProximalOPT `c247846`.
 
-| case | 0.6 (ms) | 0.6, momentum = false (ms) | 0.7 (ms) | 0.7 / 0.6 | 0.7 / 0.6 without momentum | passes, 0.6 without momentum / 0.7 | largest difference |
+| case | 0.6 (ms) | 0.6, momentum = false (ms) | 0.7 (ms) | 0.7 / 0.6 | 0.7 / 0.6 without momentum | passes, 0.6 / 0.7 | largest difference |
 |---|---:|---:|---:|---:|---:|---|---:|
-| A CDQuadraticLoss | 220.1 | 929.2 | 922.3 | 4.19 | 0.99 | 5524 / 5524 | 0e+00 |
-| A LassoPath | 486.4 | 2199.4 | 2186.3 | 4.49 | 0.99 | 31986 / 31986 | 1e-14 |
-| A feasibleLasso! | 1.5 | 1.5 | 1.5 | 1.00 | 0.99 | 2 / 2 | 0e+00 |
-| A lasso | 25.1 | 54.8 | 54.6 | 2.17 | 1.00 | 934 / 934 | 1e-14 |
-| A scaledLasso | 1.9 | 2.1 | 2.1 | 1.08 | 0.97 | 29 / 29 | 0e+00 |
-| A sqrtLasso | 6.0 | 5.8 | 5.8 | 0.96 | 1.00 | 11 / 11 | 0e+00 |
-| E CDQuadraticLoss | 43.8 | 109.3 | 110.5 | 2.53 | 1.01 | 946 / 946 | 0e+00 |
-| E LassoPath | 173.6 | 464.9 | 459.5 | 2.65 | 0.99 | 10594 / 10594 | 1e-14 |
-| E feasibleLasso! | 4.7 | 4.5 | 4.4 | 0.92 | 0.98 | 151 / 151 | 2e-15 |
-| E lasso | 3.9 | 5.0 | 5.0 | 1.28 | 1.01 | 173 / 173 | 5e-15 |
-| E scaledLasso | 1.9 | 1.6 | 1.6 | 0.83 | 0.98 | 76 / 76 | 0e+00 |
-| E sqrtLasso | 8.9 | 10.4 | 10.3 | 1.16 | 0.99 | 23 / 23 | 0e+00 |
-| F CDQuadraticLoss | 54.5 | 146.1 | 147.1 | 2.70 | 1.01 | 1282 / 1282 | 0e+00 |
-| F LassoPath | 225.6 | 720.3 | 705.5 | 3.13 | 0.98 | 18205 / 18205 | 2e-14 |
-| F feasibleLasso! | 4.7 | 4.9 | 4.8 | 1.01 | 0.97 | 501 / 501 | 7e-15 |
-| F lasso | 5.2 | 8.8 | 8.8 | 1.71 | 1.01 | 344 / 344 | 8e-15 |
-| F scaledLasso | 2.2 | 2.9 | 2.8 | 1.29 | 0.98 | 277 / 277 | 1e-15 |
-| F sqrtLasso | 13.0 | 19.8 | 19.4 | 1.49 | 0.98 | 51 / 51 | 0e+00 |
-| locpolyl1 | 0.6 | 0.5 | 0.6 | 0.94 | 1.03 | 0 / 0 | 9e-16 |
+| A CDQuadraticLoss | 245.9 | 1050.4 | 234.4 | 0.95 | 0.22 | 1224 / 1224 | 0e+00 |
+| A LassoPath | 497.8 | 2218.3 | 498.6 | 1.00 | 0.22 | 7387 / 7387 | 4e-14 |
+| A feasibleLasso! | 1.5 | 1.5 | 1.5 | 1.01 | 1.01 | 2 / 2 | 0e+00 |
+| A lasso | 25.9 | 54.6 | 25.1 | 0.97 | 0.46 | 397 / 397 | 5e-15 |
+| A scaledLasso | 2.0 | 2.2 | 1.9 | 0.96 | 0.88 | 27 / 27 | 7e-16 |
+| A sqrtLasso | 5.8 | 5.5 | 5.8 | 1.01 | 1.06 | 11 / 11 | 0e+00 |
+| E CDQuadraticLoss | 49.0 | 123.1 | 48.6 | 0.99 | 0.39 | 328 / 328 | 0e+00 |
+| E LassoPath | 174.6 | 467.9 | 168.8 | 0.97 | 0.36 | 4548 / 4548 | 2e-14 |
+| E feasibleLasso! | 4.8 | 4.5 | 4.5 | 0.94 | 1.01 | 154 / 154 | 2e-15 |
+| E lasso | 4.1 | 5.1 | 4.1 | 1.00 | 0.79 | 108 / 108 | 3e-15 |
+| E scaledLasso | 1.9 | 1.6 | 1.8 | 0.95 | 1.13 | 84 / 84 | 0e+00 |
+| E sqrtLasso | 8.5 | 9.7 | 8.4 | 0.99 | 0.87 | 19 / 19 | 0e+00 |
+| F CDQuadraticLoss | 61.9 | 169.2 | 61.7 | 1.00 | 0.36 | 427 / 427 | 0e+00 |
+| F LassoPath | 227.9 | 715.7 | 216.3 | 0.95 | 0.30 | 6428 / 6428 | 4e-14 |
+| F feasibleLasso! | 4.7 | 4.8 | 4.5 | 0.95 | 0.93 | 282 / 282 | 3e-15 |
+| F lasso | 5.4 | 9.1 | 5.3 | 0.96 | 0.58 | 161 / 161 | 4e-15 |
+| F scaledLasso | 2.2 | 2.9 | 2.1 | 0.96 | 0.73 | 146 / 146 | 1e-15 |
+| F sqrtLasso | 12.1 | 18.5 | 12.0 | 0.99 | 0.65 | 32 / 32 | 0e+00 |
+| locpolyl1 | 0.8 | 0.7 | 0.8 | 1.03 | 1.11 | 0 / 0 | 9e-16 |
 
-- **The coordinate descent moved without a change.** Against 0.6.0 without
-  momentum, every case takes the same passes and the solutions agree to 2e-14.
-  The times are within 3% (0.97–1.03).
-- **Momentum has not moved.** Against the default of 0.6.0, which uses
-  momentum, this version is slower where momentum helps:
-  - `LassoPath`: 2.7–4.5 times as long;
-  - `CDQuadraticLoss`: 2.5–4.2 times as long;
-  - `lasso`: 1.3–2.2 times as long.
-  The scaled, feasible and square-root lasso at theory-driven penalties take
-  0.83–1.49 times as long.
+- **The coordinate descent moved without a change, momentum included.**
+  - Against the default of 0.6.0, every case takes the same passes, and the
+    solutions agree to 4e-14.
+  - The times are 0.94–1.03 of 0.6.0's.
+- **What momentum gives**, from the column without it: `LassoPath` takes
+  0.22–0.36 of the time, `CDQuadraticLoss` 0.22–0.39 and `lasso` 0.46–0.79. The
+  scaled, feasible and square-root lasso at theory-driven penalties take
+  0.65–1.13, as in 0.6.
+- A first run, before ProximalOPT took ProximalBase from the registry, gave
+  0.95–1.05 with the same passes.
