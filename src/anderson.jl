@@ -110,11 +110,6 @@ function _extrapolate!(a::AndersonState{T}, x::SparseIterate{T}, f, g) where {T}
   initialize!(f, x)
   _objective(f, g, x) < F0 && return true
   copyto!(view(x.nzval, 1:m), xold)
-  if cache === nothing
-    initialize!(f, x)
-  else
-    copyto!(cache, a.cache)
-    _cacheMoved!(f, x)
-  end
+  cache === nothing ? initialize!(f, x) : (copyto!(cache, a.cache); _cacheMoved!(f, x))
   false
 end
