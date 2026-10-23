@@ -230,3 +230,10 @@ coordinates needs a block update on an `AtomIterate`, which is implemented for
 
 Package depends on [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl)
 and [ProximalSolvers.jl](https://github.com/mlakolar/ProximalSolvers.jl).
+
+## Related packages
+
+- [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl): functions with gradients and proximal operators, and sparse iterates, with [documentation](https://mlakolar.github.io/ProximalBase.jl/dev/) of the closed forms.
+- [ProximalSolvers.jl](https://github.com/mlakolar/ProximalSolvers.jl): coordinate descent with penalty paths, screening and active sets, proximal gradient methods and ADMM.
+- [CovSel.jl](https://github.com/mlakolar/CovSel.jl): high-dimensional Gaussian graphical models: the graphical lasso, CLIME, the fused graphical lasso, and the direct estimation of the difference of two precision matrices.
+- [DiffPrecTest.jl](https://github.com/mlakolar/DiffPrecTest.jl): confidence intervals and tests for the difference of two precision matrices.
