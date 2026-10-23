@@ -46,13 +46,13 @@ options passed to them.
   it off
 """
 struct CDOptions
-  maxIter::Int64
+  maxIter::Int
   optTol::Float64
   order::Symbol             # :random or :cyclic
   warmStart::Bool           # when running CD, should we do path following or not
-  numSteps::Int64           # when pathFollowing, how many points are there on the path
+  numSteps::Int             # when pathFollowing, how many points are there on the path
   relativeTol::Bool         # changes measured relative to the scales of the loss
-  anderson::Int64           # memory of Anderson acceleration, 0 for none
+  anderson::Int             # memory of Anderson acceleration, 0 for none
   momentum::Union{Bool, Nothing}   # Nesterov momentum, nothing for the default
 
   function CDOptions(maxIter, optTol, order::Symbol, warmStart, numSteps, relativeTol, anderson, momentum)
@@ -166,7 +166,7 @@ passed as the last argument. Deprecated: `solve!(x, f, g, options)` (see
 - `tolerance`: the threshold `maxChange` is compared with
 """
 mutable struct CDInfo
-  iterations::Int64
+  iterations::Int
   converged::Bool
   maxChange::Float64
   tolerance::Float64
@@ -209,10 +209,10 @@ replaced. The two solvers also take these fields as keyword arguments, as in
   `warmStart` is not used there
 """
 struct IterLassoOptions
-  maxIter::Int64
+  maxIter::Int
   optTol::Float64
   initProcedure::Symbol    # :Screening, :InitStd, :WarmStart
-  sinit::Int64             # how many columns of X to use to estimate initial variance or obtain initial residuals
+  sinit::Int               # how many columns of X to use to estimate initial variance or obtain initial residuals
   σinit::Float64
   optionsCD::CDOptions
 
@@ -330,7 +330,7 @@ end
 # pivoted QR factorization of √w X rather than the normal equations; when they
 # are not unique, as when X has more columns than there are positive weights,
 # the one of minimum norm
-function _wls(X::AbstractMatrix{T}, w::AbstractVector{T}, y::AbstractVector{T}) where {T <: AbstractFloat}
+function _wls(X::AbstractMatrix, w::AbstractVector, y::AbstractVector)
   sw = sqrt.(w)
   qr(sw .* X, ColumnNorm()) \ (sw .* y)
 end
