@@ -1,14 +1,16 @@
-# Coordinate orders and Anderson acceleration (issue #9) on the lasso
+# Coordinate orders, Anderson acceleration (issue #9) and momentum (issue #20)
+# on the lasso
 #
 #     minimize  ‖y - Xβ‖² / (2n) + λ‖β‖₁,
 #
 # solved from β = 0 with the default stopping rule (optTol = 1e-7), for
-# `order = :cyclic`, `:random`, and `order = :cyclic` with `anderson = 5`.
-# Version 0.6 also had `order = :active` and momentum (issue #20), which the
-# coordinate descent of ProximalOPT does not have yet; see README.md. The designs
-# are those of common.jl, as in the lasso benchmark of ProximalOPT.jl. Prints
-# passes, times and the relative suboptimality of the solution, then the times
-# of 50-λ paths (`LassoPath`, λmax to λmax/100) and a comparison of memories K.
+# `order = :cyclic` and `:random` without momentum, `order = :cyclic` with
+# `anderson = 5`, and `order = :random` with `momentum = true`. Version 0.6
+# also had `order = :active`, which version 0.7 removed; see README.md. The
+# designs are those of common.jl, as in the lasso benchmark of ProximalOPT.jl.
+# Prints passes, times and the relative suboptimality of the solution, then the
+# times of 50-λ paths (`LassoPath`, λmax to λmax/100) and a comparison of
+# memories K.
 # Other processes load the machine unevenly, so every case runs the solvers in
 # turn, until each has at least half a second of runs and at least 3 runs (5 for
 # the random orders); the times are the minimum for the deterministic orders,
@@ -19,9 +21,10 @@
 include("common.jl")
 
 const SOLVERS = [          # name, options, random order
-  ("cyclic",   CDOptions(; order = :cyclic),              false),
-  ("random",   CDOptions(; order = :random),              true),
-  ("Anderson", CDOptions(; order = :cyclic, anderson = 5), false),
+  ("cyclic",   CDOptions(; order = :cyclic),                  false),
+  ("random",   CDOptions(; order = :random, momentum = false), true),
+  ("Anderson", CDOptions(; order = :cyclic, anderson = 5),     false),
+  ("momentum", CDOptions(; order = :random, momentum = true),  true),
 ]
 
 objective(X, y, β, λ) = sum(abs2, y - X * β) / (2 * size(X, 1)) + λ * sum(abs, β)

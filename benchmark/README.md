@@ -83,10 +83,9 @@ default stopping rule.
 ## order_anderson_bench.jl
 
 The tables of this section are from version 0.6, whose own coordinate descent
-also had `order = :active` and momentum. Version 0.7 runs ProximalOPT's
-coordinate descent, which has neither yet, and the script now times the cyclic
-and random orders and Anderson acceleration only; the other columns record
-what momentum gave, for its move to ProximalOPT.
+also had `order = :active`. Version 0.7 runs ProximalOPT's coordinate descent,
+which takes the same passes with and without momentum (see compare/ below) but
+has no `order = :active`; the script no longer times that order.
 
 Compares the orders of the coordinates, Anderson acceleration (issue #9) and
 momentum (issue #20) on the lasso `‖y - Xβ‖² / (2n) + λ‖β‖₁`, solved from β = 0

@@ -80,6 +80,25 @@ losses, or a callable user-defined loss). It pays off when coordinate descent
 needs many passes, as at small penalties and with correlated columns. It keeps
 the weakness of the cyclic order when the columns share a strong common factor,
 where `order = :random` is much faster.
+
+# Momentum
+
+With momentum (`momentum` in [`CDOptions`](@ref)), each pass over the active
+set starts from the extrapolated point `xₖ + βₖ (xₖ - xₖ₋₁)`, with Nesterov's
+`βₖ = (k - 1) / (k + 2)`; the momentum restarts when the step of a pass points
+against it (O'Donoghue and Candès, 2015), after a full pass, and when the
+active set shrinks. The cache of a built-in loss moves with the point, at the
+cost of a few vector operations per pass; a user-defined loss is initialized
+at the extrapolated point. It needs a `SparseIterate` or a
+`SymmetricSparseIterate`. Unlike Anderson acceleration, it works with the
+random order, so it also helps when the columns share a common factor; with
+the cyclic order it can stall.
+
+By default (`momentum = nothing`) it is used with `order = :random`, a
+`SparseIterate` and a built-in loss other than `KronQuadratic`, and not
+otherwise. `momentum = true` asks for it with a user-defined loss as well,
+which can pay off when initializing the loss costs less than a pass;
+`momentum = false` turns it off.
 """
 function coordinateDescent!(
   x::Union{SparseIterate, SymmetricSparseIterate, AtomIterate, Vector{<:AbstractFloat}},

@@ -72,16 +72,26 @@ false)` measures it in the units of the coefficients). It also stops after
 inaccurate.
 
 Each pass visits the coordinates in a new random order by default
-(`order = :random`). With `order = :cyclic`, `anderson = 5` accelerates the
-passes over the active set, which make up most of the passes at small
-penalties, by Anderson extrapolation from the last passes; under a common
-factor between the columns it is much slower than the random order, like the
-cyclic order itself. The Nesterov momentum on the random order that versions
-0.6 used by default is not in ProximalOPT's coordinate descent yet, so 0.7 runs
-without it.
+(`order = :random`). The passes over the active set, which make up most of the
+passes at small penalties, can be accelerated in two ways:
+
+- **Momentum.** Each such pass starts from a point extrapolated from the last
+  two (Nesterov momentum).
+  - It is on by default with a random order, a `SparseIterate` and a built-in
+    loss.
+  - On the designs in [benchmark/README.md](benchmark/README.md) it computes
+    50-λ paths 2.7–6.5 times faster than the plain random order, including
+    designs whose columns share a common factor. Short solves take about as
+    long either way.
+  - `momentum = false` gives the plain random order of versions before 0.6.
+- **Anderson acceleration.** `anderson = 5`, with `order = :cyclic`,
+  extrapolates from the last passes.
+  - It is faster than momentum when few passes are needed, and when n ≫ p.
+  - Under a common factor it is much slower, like the cyclic order.
 
 ```julia
-sol = lasso(X, y, 0.01)                                     # random order
+sol = lasso(X, y, 0.01)                                     # random order, momentum
+sol = lasso(X, y, 0.01, CDOptions(; momentum = false))       # plain random order
 sol = lasso(X, y, 0.01, CDOptions(; order = :cyclic, anderson = 5))
 ```
 

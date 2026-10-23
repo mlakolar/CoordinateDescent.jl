@@ -33,10 +33,11 @@ coordinate descent of ProximalOPT (`ProximalOPT.CDSolver`) with them.
   user-defined ones, use the absolute rule either way
 - `anderson`: the memory `K` of Anderson acceleration, `0` for none (see
   [`coordinateDescent!`](@ref)); it needs `order = :cyclic`
-- `momentum`: Nesterov momentum on the passes over the active set, the default
-  of version 0.6. ProximalOPT's coordinate descent does not have it yet:
-  `nothing` (the default) and `false` run without it, and `true` throws an
-  `ArgumentError`
+- `momentum`: Nesterov momentum on the passes over the active set (see
+  [`coordinateDescent!`](@ref)). The default, `nothing`, uses it where it is
+  known to help: with `order = :random`, a `SparseIterate` and a built-in loss.
+  `true` asks for it with any loss, and needs `order = :random`; `false` turns
+  it off
 """
 struct CDOptions
   maxIter::Int64
@@ -46,7 +47,7 @@ struct CDOptions
   numSteps::Int64           # when pathFollowing, how many points are there on the path
   relativeTol::Bool         # changes measured relative to the scales of the loss
   anderson::Int64           # memory of Anderson acceleration, 0 for none
-  momentum::Union{Bool, Nothing}   # Nesterov momentum, not available yet
+  momentum::Union{Bool, Nothing}   # Nesterov momentum, nothing for the default
 
   function CDOptions(maxIter, optTol, order::Symbol, warmStart, numSteps, relativeTol, anderson, momentum)
     o = new(maxIter, optTol, order, warmStart, numSteps, relativeTol, anderson, momentum)
@@ -60,8 +61,8 @@ struct CDOptions
     o.anderson >= 0 || throw(ArgumentError("anderson must be nonnegative, but it is $(o.anderson)."))
     o.anderson == 0 || o.order === :cyclic ||
       throw(ArgumentError("anderson needs order = :cyclic, since the extrapolation assumes the same order in every pass."))
-    o.momentum === true &&
-      throw(ArgumentError("momentum is not available: ProximalOPT's coordinate descent does not have it yet."))
+    o.momentum === true && o.order === :cyclic &&
+      throw(ArgumentError("momentum needs order = :random; with the cyclic order it can stall far from the minimizer."))
     o
   end
 end
@@ -102,7 +103,7 @@ _withWarmStart(o::CDOptions) =
 # the coordinate descent of ProximalOPT with these options
 _solver(o::CDOptions) =
   CDSolver(; maxpasses = o.maxIter, tol = o.optTol, order = o.order, relative = o.relativeTol,
-           anderson = o.anderson)
+           anderson = o.anderson, momentum = o.momentum)
 
 # Minimizes f + g by the coordinate descent of ProximalOPT, from x when
 # options.warmStart is true. Otherwise x is set to zero and, for NormL1 and

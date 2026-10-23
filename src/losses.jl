@@ -202,16 +202,16 @@ function ProximalOPT.initialize!(m::_LossModel, x)
   m
 end
 
-ProximalOPT._step!(m::_LossModel{T}, g, x::SparseIterate{T}, k::Int) where {T} =
+ProximalOPT.coordinate_step!(m::_LossModel{T}, g, x::SparseIterate{T}, k::Int) where {T} =
   descendCoordinate!(m.f, g, x, k)
-ProximalOPT._step!(m::_LossModel{T}, g, x::SymmetricSparseIterate{T}, k::Int) where {T} =
+ProximalOPT.coordinate_step!(m::_LossModel{T}, g, x::SymmetricSparseIterate{T}, k::Int) where {T} =
   descendCoordinate!(m.f, g, x, k)
 
-ProximalOPT._coordscale(m::_LossModel{T}, x, k::Int) where {T} = T(coordinateScale(m.f, k))
-ProximalOPT._responsescale(m::_LossModel{T}, x) where {T} = T(responseScale(m.f))
+ProximalOPT.coordinate_scale(m::_LossModel{T}, x, k::Int) where {T} = T(coordinateScale(m.f, k))
+ProximalOPT.response_scale(m::_LossModel{T}, x) where {T} = T(responseScale(m.f))
 
 # the value from the cache when the loss is callable, NaN otherwise
-ProximalOPT._value(m::_LossModel{T}, x) where {T} = applicable(m.f, x) ? T(m.f(x)) : T(NaN)
+ProximalOPT.loss_value(m::_LossModel{T}, x) where {T} = applicable(m.f, x) ? T(m.f(x)) : T(NaN)
 
 ProximalOPT.gradient!(G::AbstractVector, m::_LossModel, x::SparseIterate) = fullGradient!(G, m.f, x)
 

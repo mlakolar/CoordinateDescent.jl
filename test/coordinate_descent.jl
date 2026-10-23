@@ -856,12 +856,84 @@ end
 
 
 @testset "momentum" begin
-  # not in ProximalOPT's coordinate descent yet
-  @test CDOptions().momentum === nothing
+  @test CDOptions().momentum === nothing           # used where it is known to help
+  @test CDOptions(;momentum=true).momentum
   @test CDOptions(;momentum=false).momentum === false
-  @test_throws ArgumentError CDOptions(;momentum=true)
+  @test CDOptions(;order=:cyclic).momentum === nothing
+  @test_throws ArgumentError CDOptions(;order=:cyclic, momentum=true)   # can stall
+  @test_throws ArgumentError CDOptions(;order=:cyclic, anderson=5, momentum=true)
   o = CDOptions(;order=:cyclic, anderson=5)
   @test CDOptions(o.maxIter, o.optTol, o.order, o.warmStart, o.numSteps, o.relativeTol, o.anderson) == o
+
+  # a common factor between the columns, where the random order is fast and
+  # the momentum makes it faster
+  n, p, s = 300, 1000, 20
+  X = sqrt(0.5) * randn(n) .+ sqrt(0.5) * randn(n, p)
+  Y = X[:, 1:s] * randn(s) + randn(n)
+  w = 0.5 .+ rand(n)
+  λ = 0.02 * maximum(abs, X'Y) / n
+  λs = 0.2 * maximum(abs, X'Y) / norm(Y)
+  plain = CDOptions(;optTol=1e-10, momentum=false)
+  mom = CDOptions(;optTol=1e-10, momentum=true)
+
+  # the same solution, in fewer passes over all losses together; UserLS has a
+  # cache that ProximalOPT does not know, and is initialized at the
+  # extrapolated point instead
+  passes0, passes1 = 0, 0
+  for (f, g) in ((CDLeastSquaresLoss(Y, X), NormL1(λ)),
+                 (CDLeastSquaresLoss(Y, X; intercept=true), NormL1(λ)),
+                 (CDWeightedLSLoss(Y, X, w), NormL1(λ)),
+                 (CDQuadraticLoss(X'X/n, -X'Y/n), NormL1(λ)),
+                 (CDSqrtLassoLoss(Y, X), NormL1(λs)),
+                 (CDLeastSquaresLoss(Y, X), NormL1(λ, rand(p))),
+                 (UserLS(Y, X), NormL1(λ)))
+    x0, info0 = SparseIterate(p), CDInfo()
+    coordinateDescent!(x0, f, g, plain, info0)
+    x1, info1 = SparseIterate(p), CDInfo()
+    coordinateDescent!(x1, f, g, mom, info1)
+    @test info1.converged
+    @test Vector(x1) ≈ Vector(x0) atol=1e-6
+    passes0 += info0.iterations
+    passes1 += info1.iterations
+  end
+  @test passes1 < passes0 / 1.3
+
+  # without a penalty, from a path of penalties, and along LassoPath
+  f = CDLeastSquaresLoss(Y, X)
+  xref = SparseIterate(p)
+  coordinateDescent!(xref, f, NormL1(λ), plain)
+  x = SparseIterate(p)
+  coordinateDescent!(x, f, NormL1(λ), CDOptions(;optTol=1e-10, warmStart=false, momentum=true))
+  @test Vector(x) ≈ Vector(xref) atol=1e-6
+  x0, x1 = SparseIterate(100), SparseIterate(100)
+  coordinateDescent!(x0, CDLeastSquaresLoss(Y, X[:, 1:100]), ZeroFunction(), plain)
+  coordinateDescent!(x1, CDLeastSquaresLoss(Y, X[:, 1:100]), ZeroFunction(), mom)
+  @test Vector(x1) ≈ Vector(x0) atol=1e-6
+  λpath = [0.2, 0.1, 0.05, 0.02] .* (maximum(abs, X'Y) / n)
+  path0 = LassoPath(X, Y, λpath, plain; standardizeX=false)
+  path1 = LassoPath(X, Y, λpath, mom; standardizeX=false)
+  @test all(path1.converged)
+  for k in eachindex(λpath)
+    @test Vector(path1.βpath[k]) ≈ Vector(path0.βpath[k]) atol=1e-6
+  end
+
+  # not on the groups of an AtomIterate
+  groups = [((k-1)*10+1):(k*10) for k in 1:100]
+  gg = GroupNormL2(λ, groups)
+  @test_throws ArgumentError coordinateDescent!(AtomIterate(p, groups), f, gg, mom)
+
+  # by default it is used with a random order, a SparseIterate and a built-in
+  # loss, and not otherwise: the same runs as momentum = true or false
+  passes(f, g, x, o; seed = 7) = (Random.seed!(seed); info = CDInfo(); coordinateDescent!(x, f, g, o, info); info.iterations)
+  auto = CDOptions(;optTol=1e-10)
+  @test passes(f, NormL1(λ), SparseIterate(p), auto) == passes(f, NormL1(λ), SparseIterate(p), mom)
+  @test passes(f, NormL1(λ), SparseIterate(p), auto) != passes(f, NormL1(λ), SparseIterate(p), plain)
+  uf = UserLS(Y, X)
+  @test passes(uf, NormL1(λ), SparseIterate(p), auto) == passes(uf, NormL1(λ), SparseIterate(p), plain)
+  cyc = CDOptions(;optTol=1e-10, order=:cyclic)
+  @test passes(f, NormL1(λ), SparseIterate(p), cyc) ==
+        passes(f, NormL1(λ), SparseIterate(p), CDOptions(;optTol=1e-10, order=:cyclic, momentum=false))
+  @test passes(f, gg, AtomIterate(p, groups), auto) == passes(f, gg, AtomIterate(p, groups), plain)
 end
 
 end
