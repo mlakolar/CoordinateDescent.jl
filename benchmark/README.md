@@ -9,6 +9,7 @@ julia --project=benchmark benchmark/locpoly_bench.jl    # about a minute
 julia --project=benchmark benchmark/cd_bench.jl         # a few minutes
 julia --project=benchmark benchmark/order_anderson_bench.jl    # about 4 minutes
 julia --project=benchmark benchmark/scaledlasso_bench.jl       # about 10 minutes
+julia --project=benchmark benchmark/gram_bench.jl              # gram = true against false
 ```
 
 The checkout is found through `[sources]` in `Project.toml`, which Julia 1.11
@@ -91,6 +92,19 @@ solutions have about 2,980 nonzero coefficients, close to interpolating the
 3,000 observations. Each of the first three solves took 44,000 to 53,000
 passes, and the script took 19 minutes measuring a regime that users rarely
 fit.
+
+## gram_bench.jl
+
+Compares `lasso` and `LassoPath` on the Gram matrix (`gram = true`) and on the
+residuals (`gram = false`), to calibrate `gram = :auto`. The cases are:
+
+- n ∈ {1000, 5000, 20000} and p ∈ {50, 200, 1000};
+- independent and AR(1) columns;
+- the lasso with an intercept at 0.1 and 0.02 λmax, and a 100-level path.
+
+Each line gives the shortest time of three interleaved runs of each form, the
+passes, the largest difference of the coefficients, and what `:auto` picks.
+`GRAM_BENCH_QUICK=1` runs small sizes, as a check that the script runs.
 
 ## order_anderson_bench.jl
 
