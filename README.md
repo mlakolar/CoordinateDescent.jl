@@ -67,17 +67,23 @@ false)` measures it in the units of the coefficients). It also stops after
 inaccurate.
 
 Each pass visits the coordinates in a new random order by default
-(`order = :random`). `order = :cyclic` visits them in the order `1, 2, …`,
-which is faster on most designs but much slower when the columns share a
-common factor. With the cyclic order, `anderson = 5` adds Anderson
-acceleration: it extrapolates from the last passes over the active set, and
-needs several times fewer passes at small penalties. On the designs without a
-common factor in [benchmark/README.md](benchmark/README.md), it computes a 50-λ
-path 4.7–6.2 times faster than the default; with a common factor, keep the
-random order.
+(`order = :random`). Two options accelerate the passes over the active set,
+which make up most of the passes at small penalties:
+
+- `momentum = true`, with a random order, starts each pass from an
+  extrapolated point (Nesterov momentum).
+  - On every design in [benchmark/README.md](benchmark/README.md) it is at least
+    as fast as the default, and it computes a 50-λ path 2.7–6.5 times faster.
+  - That includes designs whose columns share a common factor.
+  - On easy problems that converge in a few dozen passes it can be a little
+    slower.
+- `anderson = 5`, with `order = :cyclic`, extrapolates from the last passes
+  (Anderson acceleration).
+  - It is faster than momentum when few passes are needed, and when n ≫ p.
+  - Under a common factor it is much slower, like the cyclic order.
 
 ```julia
-sol = lasso(X, y, 0.01, CDOptions(; order = :cyclic, anderson = 5))
+sol = lasso(X, y, 0.01, CDOptions(; order = :active, momentum = true))
 ```
 
 ## Examples

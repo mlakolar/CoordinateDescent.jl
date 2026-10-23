@@ -75,6 +75,19 @@ for another penalty than `ProxL1` and `ProxZero`, `ProximalBase.value(g, x)`.
 It pays off when coordinate descent needs many passes, as at small penalties
 and with correlated columns. It keeps the weakness of the cyclic order when the
 columns share a strong common factor, where `order = :random` is much faster.
+
+# Momentum
+
+With `momentum = true` in [`CDOptions`](@ref), which needs `order = :random` or
+`:active`, each pass over the active set starts from the extrapolated point
+`xₖ + βₖ (xₖ - xₖ₋₁)`, with Nesterov's `βₖ = (k - 1) / (k + 2)`; the momentum
+restarts when the step of a pass points against it (O'Donoghue and Candès,
+2015), after a full pass, and when the active set shrinks. The cache of a
+built-in loss moves with the point, at the cost of a few vector operations per
+pass; another loss is initialized at the extrapolated point. It needs a
+`SparseIterate`. Unlike Anderson acceleration, it works with the random order,
+so it also helps when the columns share a common factor; with the cyclic order
+it can stall.
 """
 function coordinateDescent!(
   x::Union{SparseIterate,SymmetricSparseIterate},
@@ -260,6 +273,7 @@ function _coordinateDescent!(
   scaled = options.relativeTol && sy > 0
   tol = scaled ? options.optTol * sy : options.optTol
   acc = _andersonState(x, f, g, options.anderson)
+  mom = _momentumState(x, options.momentum)
 
   prev_converged = false
   converged = true
@@ -267,8 +281,10 @@ function _coordinateDescent!(
   for iter=1:options.maxIter
 
     # a full pass after convergence on the active set, otherwise a pass over
-    # the nonzero coordinates
+    # the nonzero coordinates, which with momentum starts from the
+    # extrapolated point (see momentum.jl)
     fullPass = converged
+    mom === nothing || fullPass || _momentumStep!(mom, x, f)
     reset!(coef_iterator, fullPass)
     maxH = _cdPass!(x, f, g, coef_iterator, scaled)
     prev_converged = converged
@@ -289,6 +305,18 @@ function _coordinateDescent!(
         acc.filled = 0
       elseif _record!(acc, x)
         _extrapolate!(acc, x, f, g)
+      end
+    end
+
+    # the momentum starts again after a full pass, and the cache is computed
+    # exactly before one
+    if mom !== nothing
+      if fullPass
+        _momentumReset!(mom, x, f)
+      elseif converged
+        _momentumRefresh!(mom, x, f)
+      else
+        _momentumUpdate!(mom, x, f)
       end
     end
   end

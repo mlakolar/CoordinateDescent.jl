@@ -1,7 +1,7 @@
 name = "CoordinateDescent"
 uuid = "c00ed354-b9be-54b8-8a23-c5ac771bc43a"
 authors = ["Mladen Kolar <mkolar@chicagobooth.edu>"]
-version = "0.5.5"
+version = "0.5.6"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
