@@ -843,7 +843,7 @@ nonnegative quadratic. With `A = X'X/n`, `b = -X'y/n` and `c = y'y/n` it is
 `‖y - Xx‖ / √n`, the loss of [`CDSqrtLassoLoss`](@ref) divided by `√n`, without
 the data: it caches `Ax` and the value of the quadratic, so a coordinate update
 costs `O(p)` instead of `O(n)`, and checking a coordinate that does not move
-costs `O(1)`. It also solves the scaled lasso of one variable on the others
+costs `O(1)`. It pays off when n > p, and when many fits share `A`. It also solves the scaled lasso of one variable on the others
 from their covariance matrix `S`: `A = S`, `b = -S[:, j]` and `c = S[j, j]`,
 with an infinite penalty weight on coordinate `j`, which keeps it at zero (see
 [`scaledLasso!`](@ref)).

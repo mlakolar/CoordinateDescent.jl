@@ -224,3 +224,76 @@ median times on the M3 Pro.
 - **Solves that need few passes take about as long either way.** That covers the scaled and feasible lasso at theory-driven penalties, `sqrtLasso` on A, and the small `locpolyl1` problem (0.6 ms both ways). The largest slowdown, 3–5%, is within the noise of the timing.
 - **The default leaves some cases unchanged.** It uses momentum only with a random order, a `SparseIterate` and a built-in loss. User-defined losses, `SymmetricSparseIterate`s (CovSel, DiffPrecTest), the group lasso on `AtomIterate`s, and `order = :cyclic` run as before.
 
+## scaledlasso_bench.jl
+
+Compares the scaled lasso of version 0.6.0, which alternated lasso fits with
+updates of σ̂ until the relative change of σ̂ was below `optTol` (1e-2 by
+default, and 1e-6), with the square-root lasso solved in one run of coordinate
+descent: from the data (`scaledLasso`) and from sufficient statistics
+(`CDSqrtQuadraticLoss`). Part 1 fits regressions with independent or AR(1)
+columns, ten nonzero coefficients, unit noise, `λ = √(2 log p / n)` and the
+column standard deviations as loadings. Part 2 is the precision matrix
+estimator of Sun and Zhang (2013): the scaled lasso of every variable on the
+others, for AR(1), band and Erdős–Rényi precision matrices, from copies of the
+other columns of the data, or from their covariance matrix `S`, shared by all
+the columns (built with `check = false`, with an infinite weight on the
+response). Seconds on one CPU of USC CARC Discovery (AMD EPYC 7513, Julia
+1.13.2; run `20261023T1216Z-cd-scaledlasso`, commit `e6a0bd2`), and in
+parentheses the largest difference of the coefficients from a solution at
+`optTol = 1e-12`, relative to its largest coefficient. "A, b, c" is the time to
+form the sufficient statistics.
+
+| n | p | ρ | 0.6.0, optTol = 1e-2 | 0.6.0, optTol = 1e-6 | scaledLasso | from A, b, c | A, b, c | passes 0.6.0 / new |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1000 | 200 | 0.0 | 0.000544 (3e-04) | 0.000904 (5e-08) | 0.000186 (6e-10) | 4.93e-05 (2e-09) | 0.0017 | 35 / 10 |
+| 1000 | 200 | 0.5 | 0.000462 (3e-04) | 0.000715 (1e-07) | 0.000207 (4e-07) | 5.76e-05 (1e-07) | 0.00161 | 85 / 20 |
+| 1000 | 200 | 0.9 | 0.000801 (3e-05) | 0.001 (2e-06) | 0.000657 (5e-06) | 0.000141 (3e-06) | 0.00165 | 195 / 169 |
+| 5000 | 500 | 0.0 | 0.00488 (7e-05) | 0.00701 (4e-08) | 0.00239 (5e-10) | 0.000263 (5e-11) | 0.0294 | 23 / 9 |
+| 5000 | 500 | 0.5 | 0.0061 (2e-05) | 0.00774 (3e-07) | 0.00358 (8e-08) | 0.000286 (1e-07) | 0.0285 | 53 / 32 |
+| 5000 | 500 | 0.9 | 0.0075 (3e-04) | 0.00908 (4e-06) | 0.00772 (3e-06) | 0.000393 (3e-06) | 0.0287 | 184 / 152 |
+| 1000 | 1000 | 0.0 | 0.00204 (8e-04) | 0.00373 (7e-08) | 0.000748 (6e-10) | 0.000998 (3e-10) | 0.0221 | 34 / 11 |
+| 1000 | 1000 | 0.5 | 0.00173 (7e-04) | 0.0031 (1e-07) | 0.000786 (8e-08) | 0.00101 (3e-07) | 0.022 | 77 / 40 |
+| 1000 | 1000 | 0.9 | 0.00225 (1e-04) | 0.00295 (4e-06) | 0.00126 (6e-06) | 0.0012 (4e-06) | 0.022 | 264 / 244 |
+| 200 | 1000 | 0.0 | 0.00114 (2e-02) | 0.00405 (2e-06) | 0.000213 (4e-08) | 0.000995 (1e-07) | 0.00543 | 75 / 17 |
+| 200 | 1000 | 0.5 | 0.000916 (2e-03) | 0.00197 (3e-07) | 0.00029 (5e-08) | 0.00103 (1e-07) | 0.00536 | 148 / 31 |
+| 200 | 1000 | 0.9 | 0.000923 (1e-04) | 0.0014 (3e-06) | 0.000369 (3e-06) | 0.00122 (3e-06) | 0.00541 | 255 / 173 |
+| 200 | 5000 | 0.0 | 0.00527 (3e-02) | 0.0164 (5e-06) | 0.00132 (7e-08) | 0.0329 (3e-08) | 0.172 | 72 / 26 |
+| 200 | 5000 | 0.5 | 0.00428 (2e-03) | 0.00978 (3e-07) | 0.00116 (1e-07) | 0.0329 (1e-07) | 0.173 | 99 / 22 |
+| 200 | 5000 | 0.9 | 0.00414 (4e-04) | 0.00618 (5e-06) | 0.00159 (4e-06) | 0.0337 (4e-06) | 0.171 | 266 / 181 |
+
+| problem | 0.6.0, optTol = 1e-2 | 0.6.0, optTol = 1e-6 | scaledLasso | from S |
+|---|---:|---:|---:|---:|
+| AR(1), p = 200, n = 100 | 0.026 (6e-03) | 0.066 (6e-07) | 0.0125 (1e-07) | 0.002 (1e-07) |
+| band, p = 200, n = 100 | 0.0261 (3e-02) | 0.0508 (3e-06) | 0.00864 (5e-07) | 0.00255 (6e-07) |
+| Erdős–Rényi, p = 200, n = 100 | 0.0171 (8e-03) | 0.0338 (1e-06) | 0.00834 (2e-07) | 0.00231 (2e-07) |
+| AR(1), p = 200, n = 400 | 0.0355 (4e-04) | 0.0842 (2e-07) | 0.0422 (2e-07) | 0.00225 (1e-07) |
+| band, p = 200, n = 400 | 0.0409 (4e-03) | 0.0787 (5e-07) | 0.0297 (3e-07) | 0.00458 (3e-07) |
+| Erdős–Rényi, p = 200, n = 400 | 0.0379 (6e-03) | 0.0633 (6e-07) | 0.0268 (2e-07) | 0.00306 (3e-07) |
+| AR(1), p = 500, n = 250 | 0.2 (3e-03) | 0.295 (4e-07) | 0.138 (1e-07) | 0.0134 (1e-07) |
+| band, p = 500, n = 250 | 0.247 (9e-03) | 0.463 (1e-06) | 0.122 (3e-07) | 0.024 (4e-07) |
+| Erdős–Rényi, p = 500, n = 250 | 0.182 (7e-03) | 0.318 (8e-07) | 0.139 (2e-07) | 0.015 (2e-07) |
+| AR(1), p = 500, n = 1000 | 0.504 (1e-03) | 0.68 (1e-07) | 0.366 (1e-07) | 0.0175 (1e-07) |
+| band, p = 500, n = 1000 | 0.57 (2e-03) | 0.902 (4e-07) | 0.435 (3e-07) | 0.0242 (3e-07) |
+| Erdős–Rényi, p = 500, n = 1000 | 0.532 (4e-03) | 0.81 (7e-07) | 0.366 (9e-07) | 0.0158 (7e-07) |
+| AR(1), p = 1000, n = 500 | 1.14 (2e-03) | 1.71 (3e-07) | 0.796 (1e-07) | 0.051 (1e-07) |
+| band, p = 1000, n = 500 | 1.17 (4e-03) | 2.23 (7e-07) | 0.894 (3e-07) | 0.0884 (3e-07) |
+| Erdős–Rényi, p = 1000, n = 500 | 1.07 (7e-03) | 1.82 (7e-07) | 0.751 (4e-07) | 0.0528 (5e-07) |
+| AR(1), p = 1000, n = 2000 | 3.38 (9e-04) | 4.92 (1e-07) | 3.08 (1e-07) | 0.0494 (1e-07) |
+| band, p = 1000, n = 2000 | 4.26 (6e-04) | 6.13 (4e-07) | 3.55 (3e-07) | 0.08 (3e-07) |
+| Erdős–Rényi, p = 1000, n = 2000 | 3.8 (3e-03) | 5.36 (4e-07) | 3.08 (3e-07) | 0.0524 (6e-07) |
+
+- **Faster, and at the solution.** In all but one case the new `scaledLasso`
+  was 1.2–5.4 times faster than the default of 0.6.0, whose coefficients were
+  off by 2e-5 to 3e-2; the exception (n = 5000, p = 500, ρ = 0.9) was 3% slower,
+  with an error of 3e-6 against 3e-4. At the accuracy of the new version (0.6.0
+  with `optTol = 1e-6`) it was 1.2–19 times faster.
+- **Sufficient statistics pay off when n > p.** From `A`, `b` and `c` the fit
+  was 3.6–20 times faster than from the data when n > p, not counting forming
+  them, which costs `O(np²)` (29 ms for n = 5000, p = 500, as much as 4–12 fits
+  from the data). When p ≥ n it was slower, up to 25 times for p = 5000,
+  n = 200: a coordinate update costs `O(p)` instead of `O(n)`.
+- **The precision matrix estimator.** From the shared `S`, all the columns took
+  2–90 ms, 3.4–62 times faster than the new `scaledLasso` on copies of the data
+  and 7–73 times faster than the default of 0.6.0, with coefficients within
+  7e-7 of the solution. Without `check = false`, checking `S` for every column
+  costs `O(p²)` each, which dominated for p ≥ 1000.
