@@ -835,7 +835,7 @@ end
 ####################################
 
 """
-    CDSqrtQuadraticLoss(A, b, c)
+    CDSqrtQuadraticLoss(A, b, c; check=true)
 
 The square-root lasso loss from sufficient statistics,
 `f(x) = √(x'Ax + 2b'x + c)`, with symmetric positive semidefinite `A` and a
@@ -851,7 +851,9 @@ with an infinite penalty weight on coordinate `j`, which keeps it at zero (see
 As for [`CDSqrtLassoLoss`](@ref), `descendCoordinate!` minimizes `f + g` over
 a coordinate exactly, and is implemented for
 [`ProxL1`](@ref ProximalBase.ProxL1) only. `A`, `b` and `c` must not contain
-`NaN` or `Inf`.
+`NaN` or `Inf`, and `A` must be symmetric; checking `A` costs `O(p²)`, as much
+as a few passes, so `check = false` skips it when many losses share a checked
+`A`, as the columns of a covariance matrix do.
 """
 mutable struct CDSqrtQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferentiableFunction
   const A::S
@@ -861,12 +863,15 @@ mutable struct CDSqrtQuadraticLoss{T<:AbstractFloat, S, U} <: CoordinateDifferen
   q::T                  # x'Ax + 2b'x + c at the iterate f is current for
 end
 
-function CDSqrtQuadraticLoss(A::AbstractMatrix{T}, b::AbstractVector{T}, c::Real) where {T<:AbstractFloat}
-  _check_finite(A, "A")
+function CDSqrtQuadraticLoss(A::AbstractMatrix{T}, b::AbstractVector{T}, c::Real; check::Bool=true) where {T<:AbstractFloat}
+  if check
+    _check_finite(A, "A")
+    issymmetric(A) || throw(ArgumentError("A must be symmetric"))
+  end
   _check_finite(b, "b")
   isfinite(c) || throw(ArgumentError("c must be finite, but it is $c."))
-  issymmetric(A) || throw(ArgumentError("A must be symmetric"))
-  length(b) == size(A, 2) || throw(ArgumentError("length of b must equal the number of columns of A"))
+  LinearAlgebra.checksquare(A) == length(b) ||
+    throw(ArgumentError("length of b must equal the number of columns of A"))
   CDSqrtQuadraticLoss{T, typeof(A), typeof(b)}(A, b, T(c), zeros(T, length(b)), T(c))
 end
 

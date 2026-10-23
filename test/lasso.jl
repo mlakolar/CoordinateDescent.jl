@@ -451,6 +451,12 @@ end
   @test_throws ArgumentError CDSqrtQuadraticLoss(A, b, Inf)
   @test_throws ArgumentError CDSqrtQuadraticLoss(A, b[1:end-1], c)
   @test_throws ArgumentError CDSqrtQuadraticLoss(A + triu(ones(p, p), 1), b, c)
+  @test_throws ArgumentError CDSqrtQuadraticLoss(A[:, 1:end-1], b[1:end-1], c)
+  # without the O(p²) checks of A: the same solution
+  x = SparseIterate(p)
+  coordinateDescent!(x, CDSqrtQuadraticLoss(A, b, c; check=false), ProxL1(λ / sqrt(n)), tight)
+  @test Vector(x) ≈ Vector(xd) atol=1e-8
+  CDSqrtQuadraticLoss(A + triu(ones(p, p), 1), b, c; check=false)     # not checked
 end
 
 @testset "scaled lasso from sufficient statistics" begin

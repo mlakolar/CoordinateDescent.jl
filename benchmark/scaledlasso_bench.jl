@@ -147,7 +147,7 @@ function part2()
     function fromS(j, others; options=CDOptions())
       ω = copy(w)
       ω[j] = Inf
-      s = scaledLasso!(SparseIterate(p), CDSqrtQuadraticLoss(S, -S[:, j], S[j, j]), λ, ω, options)
+      s = scaledLasso!(SparseIterate(p), CDSqrtQuadraticLoss(S, -S[:, j], S[j, j]; check=false), λ, ω, options)
       Vector(s.x)[others], s.σ
     end
     ref, _ = columns((j, others) -> fromS(j, others; options=CDOptions(; optTol=1e-12, maxIter=100_000)), p)

@@ -213,8 +213,9 @@ loss [`CDSqrtQuadraticLoss`](@ref)`(A, b, c)`, `A = X'X/n`, `b = -X'y/n` and
 `c = y'y/n`, it needs neither `X` nor `y`, and a coordinate update costs `O(p)`
 instead of `O(n)`. With `A = S`, `b = -S[:, j]`, `c = S[j, j]` and `ω[j] = Inf`
 it is the scaled lasso of variable `j` on the others from their covariance
-matrix `S`, as in the precision matrix estimator of Sun and Zhang (2013). Its
-solution has no residuals (an empty vector) and no intercept.
+matrix `S`, as in the precision matrix estimator of Sun and Zhang (2013); for
+all the variables, check `S` once and build the losses with `check = false`.
+Its solution has no residuals (an empty vector) and no intercept.
 
 Before version 0.6.1, `scaledLasso!` alternated lasso fits with updates of `σ̂`
 until the relative change of `σ̂` was below `options.optTol` (by default 1e-2),
