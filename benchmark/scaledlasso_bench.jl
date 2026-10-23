@@ -16,7 +16,7 @@
 # accuracy is the largest difference of the coefficients from a solution at
 # optTol = 1e-12 (relative to the largest coefficient), and of σ̂.
 
-using CoordinateDescent, ProximalBase
+using CoordinateDescent, ProximalBase, ProximalSolvers
 using LinearAlgebra, Printf, Random, SparseArrays, Statistics
 
 const QUICK = "quick" in ARGS
@@ -45,9 +45,9 @@ function alternating!(x, X, y, λ, ω, optTol; maxIter=100, optionsCD=CDOptions(
   info = CDInfo()
   passes = 0
   for _ in 1:maxIter
-    coordinateDescent!(x, f, ProxL1(λ * σ, ω), optionsCD, info)
+    coordinateDescent!(x, f, NormL1(λ * σ, ω), optionsCD, info)
     passes += info.iterations
-    σnew = norm(f.r) / sqrt(n)
+    σnew = norm(ProximalSolvers.residuals(f)) / sqrt(n)
     done = abs(σnew - σ) / σ < optTol
     σ = σnew
     done && break

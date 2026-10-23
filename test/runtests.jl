@@ -3,7 +3,6 @@ using Test
 using Aqua
 
 tests = [
-  "atom_iterator",
   "coordinate_descent",
   "lasso",
   "varying_coefficient_lasso"

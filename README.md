@@ -4,9 +4,14 @@
 [![codecov](https://codecov.io/gh/mlakolar/CoordinateDescent.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/mlakolar/CoordinateDescent.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
-Implements coordinate descent for a smooth function plus a penalty that decomposes across coordinates.
-
-Currently a naive version of the active-set coordinate descent is implemented that works for the L1 and weighted L1 penalty and for other penalties that separate across coordinates (see [Writing your own loss or penalty](#writing-your-own-loss-or-penalty)), and a block version for the group lasso, whose coordinates are groups.
+Lasso estimators computed by coordinate descent. The coordinate descent
+itself (the passes over the coordinates and the active set, the penalty paths
+with screening, the reweighting of the scaled and feasible lasso) is that of
+[ProximalSolvers.jl](https://github.com/mlakolar/ProximalSolvers.jl), on the losses and
+penalties of [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl). It
+works for the ℓ1 and weighted ℓ1 penalty and for other penalties that separate
+across coordinates (see [Writing your own loss or penalty](#writing-your-own-loss-or-penalty)),
+and by blocks for the group lasso, whose coordinates are groups.
 
 Estimators:
 * Lasso
@@ -40,7 +45,7 @@ path.λpath, path.βpath, path.β0path
 # lower-level interface
 x = SparseIterate(p)
 f = CDLeastSquaresLoss(y, X)
-g = ProxL1(0.1)
+g = NormL1(0.1)
 info = CDInfo()
 coordinateDescent!(x, f, g, CDOptions(; optTol=1e-8), info)
 info.converged, info.iterations
@@ -54,8 +59,8 @@ coefficients; each step updates one group, with the largest eigenvalue of
 ```julia
 using LinearAlgebra
 groups = [1:5, 6:10, 11:20, 21:50]
-g = ProxGroupL2(0.1, groups)         # weights wₖ = √|Gₖ| by default
-x = AtomIterate(p, g)
+g = GroupNormL2(0.1, groups)         # weights wₖ = √|Gₖ| by default
+x = AtomIterate(p, groups)
 coordinateDescent!(x, CDLeastSquaresLoss(y, X), g)
 [norm(x[G]) for G in groups]         # the first group is selected
 ```
@@ -105,8 +110,8 @@ each one prints its results:
 | [05_group_lasso.jl](examples/05_group_lasso.jl) | the group lasso: weights, unpenalized groups, the optimality conditions, choosing λ on a validation set |
 | [06_losses.jl](examples/06_losses.jl) | `coordinateDescent!` with each loss: weighted least squares, a weighted bootstrap, a quadratic loss from `X'X` or from a covariance matrix |
 | [07_varying_coefficient.jl](examples/07_varying_coefficient.jl) | `locpoly` and `locpolyl1`: kernels, bandwidths, degrees, cross-validation, standard errors |
-| [08_custom_loss.jl](examples/08_custom_loss.jl) | a loss of your own: ℓ1-penalized logistic regression |
-| [09_custom_penalty.jl](examples/09_custom_penalty.jl) | penalties of your own: the elastic net and the minimax concave penalty |
+| [08_custom_loss.jl](examples/08_custom_loss.jl) | a loss of your own: ℓ1-penalized logistic regression, checked against ProximalBase's `LogisticLoss` |
+| [09_custom_penalty.jl](examples/09_custom_penalty.jl) | penalties of your own: the elastic net and the minimax concave penalty, checked against ProximalBase's |
 
 Run them from the root of the repository:
 
@@ -116,20 +121,23 @@ julia --project=examples examples/01_lasso.jl
 julia --project=examples examples/run_all.jl      # all of them, about 20 seconds
 ```
 
-The environment loads the package from this checkout through `[sources]` in
+The environment loads the package from this checkout, and ProximalSolvers from
+GitHub until its version 0.1.1 is registered, through `[sources]` in
 [examples/Project.toml](examples/Project.toml), which Julia 1.11 and later
-read. On Julia 1.10, instantiate it with
-`julia --project=examples -e 'using Pkg; Pkg.develop(path = "."); Pkg.instantiate()'`
-instead.
+read. On Julia 1.10, develop the checkout and add ProximalSolvers by URL in that
+environment first.
 
 ## Writing your own loss or penalty
 
 `coordinateDescent!(x, f, g)` minimizes `f(x) + g(x)` one coordinate at a
-time. It does the passes over the coordinates, the active set and the stopping
-rule, and for `ProxL1` and `ProxGroupL2` also the path of penalty levels from
-λmax (`warmStart = false`) and the screening with the strong rule. The loss `f`
-makes each coordinate update, and the penalty `g` enters it through its
-proximal operator on that coordinate. Both can be your own.
+time, by ProximalSolvers's coordinate descent: it does the passes over the
+coordinates, the active set and the stopping rule, and for `NormL1` and
+`GroupNormL2` also the path of penalty levels from λmax (`warmStart = false`)
+and the screening with the strong rule. The loss `f` makes each coordinate
+update, and the penalty `g` enters it through its proximal operator on that
+coordinate. Both can be your own. A loss can also be written for ProximalSolvers
+directly, as a `ProximalSolvers.CDModel` (see its documentation); the interface
+below adapts to it.
 
 ### A loss
 
@@ -145,10 +153,12 @@ extends these functions, which are not exported (write
 | `gradient(f, x, k)` | `∂f/∂xₖ` at `x`, from the cache |
 | `descendCoordinate!(f, g, x, k)` | updates `x[k]` and the cache, and returns the change of `x[k]`, which the stopping rule uses |
 | `coordinateScale(f, k)`, `responseScale(f)` | optional: the scales of the coordinates and of the response, which make the stopping rule independent of the units (both 1 by default) |
-| `fullGradient!(grad, f, x)` | optional: the whole gradient at once, for the screening (`gradient` for every `k` by default) |
+| `fullGradient!(grad, f, x)` | optional: the whole gradient at once, for λmax (`gradient` for every `k` by default) |
+| `f(x)` | optional: the value from the cache, which Anderson acceleration needs |
 
-A coordinate update that works with every penalty minimizes a quadratic upper
-bound of `f` along the coordinate plus the penalty, which is a proximal step:
+A coordinate update that works with every separable penalty minimizes a
+quadratic upper bound of `f` along the coordinate plus the penalty, which is a
+proximal step:
 
 ```julia
 using CoordinateDescent, ProximalBase
@@ -160,56 +170,70 @@ end
 function CoordinateDescent.descendCoordinate!(f::MyLoss, g, x, k)
   a = curvature(f, k)                     # an upper bound on ∂²f/∂xₖ² along the coordinate
   old = x[k]
-  x[k] = old - CoordinateDescent.gradient(f, x, k) / a
-  cdprox!(g, x, k, 1 / a)                 # the proximal operator of g with step 1/a
-  h = x[k] - old
-  iszero(h) || update_cache!(f, k, h)     # for example η .+= h .* X[:, k]
+  # the proximal operator of g on entry k with step 1/a
+  h = prox_entry(g, old - CoordinateDescent.gradient(f, x, k) / a, k, 1 / a) - old
+  if !iszero(h)
+    x[k] = old + h
+    update_cache!(f, k, h)                # for example η .+= h .* X[:, k]
+  end
   h
 end
 ```
 
 The step never increases `f + g`. With such a loss,
-`coordinateDescent!(x, f, ProxL1(λ, ω))` also gets the path from λmax and the
-screening, which use `gradient` and `fullGradient!`.
+`coordinateDescent!(x, f, NormL1(λ, ω))` also gets the path from λmax, which
+uses `gradient` and `fullGradient!`.
 [examples/08_custom_loss.jl](examples/08_custom_loss.jl) builds ℓ1-penalized
-logistic regression this way and checks it against Newton's method, and
-[CovSel.jl](https://github.com/mlakolar/CovSel.jl) and
-[DiffPrecTest.jl](https://github.com/mlakolar/DiffPrecTest.jl) define losses of
-symmetric matrices, whose iterate is a `SymmetricSparseIterate`.
+logistic regression this way and checks it against Newton's method and
+ProximalBase's `LogisticLoss`. On a `SymmetricSparseIterate`, whose
+coordinates are the entries of the lower triangle, `ProximalBase.coordinates(x)[k]`
+is coordinate `k` and `ProximalBase.prox_coordinate!(x, g, k, γ)` its proximal
+step.
 
 ### A penalty
 
 A penalty `g(x) = Σₖ gₖ(xₖ)` that separates across coordinates is a subtype
-of `ProximableFunction` from ProximalBase.jl with a method of
-`ProximalBase.cdprox!(g, x, k, γ)`, which replaces `x[k]` with
-`argmin_z gₖ(z) + (z - x[k])² / (2γ)`. For the elastic net
-`λ (α ‖x‖₁ + (1 - α) ‖x‖² / 2)`:
+of `ProximalBase.AbstractFunction` that says it is separable, gives the
+proximal operator of one entry, `ProximalBase.prox_entry(g, v, k, γ)`, which
+returns `argmin_z gₖ(z) + (z - v)² / (2γ)`, and is callable for its value. For
+the elastic net `λ (α ‖x‖₁ + (1 - α) ‖x‖² / 2)`:
 
 ```julia
-struct ElasticNet{T} <: ProximableFunction
+struct MyElasticNet{T} <: ProximalBase.AbstractFunction
   λ::T
   α::T
 end
 
-ProximalBase.cdprox!(g::ElasticNet, x::SparseIterate, k::Int, γ) =
-  x[k] = shrink(x[k], γ * g.λ * g.α) / (1 + γ * g.λ * (1 - g.α))
+ProximalBase.isseparable(::Type{<:MyElasticNet}) = true
+ProximalBase.prox_entry(g::MyElasticNet, v, k, γ) = shrink(v, γ * g.λ * g.α) / (1 + γ * g.λ * (1 - g.α))
+(g::MyElasticNet)(x) = g.λ * (g.α * norm(x, 1) + (1 - g.α) * sum(abs2, x) / 2)
 
 x = SparseIterate(p)
-coordinateDescent!(x, CDLeastSquaresLoss(y, X), ElasticNet(0.1, 0.5))
+coordinateDescent!(x, CDLeastSquaresLoss(y, X), MyElasticNet(0.1, 0.5))
 ```
 
-`CDLeastSquaresLoss`, `CDWeightedLSLoss`, `CDQuadraticLoss` and every loss whose
-`descendCoordinate!` calls `cdprox!` accept such a penalty; `CDSqrtLassoLoss`
-and `CDSqrtQuadraticLoss`, whose updates are the exact minimizers for the ℓ1
-norm, do not. The path from
-λmax and the screening need to know the penalty, so for other penalties
-`warmStart = false` starts from zero and solves at `g` directly; a path is then
-a loop over decreasing penalties in which each fit starts from the previous
-solution. The proximal operator of a nonconvex penalty must be defined for the
-steps `γ = 1/a` of the loss: `n / ‖X[:, k]‖²` for least squares.
+ProximalBase has this one built in, as `ElasticNet(λα, λ(1 - α))`, with
+`MCP`, `SCAD`, `NormL1Nonneg` and `IndBox`. `CDLeastSquaresLoss`,
+`CDWeightedLSLoss`, `CDQuadraticLoss` and every loss whose `descendCoordinate!`
+calls `prox_entry` accept such a penalty; `CDSqrtLassoLoss` and
+`CDSqrtQuadraticLoss`, whose updates are the exact minimizers for the ℓ1 norm,
+do not. The path from λmax and the screening need to know the penalty, so for
+other penalties `warmStart = false` starts from zero and solves at `g`
+directly; a path is then a loop over decreasing penalties in which each fit
+starts from the previous solution. The proximal operator of a nonconvex
+penalty must be defined for the steps `γ = 1/a` of the loss: `n / ‖X[:, k]‖²`
+for least squares.
 [examples/09_custom_penalty.jl](examples/09_custom_penalty.jl) implements the
 elastic net and the minimax concave penalty (MCP). A penalty on groups of
 coordinates needs a block update on an `AtomIterate`, which is implemented for
-`ProxGroupL2` only.
+`GroupNormL2` only.
 
-Package depends on [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl).
+Package depends on [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl)
+and [ProximalSolvers.jl](https://github.com/mlakolar/ProximalSolvers.jl).
+
+## Related packages
+
+- [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl): functions with gradients and proximal operators, and sparse iterates, with [documentation](https://mlakolar.github.io/ProximalBase.jl/dev/) of the closed forms.
+- [ProximalSolvers.jl](https://github.com/mlakolar/ProximalSolvers.jl): coordinate descent with penalty paths, screening and active sets, proximal gradient methods and ADMM.
+- [CovSel.jl](https://github.com/mlakolar/CovSel.jl): high-dimensional Gaussian graphical models: the graphical lasso, CLIME, sparse precision matrices by the scaled lasso, the fused graphical lasso, and the direct estimation of the difference of two precision matrices.
+- [DiffPrecTest.jl](https://github.com/mlakolar/DiffPrecTest.jl): confidence intervals and tests for the difference of two precision matrices.

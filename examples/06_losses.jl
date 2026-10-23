@@ -3,10 +3,10 @@
 #     coordinateDescent!(x, f, g, options = CDOptions(), info = CDInfo())
 #
 # minimizes f(x) + g(x) for a loss f and a penalty g from ProximalBase:
-# ProxL1(λ) for λ ‖x‖₁, ProxL1(λ, ω) for λ ∑ⱼ ωⱼ |xⱼ|, ProxZero() for no
-# penalty, and ProxGroupL2 for the group lasso (05_group_lasso.jl). x is a
+# NormL1(λ) for λ ‖x‖₁, NormL1(λ, ω) for λ ∑ⱼ ωⱼ |xⱼ|, ZeroFunction() for no
+# penalty, and GroupNormL2 for the group lasso (05_group_lasso.jl). x is a
 # SparseIterate, or a dense Vector that is overwritten with the solution. The
-# losses are
+# losses, models of ProximalSolvers, whose coordinate descent does the work, are
 #
 #     CDLeastSquaresLoss(y, X; intercept)   ‖y - Xβ‖² / (2n)
 #     CDWeightedLSLoss(y, X, w)             ∑ᵢ wᵢ (yᵢ - Xᵢ'β)² / (2n)
@@ -20,7 +20,7 @@
 #
 #     julia --project=examples examples/06_losses.jl
 
-using CoordinateDescent, ProximalBase
+using CoordinateDescent, ProximalBase, ProximalSolvers
 using LinearAlgebra, Printf, Random, Statistics
 
 Random.seed!(6)
@@ -36,35 +36,35 @@ println("== Least squares")
 
 f = CDLeastSquaresLoss(y, X)
 x = SparseIterate(p)
-coordinateDescent!(x, f, ProxL1(0.1))
-println("ProxL1(0.1) selects ", support(x))
+coordinateDescent!(x, f, NormL1(0.1))
+println("NormL1(0.1) selects ", support(x))
 
-# the objective, with value(g, x) from ProximalBase for the penalty
-g = ProxL1(0.1)
-@printf("objective %.6f\n", sum(abs2, y - X * x) / (2n) + value(g, x))
+# the objective; the functions of ProximalBase are callable, g(x) is the penalty
+g = NormL1(0.1)
+@printf("objective %.6f\n", sum(abs2, y - X * x) / (2n) + g(x))
 
 # no penalty: least squares by coordinate descent
 xls = SparseIterate(p)
-coordinateDescent!(xls, f, ProxZero(), CDOptions(; optTol = 1e-12))
-@printf("ProxZero() matches X \\ y to %.1e\n", norm(xls - X \ y, Inf))
+coordinateDescent!(xls, f, ZeroFunction(), CDOptions(; optTol = 1e-12))
+@printf("ZeroFunction() matches X \\ y to %.1e\n", norm(xls - X \ y, Inf))
 
 # loadings ω, here zero for the first column, which is then not penalized:
 # for a λ that sets every other coefficient to zero, it is still there
 ω = [0.0; ones(p - 1)]
 x = SparseIterate(p)
-coordinateDescent!(x, f, ProxL1(5.0, ω))
-println("ProxL1(5.0, ω) with ω₁ = 0 keeps ", support(x))
+coordinateDescent!(x, f, NormL1(5.0, ω))
+println("NormL1(5.0, ω) with ω₁ = 0 keeps ", support(x))
 
 # with an intercept, the columns and y are centered on the fly; the intercept
-# that goes with x is f.ybar - f.xbar'x
+# that goes with x is ProximalSolvers.intercept(f, x), ȳ - x̄'x
 fi = CDLeastSquaresLoss(y .+ 5, X; intercept = true)
 x = SparseIterate(p)
-coordinateDescent!(x, fi, ProxL1(0.1))
-@printf("with intercept = true: β̂₀ = %.2f, selects %s\n", fi.ybar - dot(fi.xbar, x), support(x))
+coordinateDescent!(x, fi, NormL1(0.1))
+@printf("with intercept = true: β̂₀ = %.2f, selects %s\n", ProximalSolvers.intercept(fi, x), support(x))
 
 # a dense starting point is converted, and overwritten with the solution
 xd = zeros(p)
-coordinateDescent!(xd, f, ProxL1(0.1))
+coordinateDescent!(xd, f, NormL1(0.1))
 println("dense Vector: ", typeof(xd), " with ", count(!iszero, xd), " nonzeros")
 
 println("\n== Weighted least squares")
@@ -77,11 +77,11 @@ yh = X * β + σ .* randn(n)
 w = 1 ./ σ .^ 2
 w ./= mean(w)                  # the loss divides by n, so weights of mean one keep λ comparable
 xw = SparseIterate(p)
-coordinateDescent!(xw, CDWeightedLSLoss(yh, X, w), ProxL1(0.05), CDOptions(; optTol = 1e-10))
+coordinateDescent!(xw, CDWeightedLSLoss(yh, X, w), NormL1(0.05), CDOptions(; optTol = 1e-10))
 xs = SparseIterate(p)
-coordinateDescent!(xs, CDLeastSquaresLoss(sqrt.(w) .* yh, sqrt.(w) .* X), ProxL1(0.05), CDOptions(; optTol = 1e-10))
+coordinateDescent!(xs, CDLeastSquaresLoss(sqrt.(w) .* yh, sqrt.(w) .* X), NormL1(0.05), CDOptions(; optTol = 1e-10))
 xu = SparseIterate(p)
-coordinateDescent!(xu, CDLeastSquaresLoss(yh, X), ProxL1(0.05))
+coordinateDescent!(xu, CDLeastSquaresLoss(yh, X), NormL1(0.05))
 @printf("weighted ‖β̂ - β‖ = %.3f (scaled rows agree to %.1e), unweighted ‖β̂ - β‖ = %.3f\n",
         norm(xw - β), norm(xw - xs, Inf), norm(xu - β))
 
@@ -96,7 +96,7 @@ counts = zeros(Int, p)
 B = 100
 for b in 1:B
   wb .= -log.(rand(n))            # Exp(1) weights
-  coordinateDescent!(xb, fb, ProxL1(0.1))
+  coordinateDescent!(xb, fb, NormL1(0.1))
   counts .+= .!iszero.(xb)
 end
 println("selection frequencies in $B bootstrap fits: ",
@@ -107,15 +107,15 @@ println("\n== A quadratic loss")
 # With many observations, X'X / n and X'y / n summarize the data:
 # CDQuadraticLoss(X'X / n, -X'y / n) has the same minimizer as the least
 # squares loss, and its updates cost O(p) instead of O(n). Forming X'X costs
-# O(np²) once, so it pays off when the same data are fit many times: long
-# paths, many penalties, the bootstrap.
+# O(np²) once (and the loss copies it), so it pays off when the same data are
+# fit many times: long paths, many penalties, the bootstrap.
 nbig = 200_000
 Xbig = randn(nbig, p)
 ybig = Xbig * β + randn(nbig)
 λs = exp.(range(log(0.5), log(0.001); length = 20))
 function lassopath!(x, f, λs)
   for λ in λs
-    coordinateDescent!(x, f, ProxL1(λ))
+    coordinateDescent!(x, f, NormL1(λ))
   end
   x
 end
@@ -145,15 +145,15 @@ S = cov(Zg)
 for j in (1, 10, 20)
   others = setdiff(1:d, j)
   xn = SparseIterate(d - 1)
-  coordinateDescent!(xn, CDQuadraticLoss(S[others, others], -S[others, j]), ProxL1(0.15))
+  coordinateDescent!(xn, CDQuadraticLoss(S[others, others], -S[others, j]), NormL1(0.15))
   println("neighbors of variable $j: ", others[support(xn)])
 end
 
 println("\n== The square-root lasso loss")
 
-# CDSqrtLassoLoss takes ProxL1 only: its coordinate step is the exact minimizer
+# CDSqrtLassoLoss takes NormL1 only: its coordinate step is the exact minimizer
 # for the ℓ1 penalty. sqrtLasso(X, y, λ; standardizeX = false) does the same.
 xr = SparseIterate(p)
-coordinateDescent!(xr, CDSqrtLassoLoss(y, X), ProxL1(2.0), CDOptions(; optTol = 1e-10))
+coordinateDescent!(xr, CDSqrtLassoLoss(y, X), NormL1(2.0), CDOptions(; optTol = 1e-10))
 sol = sqrtLasso(X, y, 2.0, CDOptions(; optTol = 1e-10); standardizeX = false)
 @printf("selects %s, as sqrtLasso does (difference %.1e)\n", support(xr), norm(xr - sol.x, Inf))

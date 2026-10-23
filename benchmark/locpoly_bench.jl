@@ -200,7 +200,7 @@ function locpolyl1_alt(
     sw = sqrt.(w)
     f = CDLeastSquaresLoss(sw .* y, sw .* eX)
     β = SparseIterate(T, ep)
-    coordinateDescent!(β, f, ProxL1(λ0, stdX), opt)
+    coordinateDescent!(β, f, NormL1(λ0, stdX), opt)
     out[:, ind] = Vector(β)
   end
   out
@@ -309,7 +309,7 @@ w = evaluate.(Ref(gk), Z, Ref(z0))
 sw = sqrt.(w)
 stdX = CoordinateDescent._stdX!(zeros(ep), w, eX)
 
-g = ProxL1(λ, stdX)
+g = NormL1(λ, stdX)
 f1 = CDWeightedLSLoss(Y, eX, w)
 f2 = CDLeastSquaresLoss(sw .* Y, sw .* eX)
 opt = CDOptions(; optTol=1e-8, warmStart=false)
