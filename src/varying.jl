@@ -447,9 +447,12 @@ function _locallasso(X::Matrix{T}, z::Vector{T}, y::Vector{T}, w, kernel, h::T, 
   c = p * (q + 1)
   θ = zeros(T, c)
   m == 0 && return θ, falses(p), zeros(T, c)
-  # rows scaled so that ‖yₛ - Zₛθ‖²/(2m) = ∑ vᵢ (yᵢ - Zᵢθ)² / (2 ∑ vᵢ)
+  # rows scaled in place so that ‖yₛ - Zₛθ‖²/(2m) = ∑ vᵢ (yᵢ - Zᵢθ)² / (2 ∑ vᵢ);
+  # the scales are proportional to √vᵢ, so least squares on the scaled rows is
+  # the weighted least squares of the refit
   r = sqrt.(m .* v ./ sum(v))
-  Zs, ys = r .* Z, r .* y[idx]
+  Zs = (Z .*= r)
+  ys = r .* view(y, idx)
   if penalty === :group
     groups = [collect(_coefrange(j, q)) for j in 1:p]
     θ .= Vector(groupLasso(Zs, ys, λ, groups, options; intercept = false, standardize = :orthonormal,
@@ -466,7 +469,7 @@ function _locallasso(X::Matrix{T}, z::Vector{T}, y::Vector{T}, w, kernel, h::T, 
   θr = zeros(T, c)
   if refit && any(sel)
     cols = reduce(vcat, [collect(_coefrange(j, q)) for j in findall(sel)])
-    θr[cols] .= _wls(view(Z, :, cols), v, y[idx])
+    θr[cols] .= qr(Zs[:, cols], ColumnNorm()) \ ys
   end
   θ, sel, θr
 end
