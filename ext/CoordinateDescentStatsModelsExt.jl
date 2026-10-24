@@ -126,6 +126,24 @@ function CoordinateDescent.glmLasso(f::FormulaTerm, data, λ::Real, args...; con
   end
 end
 
+# the sparse group lasso, with the groups of the terms unless given
+function StatsAPI.fit(::Type{SparseGroupLassoPath}, f::FormulaTerm, data, args...; contrasts = Dict{Symbol, Any}(),
+                      groups = nothing, kwargs...)
+  _checkkeywords(kwargs)
+  λargs, oargs = filter(a -> !(a isa CDOptions), args), filter(a -> a isa CDOptions, args)
+  _formulafit(f, data; contrasts) do X, y, intercept, termgroups, w, o
+    SparseGroupLassoPath(X, y, λargs..., something(groups, termgroups), oargs...; intercept, kwargs...)
+  end
+end
+
+function CoordinateDescent.sparseGroupLasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
+                                            groups = nothing, kwargs...)
+  _checkkeywords(kwargs)
+  _formulafit(f, data; contrasts) do X, y, intercept, termgroups, w, o
+    sparseGroupLasso(X, y, λ, something(groups, termgroups), args...; intercept, kwargs...)
+  end
+end
+
 function CoordinateDescent.groupLasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
                                       groups = nothing, kwargs...)
   _checkkeywords(kwargs)

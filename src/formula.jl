@@ -18,9 +18,9 @@ grp = groupLasso(@formula(y ~ x1 + region + x2 & region), data, 0.05)   # a grou
 ```
 
 The formula methods are `fit` with [`LassoPath`](@ref), [`CVLassoPath`](@ref),
-[`GLMLassoPath`](@ref), [`CVGLMLassoPath`](@ref) and [`GroupLassoPath`](@ref), and [`lasso`](@ref),
-[`sqrtLasso`](@ref), [`adaptiveLasso`](@ref), [`glmLasso`](@ref),
-[`groupLasso`](@ref) and [`rlasso`](@ref) with the formula and the table in
+[`GLMLassoPath`](@ref), [`CVGLMLassoPath`](@ref), [`GroupLassoPath`](@ref) and
+[`SparseGroupLassoPath`](@ref), and [`lasso`](@ref), [`sqrtLasso`](@ref), [`adaptiveLasso`](@ref),
+[`glmLasso`](@ref), [`groupLasso`](@ref), [`sparseGroupLasso`](@ref) and [`rlasso`](@ref) with the formula and the table in
 place of `X` and `y`. The other arguments and keywords are those of the
 estimator, with these differences:
 
@@ -28,8 +28,8 @@ estimator, with these differences:
   does not, and the keyword `intercept` is an error.
 - Categorical variables (strings, or `CategoricalArray`s) become dummy columns,
   coded by `contrasts`, a `Dict` from variable names to StatsModels contrasts.
-  The lasso penalizes each dummy column; the group lasso takes the columns of
-  each term as a group unless `groups` is given.
+  The lasso penalizes each dummy column; the group lasso and the sparse group
+  lasso take the columns of each term as a group unless `groups` is given.
 - `weights` and `offset`, where the estimator takes them, may also be names of
   columns of the table.
 - Rows with a missing value in a variable of the model are left out.

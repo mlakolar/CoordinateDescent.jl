@@ -154,6 +154,7 @@ StatsAPI.fit(::Type{LassoPath}, X::AbstractMatrix, y::AbstractVector, args...; k
     fit(GLMLassoPath, X, y, args...; kwargs...)
     fit(CVGLMLassoPath, X, y, args...; kwargs...)
     fit(GroupLassoPath, X, y, args...; kwargs...)
+    fit(SparseGroupLassoPath, X, y, args...; kwargs...)
     fit(MultiLassoPath, X, Y, args...; kwargs...)
 
 The same as calling the constructor, for example
@@ -167,6 +168,8 @@ StatsAPI.fit(::Type{CVGLMLassoPath}, X::AbstractMatrix, y::AbstractVector, args.
   CVGLMLassoPath(X, y, args...; kwargs...)
 StatsAPI.fit(::Type{GroupLassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) =
   GroupLassoPath(X, y, args...; kwargs...)
+StatsAPI.fit(::Type{SparseGroupLassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) =
+  SparseGroupLassoPath(X, y, args...; kwargs...)
 StatsAPI.fit(::Type{MultiLassoPath}, X::AbstractMatrix, Y::AbstractMatrix, args...; kwargs...) =
   MultiLassoPath(X, Y, args...; kwargs...)
 
@@ -286,6 +289,33 @@ StatsAPI.coef(path::GroupLassoPath{T}, λ::Real) where {T} = _coefat(T, path.λp
 StatsAPI.predict(path::GroupLassoPath{T}, X::AbstractMatrix{<:Real}) where {T} =
   _predictpath(T, path.βpath, path.β0path, X)
 StatsAPI.nobs(path::GroupLassoPath) = path.nobs
+
+"""
+    coef(sol::SparseGroupLassoSolution)
+    predict(sol::SparseGroupLassoSolution, X)
+    coef(path::SparseGroupLassoPath)
+    coef(path::SparseGroupLassoPath, λ)
+    predict(path::SparseGroupLassoPath, X)
+
+As for the group lasso: the coefficients `[β₀; β]` (`β` without an intercept)
+and the fitted values `β₀ .+ X * β`, along the path as for
+[`LassoPath`](@ref). `nobs` and `dof` (the nonzero coefficients, plus one for
+the intercept) apply too.
+"""
+StatsAPI.coef(sol::SparseGroupLassoSolution) = sol.hasintercept ? _prepend(sol.intercept, sol.x) : sol.x
+
+function StatsAPI.predict(sol::SparseGroupLassoSolution, X::AbstractMatrix{<:Real})
+  _checkcolumns(X, length(sol.x))
+  Vector(X * sol.x) .+ sol.intercept
+end
+
+StatsAPI.nobs(sol::SparseGroupLassoSolution) = sol.nobs
+StatsAPI.dof(sol::SparseGroupLassoSolution) = nnz(sol.x) + sol.hasintercept
+StatsAPI.coef(path::SparseGroupLassoPath{T}) where {T} = _coefmatrix(T, path.βpath, path.β0path, path.intercept)
+StatsAPI.coef(path::SparseGroupLassoPath{T}, λ::Real) where {T} = _coefat(T, path.λpath, _coefk(path), λ)
+StatsAPI.predict(path::SparseGroupLassoPath{T}, X::AbstractMatrix{<:Real}) where {T} =
+  _predictpath(T, path.βpath, path.β0path, X)
+StatsAPI.nobs(path::SparseGroupLassoPath) = path.nobs
 
 ######################################################################
 #

@@ -12,6 +12,7 @@ tests = [
   "glm",
   "glm_penalties",
   "group",
+  "sparsegroup",
   "multiresponse",
   "hdm",
   "statsapi",

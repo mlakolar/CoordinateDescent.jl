@@ -59,9 +59,11 @@ export
   GLMLassoPath,
   CVGLMLassoPath,
 
-  # the group lasso
+  # the group lasso and the sparse group lasso
   groupLasso,
   GroupLassoPath,
+  sparseGroupLasso,
+  SparseGroupLassoPath,
 
   # the multi-response lasso
   multiLasso,
@@ -84,6 +86,7 @@ include("lasso.jl")
 include("penalties.jl")
 include("glm.jl")
 include("group.jl")
+include("sparsegroup.jl")
 include("multiresponse.jl")
 include("cv.jl")
 include("hdm.jl")
