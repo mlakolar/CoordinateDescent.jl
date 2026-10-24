@@ -55,16 +55,12 @@ jobs:
       # 0.1.1, which has SqrtQuadraticFunction, is on its master. Julia 1.11 and
       # later take it from [sources] in Project.toml; Julia 1.10 ignores
       # [sources]. Remove this step and [sources] once 0.1.1 is registered.
-      # The branch weighted-intercept (ProximalSolvers PR #45, on PRs #41 and #36)
-      # adds CDSolver(; rng), the response scale of QuadModel that the gram option
-      # needs and weights with an intercept; go back to master here and in
-      # [sources] once they are merged.
       - name: Add ProximalSolvers from GitHub on Julia 1.10
         if: matrix.version == 'lts'
         shell: julia --color=yes --project=. {0}
         run: |
           using Pkg
-          Pkg.add(url="https://github.com/mlakolar/ProximalSolvers.jl", rev="weighted-intercept")
+          Pkg.add(url="https://github.com/mlakolar/ProximalSolvers.jl", rev="master")
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
