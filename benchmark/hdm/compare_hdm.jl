@@ -51,16 +51,35 @@ function compare(dir)
   end
 end
 
-function coverage(; reps = 500, n = 200, p = 100)
-  for method in (:doubleselection, :partialling)
-    cover, est, ses = 0, Float64[], Float64[]
-    for r in 1:reps
-      X, y, d = dataset(n, p; seed = 10_000 + r)
-      e = doubleSelection(y, d, X; method)
-      cover += e.ci[1] <= 0.5 <= e.ci[2]
-      push!(est, e.estimate); push!(ses, e.se)
+# the design of the simulations of Belloni, Chernozhukov and Hansen (2014):
+# AR(1) correlation 0.5 between the controls, and coefficients 1/j² of both the
+# outcome and the treatment on control j, so that the confounding is
+# approximately sparse
+function bch2014(n, p; seed)
+  rng = Xoshiro(seed)
+  X = randn(rng, n, p)
+  for j in 2:p
+    @views X[:, j] .= 0.5 .* X[:, j-1] .+ sqrt(0.75) .* X[:, j]
+  end
+  b = [1 / j^2 for j in 1:p]
+  d = X * b .+ randn(rng, n)
+  X, 0.5 .* d .+ X * b .+ randn(rng, n), d
+end
+
+function coverage(; reps = 500)
+  for (name, gen, n, p) in (("BCH 2014, 1/j² coefficients", bch2014, 100, 200), ("BCH 2014, 1/j² coefficients", bch2014, 200, 100),
+                            ("the comparison design, weak confounders", dataset, 200, 100))
+    for method in (:doubleselection, :partialling)
+      cover, est, ses = 0, Float64[], Float64[]
+      for r in 1:reps
+        X, y, d = gen(n, p; seed = 10_000 + r)
+        e = doubleSelection(y, d, X; method)
+        cover += e.ci[1] <= 0.5 <= e.ci[2]
+        push!(est, e.estimate); push!(ses, e.se)
+      end
+      @printf "coverage %-40s %-15s n=%d p=%d reps=%d: 95%% CI covers α = 0.5 in %.3f; mean estimate %.4f, sd %.4f, mean se %.4f\n" name method n p reps cover / reps mean(est) std(est) mean(ses)
+      flush(stdout)
     end
-    @printf "coverage %-15s n=%d p=%d reps=%d: 95%% CI covers α = 0.5 in %.3f; mean estimate %.4f, sd %.4f, mean se %.4f\n" method n p reps cover / reps mean(est) std(est) mean(ses)
   end
 end
 
