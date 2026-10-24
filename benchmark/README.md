@@ -5,7 +5,6 @@ folder, which loads CoordinateDescent from this checkout:
 
 ```
 julia --project=benchmark -e 'using Pkg; Pkg.instantiate()'
-julia --project=benchmark benchmark/locpoly_bench.jl    # about a minute
 julia --project=benchmark benchmark/cd_bench.jl         # a few minutes
 julia --project=benchmark benchmark/order_anderson_bench.jl    # about 4 minutes
 julia --project=benchmark benchmark/scaledlasso_bench.jl       # about 10 minutes
@@ -19,43 +18,20 @@ environment first.
 
 `compare/` compares this version with version 0.6.0 (see below).
 
-## locpoly_bench.jl
+## varying/
 
-Compares the local polynomial code with the alternatives it was chosen over,
-checks that they give the same result, and reports median times
-(BenchmarkTools, one BLAS thread):
+`varying/bench.jl` times the varying-coefficient code before and after it moved
+onto the kernels of KernelSmoothing.jl (#38), on the same data and in separate
+environments (`varying/old` takes CoordinateDescent at master 1832be7, the last
+with `locpoly`; `varying/new` this checkout):
 
-1. `locpoly`, least squares by QR on the √w-weighted expanded design X̃, against
-   the normal equations, formed from X̃ or accumulated without forming it and
-   solved by Cholesky;
-2. `_expand_Xt_w_X!`, which accumulates X̃' diag(w) X̃ without forming X̃ (for
-   `getStandardError`), against a naive loop and against BLAS on the formed X̃;
-3. the weighted lasso at one point: `CDWeightedLSLoss` against
-   `CDLeastSquaresLoss` on the √w-scaled data;
-4. `locpolyl1`, which updates one loss in place and warm starts along the grid,
-   against a `CDLeastSquaresLoss` built at every grid point and solved from
-   zero.
+```sh
+julia --project=benchmark/varying/old benchmark/varying/bench.jl old old.jls
+julia --project=benchmark/varying/new benchmark/varying/bench.jl new new.jls
+julia benchmark/varying/compare.jl old.jls new.jls
+```
 
-On an Apple silicon laptop with Julia 1.13.2 and one BLAS thread (indicative
-only; Julia 1.10.12 gives similar times):
-
-| part | method | median | max abs difference |
-|---|---|---:|---:|
-| 1. `locpoly` at 50 points, n = 1000, 30 coefficients | QR (`locpoly`) | 11.6 ms | reference |
-| | normal equations from X̃ | 4.8 ms | 3e-13 |
-| | normal equations without X̃, Cholesky | 18.9 ms | 8e-13 |
-| 2. X̃' diag(w) X̃, 30 × 30, n = 1000 | `_expand_Xt_w_X!` | 0.35 ms | reference |
-| | naive loop | 1.35 ms | 5e-13 |
-| | BLAS, forming X̃ included | 0.07 ms | 4e-12 |
-| 3. weighted lasso, n = 500, 150 coefficients | `CDWeightedLSLoss` | 1.5 ms | reference |
-| | `CDLeastSquaresLoss` on √w-scaled data | 1.4 ms | 2e-8 |
-| 4. `locpolyl1` at 20 points, n = 500, 150 coefficients | `locpolyl1` | 7.5 ms | reference |
-| | a loss per point, from zero | 9.0 ms | 1e-6 |
-
-The normal equations are faster than QR here and agree with it to rounding
-error, but they square the condition number of the local design, which matters
-when few points fall in the kernel window or the degree is high. The
-differences in parts 3 and 4 come from the stopping rule (`optTol = 1e-8`).
+RESULTS_PLACEHOLDER
 
 ## cd_bench.jl
 

@@ -80,12 +80,12 @@ Result returned by [`varyingCoefficient`](@ref).
 - `coefficients::Array{T,3}`: `coefficients[j, r + 1, g]` estimates the `r`-th
   derivative `βⱼ⁽ʳ⁾(zgrid[g])`, `r = 0, …, degree`
 - `stderrors::Array{T,3}`: their heteroskedasticity-robust standard errors
-  (`NaN` where the local fit is singular), or an empty array without `se`
+  (`NaN` where the local fit is singular), or an empty array without `se = true`
 - `bandwidth`, `degree`, `kernel`: the settings of the fit
 - `rank::Vector{Int}`: the rank of the local design at each point; below
   `p(degree + 1)` the local fit is not unique and the one of minimum norm is taken
 - `fitted::Vector`, `residuals::Vector`: the fitted values `∑ⱼ Xᵢⱼ β̂ⱼ(zᵢ)` of the
-  local fits at the observed `zᵢ`, and the residuals, or empty without `se`
+  local fits at the observed `zᵢ`, and the residuals, or empty without `se = true`
 - `nobs::Int`: the number of observations
 
 [`coef`](@ref) (`coef(fit; derivative = r)`), [`predict`](@ref), `stderror`,
@@ -105,7 +105,7 @@ struct VaryingCoefficientFit{T, K}
 end
 
 """
-    varyingCoefficient(X, z, y, zgrid; kernel, bandwidth, degree = 1, weights = nothing, se = true)
+    varyingCoefficient(X, z, y, zgrid; kernel, bandwidth, degree = 1, weights = nothing, se = false)
 
 The local polynomial estimate of the varying-coefficient model
 
@@ -130,8 +130,9 @@ them, or collinear), the fit of minimum norm is taken and `rank` records it.
 [`varyingCoefficientCV`](@ref) chooses the bandwidth by leave-one-out
 cross-validation.
 
-With `se`, the fit also computes the fitted values and residuals of the local
-fits at the observed `zᵢ`, and the heteroskedasticity-robust (sandwich)
+With `se = true`, the fit also computes the fitted values and residuals of the
+local fits at the observed `zᵢ` (one more local fit per observation, which can
+cost far more than the fit on the grid), and the heteroskedasticity-robust (sandwich)
 standard errors of the estimates, `(Z'WZ)⁻¹ Z'W diag(ε̂²) W Z (Z'WZ)⁻¹` for the
 local design `Z` and the kernel weights `W` (the observation weights count as
 frequencies: integer weights give the fit and the standard errors of
@@ -142,15 +143,17 @@ when the bandwidth is small enough for the bias to be negligible
 
 ```julia
 using CoordinateDescent, KernelSmoothing
-fit = varyingCoefficient(X, z, y, range(0, 1; length = 50); kernel = EpanechnikovKernel(), bandwidth = 0.2)
+fit = varyingCoefficient(X, z, y, range(0, 1; length = 50); kernel = EpanechnikovKernel(), bandwidth = 0.2,
+                         se = true)
 coef(fit)                      # p × 50: the estimates of βⱼ at the points
 coef(fit; derivative = 1)      # of their first derivatives
+confint(fit)                   # pointwise intervals, from the robust standard errors
 predict(fit, Xnew, znew)       # ∑ⱼ Xnewᵢⱼ βⱼ(znewᵢ), interpolated linearly between the points
 ```
 """
 function varyingCoefficient(X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
                             zgrid::AbstractVector{<:Real}; kernel, bandwidth::Real, degree::Integer = 1,
-                            weights::Union{Nothing, AbstractVector{<:Real}} = nothing, se::Bool = true)
+                            weights::Union{Nothing, AbstractVector{<:Real}} = nothing, se::Bool = false)
   T, Xf, zf, yf, g, w = _varyingdata(X, z, y, zgrid, weights)
   h, q = T(bandwidth), Int(degree)
   _checkvarying(Xf, zf, yf, g, h, q, w)
@@ -420,8 +423,9 @@ function varyingCoefficientLasso(X::AbstractMatrix{<:Real}, z::AbstractVector{<:
   B = zeros(T, p, q + 1, length(g))
   R = refit ? zeros(T, p, q + 1, length(g)) : Array{T}(undef, 0, 0, 0)
   sel = falses(p, length(g))
+  x = SparseIterate(T, p * (q + 1))         # warm starts the lasso at each point from the previous one
   for (k, z0) in enumerate(g)
-    θ, s, θr = _locallasso(Xf, zf, yf, w, kernel, h, z0, q, T(λ), penalty, refit, options)
+    θ, s, θr = _locallasso(Xf, zf, yf, w, kernel, h, z0, q, T(λ), penalty, refit, options; x)
     _derivatives!(B, k, θ, h, q)
     sel[:, k] .= s
     refit && _derivatives!(R, k, θr, h, q)
@@ -432,7 +436,8 @@ end
 # The penalized local fit at z₀ and the variables it selects, and the unpenalized
 # refit on them (zero without refit), as coefficient vectors of the local design
 function _locallasso(X::Matrix{T}, z::Vector{T}, y::Vector{T}, w, kernel, h::T, z0::T, q::Int, λ::T,
-                     penalty::Symbol, refit::Bool, options::CDOptions; skip::Int = 0) where {T}
+                     penalty::Symbol, refit::Bool, options::CDOptions; skip::Int = 0,
+                     x::SparseIterate{T} = SparseIterate(T, size(X, 2) * (q + 1))) where {T}
   idx, v, Z = _localdesign(X, z, w, kernel, h, z0, q)
   if skip > 0                      # leave observation skip out
     keep = idx .!= skip
@@ -450,7 +455,12 @@ function _locallasso(X::Matrix{T}, z::Vector{T}, y::Vector{T}, w, kernel, h::T, 
     θ .= Vector(groupLasso(Zs, ys, λ, groups, options; intercept = false, standardize = :orthonormal,
                            groupweights = fill(sqrt(T(q + 1)), p)).x)
   else
-    θ .= Vector(lasso(Zs, ys, λ, options; intercept = false, standardizeX = true).x)
+    # the lasso with the loadings of the standardized columns (zero columns get
+    # weight one and stay at zero), from the iterate x, which keeps the solution
+    ω = sqrt.(vec(sum(abs2, Zs; dims = 1)) ./ m)
+    ω[iszero.(ω)] .= one(T)
+    _solve!(x, CDLeastSquaresLoss(ys, Zs), NormL1(λ, ω), options)
+    θ .= Vector(x)
   end
   sel = BitVector(any(!iszero, view(θ, _coefrange(j, q))) for j in 1:p)
   θr = zeros(T, c)
@@ -505,12 +515,13 @@ function varyingCoefficientLassoCV(X::AbstractMatrix{<:Real}, z::AbstractVector{
   foreach(h -> _checkvarying(Xf, zf, yf, T[], h, q, w), hs)
   penalty in (:group, :lasso) || throw(ArgumentError("penalty must be :group or :lasso, but it is :$penalty."))
   n, p = size(Xf)
+  x = SparseIterate(T, p * (q + 1))        # warm starts each local lasso from the previous one
   cvm = map(hs) do h
     total, wsum = zero(T), zero(T)
     for i in 1:n
       wi = w === nothing ? one(T) : w[i]
       iszero(wi) && continue
-      θ, _, θr = _locallasso(Xf, zf, yf, w, kernel, h, zf[i], q, T(λ), penalty, refit, options; skip = i)
+      θ, _, θr = _locallasso(Xf, zf, yf, w, kernel, h, zf[i], q, T(λ), penalty, refit, options; skip = i, x)
       t = refit ? θr : θ
       ŷ = sum(Xf[i, j] * t[_coefrange(j, q)[1]] for j in 1:p)
       total += wi * abs2(yf[i] - ŷ)

@@ -33,9 +33,10 @@ compactly supported kernel only the observations within ``h`` of ``z_0`` enter;
 when they do not determine the polynomials, the fit of minimum norm is taken
 and the `rank` of the fit records it.
 
-The fit also gives the fitted values and residuals of the local fits at the
-observations, and heteroskedasticity-robust (sandwich) standard errors,
-`stderror(fit)` and `confint(fit)`. These describe the variance of the local
+With `se = true`, the fit also gives the fitted values and residuals of the local
+fits at the observations (one more local fit per observation), and
+heteroskedasticity-robust (sandwich) standard errors, `stderror(fit)` and
+`confint(fit)`. These describe the variance of the local
 estimate, not its bias, so an interval covers ``\beta_j(z_0)`` when the
 bandwidth is small enough for the bias to be negligible. `predict(fit, X, z)`
 interpolates the estimates linearly between the points of the grid.

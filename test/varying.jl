@@ -47,7 +47,7 @@ end
 
   @testset "polynomial coefficient functions are reproduced" begin
     yp = X[:, 1] .* (1 .+ 2 .* z) .+ X[:, 2] .* z .^ 2
-    fit = varyingCoefficient(X, z, yp, zgrid; kernel = epa, bandwidth = 0.3, degree = 2)
+    fit = varyingCoefficient(X, z, yp, zgrid; kernel = epa, bandwidth = 0.3, degree = 2, se = true)
     g = fit.zgrid
     @test coef(fit) ≈ [(1 .+ 2 .* g)'; (g .^ 2)'; zeros(4)'] atol = 1e-9
     @test coef(fit; derivative = 1) ≈ [fill(2.0, 4)'; (2 .* g)'; zeros(4)'] atol = 1e-8
@@ -57,7 +57,7 @@ end
   end
 
   @testset "standard errors, intervals, fitted values and prediction" begin
-    fit = varyingCoefficient(X, z, y, zgrid; kernel = epa, bandwidth = 0.2)
+    fit = varyingCoefficient(X, z, y, zgrid; kernel = epa, bandwidth = 0.2, se = true)
     @test nobs(fit) == n
     # the fitted value at zᵢ is that of the local fit at zᵢ
     for i in (1, 50, 200)
@@ -82,7 +82,7 @@ end
                                   dot(Xn[3, :], B[:, 1]), dot(Xn[4, :], B[:, 4])]
     @test_throws DimensionMismatch predict(fit, Xn[:, 1:2], zn)
     @test_throws DimensionMismatch predict(fit, Xn, zn[1:3])
-    nose = varyingCoefficient(X, z, y, zgrid; kernel = epa, bandwidth = 0.2, se = false)
+    nose = varyingCoefficient(X, z, y, zgrid; kernel = epa, bandwidth = 0.2)        # se = false, the default
     @test coef(nose) == coef(fit)
     @test_throws ArgumentError stderror(nose)
     @test_throws ArgumentError fitted(nose)
@@ -92,14 +92,14 @@ end
   @testset "observation weights and windows without enough data" begin
     w = rand(Xoshiro(3), 1:3, n)
     rows = reduce(vcat, [fill(i, w[i]) for i in 1:n])
-    a = varyingCoefficient(X, z, y, zgrid; kernel = epa, bandwidth = 0.2, weights = w)
-    b = varyingCoefficient(X[rows, :], z[rows], y[rows], zgrid; kernel = epa, bandwidth = 0.2)
+    a = varyingCoefficient(X, z, y, zgrid; kernel = epa, bandwidth = 0.2, weights = w, se = true)
+    b = varyingCoefficient(X[rows, :], z[rows], y[rows], zgrid; kernel = epa, bandwidth = 0.2, se = true)
     @test coef(a) ≈ coef(b) && stderror(a) ≈ stderror(b)
     # a window with fewer observations than coefficients: the fit of minimum norm, no standard errors
     zs = [0.0; 0.5 .+ 0.01 .* (1:20)]
     Xs = [ones(21) randn(Xoshiro(4), 21)]
     ys = randn(Xoshiro(5), 21)
-    f = varyingCoefficient(Xs, zs, ys, [0.0, 0.6]; kernel = epa, bandwidth = 0.05)
+    f = varyingCoefficient(Xs, zs, ys, [0.0, 0.6]; kernel = epa, bandwidth = 0.05, se = true)
     @test f.rank[1] < 4 && f.rank[2] == 4
     @test all(isnan, stderror(f)[:, 1]) && all(isfinite, stderror(f)[:, 2])
   end

@@ -58,7 +58,7 @@ for (name, kernel, h) in (("Epanechnikov h = 0.05", EpanechnikovKernel(), 0.05),
                           ("Epanechnikov h = 0.40", EpanechnikovKernel(), 0.40),
                           ("Gaussian h = 0.06", GaussianKernel(), 0.06)),
     degree in (0, 1, 2)
-  f = varyingCoefficient(X, z, y, zfine; kernel, bandwidth = h, degree, se = false)
+  f = varyingCoefficient(X, z, y, zfine; kernel, bandwidth = h, degree)
   @printf("  %-21s  %6d  %10.3f\n", name, degree, rmse(f))
 end
 
@@ -71,10 +71,10 @@ println("\nleave-one-out errors ", round.(cv.cvm; digits = 4), " for h = ", hs, 
 
 println("\n== Standard errors")
 
-# The fit computes robust (sandwich) standard errors from the residuals of the
-# local fits at the observations. The intervals describe the variance of the
+# With se = true the fit computes robust (sandwich) standard errors from the
+# residuals of the local fits at the observations. The intervals describe the variance of the
 # local estimate, not its bias, so they cover where the bias is small.
-fit = varyingCoefficient(X, z, y, [0.2, 0.5, 0.8]; kernel = EpanechnikovKernel(), bandwidth = cv.bandwidth)
+fit = varyingCoefficient(X, z, y, [0.2, 0.5, 0.8]; kernel = EpanechnikovKernel(), bandwidth = cv.bandwidth, se = true)
 @printf("σ̂ = %.3f (true 0.3)\n", std(residuals(fit)))
 lo, hi = confint(fit)
 println("   z0  β̂₂(z0)  95% interval      true")
