@@ -46,13 +46,13 @@ options passed to them.
   it off
 """
 struct CDOptions
-  maxIter::Int64
+  maxIter::Int
   optTol::Float64
   order::Symbol             # :random or :cyclic
   warmStart::Bool           # when running CD, should we do path following or not
-  numSteps::Int64           # when pathFollowing, how many points are there on the path
+  numSteps::Int             # when pathFollowing, how many points are there on the path
   relativeTol::Bool         # changes measured relative to the scales of the loss
-  anderson::Int64           # memory of Anderson acceleration, 0 for none
+  anderson::Int             # memory of Anderson acceleration, 0 for none
   momentum::Union{Bool, Nothing}   # Nesterov momentum, nothing for the default
 
   function CDOptions(maxIter, optTol, order::Symbol, warmStart, numSteps, relativeTol, anderson, momentum)
@@ -166,7 +166,7 @@ passed as the last argument. Deprecated: `solve!(x, f, g, options)` (see
 - `tolerance`: the threshold `maxChange` is compared with
 """
 mutable struct CDInfo
-  iterations::Int64
+  iterations::Int
   converged::Bool
   maxChange::Float64
   tolerance::Float64
@@ -209,10 +209,10 @@ replaced. The two solvers also take these fields as keyword arguments, as in
   `warmStart` is not used there
 """
 struct IterLassoOptions
-  maxIter::Int64
+  maxIter::Int
   optTol::Float64
   initProcedure::Symbol    # :Screening, :InitStd, :WarmStart
-  sinit::Int64             # how many columns of X to use to estimate initial variance or obtain initial residuals
+  sinit::Int               # how many columns of X to use to estimate initial variance or obtain initial residuals
   σinit::Float64
   optionsCD::CDOptions
 
@@ -282,6 +282,28 @@ _design(X::AbstractMatrix) = issparse(X) ? sparse(X) : Matrix(X)
 _response(y::StridedVector) = y
 _response(y::AbstractVector) = Vector(y)
 
+# Observation weights and an offset as the solvers take them, after checks: a
+# Vector{T}, or nothing for unit weights and for a zero offset, which are the
+# same as none
+function _weights(::Type{T}, w, n::Int) where {T}
+  w === nothing && return nothing
+  length(w) == n || throw(DimensionMismatch("X has $n rows, but the weights have length $(length(w))"))
+  all(v -> isfinite(v) && v >= 0, w) || throw(ArgumentError("the weights must be finite and nonnegative."))
+  sum(w) > 0 || throw(ArgumentError("the weights must have a positive sum."))
+  all(isone, w) ? nothing : convert(Vector{T}, w)
+end
+
+function _offset(::Type{T}, o, n::Int) where {T}
+  o === nothing && return nothing
+  length(o) == n || throw(DimensionMismatch("X has $n rows, but the offset has length $(length(o))"))
+  all(isfinite, o) || throw(ArgumentError("the offset contains NaN or Inf."))
+  all(iszero, o) ? nothing : convert(Vector{T}, o)
+end
+
+# y - o, the response that the offset leaves
+_minus(y, ::Nothing) = y
+_minus(y, o) = y .- o
+
 
 # NaN or Inf in the data would give a meaningless solution that is reported as
 # converged: shrinking a NaN gives zero, so a coordinate with a NaN gradient
@@ -301,6 +323,18 @@ function _column_means(X::AbstractMatrix{T}) where {T}
   end
   xbar
 end
+
+# the column means weighted by w, ∑ᵢ wᵢ Xᵢⱼ / ∑ᵢ wᵢ, with constant columns exact
+function _column_means(X::AbstractMatrix{T}, w::AbstractVector{T}) where {T}
+  xbar = Vector{T}((transpose(X) * w) ./ sum(w))
+  size(X, 1) > 0 || return xbar
+  for k in axes(X, 2)
+    c = X[1, k]
+    all(==(c), view(X, :, k)) && (xbar[k] = c)
+  end
+  xbar
+end
+_column_means(X::AbstractMatrix, ::Nothing) = _column_means(X)
 
 # the same over the stored entries: a column is constant when it is all zero
 # (whatever it stores) or stores n equal values
@@ -330,7 +364,7 @@ end
 # pivoted QR factorization of √w X rather than the normal equations; when they
 # are not unique, as when X has more columns than there are positive weights,
 # the one of minimum norm
-function _wls(X::AbstractMatrix{T}, w::AbstractVector{T}, y::AbstractVector{T}) where {T <: AbstractFloat}
+function _wls(X::AbstractMatrix, w::AbstractVector, y::AbstractVector)
   sw = sqrt.(w)
   qr(sw .* X, ColumnNorm()) \ (sw .* y)
 end

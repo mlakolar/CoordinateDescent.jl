@@ -26,7 +26,8 @@ end
     predict(sol::LassoSolution, X)
 
 The fitted values `β₀ .+ X * β` at the rows of `X`, which has the columns of
-the data the solver was given (without a column for the intercept).
+the data the solver was given (without a column for the intercept); an offset
+of the fit is not included.
 """
 function StatsAPI.predict(sol::LassoSolution, X::AbstractMatrix{<:Real})
   size(X, 2) == length(sol.x) ||
@@ -72,9 +73,13 @@ StatsAPI.dof(sol::LassoSolution) = nnz(_sparsevec(sol.x)) + sol.hasintercept
 """
     deviance(sol::LassoSolution)
 
-The residual sum of squares `‖y - β₀ - X * β‖²`.
+The residual sum of squares `‖y - β₀ - X * β‖²`, weighted, `∑ᵢ wᵢ rᵢ²`, for a fit
+with observation weights.
 """
-StatsAPI.deviance(sol::LassoSolution) = sum(abs2, _residuals(sol))
+function StatsAPI.deviance(sol::LassoSolution)
+  r = _residuals(sol)
+  sol.weights === nothing ? sum(abs2, r) : sum(i -> sol.weights[i] * r[i]^2, eachindex(r))
+end
 
 """
     coef(path::LassoPath)
@@ -98,7 +103,7 @@ function StatsAPI.coef(path::LassoPath{T}, λ::Real) where {T}
   λs = path.λpath
   isempty(λs) && throw(ArgumentError("the path is empty."))
   λs[end] <= λ <= λs[1] || throw(ArgumentError("λ = $λ is outside the range [$(λs[end]), $(λs[1])] of the path."))
-  k = findlast(>=(λ), λs)
+  k = findlast(>=(λ), λs)::Int        # λs[end] ≤ λ, so k exists
   coefk(j) = path.intercept ? _prepend(path.β0path[j], path.βpath[j]) : path.βpath[j]
   (λs[k] == λ || k == length(λs)) && return coefk(k)
   t = T((λs[k] - λ) / (λs[k] - λs[k+1]))
@@ -119,5 +124,10 @@ function StatsAPI.predict(path::LassoPath{T}, X::AbstractMatrix{<:Real}) where {
   Ŷ .+= transpose(path.β0path)
 end
 
+"""
+    fit(LassoPath, X, y, args...; kwargs...)
+
+The same as [`LassoPath`](@ref)`(X, y, args...; kwargs...)`.
+"""
 StatsAPI.fit(::Type{LassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) =
   LassoPath(X, y, args...; kwargs...)
