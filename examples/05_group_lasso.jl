@@ -37,10 +37,9 @@ println("== One λ")
 g = GroupNormL2(λ, groups)
 f = CDLeastSquaresLoss(y, X; intercept = true)
 x = AtomIterate(p, groups)
-info = CDInfo()
-coordinateDescent!(x, f, g, CDOptions(), info)
+r = solve!(x, f, g, CDOptions())
 β₀ = ProximalSolvers.intercept(f, x)              # the intercept ȳ - x̄'β̂
-println("selected variables ", selected(x), " in $(info.iterations) passes; β̂₀ = ", round(β₀; digits = 2))
+println("selected variables ", selected(x), " in $(r.passes) passes; β̂₀ = ", round(β₀; digits = 2))
 println("norms of the groups ", round.([norm(x[G]) for G in groups[1:6]]; digits = 2), " …")
 
 # A solution satisfies ‖∇_G f‖ ≤ λ wₖ for the groups at zero and
@@ -74,9 +73,9 @@ println("\n== Starting from zero along a path of penalties")
 λsmall = 0.01
 for (warmStart, numSteps) in ((true, 50), (false, 10), (false, 50))
   xs = AtomIterate(p, groups)
-  coordinateDescent!(xs, f, GroupNormL2(λsmall, groups), CDOptions(; warmStart, numSteps), info)
+  r = solve!(xs, f, GroupNormL2(λsmall, groups), CDOptions(; warmStart, numSteps))
   @printf("warmStart = %-5s numSteps = %-3s: %4d passes, %d groups selected\n", warmStart,
-          warmStart ? "-" : string(numSteps), info.iterations, length(selected(xs)))
+          warmStart ? "-" : string(numSteps), r.passes, length(selected(xs)))
 end
 
 println("\n== Choosing λ on a validation set")

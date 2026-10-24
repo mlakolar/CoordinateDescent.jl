@@ -1,10 +1,12 @@
-# Options of coordinate descent: CDOptions and CDInfo
+# Options of coordinate descent: CDOptions, keywords, and what a run reports
 #
 # Every solver takes a CDOptions: the high-level ones (lasso, sqrtLasso,
 # LassoPath) as their last positional argument, coordinateDescent! as its
-# fourth. They run the coordinate descent of ProximalSolvers (CDSolver) with these
-# options. coordinateDescent! reports how the run went in a CDInfo, its fifth
-# argument.
+# fourth. They also take its fields as keywords, as in
+# lasso(X, y, λ; optTol = 1e-8), and a random number generator rng for the
+# random order. They run the coordinate descent of ProximalSolvers (CDSolver)
+# with these options. solve!(x, f, g, options) does what coordinateDescent!
+# does and returns how the run went (a CDResults).
 #
 #     julia --project=examples examples/02_solver_options.jl
 
@@ -24,15 +26,15 @@ end
 
 objective(X, y, λ, x) = sum(abs2, y - X * x) / (2 * size(X, 1)) + λ * norm(x, 1)
 
-# solves the lasso with coordinateDescent!, from zero; returns the solution,
-# the CDInfo and the shortest time in seconds of three runs
-function solve(X, y, λ, options)
-  x, info, t = SparseIterate(size(X, 2)), CDInfo(), Inf
+# solves the lasso with solve!, from zero; returns the solution, the results
+# (passes, converged, …) and the shortest time in seconds of three runs
+function timed_solve(X, y, λ, options)
+  x, r, t = SparseIterate(size(X, 2)), nothing, Inf
   for _ in 1:3
-    x, info = SparseIterate(size(X, 2)), CDInfo()
-    t = min(t, @elapsed coordinateDescent!(x, CDLeastSquaresLoss(y, X), NormL1(λ), options, info))
+    x = SparseIterate(size(X, 2))
+    t = min(t, @elapsed r = solve!(x, CDLeastSquaresLoss(y, X), NormL1(λ), options))
   end
-  x, info, t
+  x, r, t
 end
 
 X, y = simulate(500, 200, 0.5)
@@ -49,12 +51,12 @@ println("\n== optTol: when to stop")
 # Coordinate descent stops after a full pass and a pass over the active set
 # in which no coefficient changes by more than the tolerance. The default 1e-7
 # gives about seven correct digits of the coefficients.
-xstar, = solve(X, y, λ, CDOptions(; optTol = 1e-14))
+xstar, = timed_solve(X, y, λ, CDOptions(; optTol = 1e-14))
 Fstar = objective(X, y, λ, xstar)
 println("  optTol  passes  |F - F*| / F*  max |β̂ - β*|")
 for optTol in (1e-2, 1e-4, 1e-7, 1e-10)
-  x, info = solve(X, y, λ, CDOptions(; optTol))
-  @printf("%8.0e  %6d  %13.1e  %12.1e\n", optTol, info.iterations,
+  x, r = timed_solve(X, y, λ, CDOptions(; optTol))
+  @printf("%8.0e  %6d  %13.1e  %12.1e\n", optTol, r.passes,
           abs(objective(X, y, λ, x) - Fstar) / Fstar, norm(x - xstar, Inf))
 end
 
@@ -71,16 +73,17 @@ println("\n== relativeTol: a tolerance that does not depend on the units")
 println("  relativeTol  unit of y  passes  max |β̂ - β*| / max |β*|")
 for relativeTol in (true, false), scale in (1, 1000)
   Random.seed!(10)
-  x, info = solve(X, scale * y, scale * λ, CDOptions(; relativeTol))
+  x, r = timed_solve(X, scale * y, scale * λ, CDOptions(; relativeTol))
   @printf("  %-11s  %9s  %6d  %10.1e\n", relativeTol, scale == 1 ? "1" : "1/1000",
-          info.iterations, norm(x / scale - xstar, Inf) / norm(xstar, Inf))
+          r.passes, norm(x / scale - xstar, Inf) / norm(xstar, Inf))
 end
 
 println("\n== order and anderson: the order of the coordinates")
 
 # order = :random (the default) visits the coordinates in a new random order
-# in every pass, drawn from the global random number generator (seed it with
-# Random.seed! to reproduce a run), and by default with momentum (see below).
+# in every pass, drawn from the random number generator rng, a keyword of every
+# solver (by default the global generator, which Random.seed! resets), and by
+# default with momentum (see below).
 # order = :cyclic visits them in the order 1, 2, …, p, which is faster on
 # independent columns but much slower when the columns share a common factor.
 # The older option randomize = true or false means order = :random or :cyclic.
@@ -107,8 +110,8 @@ for (name, Xd, yd, λd) in (("independent columns", Xiid, yiid, λ), ("common fa
                       ("random, momentum = false", CDOptions(; momentum = false)),
                       ("order = :cyclic", CDOptions(; order = :cyclic)),
                       ("cyclic, anderson = 5", CDOptions(; order = :cyclic, anderson = 5)))
-  _, info, t = solve(Xd, yd, λd, opts)
-  @printf("  %-19s  %-24s  %6d  %9.2f\n", name, oname, info.iterations, 1000t)
+  _, r, t = timed_solve(Xd, yd, λd, opts)
+  @printf("  %-19s  %-24s  %6d  %9.2f\n", name, oname, r.passes, 1000t)
 end
 
 println("\n== warmStart and numSteps: where to start")
@@ -126,9 +129,9 @@ println("  design        λ / λmax  warmStart  numSteps  passes  time (ms)")
 for (name, Xd, yd) in (("n=500, p=200", X, y), ("n=100, p=5000", Xwide, ywide))
   λmax = maximum(abs, Xd' * yd) / size(Xd, 1)
   for (warmStart, numSteps) in ((true, 50), (false, 10), (false, 50))
-    _, info, t = solve(Xd, yd, 0.02λmax, CDOptions(; warmStart, numSteps))
+    _, r, t = timed_solve(Xd, yd, 0.02λmax, CDOptions(; warmStart, numSteps))
     @printf("  %-13s  %8.2f  %-9s  %8s  %6d  %9.2f\n", name, 0.02, warmStart,
-            warmStart ? "-" : string(numSteps), info.iterations, 1000t)
+            warmStart ? "-" : string(numSteps), r.passes, 1000t)
   end
 end
 
@@ -137,24 +140,31 @@ end
 # this for you)
 x = SparseIterate(size(X, 2))
 f = CDLeastSquaresLoss(y, X)
-info = CDInfo()
 println("\n       λ  passes  nonzeros")
 for λk in exp.(range(log(0.5), log(0.002); length = 10))
-  coordinateDescent!(x, f, NormL1(λk), CDOptions(), info)
-  @printf("  %6.3f  %6d  %8d\n", λk, info.iterations, count(!iszero, x))
+  r = solve!(x, f, NormL1(λk), CDOptions())
+  @printf("  %6.3f  %6d  %8d\n", λk, r.passes, count(!iszero, x))
 end
 
-println("\n== maxIter and CDInfo")
+println("\n== maxIter, and what a run reports")
 
-# maxIter caps the number of passes. Running out of passes gives a warning
-# and info.converged = false, and info.maxChange > info.tolerance tells how far
-# the last pass was from the stopping rule (both scaled as with relativeTol).
+# maxIter caps the number of passes. Running out of passes gives a warning and
+# r.converged = false, and r.maxchange > r.tolerance tells how far the last
+# pass was from the stopping rule (both scaled as with relativeTol). The
+# options can also be given as keywords, which change those passed.
 flush(stdout)
 x = SparseIterate(size(X, 2))
-info = CDInfo()
-coordinateDescent!(x, CDLeastSquaresLoss(y, X), NormL1(λ), CDOptions(; maxIter = 5), info)
-println("  converged = $(info.converged) after $(info.iterations) passes; ",
-        @sprintf("maxChange = %.2e, tolerance = %.2e", info.maxChange, info.tolerance))
+r = solve!(x, CDLeastSquaresLoss(y, X), NormL1(λ), CDOptions(); maxIter = 5)
+println("  converged = $(r.converged) after $(r.passes) passes; ",
+        @sprintf("maxchange = %.2e, tolerance = %.2e", r.maxchange, r.tolerance))
+
+println("\n== rng: reproducible random orders")
+
+# A generator of its own makes the random order, and so the passes, the same
+# from run to run without reseeding the global generator, and gives parallel
+# fits independent streams.
+passes(rng) = lasso(X, y, λ; rng).iterations
+println("  passes with Xoshiro(1), twice: ", passes(Xoshiro(1)), ", ", passes(Xoshiro(1)))
 
 println("\n== Float32")
 
@@ -162,8 +172,6 @@ println("\n== Float32")
 # Float32 solution is accurate to about 1e-7 relative to its size, so a
 # tolerance at that level may never be met: use optTol ≥ 1e-6.
 x32 = SparseIterate(Float32, size(X, 2))
-info = CDInfo()
-coordinateDescent!(x32, CDLeastSquaresLoss(Float32.(y), Float32.(X)), NormL1(Float32(λ)),
-                   CDOptions(; optTol = 1e-6), info)
-@printf("  %s solution in %d passes, max |β̂ - β*| = %.1e\n", eltype(x32), info.iterations,
+r = solve!(x32, CDLeastSquaresLoss(Float32.(y), Float32.(X)), NormL1(Float32(λ)), CDOptions(; optTol = 1e-6))
+@printf("  %s solution in %d passes, max |β̂ - β*| = %.1e\n", eltype(x32), r.passes,
         norm(Vector(x32) - xstar, Inf))

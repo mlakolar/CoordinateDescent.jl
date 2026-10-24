@@ -58,13 +58,16 @@ sol = lasso(X, y, 0.1; intercept=true, standardizeX=true)
 path = LassoPath(X, y; nλ=50, intercept=true)
 path.λpath, path.βpath, path.β0path
 
-# lower-level interface
+# lower-level interface: solve! (or coordinateDescent!, which returns x)
 x = SparseIterate(p)
 f = CDLeastSquaresLoss(y, X)
 g = NormL1(0.1)
-info = CDInfo()
-coordinateDescent!(x, f, g, CDOptions(; optTol=1e-8), info)
-info.converged, info.iterations
+r = solve!(x, f, g, CDOptions(); optTol=1e-8)
+r.converged, r.passes
+
+# the fields of CDOptions are keywords of every solver, and rng gives the random
+# order; a seeded generator reproduces the passes
+sol = lasso(X, y, 0.1; maxIter=10_000, rng=Xoshiro(1))
 ```
 
 For the group lasso, `g(β) = λ Σₖ wₖ ‖β[Gₖ]‖₂`, the iterate is an
@@ -120,7 +123,7 @@ each one prints its results:
 | script | shows |
 |---|---|
 | [01_lasso.jl](examples/01_lasso.jl) | `lasso`: the penalty level, an intercept, standardization, penalty loadings, the adaptive lasso |
-| [02_solver_options.jl](examples/02_solver_options.jl) | `CDOptions` and `CDInfo`: the tolerance and its units, the order of the coordinates, warm starts and the path from λmax, `maxIter`, Float32 |
+| [02_solver_options.jl](examples/02_solver_options.jl) | `CDOptions`, its fields as keywords, and what `solve!` reports: the tolerance and its units, the order of the coordinates, warm starts and the path from λmax, `maxIter`, `rng`, Float32 |
 | [03_lasso_path.jl](examples/03_lasso_path.jl) | `LassoPath` and `refitLassoPath`: grids, early stopping, standardization, screening, cross-validation |
 | [04_sqrt_scaled_feasible.jl](examples/04_sqrt_scaled_feasible.jl) | penalties that do not need the noise level: `sqrtLasso`, `scaledLasso`, `feasibleLasso!` and `IterLassoOptions` |
 | [05_group_lasso.jl](examples/05_group_lasso.jl) | the group lasso: weights, unpenalized groups, the optimality conditions, choosing λ on a validation set |

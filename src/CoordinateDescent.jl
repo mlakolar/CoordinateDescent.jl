@@ -19,6 +19,7 @@ module CoordinateDescent
 using ProximalBase
 using ProximalSolvers
 using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel, residuals
+using Random: AbstractRNG, default_rng
 using SparseArrays
 using Statistics
 using LinearAlgebra
@@ -32,7 +33,7 @@ export
   CoordinateDifferentiableFunction,
   CDLeastSquaresLoss, CDWeightedLSLoss, CDQuadraticLoss, CDSqrtLassoLoss, CDSqrtQuadraticLoss,
   CDOptions, CDInfo,
-  coordinateDescent!,
+  coordinateDescent!, solve!,
 
   # var coef
   GaussianKernel, SmoothingKernel, EpanechnikovKernel, evaluate, createKernel,

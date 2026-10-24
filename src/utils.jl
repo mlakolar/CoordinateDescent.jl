@@ -7,9 +7,14 @@
 """
     CDOptions(; maxIter=100_000, optTol=1e-7, order=:random, warmStart=true,
                 numSteps=50, relativeTol=true, anderson=0, momentum=nothing)
+    CDOptions(o::CDOptions; changes...)
 
 Options for [`coordinateDescent!`](@ref) and the lasso solvers, which run the
 coordinate descent of ProximalSolvers (`ProximalSolvers.CDSolver`) with them.
+The second form copies `o` with the fields named in `changes` replaced, as in
+`CDOptions(o; warmStart=false)`. The solvers also take these fields as keyword
+arguments, `lasso(X, y, λ; maxIter=10_000, optTol=1e-8)`, which change the
+options passed to them.
 
 - `maxIter`: maximum number of passes over the coordinates; reaching it without
   convergence gives a warning
@@ -20,8 +25,9 @@ coordinate descent of ProximalSolvers (`ProximalSolvers.CDSolver`) with them.
   least squares loss these scales are `‖X[:, k]‖ / √n` and `‖y‖ / √n`.
   Otherwise `|Δxₖ|` is compared with `optTol`
 - `order`: the order in which a pass visits the coordinates
-  - `:random`: a new random order in every pass, drawn from the global random
-    number generator
+  - `:random`: a new random order in every pass, drawn from the random number
+    generator `rng` that the solvers take as a keyword argument, by default the
+    global one (`Random.default_rng()`)
   - `:cyclic`: the order `1, 2, …`
   The cyclic order can be faster on some designs, but much slower when the
   columns are strongly correlated with each other. `randomize = true` and
@@ -96,21 +102,43 @@ Base.getproperty(o::CDOptions, s::Symbol) =
   s === :randomize ? getfield(o, :order) !== :cyclic : getfield(o, s)
 Base.propertynames(::CDOptions, private::Bool=false) = (fieldnames(CDOptions)..., :randomize)
 
-# the options with warmStart = true and every other field unchanged
-_withWarmStart(o::CDOptions) =
-  CDOptions(o.maxIter, o.optTol, o.order, true, o.numSteps, o.relativeTol, o.anderson, o.momentum)
+const _CDOPTIONS_KEYWORDS = (:maxIter, :optTol, :order, :randomize, :warmStart, :numSteps, :relativeTol,
+                             :anderson, :momentum)
 
-# the coordinate descent of ProximalSolvers with these options
-_solver(o::CDOptions) =
+# the keyword arguments changes must name fields of options of type O
+function _check_keywords(::Type{O}, valid, changes) where {O}
+  for k in keys(changes)
+    k in valid || throw(ArgumentError("unsupported keyword argument $k: the fields of $O are $(join(valid, ", "))."))
+  end
+end
+
+function CDOptions(o::CDOptions; changes...)
+  _check_keywords(CDOptions, _CDOPTIONS_KEYWORDS, changes)
+  # randomize replaces order unless both are given
+  order = haskey(changes, :randomize) ? (;) : (; order = o.order)
+  CDOptions(; maxIter = o.maxIter, optTol = o.optTol, order..., warmStart = o.warmStart, numSteps = o.numSteps,
+            relativeTol = o.relativeTol, anderson = o.anderson, momentum = o.momentum, changes...)
+end
+
+# the options with the fields named in the keyword arguments kw replaced, as the
+# solvers take them
+_options(o, kw) = isempty(kw) ? o : typeof(o)(o; kw...)
+
+# the options with warmStart = true and every other field unchanged
+_withWarmStart(o::CDOptions) = CDOptions(o; warmStart = true)
+
+# the coordinate descent of ProximalSolvers with these options, drawing its
+# random orders from rng
+_solver(o::CDOptions; rng::AbstractRNG = default_rng()) =
   CDSolver(; maxpasses = o.maxIter, tol = o.optTol, order = o.order, relative = o.relativeTol,
-           anderson = o.anderson, momentum = o.momentum)
+           anderson = o.anderson, momentum = o.momentum, rng)
 
 # Minimizes f + g by the coordinate descent of ProximalSolvers, from x when
 # options.warmStart is true. Otherwise x is set to zero and, for NormL1 and
 # GroupNormL2, the problem is solved along options.numSteps penalty levels from
 # λmax down to g. f is a CDModel or a loss of ProximalBase. Returns a CDResults.
-function _solve!(x, f, g, options::CDOptions)
-  s = _solver(options)
+function _solve!(x, f, g, options::CDOptions; rng::AbstractRNG = default_rng())
+  s = _solver(options; rng)
   options.warmStart && return solve!(x, f, g, s)
   fill!(x, zero(eltype(x)))
   if g isa Union{NormL1, GroupNormL2} && options.numSteps > 0
@@ -125,7 +153,10 @@ end
     CDInfo()
 
 Convergence information that [`coordinateDescent!`](@ref) fills in when it is
-passed as the last argument.
+passed as the last argument. Deprecated: `solve!(x, f, g, options)` (see
+[`coordinateDescent!`](@ref)) returns the same information, and more, in a
+`ProximalSolvers.CDResults`: `passes` for `iterations`, `converged`,
+`maxchange` for `maxChange`, `tolerance`, and the objective `minimum`.
 
 - `iterations`: number of passes over the coordinates, including those on the
   path of penalties when `warmStart` is false
@@ -155,12 +186,15 @@ end
 """
     IterLassoOptions(; maxIter=20, optTol=1e-2, initProcedure=:Screening,
                        sinit=5, σinit=1.0, optionsCD=CDOptions())
+    IterLassoOptions(o::IterLassoOptions; changes...)
 
 Options for [`feasibleLasso!`](@ref), which alternates a lasso fit with an
 update of the penalty loadings, and for [`scaledLasso!`](@ref), which uses only
 `optionsCD` (since version 0.6.1 it solves the square-root lasso in one run of
 coordinate descent instead of alternating a lasso fit with an update of the
-noise level).
+noise level). The second form copies `o` with the fields named in `changes`
+replaced. The two solvers also take these fields as keyword arguments, as in
+`feasibleLasso!(x, X, y, λ0; maxIter=50)`.
 
 - `maxIter`: maximum number of outer iterations
 - `optTol`: tolerance on the relative change of the noise level or loadings
@@ -202,6 +236,12 @@ IterLassoOptions(;
   σinit::Real=1.,
   optionsCD::CDOptions=CDOptions()) =
   IterLassoOptions(Int(maxIter), Float64(optTol), initProcedure, Int(sinit), Float64(σinit), optionsCD)
+
+function IterLassoOptions(o::IterLassoOptions; changes...)
+  _check_keywords(IterLassoOptions, fieldnames(IterLassoOptions), changes)
+  IterLassoOptions(; maxIter = o.maxIter, optTol = o.optTol, initProcedure = o.initProcedure, sinit = o.sinit,
+                   σinit = o.σinit, optionsCD = o.optionsCD, changes...)
+end
 
 
 
