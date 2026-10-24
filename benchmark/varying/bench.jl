@@ -3,9 +3,8 @@
 # lvocv_locpoly against varyingCoefficientCV, and locpolyl1 against
 # varyingCoefficientLasso. The old EpanechnikovKernel(h) gives the same weights
 # as KernelSmoothing's EpanechnikovKernel() with bandwidth h, so the unpenalized
-# estimates and the cross-validation errors must agree. The lasso is timed for
-# information: the old code warm started across the grid and scaled λ by the
-# kernel, so the problems differ.
+# estimates and the cross-validation errors must agree. For the lasso the script
+# compares the number of selected variables, summed over the grid points.
 #
 #     julia --project=benchmark/varying/old benchmark/varying/bench.jl old OUT
 #     julia --project=benchmark/varying/new benchmark/varying/bench.jl new OUT
@@ -30,10 +29,10 @@ for (n, p) in ((500, 3), (2000, 3), (2000, 10))
   zgrid = collect(range(0.05, 0.95; length = 50))
   h = 0.15
   if NEW
-    f() = varyingCoefficient(X, z, y, zgrid; kernel = KSEpa(), bandwidth = h, se = false)
+    f() = varyingCoefficient(X, z, y, zgrid; kernel = KSEpa(), bandwidth = h)
     B = coef(f())
     results["fit $n $p"] = (besttime(f), B)
-    results["fit+se $n $p"] = (besttime(() -> varyingCoefficient(X, z, y, zgrid; kernel = KSEpa(), bandwidth = h)), nothing)
+    results["fit+se $n $p"] = (besttime(() -> varyingCoefficient(X, z, y, zgrid; kernel = KSEpa(), bandwidth = h, se = true)), nothing)
   else
     g() = locpoly(X, z, y, zgrid, 1, EpanechnikovKernel(h))
     B = g()[1:2:end, :]
