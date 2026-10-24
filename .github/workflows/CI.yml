@@ -55,14 +55,12 @@ jobs:
       # 0.1.1, which has SqrtQuadraticFunction, is on its master. Julia 1.11 and
       # later take it from [sources] in Project.toml; Julia 1.10 ignores
       # [sources]. Remove this step and [sources] once 0.1.1 is registered.
-      # The branch cd-rng (ProximalSolvers PR #36) adds CDSolver(; rng); go back
-      # to master here and in [sources] once it is merged.
       - name: Add ProximalSolvers from GitHub on Julia 1.10
         if: matrix.version == 'lts'
         shell: julia --color=yes --project=. {0}
         run: |
           using Pkg
-          Pkg.add(url="https://github.com/mlakolar/ProximalSolvers.jl", rev="cd-rng")
+          Pkg.add(url="https://github.com/mlakolar/ProximalSolvers.jl", rev="master")
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
