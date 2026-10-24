@@ -2,6 +2,6 @@
 
 ```@autodocs
 Modules = [CoordinateDescent]
-Pages = ["src/varying_coefficient_lasso.jl"]
+Pages = ["src/varying.jl"]
 Private = true
 ```

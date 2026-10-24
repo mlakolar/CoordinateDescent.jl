@@ -7,30 +7,65 @@ In a varying-coefficient model the coefficients change with an index variable
 y_i = \sum_{j=1}^p X_{ij}\, \beta_j(z_i) + \varepsilon_i.
 ```
 
-[`locpoly`](@ref) estimates ``\beta(z_0)`` at a point ``z_0`` by local polynomial
-regression. Each ``\beta_j(z)`` is approximated by a polynomial of degree ``q``
-in ``z - z_0``, which expands the design to
-``\tilde X_i = X_i \otimes (1, z_i - z_0, \dots, (z_i - z_0)^q)``, and the
-observations are weighted by a kernel ``K_h(z_i, z_0)`` with bandwidth ``h``,
-a [`GaussianKernel`](@ref) or an [`EpanechnikovKernel`](@ref). The
-coefficients of variable ``j`` are its value and its derivatives at ``z_0``, up
-to factorials.
+A column of ones in ``X`` gives a varying intercept.
 
-[`locpolyl1`](@ref) also selects the variables. At each point ``z_0`` of a grid
-it solves the weighted lasso
+## Local polynomial fits
+
+[`varyingCoefficient`](@ref)`(X, z, y, zgrid; kernel, bandwidth, degree)`
+estimates the coefficient functions at each point ``z_0`` of `zgrid` by local
+polynomial regression. Near ``z_0`` each ``\beta_j`` is a polynomial of degree
+``q`` in ``z - z_0``, and the polynomials are fitted by weighted least squares,
 
 ```math
-\underset{\beta}{\text{minimize}} \quad \frac{1}{2n} \sum_{i=1}^n w_i (y_i - \tilde X_i^\top \beta)^2 + \lambda_0 \sum_k s_k |\beta_k|, \qquad w_i = K_h(z_i, z_0),
+\underset{\theta}{\text{minimize}} \quad \sum_{i=1}^n w_i K_h(z_i - z_0)\Big(y_i - \sum_{j=1}^p X_{ij}\sum_{r=0}^q \theta_{jr}(z_i - z_0)^r\Big)^2,
+\qquad K_h(d) = k(d/h)/h,
 ```
 
-with loadings ``s_k = \sqrt{\sum_i w_i \tilde X_{ik}^2 / n}`` that standardize the
-expanded columns, warm started from the solution at the previous point, and it
-can refit weighted least squares on the selected variables.
+with observation weights ``w_i``. Then ``r!\,\theta_{jr}`` estimates the derivative
+``\beta_j^{(r)}(z_0)``: `coef(fit)` returns the estimates of ``\beta_j(z_0)``, and
+`coef(fit; derivative = r)` those of the derivatives.
 
-The bandwidth can be chosen by leave-one-out cross-validation,
-[`CoordinateDescent.lvocv_locpoly`](@ref) and
-[`CoordinateDescent.lvocv_locpolyl1`](@ref), or on a validation set,
-[`CoordinateDescent.split_locpoly`](@ref).
-[`CoordinateDescent.getStandardError`](@ref) and
-[`CoordinateDescent.getStandardErrorHEW`](@ref) give standard errors of the
-estimates. The example on varying-coefficient models goes through them.
+The kernel ``k`` is a function of the scaled distance ``u = (z_i - z_0)/h``: the
+kernels of [KernelSmoothing.jl](https://github.com/mlakolar/KernelSmoothing.jl)
+(`EpanechnikovKernel()`, `GaussianKernel()`, whose bandwidth is a standard
+deviation, `UniformKernel()`, and others), or any function of ``u``. With a
+compactly supported kernel only the observations within ``h`` of ``z_0`` enter;
+when they do not determine the polynomials, the fit of minimum norm is taken
+and the `rank` of the fit records it.
+
+The fit also gives the fitted values and residuals of the local fits at the
+observations, and heteroskedasticity-robust (sandwich) standard errors,
+`stderror(fit)` and `confint(fit)`. These describe the variance of the local
+estimate, not its bias, so an interval covers ``\beta_j(z_0)`` when the
+bandwidth is small enough for the bias to be negligible. `predict(fit, X, z)`
+interpolates the estimates linearly between the points of the grid.
+
+[`varyingCoefficientCV`](@ref) chooses the bandwidth by leave-one-out
+cross-validation. The local fit is linear in ``y``, so the prediction of ``y_i``
+without observation ``i`` comes from the fit with it,
+``(\hat y_i - H_{ii} y_i)/(1 - H_{ii})``, at the cost of one local fit per
+observation.
+
+## Selecting the variables
+
+[`varyingCoefficientLasso`](@ref)`(X, z, y, zgrid, λ; kernel, bandwidth)` adds a
+penalty that selects, at each point, the variables whose coefficient functions
+are not zero nearby:
+
+```math
+\underset{\theta}{\text{minimize}} \quad \frac{\sum_i v_i\big(y_i - \sum_j X_{ij}\sum_r \theta_{jr}((z_i - z_0)/h)^r\big)^2}{2\sum_i v_i} + \lambda\, P(\theta),
+\qquad v_i = w_i K_h(z_i - z_0).
+```
+
+The loss is the mean squared error on the local sample, so ``\lambda`` is on the
+scale of an ordinary lasso. With `penalty = :group`, the default, ``P`` is the
+group lasso over the ``q + 1`` coefficients of each variable, on the fitted
+values of its locally weighted columns (the orthonormalized groups of
+[`groupLasso`](@ref)), so that a variable enters with all its polynomial terms.
+With `penalty = :lasso`, ``P`` is the ℓ1 norm with the loadings of the
+standardized local columns. With `refit`, the default, the selected variables are
+refitted at each point by the unpenalized local fit, which removes the
+shrinkage. [`varyingCoefficientLassoCV`](@ref) chooses the bandwidth by
+leave-one-out cross-validation, one local lasso per observation and bandwidth.
+
+The example on varying-coefficient models goes through these functions.

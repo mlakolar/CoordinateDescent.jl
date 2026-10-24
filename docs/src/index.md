@@ -18,8 +18,8 @@ levels, and solves the estimators built on it:
   noise level, and the heteroscedasticity-robust (feasible) lasso;
 - lasso paths, with screening, refitting and the functions of StatsAPI;
 - the group lasso;
-- sparse varying-coefficient models, by local polynomial regression with an ℓ1
-  penalty.
+- varying-coefficient models by local polynomial regression, with the kernels
+  of KernelSmoothing.jl, and sparse ones with a group lasso penalty.
 
 The coordinate descent itself (the passes over the coordinates and the active
 set, the penalty paths with screening, the reweighting of the scaled and

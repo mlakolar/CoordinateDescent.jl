@@ -15,9 +15,9 @@ tests = [
   "sparsegroup",
   "multiresponse",
   "hdm",
+  "varying",
   "statsapi",
   "formula",
-  "varying_coefficient_lasso"
 ]
 
 @testset "CoordinateDescent" begin

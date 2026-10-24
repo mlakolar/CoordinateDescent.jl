@@ -124,9 +124,6 @@ end
 # solvers take them
 _options(o, kw) = isempty(kw) ? o : typeof(o)(o; kw...)
 
-# the options with warmStart = true and every other field unchanged
-_withWarmStart(o::CDOptions) = CDOptions(o; warmStart = true)
-
 # the coordinate descent of ProximalSolvers with these options, drawing its
 # random orders from rng
 _solver(o::CDOptions; rng::AbstractRNG = default_rng()) =
@@ -393,23 +390,6 @@ function _findInitResiduals!(
   return storage
 end
 
-# weighted version: correlations and least squares are weighted by w
-function _findInitResiduals!(
-  w::AbstractVector{T},
-  X::AbstractMatrix{T},
-  y::AbstractVector{T},
-  s::Int,
-  storage::Vector{T}) where {T <: AbstractFloat}
-
-  S = _findLargestCorrelations(w, X, y, s)
-
-  Xs = view(X, :, S)
-  mul!(storage, Xs, _wls(Xs, w, y))
-  @. storage = y - storage
-  return storage
-end
-
-
 # BitVector marking the s columns of X with the largest |X[:,j]'y|
 # (more than s when there are ties)
 function _findLargestCorrelations(
@@ -424,55 +404,9 @@ function _findLargestCorrelations(
   S = storage .>= _sthlargest(storage, s)
 end
 
-function _findLargestCorrelations(
-  w::AbstractVector{T},
-  X::AbstractMatrix{T},
-  y::AbstractVector{T},
-  s::Int) where {T <: AbstractFloat}
-
-  n, p = size(X)
-  storage = Array{T}(undef, p)
-  @inbounds for j=1:p
-    val = zero(T)
-    @simd for i=1:n
-      val += X[i,j] * w[i] * y[i]
-    end
-    storage[j] = abs(val)
-  end
-  S = storage .>= _sthlargest(storage, s)
-end
-
 # the s-th largest entry of v, or its smallest when s > length(v)
 _sthlargest(v::AbstractVector, s::Int) = partialsort(v, min(s, length(v)); rev = true)
 
-
-# column scales out[j] = sqrt(∑ᵢ X[i,j]² / n), without centering
-function _stdX!(out::Vector{T}, X::AbstractMatrix{T}) where {T <: AbstractFloat}
-  n, p = size(X)
-
-  @inbounds for j=1:p
-    v = zero(T)
-    @simd for i=1:n
-      v += abs2(X[i, j])
-    end
-    out[j] = sqrt(v / n)
-  end
-  out
-end
-
-# weighted column scales out[j] = sqrt(∑ᵢ w[i] X[i,j]² / n)
-function _stdX!(out::Vector{T}, w::AbstractVector{T}, X::AbstractMatrix{T}) where {T <: AbstractFloat}
-  n, p = size(X)
-
-  @inbounds for j=1:p
-    v = zero(T)
-    @simd for i=1:n
-      v += w[i] * abs2(X[i, j])
-    end
-    out[j] = sqrt(v / n)
-  end
-  out
-end
 
 # heteroscedasticity-robust penalty loadings out[j] = sqrt(∑ᵢ ((X[i,j] - x̄[j]) e[i])² / n),
 # for the column means x̄ (zeros without an intercept)
