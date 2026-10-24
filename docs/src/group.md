@@ -62,6 +62,23 @@ the columns as given. The groups must be disjoint and cover the columns; a
 column alone is a group of its own, and a zero weight leaves a group
 unpenalized. The solutions report the active groups.
 
+[`sparseGroupLasso`](@ref)`(X, y, λ, groups)` and
+[`SparseGroupLassoPath`](@ref)`(X, y, groups)` are the sparse group lasso of
+Simon, Friedman, Hastie and Tibshirani (2013),
+
+```math
+\frac{1}{2n}\|y - \beta_0 - X\beta\|^2 + \lambda\Big(\alpha\sum_j |\tilde\beta_j| + (1 - \alpha)\sum_k w_k\|\tilde\beta_{G_k}\|_2\Big),
+```
+
+which selects groups and, within them, variables. With `standardizeX` (the
+default), ``\tilde\beta = s\beta`` are the coefficients of the standardized
+columns, as in R's SGL, whose default `alpha = 0.95` it shares; `alpha = 1` is
+the lasso and `alpha = 0` the group lasso on the columns as given. The groups
+are not orthonormalized, since the ℓ1 term is not invariant to a change of basis
+within a group. Paths screen groups by the level at which each would be zero:
+a group at zero is optimal while
+``\lVert\mathrm{soft}(\nabla_{G_k}, \lambda\alpha)\rVert_2 \le \lambda(1 - \alpha) w_k``.
+
 ## The multi-response lasso
 
 With several responses that share the predictors, [`multiLasso`](@ref)`(X, Y, λ)`
