@@ -1,12 +1,17 @@
 module NamingTest
 using CoordinateDescent, ProximalBase, ProximalSolvers, Test, Random, LinearAlgebra, KernelSmoothing
 
+# Consumer functions keep the property name constant, as estimator code does.
+_read_max_iter(o) = o.max_iter
+_read_opt_tol(o) = o.opt_tol
+_read_options_cd(o) = o.options_cd
+
 @testset "Julia naming and integer inputs" begin
   o = CDOptions(; max_iter=Int32(100), num_steps=Int32(5), anderson=Int32(0))
   @test o.max_iter isa Int
-  @test (@inferred getproperty(o, :max_iter)) === 100
-  @test (@inferred getproperty(o, :opt_tol)) === o.opt_tol
-  @test (@inferred getproperty(IterLassoOptions(), :options_cd)) isa CDOptions
+  @test (@inferred _read_max_iter(o)) === 100
+  @test (@inferred _read_opt_tol(o)) === o.opt_tol
+  @test (@inferred _read_options_cd(IterLassoOptions())) isa CDOptions
   @test o.num_steps isa Int
   @test IterLassoOptions(; max_iter=Int32(2), sinit=Int32(3)).sinit isa Int
   @test CDOptions(o; opt_tol=1e-9).max_iter == o.max_iter
