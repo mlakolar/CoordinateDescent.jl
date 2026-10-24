@@ -12,6 +12,7 @@ using CoordinateDescent, ProximalBase, ProximalSolvers, Test, Random, LinearAlge
   @test_deprecated r"relative_tol" CDOptions(; relativeTol=false)
   io = @test_deprecated r"init_procedure" IterLassoOptions(; initProcedure=:InitStd)
   @test io.init_procedure === :InitStd
+  @test :optionsCD in propertynames(io)
   @test_deprecated r"options_cd" IterLassoOptions(IterLassoOptions(); optionsCD=o)
   @test_deprecated r"max_iter" o.maxIter
   @test_deprecated r"opt_tol" io.optTol
@@ -57,8 +58,12 @@ using CoordinateDescent, ProximalBase, ProximalSolvers, Test, Random, LinearAlge
   @test_deprecated r"max_change" info.maxChange
   @test_deprecated r"max_change" (info.maxChange = 0.5)
   @test info.max_change == 0.5
+  @test :maxChange in propertynames(info)
+  @test_deprecated r"max_change" (info.maxChange = 1)
+  @test info.max_change === 1.0
   path = LassoPath(X, y, [0.2, 0.1])
   @test_deprecated r"kkt_checks" path.kktChecks
+  @test :kktChecks in propertynames(path)
   old = @test_deprecated refitLassoPath(path, X, y)
   @test old == refit_lasso_path(path, X, y)
 end
