@@ -70,6 +70,7 @@ sol = lasso(X, y, 0.1; alpha=0.5)                # the elastic net; or penalty=M
 sol = adaptiveLasso(X, y, 0.1)                   # loadings 1/|β̃ⱼ| from a first lasso
 yb = Float64.(rand(n) .< 1 ./ (1 .+ exp.(-X[:, 1])))
 sol = glmLasso(X, yb, 0.02)                      # logistic regression; also Poisson
+sol = groupLasso(X, y, 0.1, [1:5, 6:10, 11:50])  # the group lasso, with orthonormalized groups
 ```
 
 The [documentation](https://mlakolar.github.io/CoordinateDescent.jl/dev/) has

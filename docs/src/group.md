@@ -38,3 +38,26 @@ All groups are zero for ``\lambda \ge \max_k \|X_{G_k}^\top y\| / (n w_k)``. Wit
 penalty levels from there, and screens the groups with the strong rule. The
 example on the group lasso chooses ``\lambda`` on a validation set and checks the
 optimality conditions.
+
+## The estimators
+
+[`groupLasso`](@ref)`(X, y, λ, groups)` and [`GroupLassoPath`](@ref)`(X, y, groups)`
+are the group lasso with an unpenalized intercept and, by default
+(`standardize = :orthonormal`), the penalty on the fitted values of each group,
+
+```math
+\frac{1}{2n}\|y - \beta_0 - X\beta\|^2 + \lambda\sum_k w_k\,\frac{\|\tilde X_{G_k}\beta_{G_k}\|_2}{\sqrt{n}},
+```
+
+with ``\tilde X_G`` the centered columns of group ``G`` and ``w_k = \sqrt{|G_k|}``
+by default. This makes the estimate invariant to a change of basis within a
+group (Simon and Tibshirani, 2012), as in R's grpreg. It is fitted on
+orthonormalized groups: each ``\tilde X_G`` is factored by a pivoted QR as
+``Z_G\tilde R`` with ``Z_G^\top Z_G/n = I``, the group lasso is solved in
+``\theta_G = \tilde R\beta_G`` by block coordinate descent, whose steps are then
+exact, and the coefficients are mapped back; columns of a group that are
+combinations of its other columns get zero coefficients. With
+`standardize = :none`, the penalty is ``\lambda\sum_k w_k\|\beta_{G_k}\|_2`` on
+the columns as given. The groups must be disjoint and cover the columns; a
+column alone is a group of its own, and a zero weight leaves a group
+unpenalized. The solutions report the active groups.

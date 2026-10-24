@@ -114,3 +114,24 @@ coordinateDescent!(xq, CDQuadraticLoss(Xc' * Xc / n, -Xc' * yc / n), g, CDOption
 xl = AtomIterate(p, groups)
 coordinateDescent!(xl, f, g, CDOptions(; optTol = 1e-10))
 @printf("largest difference to the least squares loss: %.1e\n", norm(xq - Vector(xl), Inf))
+
+println("\n== The estimators: groupLasso and GroupLassoPath")
+
+# groupLasso(X, y, λ, groups) and GroupLassoPath(X, y, groups) fit an
+# intercept and, by default, orthonormalize each group: the penalty
+# λ ∑ₖ wₖ ‖X̃_Gₖ β_Gₖ‖₂ / √n on the fitted values of the group (X̃ centered)
+# does not depend on the basis of the group, so rescaling a column of the
+# polynomial basis changes only its own coefficient, and every block step is
+# exact. standardize = :none penalizes λ ∑ₖ wₖ ‖β_Gₖ‖₂ as above.
+sol = groupLasso(X, y, λ, groups)
+println("orthonormal groups: selected variables ", sol.activegroups, " in $(sol.iterations) passes")
+sol_none = groupLasso(X, y, λ, groups; standardize = :none)
+println("columns as given:   selected variables ", sol_none.activegroups)
+Xs = copy(X); Xs[:, 2] .*= 10
+@printf("scaling column 2 by 10 divides its coefficient by %.2f\n", sol.x[2] / groupLasso(Xs, y, λ, groups).x[2])
+
+# The path from λmax, with the group strong rule, and λ chosen on the validation set
+path = GroupLassoPath(X[train, :], y[train], groups; nλ = 30)
+errs = [mean(abs2, y[valid] .- path.β0path[k] .- X[valid, :] * path.βpath[k]) for k in eachindex(path.λpath)]
+k = argmin(errs)
+@printf("best λ = %.4f: variables %s, validation error %.4f\n", path.λpath[k], path.activegroups[k], errs[k])

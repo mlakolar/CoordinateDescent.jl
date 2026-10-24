@@ -4,7 +4,8 @@
 Lasso estimators computed by coordinate descent: [`lasso`](@ref),
 [`sqrtLasso`](@ref), [`scaledLasso`](@ref), [`feasibleLasso!`](@ref),
 [`LassoPath`](@ref), the penalized generalized linear models [`glmLasso`](@ref) and
-[`GLMLassoPath`](@ref), and the varying-coefficient estimators [`locpoly`](@ref)
+[`GLMLassoPath`](@ref), the group lasso [`groupLasso`](@ref) and
+[`GroupLassoPath`](@ref), and the varying-coefficient estimators [`locpoly`](@ref)
 and [`locpolyl1`](@ref). They run the coordinate descent, the penalty paths and
 the reweighting of ProximalSolvers.jl on the losses and penalties of
 ProximalBase.jl, as does [`coordinateDescent!`](@ref), which minimizes
@@ -49,6 +50,10 @@ export
   glmLasso,
   GLMLassoPath,
 
+  # the group lasso
+  groupLasso,
+  GroupLassoPath,
+
   # var coef
   GaussianKernel, SmoothingKernel, EpanechnikovKernel, evaluate, createKernel,
   locpoly, locpolyl1
@@ -59,6 +64,7 @@ include("coordinate_descent.jl")
 include("lasso.jl")
 include("penalties.jl")
 include("glm.jl")
+include("group.jl")
 include("statsapi.jl")
 include("cv.jl")
 include("varying_coefficient_lasso.jl")
