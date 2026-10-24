@@ -2,6 +2,6 @@
 
 ```@autodocs
 Modules = [CoordinateDescent]
-Pages = ["src/statsapi.jl"]
+Pages = ["src/statsapi.jl", "src/formula.jl"]
 Private = false
 ```

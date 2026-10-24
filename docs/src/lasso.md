@@ -40,6 +40,29 @@ it: [`coef`](@ref) (intercept first), [`predict`](@ref), [`residuals`](@ref),
 [`nobs`](@ref), [`dof`](@ref) (the number of nonzero coefficients, plus one for
 the intercept) and [`deviance`](@ref).
 
+## Formulas and tables
+
+Loading StatsModels.jl adds methods that take a formula and a table (a
+DataFrame, a NamedTuple of vectors or any other Tables.jl table) in place of
+`X` and `y`: `fit` with [`LassoPath`](@ref), [`CVLassoPath`](@ref),
+[`GLMLassoPath`](@ref) and [`GroupLassoPath`](@ref), and [`lasso`](@ref),
+[`sqrtLasso`](@ref), [`adaptiveLasso`](@ref), [`glmLasso`](@ref),
+[`groupLasso`](@ref) and [`rlasso`](@ref).
+
+```julia
+using CoordinateDescent, StatsModels
+m = fit(LassoPath, @formula(y ~ x1 + log(x2) + region), df; nλ = 50)
+coef(m, 0.1), coefnames(m), predict(m, newdf)
+g = groupLasso(@formula(y ~ x1 + region + x2 & region), df, 0.05)   # a group per term
+```
+
+The formula sets the intercept (`y ~ 0 + x1` has none). Categorical variables
+become dummy columns, coded by `contrasts`. The group lasso takes the columns
+of each term as a group. `weights` and `offset` may name columns of the table,
+and rows with missing values in the variables of the model are left out. The
+result is a [`FormulaFit`](@ref), whose functions of StatsAPI forward to the
+fitted model and whose `predict` builds the columns of new data by the formula.
+
 ## The elastic net, MCP and SCAD
 
 [`lasso`](@ref) and [`LassoPath`](@ref) take other penalties of ProximalBase
