@@ -69,6 +69,10 @@ log1pexp(z) = z > 0 ? z + log1p(exp(-z)) : log1p(exp(z))
     @test cv.λmin < cv.λpath[1] && nnz(coef(cv; λ = :λmin)) > 1
     f = fit(CVGLMLassoPath, X, y; nfolds = 4, nλ = 15, rng = Xoshiro(3))
     @test f.cvm == cv.cvm
+    # integer data are converted to floating point
+    Xi = round.(Int, 10 .* X)
+    @test CVGLMLassoPath(Xi, round.(Int, y); nfolds = 4, nλ = 10, rng = Xoshiro(3)).cvm ≈
+          CVGLMLassoPath(Float64.(Xi), y; nfolds = 4, nλ = 10, rng = Xoshiro(3)).cvm
     # misclassification goes to zero on separable data
     ys = Float64.(X[:, 1] .> 0)
     cs = CVGLMLassoPath(X, ys; measure = :class, nfolds = 4, nλ = 30, rng = Xoshiro(5), devmax = 1.0)
