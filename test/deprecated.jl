@@ -16,6 +16,16 @@ using CoordinateDescent, ProximalBase, ProximalSolvers, Test, Random, LinearAlge
   @test_deprecated r"options_cd" IterLassoOptions(IterLassoOptions(); optionsCD=o)
   @test_deprecated r"max_iter" o.maxIter
   @test_deprecated r"opt_tol" io.optTol
+  for (old, new) in ((:maxIter, :max_iter), (:optTol, :opt_tol), (:warmStart, :warm_start),
+                     (:numSteps, :num_steps), (:relativeTol, :relative_tol))
+    value = @test_deprecated getproperty(o, old)
+    @test value === getproperty(o, new)
+  end
+  for (old, new) in ((:maxIter, :max_iter), (:optTol, :opt_tol),
+                     (:initProcedure, :init_procedure), (:optionsCD, :options_cd))
+    value = @test_deprecated getproperty(io, old)
+    @test value === getproperty(io, new)
+  end
   @test_throws ArgumentError CDOptions(; maxIter=10, max_iter=20)
   @test_deprecated r"standardize_x" lasso(X, y, 0.1; standardizeX=false)
   @test_throws ArgumentError lasso(X, y, 0.1; standardizeX=false, standardize_x=false)
