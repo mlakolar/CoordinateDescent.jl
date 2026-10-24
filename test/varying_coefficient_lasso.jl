@@ -302,6 +302,8 @@ struct ScaledGaussianKernel{T} <: SmoothingKernel{T}
 end
 CoordinateDescent.evaluate(k::ScaledGaussianKernel{T}, x::T, y::T) where {T <: AbstractFloat} =
   k.c * evaluate(GaussianKernel(k.h), x, y)
+CoordinateDescent.createKernel(::Type{ScaledGaussianKernel{T}}, h::T) where {T <: AbstractFloat} =
+  ScaledGaussianKernel{T}(h, one(T))
 
 @testset "locpolyl1 penalty scale and input checks" begin
   n, p = 300, 8
@@ -383,6 +385,16 @@ end
   @test M1 == M2
   @test CoordinateDescent.lvocv_locpolyl1(view(X, 1:m, :), z[1:m], y[1:m], Int32(1), 0.2:0.2:0.4,
                                           GaussianKernel{Float64}, 0.1, opt) == M2
+
+  # an Epanechnikov kernel is converted with the data, and its type may be given
+  # without its parameter too; a kernel type of the user's is used as it is
+  X32, z32, y32, g32 = Float32.(X), Float32.(z), Float32.(y), Float32[0.3, 0.5]
+  E = locpoly(X32, z32, y32, g32, 1, EpanechnikovKernel(0.5))
+  @test eltype(E) == Float32 && E == locpoly(X32, z32, y32, g32, 1, EpanechnikovKernel(0.5f0))
+  @test CoordinateDescent.lvocv_locpoly(X[1:m, :], z[1:m], y[1:m], 1, [0.5, 0.8], EpanechnikovKernel) ==
+        CoordinateDescent.lvocv_locpoly(X[1:m, :], z[1:m], y[1:m], 1, [0.5, 0.8], EpanechnikovKernel{Float64})
+  @test CoordinateDescent.lvocv_locpoly(X[1:m, :], z[1:m], y[1:m], 1, [0.2, 0.4], ScaledGaussianKernel{Float64}) ==
+        CoordinateDescent.lvocv_locpoly(X[1:m, :], z[1:m], y[1:m], 1, [0.2, 0.4], GaussianKernel{Float64})
 end
 
 end

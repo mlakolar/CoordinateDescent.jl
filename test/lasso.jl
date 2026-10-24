@@ -978,6 +978,11 @@ end
   # integer and Float32 data of other array types are converted as before
   @test close(lasso(transpose(round.(Int, 10 * X)'), Y, λ, opt), lasso(Float64.(round.(Int, 10 * X)), Y, λ, opt))
   @test eltype(lasso(sparse(Float32.(X)), Float32.(Y), λ; optTol = 1e-5).x) == Float32
+  # and so are integer data for the refits of a path
+  Xi = round.(Int, 10 * X)
+  Pi = LassoPath(Float64.(Xi), Y, opt; nλ = 8, intercept = true)
+  Ri, Rf = refitLassoPath(Pi, Xi, Y), refitLassoPath(Pi, Float64.(Xi), Y)
+  @test keys(Ri) == keys(Rf) && all(Ri[S] == Rf[S] for S in keys(Rf))
 end
 
 end
