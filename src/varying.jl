@@ -6,8 +6,8 @@
 #
 #   by local polynomial regression in z: near a point z₀ each βⱼ(z) is a
 #   polynomial of degree q in z - z₀, fitted by kernel-weighted least squares
-#   (varyingCoefficient) or with a lasso or group lasso penalty
-#   (varyingCoefficientLasso). The kernels come from KernelSmoothing.jl, or any
+#   (varying_coefficient) or with a lasso or group lasso penalty
+#   (varying_coefficient_lasso). The kernels come from KernelSmoothing.jl, or any
 #   function k(u) of the scaled distance u = (zᵢ - z₀)/h.
 #
 ######################################################################
@@ -75,7 +75,7 @@ _varyingdata(X, z, y, zgrid, w) =
 """
     VaryingCoefficientFit
 
-Result returned by [`varyingCoefficient`](@ref).
+Result returned by [`varying_coefficient`](@ref).
 
 # Fields
 - `zgrid::Vector`: the points `z₀`, sorted
@@ -107,7 +107,7 @@ struct VaryingCoefficientFit{T, K}
 end
 
 """
-    varyingCoefficient(X, z, y, zgrid; kernel, bandwidth, degree = 1, weights = nothing, se = false)
+    varying_coefficient(X, z, y, zgrid; kernel, bandwidth, degree = 1, weights = nothing, se = false)
 
 The local polynomial estimate of the varying-coefficient model
 
@@ -129,7 +129,7 @@ the standard deviation), `UniformKernel()`, and so on. With a compactly
 supported kernel only the observations within `h` of `z₀` enter the fit at
 `z₀`; when they do not determine the polynomials (fewer than `p(degree + 1)` of
 them, or collinear), the fit of minimum norm is taken and `rank` records it.
-[`varyingCoefficientCV`](@ref) chooses the bandwidth by leave-one-out
+[`varying_coefficient_cv`](@ref) chooses the bandwidth by leave-one-out
 cross-validation.
 
 With `se = true`, the fit also computes the fitted values and residuals of the
@@ -145,7 +145,7 @@ when the bandwidth is small enough for the bias to be negligible
 
 ```julia
 using CoordinateDescent, KernelSmoothing
-fit = varyingCoefficient(X, z, y, range(0, 1; length = 50); kernel = EpanechnikovKernel(), bandwidth = 0.2,
+fit = varying_coefficient(X, z, y, range(0, 1; length = 50); kernel = EpanechnikovKernel(), bandwidth = 0.2,
                          se = true)
 coef(fit)                      # p × 50: the estimates of βⱼ at the points
 coef(fit; derivative = 1)      # of their first derivatives
@@ -153,7 +153,7 @@ confint(fit)                   # pointwise intervals, from the robust standard e
 predict(fit, Xnew, znew)       # ∑ⱼ Xnewᵢⱼ βⱼ(znewᵢ), interpolated linearly between the points
 ```
 """
-function varyingCoefficient(X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
+function varying_coefficient(X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
                             zgrid::AbstractVector{<:Real}; kernel, bandwidth::Real, degree::Integer = 1,
                             weights::Union{Nothing, AbstractVector{<:Real}} = nothing, se::Bool = false)
   T, Xf, zf, yf, g, w = _varyingdata(X, z, y, zgrid, weights)
@@ -238,7 +238,7 @@ The `p × length(zgrid)` estimates of `βⱼ⁽ʳ⁾` at the points of `fit.zgri
 (`r = derivative`), their robust standard errors, and the pointwise normal
 intervals `estimate ± z stderror` as a pair of matrices (lower, upper), which
 cover `βⱼ⁽ʳ⁾(z₀)` only when the bias of the local fit is negligible (see
-[`varyingCoefficient`](@ref)). `predict` gives `∑ⱼ Xᵢⱼ βⱼ(zᵢ)` with `β` interpolated
+[`varying_coefficient`](@ref)). `predict` gives `∑ⱼ Xᵢⱼ βⱼ(zᵢ)` with `β` interpolated
 linearly between the points of the grid (and constant outside it).
 `fitted` and `residuals` are those of the local fits at the observations.
 """
@@ -285,8 +285,8 @@ StatsAPI.nobs(fit::VaryingCoefficientFit) = fit.nobs
 """
     VaryingCoefficientCV
 
-Result returned by [`varyingCoefficientCV`](@ref) and
-[`varyingCoefficientLassoCV`](@ref): the `bandwidths` tried, the
+Result returned by [`varying_coefficient_cv`](@ref) and
+[`varying_coefficient_lasso_cv`](@ref): the `bandwidths` tried, the
 cross-validated mean squared prediction error `cvm` at each (weighted by the
 observation weights), and the `bandwidth` that minimizes it.
 """
@@ -297,10 +297,10 @@ struct VaryingCoefficientCV{T}
 end
 
 """
-    varyingCoefficientCV(X, z, y, bandwidths; kernel, degree = 1, weights = nothing)
+    varying_coefficient_cv(X, z, y, bandwidths; kernel, degree = 1, weights = nothing)
 
 Leave-one-out cross-validation of the bandwidth of
-[`varyingCoefficient`](@ref): observation `i` is predicted from the local fit at
+[`varying_coefficient`](@ref): observation `i` is predicted from the local fit at
 `zᵢ` computed without it, and `cvm` is the mean squared error of these
 predictions, weighted by the observation weights. The local fit is linear in
 `y`, so the prediction without `i` comes from the fit with it,
@@ -309,7 +309,7 @@ per observation. An observation alone in its window, or in a window that does
 not determine the local polynomials, cannot be predicted, and its bandwidth gets
 `cvm = Inf`. Returns a [`VaryingCoefficientCV`](@ref).
 """
-function varyingCoefficientCV(X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
+function varying_coefficient_cv(X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
                               bandwidths::AbstractVector{<:Real}; kernel, degree::Integer = 1,
                               weights::Union{Nothing, AbstractVector{<:Real}} = nothing)
   T, Xf, zf, yf, _, w = _varyingdata(X, z, y, Real[], weights)
@@ -352,7 +352,7 @@ end
 """
     VaryingCoefficientLassoFit
 
-Result returned by [`varyingCoefficientLasso`](@ref).
+Result returned by [`varying_coefficient_lasso`](@ref).
 
 # Fields
 - `zgrid::Vector`: the points `z₀`, sorted
@@ -382,11 +382,11 @@ struct VaryingCoefficientLassoFit{T, K}
 end
 
 """
-    varyingCoefficientLasso(X, z, y, zgrid, λ, options = CDOptions(); kernel, bandwidth, degree = 1,
+    varying_coefficient_lasso(X, z, y, zgrid, λ, options = CDOptions(); kernel, bandwidth, degree = 1,
                             penalty = :group, refit = true, weights = nothing)
 
 A sparse varying-coefficient model: at each point `z₀` of `zgrid`, the local
-polynomial fit of [`varyingCoefficient`](@ref) with a penalty that selects the
+polynomial fit of [`varying_coefficient`](@ref) with a penalty that selects the
 variables `Xⱼ` whose coefficient functions are not zero near `z₀`,
 
     minimize  ∑ᵢ vᵢ (yᵢ - ∑ⱼ Xᵢⱼ ∑ᵣ θⱼᵣ ((zᵢ - z₀)/h)ʳ)² / (2 ∑ᵢ vᵢ) + λ P(θ),
@@ -397,22 +397,22 @@ on the local sample, so `λ` is on the scale of an ordinary lasso.
 - `penalty = :group`, the default, is the group lasso over the `degree + 1`
   coefficients of each variable, `P(θ) = ∑ⱼ √(degree + 1) ‖Z̃ⱼθⱼ‖ / √n`, with the
   locally weighted columns `Z̃ⱼ` of variable `j` orthonormalized (the
-  `standardize = :orthonormal` of [`groupLasso`](@ref)), so that the penalty is
+  `standardize = :orthonormal` of [`group_lasso`](@ref)), so that the penalty is
   on the fitted values of each variable and a variable enters or leaves with all
   its polynomial terms.
 - `penalty = :lasso` is the lasso on the expanded coefficients, with the
   loadings of the standardized local columns, as [`lasso`](@ref) with
-  `standardizeX`; a variable is selected when any of its coefficients is not
+  `standardize_x`; a variable is selected when any of its coefficients is not
   zero.
 
 With `refit`, the selected variables are refitted at each point by the
 unpenalized local fit (all their polynomial terms), which removes the shrinkage
 of the penalty. Coordinate descent runs with `options`. The `kernel` and the
-`bandwidth` are as for [`varyingCoefficient`](@ref);
-[`varyingCoefficientLassoCV`](@ref) chooses the bandwidth. Returns a
+`bandwidth` are as for [`varying_coefficient`](@ref);
+[`varying_coefficient_lasso_cv`](@ref) chooses the bandwidth. Returns a
 [`VaryingCoefficientLassoFit`](@ref).
 """
-function varyingCoefficientLasso(X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
+function varying_coefficient_lasso(X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
                                  zgrid::AbstractVector{<:Real}, λ::Real, options::CDOptions = CDOptions();
                                  kernel, bandwidth::Real, degree::Integer = 1, penalty::Symbol = :group,
                                  refit::Bool = true, weights::Union{Nothing, AbstractVector{<:Real}} = nothing)
@@ -457,7 +457,7 @@ function _locallasso(X::Matrix{T}, z::Vector{T}, y::Vector{T}, w, kernel, h::T, 
   ys = r .* view(y, idx)
   if penalty === :group
     groups = [collect(_coefrange(j, q)) for j in 1:p]
-    θ .= Vector(groupLasso(Zs, ys, λ, groups, options; intercept = false, standardize = :orthonormal,
+    θ .= Vector(group_lasso(Zs, ys, λ, groups, options; intercept = false, standardize = :orthonormal,
                            groupweights = fill(sqrt(T(q + 1)), p)).x)
   else
     # the lasso with the loadings of the standardized columns (zero columns get
@@ -483,7 +483,7 @@ end
 The `p × length(zgrid)` penalized estimates of `βⱼ⁽ʳ⁾` (`r = derivative`) at the
 points of `fit.zgrid`, or with `refit` those of the unpenalized refit on the
 selected variables; and the predictions `∑ⱼ Xᵢⱼ βⱼ(zᵢ)`, interpolated linearly
-between the points, as for [`varyingCoefficient`](@ref).
+between the points, as for [`varying_coefficient`](@ref).
 """
 function StatsAPI.coef(fit::VaryingCoefficientLassoFit; derivative::Integer = 0, refit::Bool = false)
   r = _derivindex(fit, derivative)
@@ -499,17 +499,17 @@ StatsAPI.predict(fit::VaryingCoefficientLassoFit, X::AbstractMatrix{<:Real}, z::
 StatsAPI.nobs(fit::VaryingCoefficientLassoFit) = fit.nobs
 
 """
-    varyingCoefficientLassoCV(X, z, y, bandwidths, λ, options = CDOptions(); kernel, degree = 1,
+    varying_coefficient_lasso_cv(X, z, y, bandwidths, λ, options = CDOptions(); kernel, degree = 1,
                               penalty = :group, refit = true, weights = nothing)
 
 Leave-one-out cross-validation of the bandwidth of
-[`varyingCoefficientLasso`](@ref) at the level `λ`: observation `i` is predicted
+[`varying_coefficient_lasso`](@ref) at the level `λ`: observation `i` is predicted
 from the penalized local fit at `zᵢ` computed without it (refitted on the
 selected variables with `refit`), and `cvm` is the mean squared error of these
 predictions, weighted by the observation weights. It solves one local lasso per
 observation and bandwidth. Returns a [`VaryingCoefficientCV`](@ref).
 """
-function varyingCoefficientLassoCV(X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
+function varying_coefficient_lasso_cv(X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
                                    bandwidths::AbstractVector{<:Real}, λ::Real, options::CDOptions = CDOptions();
                                    kernel, degree::Integer = 1, penalty::Symbol = :group, refit::Bool = true,
                                    weights::Union{Nothing, AbstractVector{<:Real}} = nothing)

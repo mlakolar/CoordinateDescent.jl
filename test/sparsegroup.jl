@@ -35,11 +35,11 @@ end
   xbar = vec(mean(X; dims = 1)); s = vec(sqrt.(mean((X .- transpose(xbar)) .^ 2; dims = 1)))
   Xs = (X .- transpose(xbar)) ./ transpose(s); yc = y .- mean(y)
   gradt(b) = -Xs' * (yc - Xs * (s .* b)) / n            # the gradient in t = s .* β
-  tight = CDOptions(; optTol = 1e-12)
+  tight = CDOptions(; opt_tol = 1e-12)
 
-  @testset "sparseGroupLasso, alpha = $α" for α in (0.2, 0.5, 0.95)
+  @testset "sparse_group_lasso, alpha = $α" for α in (0.2, 0.5, 0.95)
     λ = 0.05
-    sol = sparseGroupLasso(X, y, λ, groups, tight; alpha = α)
+    sol = sparse_group_lasso(X, y, λ, groups, tight; alpha = α)
     b = Vector(sol.x)
     @test sol.converged && sol.scales ≈ s && sol.alpha == α
     @test kkt_sgl(gradt(b), s .* b, groups, w, λ, α) < 1e-7
@@ -47,17 +47,17 @@ end
     @test sol.activegroups == [k for (k, G) in enumerate(groups) if any(!iszero, b[G])]
     @test Vector(coef(sol)) == [sol.intercept; b] && predict(sol, X) ≈ sol.intercept .+ X * b
     @test dof(sol) == nnz(sol.x) + 1 && nobs(sol) == n
-    # warmStart = false: along a path of levels from λmax, to the same solution
-    @test Vector(sparseGroupLasso(X, y, λ, groups, CDOptions(tight; warmStart = false); alpha = α).x) ≈ b atol = 1e-6
+    # warm_start = false: along a path of levels from λmax, to the same solution
+    @test Vector(sparse_group_lasso(X, y, λ, groups, CDOptions(tight; warm_start = false); alpha = α).x) ≈ b atol = 1e-6
   end
 
   @testset "the limits: the lasso and the group lasso" begin
     λ = 0.05
-    a = sparseGroupLasso(X, y, λ, groups, tight; alpha = 1)
-    b = lasso(X, y, λ; intercept = true, standardizeX = true, optTol = 1e-12)
+    a = sparse_group_lasso(X, y, λ, groups, tight; alpha = 1)
+    b = lasso(X, y, λ; intercept = true, standardize_x = true, opt_tol = 1e-12)
     @test Vector(a.x) ≈ Vector(b.x) atol = 1e-6
-    c = sparseGroupLasso(X, y, λ, groups, tight; alpha = 0, standardizeX = false)
-    d = groupLasso(X, y, λ, groups, tight; standardize = :none)
+    c = sparse_group_lasso(X, y, λ, groups, tight; alpha = 0, standardize_x = false)
+    d = group_lasso(X, y, λ, groups, tight; standardize = :none)
     @test Vector(c.x) ≈ Vector(d.x) atol = 1e-6
   end
 
@@ -66,7 +66,7 @@ end
     @test path.alpha == 0.95 && path.scales ≈ s && nobs(path) == n
     @test all(iszero, path.βpath[1]) && nnz(path.βpath[end]) > 0
     # λmax: just below it, a solution is not zero
-    @test nnz(sparseGroupLasso(X, y, path.λpath[1] * (1 - 1e-3), groups, tight).x) > 0
+    @test nnz(sparse_group_lasso(X, y, path.λpath[1] * (1 - 1e-3), groups, tight).x) > 0
     for k in eachindex(path.λpath)
       b = Vector(path.βpath[k])
       @test kkt_sgl(gradt(b), s .* b, groups, w, path.λpath[k], 0.95) < 1e-7
@@ -85,31 +85,31 @@ end
 
   @testset "formulas: a group per term" begin
     data = (; y, x1 = X[:, 1], x2 = X[:, 2], g = repeat(["a", "b", "c", "d"], n ÷ 4))
-    m = sparseGroupLasso(@formula(y ~ x1 + g + x2), data, 0.05)
+    m = sparse_group_lasso(@formula(y ~ x1 + g + x2), data, 0.05)
     @test m.model.groups == [[1], [2, 3, 4], [5]]
     @test coefnames(m) == ["(Intercept)", "x1", "g: b", "g: c", "g: d", "x2"]
     mp = fit(SparseGroupLassoPath, @formula(y ~ x1 + g + x2), data; nλ = 10)
     @test mp.model isa SparseGroupLassoPath && length(mp.model.λpath) == 10
-    q = fit(SparseGroupLassoPath, @formula(y ~ x1 + g + x2), data, mp.model.λpath, CDOptions(; optTol = 1e-10);
+    q = fit(SparseGroupLassoPath, @formula(y ~ x1 + g + x2), data, mp.model.λpath, CDOptions(; opt_tol = 1e-10);
             groups = [1:1, 2:5])
     @test q.model.groups == [[1], [2, 3, 4, 5]]
   end
 
   @testset "errors and conversions" begin
-    @test sparseGroupLasso(round.(Int, 10X), y, 0.05, groups).converged
+    @test sparse_group_lasso(round.(Int, 10X), y, 0.05, groups).converged
     Xi = round.(Int, 10X)
     pi_ = SparseGroupLassoPath(Xi, y, groups; nλ = 5, rng = Xoshiro(2))
     @test pi_.λpath == SparseGroupLassoPath(Float64.(Xi), y, groups; nλ = 5, rng = Xoshiro(2)).λpath
     @test length(SparseGroupLassoPath(Xi, y, [1, 0.5], groups).λpath) == 2          # λpath of integers and floats
-    @test_throws ArgumentError sparseGroupLasso(X, y, 0.05, groups; alpha = 1.5)
-    @test_throws ArgumentError sparseGroupLasso(X, y, -0.05, groups)
-    @test_throws ArgumentError sparseGroupLasso(X, y, 0.05, [1:5, 6:10])                       # columns in no group
-    @test_throws DimensionMismatch sparseGroupLasso(X, y, 0.05, groups; groupweights = ones(3))
-    @test_throws ArgumentError sparseGroupLasso(X, y, 0.05, groups; groupweights = -ones(4))
-    @test_throws DimensionMismatch sparseGroupLasso(X, y[1:end-1], 0.05, groups)
+    @test_throws ArgumentError sparse_group_lasso(X, y, 0.05, groups; alpha = 1.5)
+    @test_throws ArgumentError sparse_group_lasso(X, y, -0.05, groups)
+    @test_throws ArgumentError sparse_group_lasso(X, y, 0.05, [1:5, 6:10])                       # columns in no group
+    @test_throws DimensionMismatch sparse_group_lasso(X, y, 0.05, groups; groupweights = ones(3))
+    @test_throws ArgumentError sparse_group_lasso(X, y, 0.05, groups; groupweights = -ones(4))
+    @test_throws DimensionMismatch sparse_group_lasso(X, y[1:end-1], 0.05, groups)
     @test_throws ArgumentError SparseGroupLassoPath(X, y, [0.1, -0.1], groups)
     Xn = copy(X); Xn[1, 1] = NaN
-    @test_throws ArgumentError sparseGroupLasso(Xn, y, 0.05, groups)
+    @test_throws ArgumentError sparse_group_lasso(Xn, y, 0.05, groups)
   end
 end
 

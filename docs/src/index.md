@@ -27,7 +27,7 @@ feasible lasso) is that of
 [ProximalSolvers.jl](https://github.com/mlakolar/ProximalSolvers.jl), on the
 losses and penalties of
 [ProximalBase.jl](https://mlakolar.github.io/ProximalBase.jl/dev/).
-[`coordinateDescent!`](@ref) runs it on other losses and on any penalty that
+[`coordinate_descent!`](@ref) runs it on other losses and on any penalty that
 separates across coordinates, including your own.
 
 ## Installation
@@ -78,8 +78,8 @@ path = LassoPath(X, y; nλ = 50, intercept = true)
 ## The guide
 
 - [The lasso and its tuning-free variants](lasso.md): the mathematics of
-  [`lasso`](@ref), [`sqrtLasso`](@ref), [`scaledLasso`](@ref) and
-  [`feasibleLasso!`](@ref), their conventions, and observation weights.
+  [`lasso`](@ref), [`sqrt_lasso`](@ref), [`scaled_lasso`](@ref) and
+  [`feasible_lasso!`](@ref), their conventions, and observation weights.
 - [Paths, screening and solver options](paths.md): [`LassoPath`](@ref), the
   options of coordinate descent and when each pays off, and the Gram form.
 - [The group lasso](group.md).

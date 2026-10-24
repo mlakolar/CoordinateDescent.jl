@@ -16,7 +16,7 @@ ProximalSolvers = {url = "https://github.com/mlakolar/ProximalSolvers.jl", rev =
 
 [compat]
 BenchmarkTools = "1"
-CoordinateDescent = "0.7"
+CoordinateDescent = "0.8"
 ProximalBase = "0.5"
 ProximalSolvers = "0.1.1"
 julia = "1.10"

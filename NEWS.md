@@ -1,0 +1,38 @@
+# Version 0.8.0
+
+## Breaking changes
+
+The public API follows Julia's naming convention: types use `UpperCamelCase`;
+functions, fields and keywords use lowercase, with underscores between words.
+Mutating functions keep their trailing `!`. See the
+[Julia style guide](https://docs.julialang.org/en/v1/manual/style-guide/#Use-naming-conventions-consistent-with-Julia-base/).
+
+| Previous name | New name |
+|---|---|
+| `coordinateDescent!` | `coordinate_descent!` |
+| `sqrtLasso`, `scaledLasso`, `scaledLasso!`, `feasibleLasso!` | `sqrt_lasso`, `scaled_lasso`, `scaled_lasso!`, `feasible_lasso!` |
+| `refitLassoPath`, `adaptiveLasso` | `refit_lasso_path`, `adaptive_lasso` |
+| `glmLasso`, `groupLasso`, `sparseGroupLasso`, `multiLasso` | `glm_lasso`, `group_lasso`, `sparse_group_lasso`, `multi_lasso` |
+| `theoryLambda`, `postLasso`, `doubleSelection` | `theory_lambda`, `post_lasso`, `double_selection` |
+| `varyingCoefficient`, `varyingCoefficientCV` | `varying_coefficient`, `varying_coefficient_cv` |
+| `varyingCoefficientLasso`, `varyingCoefficientLassoCV` | `varying_coefficient_lasso`, `varying_coefficient_lasso_cv` |
+| `numCoordinates`, `descendCoordinate!`, `fullGradient!` | `num_coordinates`, `descend_coordinate!`, `full_gradient!` |
+| `coordinateScale`, `responseScale` | `coordinate_scale`, `response_scale` |
+| `maxIter`, `optTol`, `warmStart`, `numSteps`, `relativeTol` | `max_iter`, `opt_tol`, `warm_start`, `num_steps`, `relative_tol` |
+| `initProcedure`, `optionsCD`, `standardizeX` | `init_procedure`, `options_cd`, `standardize_x` |
+| `newtonTol`, `newtonMaxIter`, `kktChecks`, `maxChange` | `newton_tol`, `newton_max_iter`, `kkt_checks`, `max_change` |
+
+The previous function names forward with deprecation warnings for this release.
+The previous keyword and property spellings also warn and forward; supplying
+both spellings of a keyword is an error. Loss-interface names are deprecated
+bindings to the same generic functions, so existing extensions continue to work.
+Type names, including `IterLassoOptions` and `LassoPath`, are unchanged.
+
+`coordinate_descent!` returns `ProximalSolvers.CDResults`, including `minimizer`,
+`minimum`, `passes`, `converged`, `maxchange` and `tolerance`. The deprecated
+`coordinateDescent!` keeps its previous return value, the iterate `x`, including
+its five-argument form with `CDInfo`. Use `r = coordinate_descent!(x, f, g)` and
+`r.minimizer` for the fitted iterate.
+
+Integer fields use `Int` and integer inputs such as `degree` accept `Integer`.
+The benchmark uses 0.05 and 0.01 times the smallest penalty with a zero solution.

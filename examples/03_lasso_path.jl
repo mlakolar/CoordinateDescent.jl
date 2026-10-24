@@ -5,7 +5,7 @@
 #     minimize  ‖y - β₀ - Xβ‖² / (2n) + λ ∑ⱼ ωⱼ |βⱼ|
 #
 # along a decreasing sequence of λ, each from the previous solution;
-# refitLassoPath refits least squares on the selected variables. This example
+# refit_lasso_path refits least squares on the selected variables. This example
 # shows the options of both and chooses λ by cross-validation.
 #
 #     julia --project=examples examples/03_lasso_path.jl
@@ -31,13 +31,13 @@ println("== The default path")
 # 100 values of λ, evenly spaced on the log scale from λmax, the smallest λ
 # with a zero solution, down to λminratio ⋅ λmax, with λminratio = 0.01 when
 # p > n and 1e-4 otherwise; loadings ωⱼ = standard deviation of X[:, j]
-# (standardizeX = true); no intercept unless asked for; and screening with the
+# (standardize_x = true); no intercept unless asked for; and screening with the
 # sequential strong rule
 path = LassoPath(X, y; intercept = true)
 println("        λ  nonzeros    β̂₀  passes  KKT checks")
 for k in 1:11:length(path.λpath)
   @printf("  %7.4f  %8d  %5.2f  %6d  %10d\n", path.λpath[k], nonzeros(path.βpath[k]),
-          path.β0path[k], path.iterations[k], path.kktChecks[k])
+          path.β0path[k], path.iterations[k], path.kkt_checks[k])
 end
 println("all converged: ", all(path.converged))
 
@@ -65,7 +65,7 @@ early = LassoPath(X, y; intercept = true, max_hat_s = 20)
 
 println("\n== Unstandardized columns")
 
-# With standardizeX = false the loadings are 1, and columns with larger
+# With standardize_x = false the loadings are 1, and columns with larger
 # standard deviations are penalized less (see 01_lasso.jl). Here the columns
 # have standard deviations mostly between 0.1 and 10, and the variables that
 # enter first are those with large columns rather than those that matter.
@@ -77,9 +77,9 @@ function entry_order(path)            # variables in the order they become nonze
   end
   order
 end
-for standardizeX in (true, false)
-  path_s = LassoPath(Xs, y .- 1.0; standardizeX)
-  println("standardizeX = ", rpad(standardizeX, 5), ": first ten variables to enter ",
+for standardize_x in (true, false)
+  path_s = LassoPath(Xs, y .- 1.0; standardize_x)
+  println("standardize_x = ", rpad(standardize_x, 5), ": first ten variables to enter ",
           first(entry_order(path_s), 10))
 end
 
@@ -88,7 +88,7 @@ println("\n== Screening and solver options")
 # With screening = true (the default), each λ is solved first over the
 # variables kept by the strong rule, and the optimality conditions of the
 # others are checked afterwards; violators are added and the problem solved
-# again. kktChecks[k] counts the checks, 1 when the rule missed nothing.
+# again. kkt_checks[k] counts the checks, 1 when the rule missed nothing.
 # screening = false visits all p variables in every full pass. The solutions
 # are the same up to the accuracy of the solver, which is lowest at the end of
 # the path, where almost n variables are selected. Screening saves time in the
@@ -103,13 +103,13 @@ p0 = LassoPath(Xw, yw; screening = false)
 @printf("largest difference between the two paths: %.1e over the first 80 values of λ, %.1e over the last 20\n",
         maximum(Δ[1:80]), maximum(Δ[81:end]))
 @printf("time: %.0f ms with screening, %.0f ms without\n", 1000time_path(), 1000time_path(; screening = false))
-println("values of λ at which the strong rule missed a variable: ", count(>(1), p1.kktChecks))
+println("values of λ at which the strong rule missed a variable: ", count(>(1), p1.kkt_checks))
 
 # Options of coordinate descent go in the last positional argument, here a
 # tighter tolerance; screening needs warm starts, so it is off with
-# warmStart = false
-tight = LassoPath(Xw, yw, CDOptions(; optTol = 1e-9))
-println("with optTol = 1e-9: ", sum(tight.iterations), " passes along the path instead of ", sum(p1.iterations))
+# warm_start = false
+tight = LassoPath(Xw, yw, CDOptions(; opt_tol = 1e-9))
+println("with opt_tol = 1e-9: ", sum(tight.iterations), " passes along the path instead of ", sum(p1.iterations))
 
 println("\n== Choosing λ by cross-validation")
 
@@ -154,10 +154,10 @@ end
 
 println("\n== Least squares refits")
 
-# refitLassoPath maps every distinct support S along the path to the least
+# refit_lasso_path maps every distinct support S along the path to the least
 # squares fit on X[:, S], with the intercept first when the path has one.
 # Refitting removes the shrinkage of the lasso from the selected coefficients.
-refits = refitLassoPath(path, X, y)
+refits = refit_lasso_path(path, X, y)
 println(length(refits), " distinct supports along the path")
 
 S = findall(!iszero, path.βpath[i1se])

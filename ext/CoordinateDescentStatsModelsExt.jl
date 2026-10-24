@@ -108,7 +108,7 @@ function StatsAPI.fit(::Type{GroupLassoPath}, f::FormulaTerm, data, args...; con
   end
 end
 
-for fn in (:lasso, :sqrtLasso, :adaptiveLasso)
+for fn in (:lasso, :sqrt_lasso, :adaptive_lasso)
   @eval function CoordinateDescent.$fn(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
                                        weights = nothing, offset = nothing, kwargs...)
     _checkkeywords(kwargs)
@@ -118,11 +118,11 @@ for fn in (:lasso, :sqrtLasso, :adaptiveLasso)
   end
 end
 
-function CoordinateDescent.glmLasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
+function CoordinateDescent.glm_lasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
                                     weights = nothing, offset = nothing, kwargs...)
   _checkkeywords(kwargs)
   _formulafit(f, data; contrasts, weights, offset) do X, y, intercept, groups, w, o
-    glmLasso(X, y, λ, args...; intercept, weights = w, offset = o, kwargs...)
+    glm_lasso(X, y, λ, args...; intercept, weights = w, offset = o, kwargs...)
   end
 end
 
@@ -136,19 +136,19 @@ function StatsAPI.fit(::Type{SparseGroupLassoPath}, f::FormulaTerm, data, args..
   end
 end
 
-function CoordinateDescent.sparseGroupLasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
+function CoordinateDescent.sparse_group_lasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
                                             groups = nothing, kwargs...)
   _checkkeywords(kwargs)
   _formulafit(f, data; contrasts) do X, y, intercept, termgroups, w, o
-    sparseGroupLasso(X, y, λ, something(groups, termgroups), args...; intercept, kwargs...)
+    sparse_group_lasso(X, y, λ, something(groups, termgroups), args...; intercept, kwargs...)
   end
 end
 
-function CoordinateDescent.groupLasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
+function CoordinateDescent.group_lasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
                                       groups = nothing, kwargs...)
   _checkkeywords(kwargs)
   _formulafit(f, data; contrasts) do X, y, intercept, termgroups, w, o
-    groupLasso(X, y, λ, something(groups, termgroups), args...; intercept, kwargs...)
+    group_lasso(X, y, λ, something(groups, termgroups), args...; intercept, kwargs...)
   end
 end
 

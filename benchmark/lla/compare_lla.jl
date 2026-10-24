@@ -57,12 +57,12 @@ else
       f = joinpath(dir, "$(name)_std$(Int(std))_glmtlp.csv")
       if isfile(f)
         R = rd(basename(f))
-        P = LassoPath(X, y, λs; penalty = CappedL1(1, TAU), intercept = true, standardizeX = std, optTol = 1e-13)
+        P = LassoPath(X, y, λs; penalty = CappedL1(1, TAU), intercept = true, standardize_x = std, opt_tol = 1e-13)
         report("$tag glmtlp tlp", coefmat(P), P.β0path, R)
         # lasso at single levels gives the same as the path
         ks = (10, 20, 30)
         dl = maximum(k -> maximum(abs, Vector(lasso(X, y, λs[k]; penalty = CappedL1(1, TAU), intercept = true,
-                                                    standardizeX = std, optTol = 1e-13).x) .- R[2:end, k]), ks)
+                                                    standardize_x = std, opt_tol = 1e-13).x) .- R[2:end, k]), ks)
         @printf "%-32s lasso at levels %s: max |Δβ| %.1e\n" "$tag glmtlp tlp" ks dl
       end
       # ncpen: CCCP warm started along the path = LLA from the previous level, to convergence
@@ -71,7 +71,7 @@ else
         isfile(f) || (println("$tag ncpen $pen: no R result"); continue)
         R = rd(basename(f))
         P = LassoPath(X, y, λs; penalty = g, lla = LLA(; stages = 1000, start = :previous), intercept = true,
-                      standardizeX = std, optTol = 1e-13)
+                      standardize_x = std, opt_tol = 1e-13)
         report("$tag ncpen $pen", coefmat(P), P.β0path, R)
       end
     end

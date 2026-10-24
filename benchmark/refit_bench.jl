@@ -1,4 +1,4 @@
-# refitLassoPath with the factor updated along the path (ProximalSolvers'
+# refit_lasso_path with the factor updated along the path (ProximalSolvers'
 # RefitCache) against the previous implementation, a pivoted QR of X[:, S] for
 # every support, on the same paths. One BLAS thread; run it on Discovery.
 #
@@ -40,13 +40,13 @@ for (name, n, p, s, ρ, intercept) in (("n=500 p=2500 independent", 500, 2500, 5
                                       ("n=1000 p=5000 independent, intercept", 1000, 5000, 100, 0.0, true))
   X, Y = design(n, p, s; ρ)
   path = LassoPath(X, Y; nλ = 100, λminratio = 0.01, intercept)
-  r1, r2 = refit_qr(path, X, Y), refitLassoPath(path, X, Y)     # compile, and check
+  r1, r2 = refit_qr(path, X, Y), refit_lasso_path(path, X, Y)     # compile, and check
   diff = maximum(maximum(abs, r1[S] - r2[S]) / max(maximum(abs, r1[S]), 1.0) for S in keys(r1) if !isempty(S); init = 0.0)
   # interleave the two, keeping each one's fastest run
   t1, t2 = Inf, Inf
   for _ in 1:3
     t1 = min(t1, mintime(() -> refit_qr(path, X, Y)))
-    t2 = min(t2, mintime(() -> refitLassoPath(path, X, Y)))
+    t2 = min(t2, mintime(() -> refit_lasso_path(path, X, Y)))
   end
   @printf "%-34s %8d %6d %10.1f %10.1f %7.2f %10.1e\n" name length(r1) maximum(length, keys(r1)) 1e3t1 1e3t2 t1 / t2 diff
 end

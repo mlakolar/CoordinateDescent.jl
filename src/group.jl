@@ -35,7 +35,7 @@ struct _GroupDesign{T, MZ<:AbstractMatrix{T}}
   R::Vector{UpperTriangular{T, Matrix{T}}} # R̃, empty without orthonormalization
 end
 
-function _group_design(X::AbstractMatrix{T}, groups::Vector{Vector{Int}}, intercept::Bool,
+function _GroupDesign(X::AbstractMatrix{T}, groups::Vector{Vector{Int}}, intercept::Bool,
                        orthonormal::Bool) where {T}
   orthonormal || return _GroupDesign{T, typeof(X)}(X, groups, collect(1:length(groups)), groups,
                                                    UpperTriangular{T, Matrix{T}}[])
@@ -76,7 +76,7 @@ _activegroups(groups, β::AbstractVector) = [k for (k, G) in enumerate(groups) i
 
 # the least-squares model, the penalty with level one and a zero iterate of the
 # fit, and the design
-function _groupProblem(X::AbstractMatrix{T}, y::AbstractVector{T}, groups, intercept::Bool, standardize::Symbol,
+function _group_problem(X::AbstractMatrix{T}, y::AbstractVector{T}, groups, intercept::Bool, standardize::Symbol,
                        groupweights) where {T}
   n, p = size(X)
   length(y) == n || throw(DimensionMismatch("X has $n rows and y has length $(length(y))"))
@@ -86,18 +86,18 @@ function _groupProblem(X::AbstractMatrix{T}, y::AbstractVector{T}, groups, inter
   w = groupweights === nothing ? T.(sqrt.(length.(gs))) : convert(Vector{T}, groupweights)
   length(w) == length(gs) || throw(DimensionMismatch("there are $(length(gs)) groups and $(length(w)) group weights"))
   all(>=(0), w) || throw(ArgumentError("the group weights must be nonnegative"))
-  d = _group_design(X, gs, intercept, standardize === :orthonormal)
+  d = _GroupDesign(X, gs, intercept, standardize === :orthonormal)
   m = CDLeastSquaresLoss(y, d.Z; intercept)
   g = GroupNormL2(one(T), d.zgroups, w[d.fitted])
   m, g, AtomIterate(T, size(d.Z, 2), d.zgroups), d, gs, w
 end
 
-_groupIntercept(X, y, β, intercept::Bool) = intercept ? mean(y) - dot(_column_means(X), β) : zero(eltype(y))
+_group_intercept(X, y, β, intercept::Bool) = intercept ? mean(y) - dot(_column_means(X), β) : zero(eltype(y))
 
 """
     GroupLassoSolution
 
-Result returned by [`groupLasso`](@ref).
+Result returned by [`group_lasso`](@ref).
 
 # Fields
 - `x::SparseVector`: the coefficients `β`, on the scale of the data
@@ -127,7 +127,7 @@ struct GroupLassoSolution{T}
 end
 
 """
-    groupLasso(X, y, λ, groups, options = CDOptions(); intercept = true, standardize = :orthonormal,
+    group_lasso(X, y, λ, groups, options = CDOptions(); intercept = true, standardize = :orthonormal,
                groupweights = sqrt.(length.(groups)))
 
 The group lasso
@@ -150,27 +150,27 @@ back. The columns of a group that are linear combinations of its other columns
 get zero coefficients. With `standardize = :none`, the penalty is
 `λ ∑ₖ wₖ ‖βGₖ‖₂` on the columns as given.
 
-Coordinate descent runs with `options`; with `options.warmStart` false the
-solution is computed along `options.numSteps` levels from λmax. Returns a
+Coordinate descent runs with `options`; with `options.warm_start` false the
+solution is computed along `options.num_steps` levels from λmax. Returns a
 [`GroupLassoSolution`](@ref). See also [`GroupLassoPath`](@ref).
 """
-function groupLasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T, groups::AbstractVector,
+function group_lasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T, groups::AbstractVector,
                     options::CDOptions = CDOptions(); intercept::Bool = true, standardize::Symbol = :orthonormal,
                     groupweights::Union{Nothing, AbstractVector{<:Real}} = nothing) where {T<:AbstractFloat}
   λ >= 0 || throw(ArgumentError("λ must be nonnegative, but it is $λ."))
   _check_finite(X, "X"); _check_finite(y, "y")
   p = size(X, 2)
-  m, g1, x, d, gs, w = _groupProblem(X, y, groups, intercept, standardize, groupweights)
+  m, g1, x, d, gs, w = _group_problem(X, y, groups, intercept, standardize, groupweights)
   r = _solve!(x, m, GroupNormL2(λ, g1.groups, g1.w), options)
   β = _coefficients(d, Vector(x), p)
-  GroupLassoSolution{T}(β, _groupIntercept(X, y, β, intercept), λ, gs, w, _activegroups(gs, β), r.passes,
+  GroupLassoSolution{T}(β, _group_intercept(X, y, β, intercept), λ, gs, w, _activegroups(gs, β), r.passes,
                         r.converged, intercept, size(X, 1))
 end
 
-function groupLasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real, groups::AbstractVector,
+function group_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real, groups::AbstractVector,
                     options::CDOptions = CDOptions(); kwargs...)
   T, Xf, yf = _float_data(X, y)
-  groupLasso(Xf, yf, T(λ), groups, options; kwargs...)
+  group_lasso(Xf, yf, T(λ), groups, options; kwargs...)
 end
 
 """
@@ -178,7 +178,7 @@ end
     GroupLassoPath(X, y, λpath, groups, options = CDOptions(); intercept = true, standardize = :orthonormal,
                    groupweights = sqrt.(length.(groups)), screening = true, max_groups = Inf)
 
-Solutions `β0path[k]` and `βpath[k]` of the group lasso of [`groupLasso`](@ref)
+Solutions `β0path[k]` and `βpath[k]` of the group lasso of [`group_lasso`](@ref)
 along a decreasing sequence `λpath`, each one warm started from the previous
 solution, by ProximalSolvers' `solve_path`.
 
@@ -189,7 +189,7 @@ Without `λpath`, the path has `nλ` values spaced evenly on the log scale from
 
 With `screening`, each λ is solved first over the groups kept by the sequential
 strong rule, and the optimality conditions of the others are checked afterwards
-(`kktChecks[k]` times at `λpath[k]`). The path stops early after the first
+(`kkt_checks[k]` times at `λpath[k]`). The path stops early after the first
 solution with more than `max_groups` nonzero groups; the returned `λpath` then
 contains only the values that were solved for. `activegroups[k]` lists the
 nonzero groups at `λpath[k]`, and `iterations[k]` and `converged[k]` are the
@@ -204,7 +204,7 @@ struct GroupLassoPath{T<:AbstractFloat}
   activegroups::Vector{Vector{Int}}
   iterations::Vector{Int}
   converged::Vector{Bool}
-  kktChecks::Vector{Int}
+  kkt_checks::Vector{Int}
   intercept::Bool
   groups::Vector{Vector{Int}}
   groupweights::Vector{T}
@@ -218,10 +218,10 @@ function GroupLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, λpath::Vect
   all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
   _check_finite(X, "X"); _check_finite(y, "y")
   p = size(X, 2)
-  m, g1, x, d, gs, w = _groupProblem(X, y, groups, intercept, standardize, groupweights)
+  m, g1, x, d, gs, w = _group_problem(X, y, groups, intercept, standardize, groupweights)
   path = solve_path(m, g1, λpath, _solver(options); x, screening, maxnnz = max_groups)
   βpath = [_coefficients(d, θ, p) for θ in path.solutions]
-  GroupLassoPath{T}(path.λ, βpath, [_groupIntercept(X, y, β, intercept) for β in βpath],
+  GroupLassoPath{T}(path.λ, βpath, [_group_intercept(X, y, β, intercept) for β in βpath],
                     [_activegroups(gs, β) for β in βpath], path.passes, path.converged, path.kkt_checks,
                     intercept, gs, w, size(X, 1))
 end
@@ -234,7 +234,7 @@ function GroupLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, groups::Abst
   nλ >= 1 || throw(ArgumentError("nλ must be positive"))
   0 < λminratio <= 1 || throw(ArgumentError("λminratio must be in (0, 1]"))
   _check_finite(X, "X"); _check_finite(y, "y")
-  m, g1, x, _, _, _ = _groupProblem(X, y, groups, intercept, standardize, groupweights)
+  m, g1, x, _, _, _ = _group_problem(X, y, groups, intercept, standardize, groupweights)
   λmax = lambda_max(m, g1, x) * (1 + sqrt(eps(T)))
   λpath = nλ == 1 ? [λmax] : [λmax * T(λminratio)^(T(k) / (nλ - 1)) for k in 0:nλ-1]
   GroupLassoPath(X, y, λpath, groups, options; intercept, standardize, groupweights, kwargs...)

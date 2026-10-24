@@ -13,14 +13,14 @@ methods to the estimators, which return it:
 ```julia
 using CoordinateDescent, StatsModels
 path = fit(LassoPath, @formula(y ~ x1 + x2 + log(x3) + region), data)
-sol = lasso(@formula(y ~ x1 + x2 + region), data, 0.1; standardizeX = true)
-grp = groupLasso(@formula(y ~ x1 + region + x2 & region), data, 0.05)   # a group per term
+sol = lasso(@formula(y ~ x1 + x2 + region), data, 0.1; standardize_x = true)
+grp = group_lasso(@formula(y ~ x1 + region + x2 & region), data, 0.05)   # a group per term
 ```
 
 The formula methods are `fit` with [`LassoPath`](@ref), [`CVLassoPath`](@ref),
 [`GLMLassoPath`](@ref), [`CVGLMLassoPath`](@ref), [`GroupLassoPath`](@ref) and
-[`SparseGroupLassoPath`](@ref), and [`lasso`](@ref), [`sqrtLasso`](@ref), [`adaptiveLasso`](@ref),
-[`glmLasso`](@ref), [`groupLasso`](@ref), [`sparseGroupLasso`](@ref) and [`rlasso`](@ref) with the formula and the table in
+[`SparseGroupLassoPath`](@ref), and [`lasso`](@ref), [`sqrt_lasso`](@ref), [`adaptive_lasso`](@ref),
+[`glm_lasso`](@ref), [`group_lasso`](@ref), [`sparse_group_lasso`](@ref) and [`rlasso`](@ref) with the formula and the table in
 place of `X` and `y`. The other arguments and keywords are those of the
 estimator, with these differences:
 

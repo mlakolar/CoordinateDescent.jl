@@ -18,17 +18,17 @@ Y = X[:,1:s] * (randn(s) .* (1. .+ rand(s))) + 6. * randn(n)
 
 stdX = vec(std(X, dims=1))
 
-options = CoordinateDescent.IterLassoOptions(;optTol=1e-3, maxIter=50)
+options = CoordinateDescent.IterLassoOptions(;opt_tol=1e-3, max_iter=50)
 x = ProximalBase.SparseIterate(p)
 λ = sqrt(2. * log(p) / n)
-@time CoordinateDescent.scaledLasso!(x, X, Y, λ, stdX, options)
+@time CoordinateDescent.scaled_lasso!(x, X, Y, λ, stdX, options)
 
 
-@show σinit = std(CoordinateDescent._findInitResiduals!(X, Y, 30, zeros(n)))
-options = CoordinateDescent.IterLassoOptions(;optTol=1e-2, maxIter=10, initProcedure=:InitStd, σinit=σinit)
+@show σinit = std(CoordinateDescent._find_init_residuals!(X, Y, 30, zeros(n)))
+options = CoordinateDescent.IterLassoOptions(;opt_tol=1e-2, max_iter=10, init_procedure=:InitStd, σinit=σinit)
 x = ProximalBase.SparseIterate(p)
 λ = sqrt(2. * log(p) / n)
-@time CoordinateDescent.scaledLasso!(x, X, Y, λ, stdX, options)
+@time CoordinateDescent.scaled_lasso!(x, X, Y, λ, stdX, options)
 
 
 # The lasso at fractions of λmax, the smallest penalty with a zero solution
@@ -42,8 +42,8 @@ function lasso_table(X, Y, stdX)
   for frac in (0.05, 0.01),
       (loadings, g) in (("unit", ProximalBase.NormL1(frac * maximum(c))),
                         ("stdX", ProximalBase.NormL1(frac * maximum(c ./ stdX), stdX))),
-      (start, options) in (("from zero", CoordinateDescent.CDOptions(; warmStart=true)),
-                           ("path, 50 levels", CoordinateDescent.CDOptions(; warmStart=false, numSteps=50)))
+      (start, options) in (("from zero", CoordinateDescent.CDOptions(; warm_start=true)),
+                           ("path, 50 levels", CoordinateDescent.CDOptions(; warm_start=false, num_steps=50)))
     x = ProximalBase.SparseIterate(p)
     t = @elapsed r = CoordinateDescent.solve!(x, f, g, options)
     @printf("  %8.2f  %-8s  %-16s  %9.2f  %6d  %8d\n", frac, loadings, start, t, r.passes, count(!iszero, x))

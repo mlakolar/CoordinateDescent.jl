@@ -6,7 +6,7 @@
 # SparseGroupLassoPath is run at √n times them, its own levels. SGL returns the coefficients of its standardized columns and
 # no intercept; they are mapped back to the columns of X, with the intercept of
 # the centered fit. The KKT violation of each solution for the objective of
-# sparseGroupLasso is reported too.
+# sparse_group_lasso is reported too.
 #
 #     julia --project=benchmark/sparsegroup benchmark/sparsegroup/compare_sparsegroup.jl gen DIR
 #     Rscript benchmark/sparsegroup/compare_sparsegroup.R DIR            # needs sparsegl (SGL optional)
@@ -51,7 +51,7 @@ end
 coefs(path) = [reshape(path.β0path, 1, :); reduce(hcat, Vector.(path.βpath))]
 soft(v, t) = sign.(v) .* max.(abs.(v) .- t, 0)
 
-# the KKT violation of the coefficients [β₀; β] for the objective of sparseGroupLasso
+# the KKT violation of the coefficients [β₀; β] for the objective of sparse_group_lasso
 function kkt(X, y, groups, b, λ, α)
   n = size(X, 1); xbar = vec(mean(X; dims = 1)); s = vec(sqrt.(mean((X .- transpose(xbar)) .^ 2; dims = 1)))
   Xs = (X .- transpose(xbar)) ./ transpose(s)
@@ -78,7 +78,7 @@ function compare(dir)
     l = Int.(vec(readdlm(joinpath(dir, "group$k.csv"), ',')))
     groups = [findall(==(g), l) for g in 1:maximum(l)]
     λs = sqrt(size(X, 1)) .* vec(readdlm(joinpath(dir, "lambda$(α)_$k.csv"), ','))
-    ours = coefs(SparseGroupLassoPath(X, y, λs, groups, CDOptions(; optTol = 1e-12); alpha = α))
+    ours = coefs(SparseGroupLassoPath(X, y, λs, groups, CDOptions(; opt_tol = 1e-12); alpha = α))
     ko = maximum(j -> kkt(X, y, groups, ours[:, j], λs[j], α), axes(ours, 2))
     xbar = vec(mean(X; dims = 1)); nrm = vec(sqrt.(sum((X .- transpose(xbar)) .^ 2; dims = 1)))
     for prog in ("sparsegl", "SGL")

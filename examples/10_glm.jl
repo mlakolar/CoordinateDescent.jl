@@ -1,7 +1,7 @@
 # Penalized generalized linear models
 #
-#     glmLasso(X, y, λ, loss = ProximalBase.Logistic(), options = CDOptions();
-#              intercept = true, standardizeX = true, weights, offset)
+#     glm_lasso(X, y, λ, loss = ProximalBase.Logistic(), options = CDOptions();
+#              intercept = true, standardize_x = true, weights, offset)
 #     GLMLassoPath(X, y, loss = ProximalBase.Logistic(); nλ = 100, λminratio, kwargs...)
 #
 # minimize ∑ᵢ wᵢ ℓ(β₀ + xᵢ'β + oᵢ, yᵢ) / ∑ᵢ wᵢ + λ ∑ⱼ ωⱼ |βⱼ| for a scalar loss ℓ
@@ -28,7 +28,7 @@ support(x) = findall(!iszero, x)
 
 println("== Logistic regression")
 
-sol = glmLasso(X, y, 0.03)
+sol = glm_lasso(X, y, 0.03)
 @printf "intercept %.3f, selected %s\n" sol.intercept support(sol.x)
 @printf "explained deviance %.3f, proximal Newton took %d coordinate descent passes\n" (1 - sol.deviance / sol.nulldeviance) sol.iterations
 
@@ -68,12 +68,12 @@ exposure = rand(n) .* 4 .+ 1
 counts = Float64.(rpois.(exposure .* exp.(0.2 .+ 0.4 .* X[:, 1] .- 0.3 .* X[:, 2])))
 # λmax, the first level of a path, is the scale of the penalty for this loss
 λmaxp = GLMLassoPath(X, counts, ProximalBase.Poisson(); nλ = 1, offset = log.(exposure)).λpath[1]
-solp = glmLasso(X, counts, 0.2 * λmaxp, ProximalBase.Poisson(); offset = log.(exposure))
+solp = glm_lasso(X, counts, 0.2 * λmaxp, ProximalBase.Poisson(); offset = log.(exposure))
 @printf "λmax %.3f; at 0.2 λmax: intercept %.3f, selected %s\n" λmaxp solp.intercept support(solp.x)
 
 # observation weights: integer weights are replicated rows
 w = Float64.(rand(1:3, n))
-solw = glmLasso(X, y, 0.03; weights = w)
+solw = glm_lasso(X, y, 0.03; weights = w)
 rows = reduce(vcat, [fill(i, Int(w[i])) for i in 1:n])
-solr = glmLasso(X[rows, :], y[rows], 0.03)
+solr = glm_lasso(X[rows, :], y[rows], 0.03)
 @printf "weighted fit and replicated rows agree to %.1e\n" norm(Vector(solw.x) - Vector(solr.x), Inf)

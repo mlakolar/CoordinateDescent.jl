@@ -15,7 +15,7 @@
   at the solution it is ``\bar y - \bar x^\top \hat\beta`` for the column means
   ``\bar x`` and the mean ``\bar y``. The columns and ``y`` are centered on the
   fly, so ``X`` is not copied. Without it, ``\beta_0 = 0``.
-- **The loadings.** By default ``\omega_j = 1``. With `standardizeX = true`,
+- **The loadings.** By default ``\omega_j = 1``. With `standardize_x = true`,
   ``\omega_j`` is the standard deviation of column ``j``,
   ``\sqrt{\sum_i (X_{ij} - \bar x_j)^2 / n}`` (centered only with an
   intercept), which penalizes the coefficients as if the columns were
@@ -46,14 +46,14 @@ Loading StatsModels.jl adds methods that take a formula and a table (a
 DataFrame, a NamedTuple of vectors or any other Tables.jl table) in place of
 `X` and `y`: `fit` with [`LassoPath`](@ref), [`CVLassoPath`](@ref),
 [`GLMLassoPath`](@ref) and [`GroupLassoPath`](@ref), and [`lasso`](@ref),
-[`sqrtLasso`](@ref), [`adaptiveLasso`](@ref), [`glmLasso`](@ref),
-[`groupLasso`](@ref) and [`rlasso`](@ref).
+[`sqrt_lasso`](@ref), [`adaptive_lasso`](@ref), [`glm_lasso`](@ref),
+[`group_lasso`](@ref) and [`rlasso`](@ref).
 
 ```julia
 using CoordinateDescent, StatsModels
 m = fit(LassoPath, @formula(y ~ x1 + log(x2) + region), df; nλ = 50)
 coef(m, 0.1), coefnames(m), predict(m, newdf)
-g = groupLasso(@formula(y ~ x1 + region + x2 & region), df, 0.05)   # a group per term
+g = group_lasso(@formula(y ~ x1 + region + x2 & region), df, 0.05)   # a group per term
 ```
 
 The formula sets the intercept (`y ~ 0 + x1` has none). Categorical variables
@@ -78,7 +78,7 @@ and `NormL1Nonneg(1, w)`, the lasso and the nonnegative lasso with weights;
 `ElasticNet(1, λ2, w)`, with the ridge part ``\lambda_2`` fixed;
 `Scaled(ElasticNet(α, 1 - α, w), 1)`, the elastic net with weights on its ℓ1
 part; and the nonconvex `MCP(1, a)` and `SCAD(1, a)` of ncvreg, whose
-concavity ``a`` is kept. With `standardizeX`, the penalty applies to the
+concavity ``a`` is kept. With `standardize_x`, the penalty applies to the
 coefficients of the standardized columns, as in glmnet and ncvreg, and the
 coefficients returned are those of the columns of ``X``. A nonconvex penalty
 has local solutions, and the one found depends on the start: as in ncvreg,
@@ -91,7 +91,7 @@ The exact coordinate steps of MCP and SCAD need each coordinate problem to be
 convex, ``a v_j > 1`` for MCP and ``(a - 1) v_j > 1`` for SCAD, where ``v_j``
 is the mean square of column ``j`` (centered with an intercept, weighted with
 weights). Standardized columns have ``v_j = 1``, so that ncvreg's conditions
-``a > 1`` and ``a > 2`` suffice; without `standardizeX`, a column with
+``a > 1`` and ``a > 2`` suffice; without `standardize_x`, a column with
 variance at most ``1/a`` fails, and the path throws an `ArgumentError`.
 
 ### Local linear approximation
@@ -119,7 +119,7 @@ which have no exact path:
 
 `lower` and `upper` restrict the coefficients to a box,
 ``l_j \le \beta_j \le u_j``, in [`lasso`](@ref), [`LassoPath`](@ref),
-[`CVLassoPath`](@ref), [`adaptiveLasso`](@ref) and [`glmLasso`](@ref), with
+[`CVLassoPath`](@ref), [`adaptive_lasso`](@ref) and [`glm_lasso`](@ref), with
 any of the penalties above. Each is a number or a vector with a bound per
 coefficient. As for glmnet's `lower.limits` and `upper.limits`, zero must be
 feasible, ``l_j \le 0 \le u_j``: `lower = 0` gives the nonnegative lasso, and
@@ -132,7 +132,7 @@ gradient that points into the box is at most ``\lambda \omega_j``, so
 for the nonnegative lasso,
 ``\lambda_{\max} = \max_j (X_j^\top y / n)_+ / \omega_j``.
 
-The adaptive lasso of Zou (2006), [`adaptiveLasso`](@ref)`(X, y, λ)`,
+The adaptive lasso of Zou (2006), [`adaptive_lasso`](@ref)`(X, y, λ)`,
 minimizes
 
 ```math
@@ -146,7 +146,7 @@ less biased, and a coefficient with ``\tilde\beta_j = 0`` stays at zero.
 
 ## Penalized generalized linear models
 
-[`glmLasso`](@ref)`(X, y, λ, loss)` solves
+[`glm_lasso`](@ref)`(X, y, λ, loss)` solves
 
 ```math
 \min_{\beta_0, \beta}\; \frac{\sum_i w_i\,\ell(\beta_0 + x_i^\top\beta + o_i, y_i)}{\sum_i w_i} + \lambda\sum_j \omega_j|\beta_j|
@@ -158,7 +158,7 @@ negative log-likelihood of logistic regression (``y_i \in [0, 1]``, usually
 the log link (``y_i \ge 0``); `ProximalBase.Huber(δ)`; or a loss of your own.
 The conventions and defaults are those of glmnet: an unpenalized intercept, the
 weighted standard deviations of the columns as the loadings
-``\omega_j`` (`standardizeX`), and the observation weights ``w_i`` and offset
+``\omega_j`` (`standardize_x`), and the observation weights ``w_i`` and offset
 ``o_i`` of `weights` and `offset`. The problem is solved by proximal Newton,
 ProximalSolvers' `ProxNewton`, the method of glmnet: each step minimizes the
 weighted least-squares model of the loss at the current fit by coordinate
@@ -167,7 +167,7 @@ decreasing sequence of levels with the strong rule, and stops once the fit
 explains a fraction `devmax = 0.999` of the null deviance, as glmnet does:
 along a logistic path on separable data the coefficients grow without bound.
 The solution reports the `deviance` and the `nulldeviance`. `alpha` and
-`penalty` give the elastic net, MCP and SCAD, and `adaptiveLasso(X, y, λ, loss)`
+`penalty` give the elastic net, MCP and SCAD, and `adaptive_lasso(X, y, λ, loss)`
 the adaptive lasso, as for least squares.
 
 [`CVGLMLassoPath`](@ref)`(X, y, loss)` chooses the level by ``K``-fold
@@ -179,14 +179,14 @@ the folds.
 
 ## The square-root lasso
 
-[`sqrtLasso`](@ref)`(X, y, λ)` solves the square-root lasso of Belloni,
+[`sqrt_lasso`](@ref)`(X, y, λ)` solves the square-root lasso of Belloni,
 Chernozhukov and Wang (2011),
 
 ```math
 \underset{\beta_0,\,\beta}{\text{minimize}} \quad \|y - \beta_0 - X\beta\| + \lambda \sum_{j=1}^p \omega_j |\beta_j|,
 ```
 
-with the loadings of standardized columns by default (`standardizeX = true`).
+with the loadings of standardized columns by default (`standardize_x = true`).
 The gradient of the loss at the true coefficients is
 ``-X^\top \varepsilon / \|\varepsilon\|``, which does not depend on the noise
 level, and neither does a good ``\lambda``: with Gaussian noise,
@@ -197,7 +197,7 @@ minimizes the objective over the coordinate exactly.
 
 ## The scaled lasso
 
-[`scaledLasso`](@ref)`(X, y, λ, ω)` estimates the coefficients and the noise
+[`scaled_lasso`](@ref)`(X, y, λ, ω)` estimates the coefficients and the noise
 level together, by the scaled lasso of Sun and Zhang (2012):
 
 ```math
@@ -210,7 +210,7 @@ so ``\hat\beta`` solves a square-root lasso, with the loss
 solves. ``\lambda`` is the penalty for unit noise, such as
 ``\sqrt{2 \log(p) / n}``: the lasso that ``\hat\beta`` solves has the penalty
 level ``\lambda \hat\sigma``, which the solution reports in `penalty`.
-[`scaledLasso!`](@ref) also solves it from sufficient statistics,
+[`scaled_lasso!`](@ref) also solves it from sufficient statistics,
 ``X^\top X / n``, ``X^\top y / n`` and ``y^\top y / n``, and from a covariance
 matrix, one variable on the others, as in the precision matrix estimator of
 Sun and Zhang (2013).
@@ -224,10 +224,10 @@ Chernozhukov and Hansen (2012) depend on the noise of each observation:
 \Gamma_j = \sqrt{\frac{1}{n} \sum_{i=1}^n (X_{ij} - \bar x_j)^2 \varepsilon_i^2}.
 ```
 
-[`feasibleLasso!`](@ref)`(x, X, y, λ0)` alternates the lasso
+[`feasible_lasso!`](@ref)`(x, X, y, λ0)` alternates the lasso
 ``\|y - \beta_0 - X\beta\|^2 / (2n) + \lambda_0 \sum_j \Gamma_j |\beta_j|`` with
 the update of ``\Gamma`` from its residuals, until the relative change of
-``\Gamma`` is below `optTol` of [`IterLassoOptions`](@ref); `initProcedure`
+``\Gamma`` is below `opt_tol` of [`IterLassoOptions`](@ref); `init_procedure`
 chooses the initial residuals. The examples use
 ``\lambda_0 = 1.1\, \Phi^{-1}(1 - \gamma / (2p)) / \sqrt n`` with
 ``\gamma = 0.1 / \log n``.
@@ -236,12 +236,12 @@ chooses the initial residuals. The examples use
 
 [`rlasso`](@ref)`(X, y)` is the lasso with data-driven penalty loadings as R's
 hdm computes it (Belloni, Chen, Chernozhukov and Hansen, 2012): the level
-[`theoryLambda`](@ref)`(n, p)` ``= c\,\Phi^{-1}(1 - \gamma/(2p))/\sqrt{n}``
+[`theory_lambda`](@ref)`(n, p)` ``= c\,\Phi^{-1}(1 - \gamma/(2p))/\sqrt{n}``
 with hdm's defaults for ``c`` and ``\gamma``, loadings from the residuals of a
 first fit, and with `post` least squares on the selected columns after each
-lasso, until the residuals settle. [`postLasso`](@ref)`(X, y, sol)` refits
+lasso, until the residuals settle. [`post_lasso`](@ref)`(X, y, sol)` refits
 least squares on the columns a lasso selected and gives
-heteroskedasticity-robust (HC1) standard errors. [`doubleSelection`](@ref)`(y, d, X)`
+heteroskedasticity-robust (HC1) standard errors. [`double_selection`](@ref)`(y, d, X)`
 estimates the effect ``\alpha`` of a treatment ``d`` in
 ``y = \alpha d + X\beta + \varepsilon`` with many controls, as hdm's
 `rlassoEffect` does: by double selection (Belloni, Chernozhukov and Hansen,
@@ -252,7 +252,7 @@ confidence interval.
 
 ## Observation weights and offsets
 
-[`lasso`](@ref), [`sqrtLasso`](@ref), [`scaledLasso`](@ref) and
+[`lasso`](@ref), [`sqrt_lasso`](@ref), [`scaled_lasso`](@ref) and
 [`LassoPath`](@ref) take observation `weights` ``w_i \ge 0``, with a positive
 sum, and an `offset` ``o``. The lasso then minimizes
 
@@ -263,7 +263,7 @@ sum, and an `offset` ``o``. The lasso then minimizes
 Dividing by ``\sum_i w_i`` follows glmnet: ``\lambda`` means the same with and
 without weights, unit weights give the unweighted fit, integer weights the fit
 of replicated rows, and zero weights leave observations out. The intercept,
-the loadings of `standardizeX` and ``\hat\sigma`` are weighted as well. The
+the loadings of `standardize_x` and ``\hat\sigma`` are weighted as well. The
 square-root lasso takes the weighted norm ``\sqrt{\sum_i w_i r_i^2}`` of the
 residuals ``r``, and the scaled lasso estimates
 ``\hat\sigma = \sqrt{\sum_i w_i r_i^2 / \sum_i w_i}``.

@@ -2,22 +2,22 @@
     CoordinateDescent
 
 Lasso estimators computed by coordinate descent: [`lasso`](@ref),
-[`sqrtLasso`](@ref), [`scaledLasso`](@ref), [`feasibleLasso!`](@ref),
-[`LassoPath`](@ref), the penalized generalized linear models [`glmLasso`](@ref) and
-[`GLMLassoPath`](@ref), the group lasso [`groupLasso`](@ref) and
-[`GroupLassoPath`](@ref), the multi-response lasso [`multiLasso`](@ref) and
+[`sqrt_lasso`](@ref), [`scaled_lasso`](@ref), [`feasible_lasso!`](@ref),
+[`LassoPath`](@ref), the penalized generalized linear models [`glm_lasso`](@ref) and
+[`GLMLassoPath`](@ref), the group lasso [`group_lasso`](@ref) and
+[`GroupLassoPath`](@ref), the multi-response lasso [`multi_lasso`](@ref) and
 [`MultiLassoPath`](@ref), the inference after selection of R's hdm
-([`rlasso`](@ref), [`postLasso`](@ref), [`doubleSelection`](@ref)), and the
-varying-coefficient models [`varyingCoefficient`](@ref) and
-[`varyingCoefficientLasso`](@ref), with the kernels of KernelSmoothing.jl. They run the coordinate descent, the penalty paths and
+([`rlasso`](@ref), [`post_lasso`](@ref), [`double_selection`](@ref)), and the
+varying-coefficient models [`varying_coefficient`](@ref) and
+[`varying_coefficient_lasso`](@ref), with the kernels of KernelSmoothing.jl. They run the coordinate descent, the penalty paths and
 the reweighting of ProximalSolvers.jl on the losses and penalties of
-ProximalBase.jl, as does [`coordinateDescent!`](@ref), which minimizes
+ProximalBase.jl, as does [`coordinate_descent!`](@ref), which minimizes
 `f(x) + g(x)` for a loss `f` (a [`CoordinateDifferentiableFunction`](@ref) or a
 loss that ProximalSolvers knows) and a penalty `g` that separates across
 coordinates, such as the weighted ℓ1 norm `NormL1`. The lasso solvers accept
 real data and penalties of any type and convert them to a common floating point
 type: the element type of `X` and `y` promoted to a float, or that of the
-iterate passed to `scaledLasso!` and `feasibleLasso!`.
+iterate passed to `scaled_lasso!` and `feasible_lasso!`.
 """
 module CoordinateDescent
 
@@ -33,9 +33,9 @@ using Statistics
 using LinearAlgebra
 
 export
-  lasso, sqrtLasso, feasibleLasso!, scaledLasso, scaledLasso!,
-  LassoPath, refitLassoPath,
-  adaptiveLasso,
+  lasso, sqrt_lasso, feasible_lasso!, scaled_lasso, scaled_lasso!,
+  LassoPath, refit_lasso_path,
+  adaptive_lasso,
   IterLassoOptions,
 
   # the StatsAPI interface of the solutions
@@ -52,32 +52,32 @@ export
   CoordinateDifferentiableFunction,
   CDLeastSquaresLoss, CDWeightedLSLoss, CDQuadraticLoss, CDSqrtLassoLoss, CDSqrtQuadraticLoss,
   CDOptions, CDInfo,
-  coordinateDescent!, solve!,
+  coordinate_descent!, solve!,
   LLA,                 # ProximalSolvers' local linear approximation, for lla
 
   # generalized linear models
-  glmLasso,
+  glm_lasso,
   GLMLassoPath,
   CVGLMLassoPath,
 
   # the group lasso and the sparse group lasso
-  groupLasso,
+  group_lasso,
   GroupLassoPath,
-  sparseGroupLasso,
+  sparse_group_lasso,
   SparseGroupLassoPath,
 
   # the multi-response lasso
-  multiLasso,
+  multi_lasso,
   MultiLassoPath,
 
   # inference after selection, as in R's hdm
-  theoryLambda,
+  theory_lambda,
   rlasso,
-  postLasso,
-  doubleSelection,
+  post_lasso,
+  double_selection,
 
   # varying-coefficient models (kernels from KernelSmoothing.jl)
-  varyingCoefficient, varyingCoefficientLasso, varyingCoefficientCV, varyingCoefficientLassoCV
+  varying_coefficient, varying_coefficient_lasso, varying_coefficient_cv, varying_coefficient_lasso_cv
 
 include("utils.jl")
 include("losses.jl")
@@ -93,6 +93,8 @@ include("hdm.jl")
 include("statsapi.jl")
 include("formula.jl")
 include("varying.jl")
+
+include("deprecated.jl")
 
 include("precompile.jl")
 

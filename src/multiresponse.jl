@@ -6,7 +6,7 @@
 
 # the multi-response least-squares model of B, the rows of B as entries of
 # vec(B), a zero iterate over vec(B) with those groups, and the loadings
-function _multiProblem(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, intercept::Bool, standardizeX::Bool) where {T}
+function _multi_problem(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, intercept::Bool, standardize_x::Bool) where {T}
   n, p = size(X)
   q = size(Y, 2)
   size(Y, 1) == n || throw(DimensionMismatch("X has $n rows and Y has $(size(Y, 1))"))
@@ -14,7 +14,7 @@ function _multiProblem(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, intercept::Bo
   groups = [collect(k:p:p*q) for k in 1:p]
   x = AtomIterate(T, p * q, groups)
   m = ProximalSolvers.cdmodel((1 / T(n)) * LeastSquaresLoss(Y, X), x; intercept)
-  m, groups, x, (standardizeX ? _loadings(X, intercept) : ones(T, p))
+  m, groups, x, (standardize_x ? _loadings(X, intercept) : ones(T, p))
 end
 
 _activerows(B::AbstractMatrix) = [k for k in axes(B, 1) if any(!iszero, view(B, k, :))]
@@ -22,7 +22,7 @@ _activerows(B::AbstractMatrix) = [k for k in axes(B, 1) if any(!iszero, view(B, 
 """
     MultiLassoSolution
 
-Result returned by [`multiLasso`](@ref).
+Result returned by [`multi_lasso`](@ref).
 
 # Fields
 - `B::SparseMatrixCSC`: the `p × q` matrix of coefficients, a column per response
@@ -52,7 +52,7 @@ struct MultiLassoSolution{T}
 end
 
 """
-    multiLasso(X, Y, λ, options = CDOptions(); intercept = true, standardizeX = true)
+    multi_lasso(X, Y, λ, options = CDOptions(); intercept = true, standardize_x = true)
 
 The multi-response lasso of the `n × q` responses `Y` on `X`,
 
@@ -61,39 +61,42 @@ The multi-response lasso of the `n × q` responses `Y` on `X`,
 which selects the same predictors for all the responses (glmnet's
 `mgaussian` family). The intercepts `β₀` are not penalized, and they are zero
 unless `intercept` is true. The loadings `ωₖ` are the standard deviations of
-the columns, centered with an intercept, when `standardizeX` is true, and one
+the columns, centered with an intercept, when `standardize_x` is true, and one
 otherwise. With one response it is [`lasso`](@ref).
 
 It is solved by block coordinate descent on the rows of `B` (ProximalSolvers'
 multi-response least-squares model), whose steps are exact, with `options`;
-with `options.warmStart` false the solution is computed along
-`options.numSteps` levels from λmax. Returns a [`MultiLassoSolution`](@ref).
+with `options.warm_start` false the solution is computed along
+`options.num_steps` levels from λmax. Returns a [`MultiLassoSolution`](@ref).
 See also [`MultiLassoPath`](@ref).
 """
-function multiLasso(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, λ::T, options::CDOptions = CDOptions();
-                    intercept::Bool = true, standardizeX::Bool = true) where {T<:AbstractFloat}
+function multi_lasso(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, λ::T, options::CDOptions = CDOptions();
+                    intercept::Bool = true, standardize_x::Union{Nothing, Bool}=nothing, kwargs...) where {T<:AbstractFloat}
+  standardize_x, kwargs = _legacy_keyword(standardize_x, kwargs, Val(:standardizeX), Val(:standardize_x), true)
+  standardize_x::Bool
+  _check_keywords(CDOptions, (), kwargs)
   λ >= 0 || throw(ArgumentError("λ must be nonnegative, but it is $λ."))
   p, q = size(X, 2), size(Y, 2)
-  m, groups, x, ω = _multiProblem(X, Y, intercept, standardizeX)
+  m, groups, x, ω = _multi_problem(X, Y, intercept, standardize_x)
   r = _solve!(x, m, GroupNormL2(λ, groups, ω), options)
   B = sparse(reshape(Vector(x), p, q))
   MultiLassoSolution{T}(B, ProximalSolvers.intercept(m, x), λ, _activerows(B), r.passes, r.converged, intercept,
                         size(X, 1))
 end
 
-function multiLasso(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real}, λ::Real, options::CDOptions = CDOptions();
+function multi_lasso(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real}, λ::Real, options::CDOptions = CDOptions();
                     kwargs...)
   T = float(promote_type(eltype(X), eltype(Y)))
-  multiLasso(convert(AbstractMatrix{T}, X), convert(AbstractMatrix{T}, Y), T(λ), options; kwargs...)
+  multi_lasso(convert(AbstractMatrix{T}, X), convert(AbstractMatrix{T}, Y), T(λ), options; kwargs...)
 end
 
 """
     MultiLassoPath(X, Y, options = CDOptions(); nλ = 100, λminratio, kwargs...)
-    MultiLassoPath(X, Y, λpath, options = CDOptions(); intercept = true, standardizeX = true,
+    MultiLassoPath(X, Y, λpath, options = CDOptions(); intercept = true, standardize_x = true,
                    screening = true, max_rows = Inf)
 
 Solutions `β0path[k]` and `Bpath[k]` of the multi-response lasso of
-[`multiLasso`](@ref) along a decreasing sequence `λpath`, each one warm started
+[`multi_lasso`](@ref) along a decreasing sequence `λpath`, each one warm started
 from the previous solution, by ProximalSolvers' `solve_path`.
 
 Without `λpath`, the path has `nλ` values spaced evenly on the log scale from
@@ -103,7 +106,7 @@ Without `λpath`, the path has `nλ` values spaced evenly on the log scale from
 
 With `screening`, each λ is solved first over the rows kept by the sequential
 strong rule, and the optimality conditions of the others are checked
-afterwards (`kktChecks[k]` times at `λpath[k]`). The path stops early after the
+afterwards (`kkt_checks[k]` times at `λpath[k]`). The path stops early after the
 first solution with more than `max_rows` nonzero rows; the returned `λpath`
 then contains only the values that were solved for. `activerows[k]` lists the
 selected predictors at `λpath[k]`. `coef` and `predict` give a vector with a
@@ -118,17 +121,20 @@ struct MultiLassoPath{T<:AbstractFloat}
   activerows::Vector{Vector{Int}}
   iterations::Vector{Int}
   converged::Vector{Bool}
-  kktChecks::Vector{Int}
+  kkt_checks::Vector{Int}
   intercept::Bool
   nobs::Int
 end
 
 function MultiLassoPath(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, λpath::Vector{T}, options::CDOptions = CDOptions();
-                        intercept::Bool = true, standardizeX::Bool = true, screening::Bool = true,
-                        max_rows = Inf) where {T<:AbstractFloat}
+                        intercept::Bool = true, standardize_x::Union{Nothing, Bool}=nothing, screening::Bool = true,
+                        max_rows = Inf, kwargs...) where {T<:AbstractFloat}
+  standardize_x, kwargs = _legacy_keyword(standardize_x, kwargs, Val(:standardizeX), Val(:standardize_x), true)
+  standardize_x::Bool
+  _check_keywords(CDOptions, (), kwargs)
   all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
   p, q = size(X, 2), size(Y, 2)
-  m, groups, x, ω = _multiProblem(X, Y, intercept, standardizeX)
+  m, groups, x, ω = _multi_problem(X, Y, intercept, standardize_x)
   β0path = Vector{T}[]
   path = solve_path(m, GroupNormL2(one(T), groups, ω), λpath, _solver(options); x, screening, maxnnz = max_rows,
                     callback = (k, λ, x, m) -> (push!(β0path, ProximalSolvers.intercept(m, x)); false))
@@ -139,13 +145,15 @@ end
 
 function MultiLassoPath(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, options::CDOptions = CDOptions();
                         nλ::Integer = 100, λminratio::Real = (size(X, 1) < size(X, 2) ? 0.01 : 1e-4),
-                        intercept::Bool = true, standardizeX::Bool = true, kwargs...) where {T<:AbstractFloat}
+                        intercept::Bool = true, standardize_x::Union{Nothing, Bool}=nothing, kwargs...) where {T<:AbstractFloat}
+  standardize_x, kwargs = _legacy_keyword(standardize_x, kwargs, Val(:standardizeX), Val(:standardize_x), true)
+  standardize_x::Bool
   nλ >= 1 || throw(ArgumentError("nλ must be positive"))
   0 < λminratio <= 1 || throw(ArgumentError("λminratio must be in (0, 1]"))
-  m, groups, x, ω = _multiProblem(X, Y, intercept, standardizeX)
+  m, groups, x, ω = _multi_problem(X, Y, intercept, standardize_x)
   λmax = lambda_max(m, GroupNormL2(one(T), groups, ω), x) * (1 + sqrt(eps(T)))
   λpath = nλ == 1 ? [λmax] : [λmax * T(λminratio)^(T(k) / (nλ - 1)) for k in 0:nλ-1]
-  MultiLassoPath(X, Y, λpath, options; intercept, standardizeX, kwargs...)
+  MultiLassoPath(X, Y, λpath, options; intercept, standardize_x, kwargs...)
 end
 
 function MultiLassoPath(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real}, λpath::AbstractVector{<:Real},

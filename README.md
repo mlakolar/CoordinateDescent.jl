@@ -23,8 +23,8 @@ Estimators:
 * Scaled lasso, from the data or from sufficient statistics (`X'X/n`, `X'y/n`,
   `y'y/n`, or a covariance matrix, one variable on the others)
 * Feasible (heteroscedastic) lasso
-* Inference after selection as in R's hdm: `rlasso`, `postLasso` and
-  `doubleSelection`
+* Inference after selection as in R's hdm: `rlasso`, `post_lasso` and
+  `double_selection`
 * Lasso paths, with λ chosen by cross-validation or an information criterion,
   and refitting
 * Varying-coefficient models by local polynomial regression with an ℓ1 penalty
@@ -70,13 +70,13 @@ cv = CVLassoPath(X, y; intercept=true)           # λ by 10-fold cross-validatio
 coef(cv)                                         # the coefficients at cv.λ1se
 sol = lasso(X, y, 0.1; alpha=0.5)                # the elastic net; or penalty=MCP(1, 3), SCAD
 sol = lasso(X, y, 0.1; lower=0)                  # the nonnegative lasso; also upper, per coefficient
-sol = adaptiveLasso(X, y, 0.1)                   # loadings 1/|β̃ⱼ| from a first lasso
+sol = adaptive_lasso(X, y, 0.1)                   # loadings 1/|β̃ⱼ| from a first lasso
 yb = Float64.(rand(n) .< 1 ./ (1 .+ exp.(-X[:, 1])))
-sol = glmLasso(X, yb, 0.02)                      # logistic regression; also Poisson
+sol = glm_lasso(X, yb, 0.02)                      # logistic regression; also Poisson
 cv = CVGLMLassoPath(X, yb)                       # λ by cross-validation of the deviance
-sol = groupLasso(X, y, 0.1, [1:5, 6:10, 11:50])  # the group lasso, with orthonormalized groups
-sol = sparseGroupLasso(X, y, 0.1, [1:5, 6:10, 11:50])  # groups, and variables within them
-sol = multiLasso(X, [y y.^2], 0.1)               # the same predictors for every response
+sol = group_lasso(X, y, 0.1, [1:5, 6:10, 11:50])  # the group lasso, with orthonormalized groups
+sol = sparse_group_lasso(X, y, 0.1, [1:5, 6:10, 11:50])  # groups, and variables within them
+sol = multi_lasso(X, [y y.^2], 0.1)               # the same predictors for every response
 ```
 
 With StatsModels.jl loaded, the estimators also take a formula and a table,
@@ -110,3 +110,12 @@ GitHub until its version 0.1.1 is registered, through `[sources]` in
 [examples/Project.toml](examples/Project.toml), which Julia 1.11 and later
 read. On Julia 1.10, develop the checkout and add ProximalSolvers by URL in that
 environment first.
+
+## Naming and the 0.8 transition
+
+Types use `UpperCamelCase`; functions, fields and keywords use lowercase with
+underscores between words. For example, use `sqrt_lasso`, `coordinate_descent!`,
+and `CDOptions(; max_iter=10_000, opt_tol=1e-8, warm_start=true)`.
+The previous spellings warn and forward for this release.
+`coordinate_descent!` returns `CDResults`; its `minimizer` is the supplied
+iterate. See [the migration table](NEWS.md#breaking-changes) for all renames.

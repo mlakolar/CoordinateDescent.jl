@@ -70,17 +70,17 @@ println("\n== Standardization")
 # The penalty λ ∑ⱼ |βⱼ| depends on the units of the columns. Measuring
 # predictor 10, which does not matter, in centimeters instead of meters
 # multiplies its column by 100, so that a coefficient a hundred times smaller
-# fits the same, at a hundredth of the penalty. standardizeX = true takes the
+# fits the same, at a hundredth of the penalty. standardize_x = true takes the
 # loadings ωⱼ = standard deviation of X[:, j], which gives the lasso on
 # standardized columns with the coefficients transformed back: the fit then
 # does not depend on the units.
 Xcm = copy(X)
 Xcm[:, 10] .*= 100
-for standardizeX in (false, true)
-  a = lasso(X, y, λ; standardizeX)
-  b = lasso(Xcm, y, λ; standardizeX)
-  @printf("standardizeX = %-5s  selects %s in meters and %s in centimeters\n",
-          standardizeX, support(a.x), support(b.x))
+for standardize_x in (false, true)
+  a = lasso(X, y, λ; standardize_x)
+  b = lasso(Xcm, y, λ; standardize_x)
+  @printf("standardize_x = %-5s  selects %s in meters and %s in centimeters\n",
+          standardize_x, support(a.x), support(b.x))
 end
 
 println("\n== Penalty loadings ωⱼ")
@@ -96,34 +96,34 @@ println("with ω₂₀ = ω₃₀ = 0 the lasso selects ", support(sol.x))
 # The adaptive lasso (Zou, 2006) takes ωⱼ = 1 / |β̃ⱼ| from a first estimate β̃,
 # here least squares (n > p). Large coefficients are penalized less, so they
 # are less biased, and small ones more, so fewer variables that do not matter
-# are selected as λ decreases. adaptiveLasso(X, y, λ; init = β̃) is
+# are selected as λ decreases. adaptive_lasso(X, y, λ; init = β̃) is
 # lasso(X, y, λ, 1 ./ abs.(β̃)).
 β̃ = X \ y
 println("\n           lasso               adaptive lasso")
 println("     λ  nonzeros  ‖β̂ - β‖   nonzeros  ‖β̂ - β‖")
 for λ in (0.2, 0.1, 0.05, 0.02)
   a = lasso(X, y, λ)
-  b = adaptiveLasso(X, y, λ; init = β̃)
+  b = adaptive_lasso(X, y, λ; init = β̃)
   @printf("%6.2f  %8d  %7.3f   %8d  %7.3f\n",
           λ, count(!iszero, a.x), norm(a.x - β), count(!iszero, b.x), norm(b.x - β))
 end
 
 # By default the first estimate is the lasso at the same λ (init = :lasso, or
 # :ridge, at the level initλ): a variable that it drops stays out.
-c = adaptiveLasso(X, y, 0.05)
+c = adaptive_lasso(X, y, 0.05)
 println("from a first lasso at λ = 0.05, the adaptive lasso selects ", support(c.x))
 
 println("\n== Other penalties")
 
 # alpha < 1 gives the elastic net λ(α‖β‖₁ + (1 - α)‖β‖²/2) of glmnet, which
 # keeps groups of correlated variables together; penalty gives MCP or SCAD,
-# whose level λ replaces. With standardizeX the penalty applies to the
+# whose level λ replaces. With standardize_x the penalty applies to the
 # coefficients of the standardized columns, as in glmnet and ncvreg. At the
 # level λ of the theory, MCP and SCAD leave the coefficients larger than aλ
 # unshrunk, so their estimates are closer to β.
 for (name, kw) in (("lasso", (;)), ("elastic net, α = 0.5", (alpha = 0.5,)),
                    ("MCP, a = 3", (penalty = MCP(1, 3),)), ("SCAD, a = 3.7", (penalty = SCAD(1, 3.7),)))
-  est = lasso(X, y, λ; intercept = true, standardizeX = true, kw...)
+  est = lasso(X, y, λ; intercept = true, standardize_x = true, kw...)
   @printf("%-22s selects %2d variables, ‖β̂ - β‖ = %.3f\n", name, count(!iszero, est.x), norm(est.x - β))
 end
 
@@ -134,10 +134,10 @@ println("\n== Bounds on the coefficients")
 # feasible, and lower = upper = 0 keeps a variable out. lower = 0 gives the
 # nonnegative lasso. Here it is the wrong model: β₂ and β₄ are negative, so
 # they are set to zero, and noise variables enter to fit what they explained.
-nn = lasso(X, y, λ; intercept = true, standardizeX = true, lower = 0)
+nn = lasso(X, y, λ; intercept = true, standardize_x = true, lower = 0)
 println("lower = 0: β̂[1:5] = ", round.(nn.x[1:5]; digits = 2), ", and ",
         count(!iszero, nn.x[6:end]), " noise variables")
-cap = lasso(X, y, λ; intercept = true, standardizeX = true, lower = -1, upper = 1)
+cap = lasso(X, y, λ; intercept = true, standardize_x = true, lower = -1, upper = 1)
 println("with -1 ≤ βⱼ ≤ 1, β̂[1:5] = ", round.(cap.x[1:5]; digits = 2))
 
 println("\n== Number types and solver options")
@@ -149,5 +149,5 @@ println("eltype of the solution from Float32 data: ", eltype(sol32.x))
 
 # The last positional argument sets the options of coordinate descent
 # (02_solver_options.jl), here a tighter tolerance
-sol = lasso(X, y, λ, CDOptions(; optTol = 1e-10))
-println("with optTol = 1e-10: $(sol.iterations) passes")
+sol = lasso(X, y, λ, CDOptions(; opt_tol = 1e-10))
+println("with opt_tol = 1e-10: $(sol.iterations) passes")

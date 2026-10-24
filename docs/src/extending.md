@@ -1,9 +1,9 @@
 # Writing a loss or a penalty
 
-[`coordinateDescent!`](@ref)`(x, f, g)` minimizes `f(x) + g(x)` one coordinate at a
+[`coordinate_descent!`](@ref)`(x, f, g)` minimizes `f(x) + g(x)` one coordinate at a
 time, by ProximalSolvers's coordinate descent: it does the passes over the
 coordinates, the active set and the stopping rule, and for `NormL1` and
-`GroupNormL2` also the path of penalty levels from λmax (`warmStart = false`)
+`GroupNormL2` also the path of penalty levels from λmax (`warm_start = false`)
 and the screening with the strong rule. The loss `f` makes each coordinate
 update, and the penalty `g` enters it through its proximal operator on that
 coordinate. Both can be your own. A loss can also be written for ProximalSolvers
@@ -19,12 +19,12 @@ extends these functions, which are not exported (write
 
 | function | |
 |---|---|
-| `numCoordinates(f)` | the number of coordinates |
+| `num_coordinates(f)` | the number of coordinates |
 | `initialize!(f, x)` | computes the cache for the iterate `x`, which need not be zero; called before the first pass |
 | `gradient(f, x, k)` | `∂f/∂xₖ` at `x`, from the cache |
-| `descendCoordinate!(f, g, x, k)` | updates `x[k]` and the cache, and returns the change of `x[k]`, which the stopping rule uses |
-| `coordinateScale(f, k)`, `responseScale(f)` | optional: the scales of the coordinates and of the response, which make the stopping rule independent of the units (both 1 by default) |
-| `fullGradient!(grad, f, x)` | optional: the whole gradient at once, for λmax (`gradient` for every `k` by default) |
+| `descend_coordinate!(f, g, x, k)` | updates `x[k]` and the cache, and returns the change of `x[k]`, which the stopping rule uses |
+| `coordinate_scale(f, k)`, `response_scale(f)` | optional: the scales of the coordinates and of the response, which make the stopping rule independent of the units (both 1 by default) |
+| `full_gradient!(grad, f, x)` | optional: the whole gradient at once, for λmax (`gradient` for every `k` by default) |
 | `f(x)` | optional: the value from the cache, which Anderson acceleration needs |
 
 A coordinate update that works with every separable penalty minimizes a
@@ -38,7 +38,7 @@ struct MyLoss <: CoordinateDifferentiableFunction
   # the data, and a cache such as the linear predictor η = Xx
 end
 
-function CoordinateDescent.descendCoordinate!(f::MyLoss, g, x, k)
+function CoordinateDescent.descend_coordinate!(f::MyLoss, g, x, k)
   a = curvature(f, k)                     # an upper bound on ∂²f/∂xₖ² along the coordinate
   old = x[k]
   # the proximal operator of g on entry k with step 1/a
@@ -52,8 +52,8 @@ end
 ```
 
 The step never increases `f + g`. With such a loss,
-`coordinateDescent!(x, f, NormL1(λ, ω))` also gets the path from λmax, which
-uses `gradient` and `fullGradient!`.
+`coordinate_descent!(x, f, NormL1(λ, ω))` also gets the path from λmax, which
+uses `gradient` and `full_gradient!`.
 [A loss of your own](examples/08_custom_loss.md) builds ℓ1-penalized
 logistic regression this way and checks it against Newton's method and
 ProximalBase's `LogisticLoss`. On a `SymmetricSparseIterate`, whose
@@ -80,7 +80,7 @@ ProximalBase.prox_entry(g::MyElasticNet, v, k, γ) = shrink(v, γ * g.λ * g.α)
 (g::MyElasticNet)(x) = g.λ * (g.α * norm(x, 1) + (1 - g.α) * sum(abs2, x) / 2)
 
 x = SparseIterate(p)
-coordinateDescent!(x, CDLeastSquaresLoss(y, X), MyElasticNet(0.1, 0.5))
+coordinate_descent!(x, CDLeastSquaresLoss(y, X), MyElasticNet(0.1, 0.5))
 ```
 
 ProximalBase has this one built in, as `ElasticNet(λα, λ(1 - α))`, with
@@ -88,11 +88,11 @@ ProximalBase has this one built in, as `ElasticNet(λα, λ(1 - α))`, with
 [`LassoPath`](@ref) take the built-in ones with standardization, an
 intercept, ``\lambda_{\max}`` and screening, as `alpha = 0.5` or
 `penalty = MCP(1, 3)` (see [The elastic net, MCP and SCAD](@ref)). `CDLeastSquaresLoss`,
-`CDWeightedLSLoss`, `CDQuadraticLoss` and every loss whose `descendCoordinate!`
+`CDWeightedLSLoss`, `CDQuadraticLoss` and every loss whose `descend_coordinate!`
 calls `prox_entry` accept such a penalty; `CDSqrtLassoLoss` and
 `CDSqrtQuadraticLoss`, whose updates are the exact minimizers for the ℓ1 norm,
 do not. The path from λmax and the screening need to know the penalty, so for
-other penalties `warmStart = false` starts from zero and solves at `g`
+other penalties `warm_start = false` starts from zero and solves at `g`
 directly; a path is then a loop over decreasing penalties in which each fit
 starts from the previous solution. The proximal operator of a nonconvex
 penalty must be defined for the steps `γ = 1/a` of the loss: `n / ‖X[:, k]‖²`

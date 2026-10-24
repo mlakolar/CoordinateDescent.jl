@@ -3,7 +3,7 @@
 #
 #     minimize  ‖y - Xβ‖² / (2n) + λ‖β‖₁,
 #
-# solved from β = 0 with the default stopping rule (optTol = 1e-7), for
+# solved from β = 0 with the default stopping rule (opt_tol = 1e-7), for
 # `order = :cyclic` and `:random` without momentum, `order = :cyclic` with
 # `anderson = 5`, and `order = :random` with `momentum = true`. Version 0.6
 # also had `order = :active`, which version 0.7 removed; see README.md. The
@@ -32,12 +32,12 @@ objective(X, y, β, λ) = sum(abs2, y - X * β) / (2 * size(X, 1)) + λ * sum(ab
 function solve(X, y, λ, opts)
   x = SparseIterate(size(X, 2))
   info = CDInfo()
-  coordinateDescent!(x, CDLeastSquaresLoss(y, X), NormL1(λ), opts, info)
+  coordinate_descent!(x, CDLeastSquaresLoss(y, X), NormL1(λ), opts, info)
   x, info.iterations
 end
 
 
-println("# One λ, from β = 0, optTol = 1e-7: milliseconds (passes) and (F - F*)/F*\n")
+println("# One λ, from β = 0, opt_tol = 1e-7: milliseconds (passes) and (F - F*)/F*\n")
 println("| design | λ/λmax | ", join(first.(SOLVERS), " | "), " |")
 println("|---|---:|", repeat("---:|", length(SOLVERS)))
 for (name, kw) in DESIGNS
@@ -46,7 +46,7 @@ for (name, kw) in DESIGNS
   λmax = maximum(abs, X' * y) / n
   for r in (0.1, 0.02, 0.01)
     λ = r * λmax
-    xref, _ = solve(X, y, λ, CDOptions(; order = :random, optTol = 1e-13, maxIter = 10^7))
+    xref, _ = solve(X, y, λ, CDOptions(; order = :random, opt_tol = 1e-13, max_iter = 10^7))
     Fstar = objective(X, y, Vector(xref), λ)
     results, times = interleaved(opts -> solve(X, y, λ, opts), SOLVERS)
     cells = String[]
@@ -60,12 +60,12 @@ for (name, kw) in DESIGNS
   end
 end
 
-println("\n# 50-λ path from λmax to λmax/100 (LassoPath, standardizeX = false): milliseconds\n")
+println("\n# 50-λ path from λmax to λmax/100 (LassoPath, standardize_x = false): milliseconds\n")
 println("| design | ", join(first.(SOLVERS), " | "), " |")
 println("|---|", repeat("---:|", length(SOLVERS)))
 for (name, kw) in DESIGNS[[1, 2, 5, 6, 8]]
   X, y = design(; kw...)
-  _, times = interleaved(opts -> LassoPath(X, y, opts; nλ = 50, λminratio = 0.01, standardizeX = false), SOLVERS)
+  _, times = interleaved(opts -> LassoPath(X, y, opts; nλ = 50, λminratio = 0.01, standardize_x = false), SOLVERS)
   cells = [@sprintf("%.0f", 1e3 * summarize(times[j], SOLVERS[j][3])) for j in eachindex(SOLVERS)]
   println("| ", name, " | ", join(cells, " | "), " |")
 end

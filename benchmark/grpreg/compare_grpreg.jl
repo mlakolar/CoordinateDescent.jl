@@ -40,7 +40,7 @@ function compare(dir)
     X = readdlm(joinpath(dir, "X$k.csv"), ','); y = vec(readdlm(joinpath(dir, "y$k.csv"), ','))
     group = vec(Int.(readdlm(joinpath(dir, "group$k.csv"), ',')))
     groups = [findall(==(g), group) for g in 1:maximum(group)]
-    path = GroupLassoPath(X, y, λs(k), groups, CDOptions(; optTol = 1e-12))
+    path = GroupLassoPath(X, y, λs(k), groups, CDOptions(; opt_tol = 1e-12))
     R = readdlm(joinpath(dir, "grpreg$k.csv"), ',')               # (p + 1) × nλ, the intercept first
     ours = [reshape(path.β0path, 1, :); reduce(hcat, Vector.(path.βpath))]
     same = all(findall(!iszero, ours[2:end, j]) == findall(!iszero, R[2:end, j]) for j in axes(R, 2))

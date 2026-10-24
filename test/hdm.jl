@@ -6,13 +6,13 @@ using SpecialFunctions: erfcinv
 
 qnorm(t) = -sqrt(2) * erfcinv(2t)
 
-@testset "rlasso, postLasso and doubleSelection" begin
-  @testset "theoryLambda" begin
+@testset "rlasso, post_lasso and double_selection" begin
+  @testset "theory_lambda" begin
     n, p = 100, 200
-    @test theoryLambda(n, p) ≈ 1.1 * qnorm(1 - 0.1 / log(n) / (2p)) / sqrt(n)
-    @test theoryLambda(n, p; c = 0.5, γ = 0.05) ≈ 0.5 * qnorm(1 - 0.05 / (2p)) / sqrt(n)
-    @test theoryLambda(n, 2p) > theoryLambda(n, p) > theoryLambda(4n, p)
-    @test_throws ArgumentError theoryLambda(n, p; γ = 1.5)
+    @test theory_lambda(n, p) ≈ 1.1 * qnorm(1 - 0.1 / log(n) / (2p)) / sqrt(n)
+    @test theory_lambda(n, p; c = 0.5, γ = 0.05) ≈ 0.5 * qnorm(1 - 0.05 / (2p)) / sqrt(n)
+    @test theory_lambda(n, 2p) > theory_lambda(n, p) > theory_lambda(4n, p)
+    @test_throws ArgumentError theory_lambda(n, p; γ = 1.5)
   end
 
   rng = Xoshiro(51)
@@ -32,13 +32,13 @@ qnorm(t) = -sqrt(2) * erfcinv(2t)
     @test Vector(sol.x)[sol.selected] ≈ b[2:end] atol = 1e-10
     @test sol.residuals ≈ y .- Z * b atol = 1e-10
     @test sol.σ ≈ std(sol.residuals)
-    @test sol.λ0 ≈ theoryLambda(n, p)
+    @test sol.λ0 ≈ theory_lambda(n, p)
     # the loadings are those of the residuals
     Xc = X .- mean(X; dims = 1)
     @test sol.loadings ≈ vec(sqrt.(mean((Xc .* sol.residuals) .^ 2; dims = 1)))
     # without the refit, the lasso coefficients and hdm's c = 0.5
     sol0 = rlasso(X, y; post = false)
-    @test sol0.λ0 ≈ theoryLambda(n, p; c = 0.5) && !sol0.post
+    @test sol0.λ0 ≈ theory_lambda(n, p; c = 0.5) && !sol0.post
     @test issubset(1:4, sol0.selected)
     # pure noise: nothing selected, the intercept is the mean
     soln = rlasso(X, randn(rng, n) .+ 2)
@@ -47,9 +47,9 @@ qnorm(t) = -sqrt(2) * erfcinv(2t)
     @test rlasso(round.(Int, 10X), round.(Int, 10y)).selected isa Vector{Int}
   end
 
-  @testset "postLasso" begin
+  @testset "post_lasso" begin
     sol = lasso(X, y, 0.1; intercept = true)
-    pl = postLasso(X, y, sol)
+    pl = post_lasso(X, y, sol)
     S = pl.selected
     @test S == findall(!iszero, Vector(sol.x))
     Z = [ones(n) X[:, S]]
@@ -62,14 +62,14 @@ qnorm(t) = -sqrt(2) * erfcinv(2t)
     @test pl.vcov ≈ V rtol = 1e-8
     @test pl.se_intercept ≈ sqrt(V[1, 1]) && Vector(pl.se)[S] ≈ sqrt.(diag(V)[2:end])
     # from rlasso, or from a vector of columns, and without an intercept
-    @test postLasso(X, y, rlasso(X, y)).x ≈ rlasso(X, y).x
-    pl0 = postLasso(X, y, [1, 2, 3]; intercept = false)
+    @test post_lasso(X, y, rlasso(X, y)).x ≈ rlasso(X, y).x
+    pl0 = post_lasso(X, y, [1, 2, 3]; intercept = false)
     @test pl0.intercept == 0 && Vector(pl0.x)[1:3] ≈ X[:, 1:3] \ y
-    @test_throws ArgumentError postLasso(X[1:3, :], y[1:3], [1, 2, 3])
-    @test postLasso(round.(Int, 10X), round.(Int, 10y), [1, 2]).selected == [1, 2]
+    @test_throws ArgumentError post_lasso(X[1:3, :], y[1:3], [1, 2, 3])
+    @test post_lasso(round.(Int, 10X), round.(Int, 10y), [1, 2]).selected == [1, 2]
   end
 
-  @testset "doubleSelection" begin
+  @testset "double_selection" begin
     # the treatment depends on the controls that also enter y: selecting on y
     # alone would drop them and bias the estimate
     α = 0.5
@@ -78,7 +78,7 @@ qnorm(t) = -sqrt(2) * erfcinv(2t)
     W = randn(rng2, m, q)
     d = W[:, 1:3] * [1.0, 1.0, -1.0] .+ randn(rng2, m)
     yd = α .* d .+ W[:, 1:3] * [1.0, 1.0, -1.0] .+ randn(rng2, m)
-    r = doubleSelection(yd, d, W)
+    r = double_selection(yd, d, W)
     @test r.method === :doubleselection && r.n == m
     @test issubset(1:3, r.selected)
     @test abs(r.estimate - α) < 4 * r.se
@@ -89,27 +89,27 @@ qnorm(t) = -sqrt(2) * erfcinv(2t)
     Z = [ones(m) d W[:, r.selected]]
     @test r.estimate ≈ (Z \ yd)[2] atol = 1e-10
     # partialling out gives nearly the same estimate here
-    rp = doubleSelection(yd, d, W; method = :partialling)
+    rp = double_selection(yd, d, W; method = :partialling)
     @test rp.method === :partialling && abs(rp.estimate - r.estimate) < 0.5 * r.se
     # forced controls enter the regression
-    rf = doubleSelection(yd, d, W; forced = [100])
+    rf = double_selection(yd, d, W; forced = [100])
     @test 100 in rf.selected
     # a wider interval at a higher level
-    r99 = doubleSelection(yd, d, W; level = 0.99)
+    r99 = double_selection(yd, d, W; level = 0.99)
     @test r99.ci[2] - r99.ci[1] > r.ci[2] - r.ci[1]
-    @test_throws ArgumentError doubleSelection(yd, d, W; method = :bogus)
-    @test doubleSelection(round.(Int, 10yd), round.(Int, 10d), round.(Int, 10W)).n == m
+    @test_throws ArgumentError double_selection(yd, d, W; method = :bogus)
+    @test double_selection(round.(Int, 10yd), round.(Int, 10d), round.(Int, 10W)).n == m
     @test occursin("TreatmentEffect", sprint(show, r))
   end
 
-  @testset "feasibleLasso! at the theory level" begin
+  @testset "feasible_lasso! at the theory level" begin
     x = SparseIterate(p)
-    sol = feasibleLasso!(x, X, y; intercept = true)
+    sol = feasible_lasso!(x, X, y; intercept = true)
     x2 = SparseIterate(p)
-    sol2 = feasibleLasso!(x2, X, y, theoryLambda(n, p); intercept = true)
+    sol2 = feasible_lasso!(x2, X, y, theory_lambda(n, p); intercept = true)
     @test Vector(sol.x) ≈ Vector(sol2.x) atol = 1e-6
-    @test sol.penalty.λ0 ≈ theoryLambda(n, p)
-    @test_throws ArgumentError feasibleLasso!(SparseIterate(p), X, y; λ0 = :bogus)
+    @test sol.penalty.λ0 ≈ theory_lambda(n, p)
+    @test_throws ArgumentError feasible_lasso!(SparseIterate(p), X, y; λ0 = :bogus)
   end
 end
 

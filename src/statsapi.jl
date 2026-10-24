@@ -46,7 +46,7 @@ end
     residuals(sol::LassoSolution)
 
 The residuals `y - β₀ - X * β` of the data the solver was given. A solution
-computed from sufficient statistics (`scaledLasso!` with a
+computed from sufficient statistics (`scaled_lasso!` with a
 [`CDSqrtQuadraticLoss`](@ref)) has none, and an error is thrown; so it is for
 [`nobs`](@ref) and [`deviance`](@ref).
 """
@@ -443,7 +443,7 @@ StatsAPI.deviance(r::PostLassoResult) = sum(abs2, r.residuals)
 The estimate of the treatment effect as a model with one coefficient: a vector
 of length one, its standard error, a 1 × 1 covariance, and the normal
 confidence interval at `level` as a 1 × 2 matrix (`te.ci` holds the one at the
-level of [`doubleSelection`](@ref)). `nobs` is the number of observations.
+level of [`double_selection`](@ref)). `nobs` is the number of observations.
 """
 StatsAPI.coef(te::TreatmentEffect) = [te.estimate]
 StatsAPI.stderror(te::TreatmentEffect) = [te.se]

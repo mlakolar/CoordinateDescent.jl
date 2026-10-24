@@ -1,5 +1,5 @@
-# rlasso and doubleSelection against R's hdm (rlasso, rlassoEffect) on the same
-# data, and the coverage of doubleSelection's confidence intervals.
+# rlasso and double_selection against R's hdm (rlasso, rlassoEffect) on the same
+# data, and the coverage of double_selection's confidence intervals.
 #
 #     julia --project=benchmark/hdm benchmark/hdm/compare_hdm.jl gen DIR       # data in DIR
 #     Rscript benchmark/hdm/compare_hdm.R DIR                                  # hdm's results in DIR (needs hdm)
@@ -44,7 +44,7 @@ function compare(dir)
       @printf "n=%4d p=%3d rlasso post=%-5s | selected: same %-5s (ours %d, hdm %d) | max |Δcoef| %.1e\n" s.n s.p post (r.selected == selR) length(r.selected) length(selR) maximum(abs, [r.intercept; Vector(r.x)] .- R)
     end
     for method in (:doubleselection, :partialling)
-      e = doubleSelection(y, d, X; method)
+      e = double_selection(y, d, X; method)
       R = vec(readdlm(joinpath(dir, "effect_$(method)$k.csv"), ','))                 # α, se
       @printf "n=%4d p=%3d %-15s | α ours %.6f hdm %.6f | se ours %.6f hdm %.6f | Δα %.1e Δse %.1e\n" s.n s.p method e.estimate R[1] e.se R[2] abs(e.estimate - R[1]) abs(e.se - R[2])
     end
@@ -73,7 +73,7 @@ function coverage(; reps = 500)
       cover, est, ses = 0, Float64[], Float64[]
       for r in 1:reps
         X, y, d = gen(n, p; seed = 10_000 + r)
-        e = doubleSelection(y, d, X; method)
+        e = double_selection(y, d, X; method)
         cover += e.ci[1] <= 0.5 <= e.ci[2]
         push!(est, e.estimate); push!(ses, e.se)
       end
