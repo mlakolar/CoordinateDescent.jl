@@ -38,8 +38,8 @@ println("$(sol.iterations) passes over the coordinates, converged: $(sol.converg
 λmax = maximum(abs, X' * y) / n
 println("\n     λ  nonzeros  ‖β̂ - β‖")
 for λ in (1.01λmax, 0.5λmax, 0.2, 0.1, 0.05, 0.01)
-  fit = lasso(X, y, λ)
-  @printf("%6.3f  %8d  %7.3f\n", λ, count(!iszero, fit.x), norm(fit.x - β))
+  sol = lasso(X, y, λ)
+  @printf("%6.3f  %8d  %7.3f\n", λ, count(!iszero, sol.x), norm(sol.x - β))
 end
 
 println("\n== An intercept")
@@ -50,16 +50,19 @@ println("\n== An intercept")
 # y as well.
 y2 = 2.0 .+ y
 for intercept in (false, true)
-  fit = lasso(X, y2, λ; intercept)
+  sol = lasso(X, y2, λ; intercept)
   @printf("intercept = %-5s  β̂₀ = %.2f  RMS of the residuals %.2f  selects %s\n",
-          intercept, fit.intercept, sqrt(mean(abs2, fit.residuals)), support(fit.x))
+          intercept, sol.intercept, sqrt(mean(abs2, residuals(sol))), support(sol.x))
 end
 
-# predictions at new points
+# predictions at new points, and the other functions of StatsAPI: coef(sol) is
+# [β̂₀; β̂] with an intercept, dof(sol) the number of nonzero coefficients plus
+# one for the intercept
 sol = lasso(X, y2, λ; intercept = true)
 Xnew = randn(3, p)
-ŷ = sol.intercept .+ Xnew * sol.x
+ŷ = predict(sol, Xnew)                         # sol.intercept .+ Xnew * sol.x
 println("predictions ", round.(ŷ; digits = 2), ", true means ", round.(2.0 .+ Xnew * β; digits = 2))
+println("coef(sol)[1:3] = ", round.(Vector(coef(sol))[1:3]; digits = 2), ", nobs = ", nobs(sol), ", dof = ", dof(sol))
 
 println("\n== Standardization")
 

@@ -985,4 +985,64 @@ end
   @test keys(Ri) == keys(Rf) && all(Ri[S] == Rf[S] for S in keys(Rf))
 end
 
+@testset "StatsAPI" begin
+  n, p, s = 80, 30, 4
+  rng = Xoshiro(31)
+  X = randn(rng, n, p)
+  Y = 1.5 .+ X[:, 1:s] * ones(s) + 0.5 * randn(rng, n)
+  Xnew = randn(rng, 7, p)
+  λ = 0.05
+
+  for intercept in (false, true)
+    for sol in (lasso(X, Y, λ; intercept), lasso(X, Y, λ, ones(p); intercept), sqrtLasso(X, Y, 1.0; intercept),
+                scaledLasso(X, Y, λ, ones(p); intercept), feasibleLasso!(SparseIterate(p), X, Y, λ; intercept))
+      β = Vector(sol.x)
+      @test sol.hasintercept == intercept
+      @test coef(sol) isa SparseVector
+      @test Vector(coef(sol)) == (intercept ? [sol.intercept; β] : β)
+      @test predict(sol, Xnew) ≈ sol.intercept .+ Xnew * β
+      @test predict(sol, X) ≈ Y - residuals(sol)
+      @test residuals(sol) === sol.residuals
+      @test nobs(sol) == n
+      @test dof(sol) == count(!iszero, β) + intercept
+      @test deviance(sol) ≈ sum(abs2, sol.residuals)
+      @test_throws DimensionMismatch predict(sol, Xnew[:, 1:p-1])
+    end
+  end
+  # the intercept entry of coef is not stored when it is zero
+  sol = lasso(X, [ones(n ÷ 2); -ones(n ÷ 2)], 10.0; intercept = true)
+  @test sol.intercept == 0 && nnz(coef(sol)) == 0 && length(coef(sol)) == p + 1
+
+  # a solution from sufficient statistics has no residuals
+  sol = scaledLasso!(SparseIterate(p), CDSqrtQuadraticLoss(X'X / n, -X'Y / n, dot(Y, Y) / n), λ, ones(p))
+  @test Vector(coef(sol)) == Vector(sol.x) && !sol.hasintercept
+  @test predict(sol, Xnew) ≈ Xnew * Vector(sol.x)
+  @test dof(sol) == count(!iszero, Vector(sol.x))
+  @test_throws ArgumentError residuals(sol)
+  @test_throws ArgumentError nobs(sol)
+  @test_throws ArgumentError deviance(sol)
+
+  # paths: fit is the constructor; coef stacks the solutions, intercepts first
+  for intercept in (false, true)
+    path = fit(LassoPath, X, Y, CDOptions(; order = :cyclic); nλ = 15, intercept)
+    @test path.βpath == LassoPath(X, Y, CDOptions(; order = :cyclic); nλ = 15, intercept).βpath
+    B = coef(path)
+    @test size(B) == (p + intercept, length(path.λpath)) && B isa SparseMatrixCSC
+    for k in eachindex(path.λpath)
+      @test Vector(B[:, k]) == (intercept ? [path.β0path[k]; Vector(path.βpath[k])] : Vector(path.βpath[k]))
+      @test coef(path, path.λpath[k]) == B[:, k]                            # exact on the grid
+    end
+    @test predict(path, Xnew) ≈ Matrix(Xnew * reduce(hcat, path.βpath)) .+ transpose(path.β0path)
+    @test nobs(path) == path.nobs == n
+    # between two grid values, linear interpolation in λ
+    λa, λb = path.λpath[5], path.λpath[6]
+    λm = (2λa + λb) / 3
+    @test Vector(coef(path, λm)) ≈ (2 * Vector(B[:, 5]) + Vector(B[:, 6])) / 3
+    @test_throws ArgumentError coef(path, 2 * path.λpath[1])
+    @test_throws ArgumentError coef(path, path.λpath[end] / 2)
+  end
+  path = fit(LassoPath, X, Y, [0.3, 0.1]; standardizeX = false, warmStart = false)
+  @test path.λpath == [0.3, 0.1] && nobs(path) == n
+end
+
 end
