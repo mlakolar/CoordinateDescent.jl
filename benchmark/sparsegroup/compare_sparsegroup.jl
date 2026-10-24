@@ -1,8 +1,12 @@
-# SparseGroupLassoPath against R's sparsegl (and SGL when it is installed), on
-# the same data and the same levels of λ, for α ∈ {0.05, 0.5, 0.95} (sparsegl's
-# asparse, SGL's alpha). All standardize the columns and penalize the
-# coefficients of the standardized columns. The KKT violation of each solution
-# for the objective of sparseGroupLasso is reported too.
+# SparseGroupLassoPath against R's sparsegl (and SGL when it is installed), for
+# α ∈ {0.05, 0.5, 0.95} (sparsegl's asparse, SGL's alpha). All penalize the
+# coefficients of standardized columns, but sparsegl and SGL scale the columns
+# to unit Euclidean norm, √n times their standard deviation, so their level λ
+# is our √n λ: gen writes our 25 levels divided by √n, at which R is run, and
+# SparseGroupLassoPath is run at √n times them, its own levels. SGL returns the coefficients of its standardized columns and
+# no intercept; they are mapped back to the columns of X, with the intercept of
+# the centered fit. The KKT violation of each solution for the objective of
+# sparseGroupLasso is reported too.
 #
 #     julia --project=benchmark/sparsegroup benchmark/sparsegroup/compare_sparsegroup.jl gen DIR
 #     Rscript benchmark/sparsegroup/compare_sparsegroup.R DIR            # needs sparsegl (SGL optional)
@@ -39,7 +43,7 @@ function gen(dir)
     writedlm(joinpath(dir, "X$k.csv"), X, ','); writedlm(joinpath(dir, "y$k.csv"), y, ',')
     writedlm(joinpath(dir, "group$k.csv"), grouplabels(groups, s.p), ',')
     for α in ALPHAS
-      writedlm(joinpath(dir, "lambda$(α)_$k.csv"), levels(X, y, groups, α), ',')
+      writedlm(joinpath(dir, "lambda$(α)_$k.csv"), levels(X, y, groups, α) ./ sqrt(s.n), ',')
     end
   end
 end
@@ -73,13 +77,18 @@ function compare(dir)
     X = readdlm(joinpath(dir, "X$k.csv"), ','); y = vec(readdlm(joinpath(dir, "y$k.csv"), ','))
     l = Int.(vec(readdlm(joinpath(dir, "group$k.csv"), ',')))
     groups = [findall(==(g), l) for g in 1:maximum(l)]
-    λs = vec(readdlm(joinpath(dir, "lambda$(α)_$k.csv"), ','))
+    λs = sqrt(size(X, 1)) .* vec(readdlm(joinpath(dir, "lambda$(α)_$k.csv"), ','))
     ours = coefs(SparseGroupLassoPath(X, y, λs, groups, CDOptions(; optTol = 1e-12); alpha = α))
     ko = maximum(j -> kkt(X, y, groups, ours[:, j], λs[j], α), axes(ours, 2))
+    xbar = vec(mean(X; dims = 1)); nrm = vec(sqrt.(sum((X .- transpose(xbar)) .^ 2; dims = 1)))
     for prog in ("sparsegl", "SGL")
       f = joinpath(dir, "$(prog)$(α)_$k.csv")
       isfile(f) || continue
       R = readdlm(f, ',')
+      if prog == "SGL"                       # the standardized coefficients, without the intercept
+        B = R ./ nrm
+        R = [reshape(mean(y) .- B' * xbar, 1, :); B]
+      end
       kr = maximum(j -> kkt(X, y, groups, R[:, j], λs[j], α), axes(R, 2))
       same = all(findall(!iszero, ours[2:end, j]) == findall(!iszero, R[2:end, j]) for j in axes(R, 2))
       @printf "%-8s α=%.2f n=%3d p=%3d | same supports: %-5s | max |Δcoef| %.1e (largest %.2f) | KKT %.0e here, %.0e %s\n" prog α s.n s.p same maximum(abs, ours .- R) maximum(abs, R) ko kr prog
