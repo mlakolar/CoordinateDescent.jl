@@ -39,8 +39,8 @@ println("$(sol.iterations) passes over the coordinates, converged: $(sol.converg
 λmax = maximum(abs, X' * y) / n
 println("\n     λ  nonzeros  ‖β̂ - β‖")
 for λ in (1.01λmax, 0.5λmax, 0.2, 0.1, 0.05, 0.01)
-  sol = lasso(X, y, λ)
-  @printf("%6.3f  %8d  %7.3f\n", λ, count(!iszero, sol.x), norm(sol.x - β))
+  s = lasso(X, y, λ)
+  @printf("%6.3f  %8d  %7.3f\n", λ, count(!iszero, s.x), norm(s.x - β))
 end
 
 println("\n== An intercept")
@@ -51,9 +51,9 @@ println("\n== An intercept")
 # y as well.
 y2 = 2.0 .+ y
 for intercept in (false, true)
-  sol = lasso(X, y2, λ; intercept)
+  s = lasso(X, y2, λ; intercept)
   @printf("intercept = %-5s  β̂₀ = %.2f  RMS of the residuals %.2f  selects %s\n",
-          intercept, sol.intercept, sqrt(mean(abs2, residuals(sol))), support(sol.x))
+          intercept, s.intercept, sqrt(mean(abs2, residuals(s))), support(s.x))
 end
 
 # predictions at new points, and the other functions of StatsAPI: coef(sol) is

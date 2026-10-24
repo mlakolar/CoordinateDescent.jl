@@ -73,9 +73,9 @@ println("\n== Starting from zero along a path of penalties")
 λsmall = 0.01
 for (warmStart, numSteps) in ((true, 50), (false, 10), (false, 50))
   xs = AtomIterate(p, groups)
-  r = solve!(xs, f, GroupNormL2(λsmall, groups), CDOptions(; warmStart, numSteps))
+  res = solve!(xs, f, GroupNormL2(λsmall, groups), CDOptions(; warmStart, numSteps))
   @printf("warmStart = %-5s numSteps = %-3s: %4d passes, %d groups selected\n", warmStart,
-          warmStart ? "-" : string(numSteps), r.passes, length(selected(xs)))
+          warmStart ? "-" : string(numSteps), res.passes, length(selected(xs)))
 end
 
 println("\n== Choosing λ on a validation set")
