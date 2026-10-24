@@ -1,9 +1,10 @@
-# sparsegl's and SGL's sparse group lasso on the data of compare_sparsegroup.jl
-# gen DIR, at the levels it wrote
+# sparsegl's sparse group lasso on the data of compare_sparsegroup.jl gen DIR,
+# at the levels it wrote, and SGL's with a second argument "sgl" (SGL is slow:
+# on the n = 200, p = 60 design its path at thresh = 1e-10 took over 20 minutes)
 args <- commandArgs(trailingOnly = TRUE)
 dir <- args[1]
 library(sparsegl)
-have_sgl <- requireNamespace("SGL", quietly = TRUE)
+have_sgl <- length(args) > 1 && args[2] == "sgl" && requireNamespace("SGL", quietly = TRUE)
 rd <- function(name) read.csv(file.path(dir, name), header = FALSE)[, 1]
 k <- 1
 while (file.exists(file.path(dir, paste0("X", k, ".csv")))) {
