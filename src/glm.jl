@@ -68,6 +68,8 @@ _check_response(::ProximalBase.Logistic, y) =
   all(t -> 0 <= t <= 1, y) || throw(ArgumentError("logistic regression needs responses in [0, 1]"))
 _check_response(::ProximalBase.Poisson, y) =
   all(t -> t >= 0, y) || throw(ArgumentError("Poisson regression needs nonnegative responses"))
+_check_response(::ProximalBase.Squared, y) =
+  throw(ArgumentError("the squared loss is least squares, which proximal Newton does not take: use lasso"))
 _check_response(loss, y) = true
 
 # The model of ∑ᵢ wᵢ ℓ(β₀ + xᵢ'β + oᵢ, yᵢ) / ∑ᵢ wᵢ for proximal Newton, and the

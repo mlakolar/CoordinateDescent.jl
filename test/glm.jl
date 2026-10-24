@@ -129,6 +129,26 @@ end
     pathp = GLMLassoPath(X, yp, range(0.2, 0.02; length = 5), ProximalBase.Poisson())
     @test length(pathp.λpath) == 5 && pathp.loss == ProximalBase.Poisson()
   end
+
+  @testset "Huber, the squared loss, a constant column, integer data" begin
+    # Huber's loss with every residual within δ is the lasso's; the squared
+    # loss itself is for lasso
+    yc = X * β .+ randn(rng, n)
+    hb = glmLasso(X, yc, 0.05, ProximalBase.Huber(100.0); newtonTol = 1e-12)
+    ls = lasso(X, yc, 0.05, CDOptions(; optTol = 1e-12); intercept = true, standardizeX = true)
+    @test Vector(hb.x) ≈ Vector(ls.x) atol = 1e-6
+    @test hb.intercept ≈ ls.intercept atol = 1e-6
+    @test_throws ArgumentError glmLasso(X, yc, 0.05, ProximalBase.Squared())
+    # with weights and an intercept, a constant column has loading zero and
+    # stays at zero
+    w = rand(rng, n) .+ 0.5
+    a = glmLasso([X fill(2.0, n)], y, 0.02; weights = w, newtonTol = 1e-12)
+    b = glmLasso(X, y, 0.02; weights = w, newtonTol = 1e-12)
+    @test a.x[p + 1] == 0
+    @test Vector(a.x)[1:p] ≈ Vector(b.x) atol = 1e-6
+    # integer data and a Bool response
+    @test GLMLassoPath(round.(Int, X), y .> 0; nλ = 5).λpath isa Vector{Float64}
+  end
 end
 
 end
