@@ -1045,4 +1045,81 @@ end
   @test path.λpath == [0.3, 0.1] && nobs(path) == n
 end
 
+@testset "gram" begin
+  rng = Xoshiro(41)
+  n, p, s = 400, 40, 5
+  X = randn(rng, n, p) .+ 0.3 .* randn(rng, 1, p)          # columns with nonzero means
+  Y = 2.0 .+ X[:, 1:s] * ones(s) + randn(rng, n)
+  λ = 0.02
+  opt = CDOptions(; optTol = 1e-10, order = :cyclic)
+
+  # the same loss and stopping rule on the Gram matrix as on the residuals
+  for intercept in (false, true), standardizeX in (false, true)
+    a = lasso(X, Y, λ, opt; intercept, standardizeX, gram = true)
+    b = lasso(X, Y, λ, opt; intercept, standardizeX, gram = false)
+    @test Vector(a.x) ≈ Vector(b.x) atol = 1e-7
+    @test a.intercept ≈ b.intercept atol = 1e-7
+    @test a.residuals ≈ b.residuals atol = 1e-6
+    @test a.σ ≈ b.σ
+    @test abs(a.iterations - b.iterations) <= 2
+  end
+  ω = rand(rng, p) .+ 0.5
+  @test Vector(lasso(X, Y, λ, ω, opt; gram = true).x) ≈ Vector(lasso(X, Y, λ, ω, opt; gram = false).x) atol = 1e-7
+  for intercept in (false, true), standardizeX in (false, true)
+    a = sqrtLasso(X, Y, 1.0, opt; intercept, standardizeX, gram = true)
+    b = sqrtLasso(X, Y, 1.0, opt; intercept, standardizeX, gram = false)
+    @test Vector(a.x) ≈ Vector(b.x) atol = 1e-6
+    @test a.intercept ≈ b.intercept atol = 1e-6
+    @test a.σ ≈ b.σ rtol = 1e-6
+    @test a.penalty.λ0 == b.penalty.λ0 == 1.0
+  end
+  for intercept in (false, true), warmStart in (true, false)
+    P1 = LassoPath(X, Y, opt; nλ = 15, intercept, warmStart, gram = true)
+    P2 = LassoPath(X, Y, opt; nλ = 15, intercept, warmStart, gram = false)
+    @test P1.λpath ≈ P2.λpath
+    @test all(isapprox(Vector(P1.βpath[k]), Vector(P2.βpath[k]); atol = 1e-6) for k in eachindex(P2.βpath))
+    @test P1.β0path ≈ P2.β0path atol = 1e-6
+    @test nobs(P1) == n
+  end
+
+  # :auto takes the Gram matrix for a path on a dense X with n ≥ p and
+  # p ≤ 2000, the residuals otherwise and at one λ
+  @test CoordinateDescent._usegram(:auto, X, true)
+  @test CoordinateDescent._usegram(:auto, X[1:p, :], true)                # n = p
+  @test !CoordinateDescent._usegram(:auto, X[1:p-1, :], true)             # n < p
+  @test !CoordinateDescent._usegram(:auto, X, false)                      # one λ
+  @test !CoordinateDescent._usegram(:auto, sparse(X), true)
+  @test CoordinateDescent._usegram(:auto, falses(2000, 2000), true)
+  @test !CoordinateDescent._usegram(:auto, falses(3000, 2001), true)      # p > 2000
+  @test CoordinateDescent._usegram(true, sparse(X), false) && !CoordinateDescent._usegram(false, X, true)
+  @test_throws ArgumentError lasso(X, Y, λ; gram = :yes)
+  a, b = lasso(X, Y, λ, opt), lasso(X, Y, λ, opt; gram = false)
+  @test a.x == b.x && a.iterations == b.iterations
+  P1, P2 = LassoPath(X, Y, opt; nλ = 15), LassoPath(X, Y, opt; nλ = 15, gram = true)
+  @test P1.βpath == P2.βpath && P1.iterations == P2.iterations
+
+  # the Gram matrix of the centered columns, also from several blocks of rows,
+  # from a sparse X and in Float32
+  xbar = vec(mean(X; dims = 1))
+  ref(X, xbar) = (X .- xbar')' * (X .- xbar') / size(X, 1)
+  @test CoordinateDescent._gram(X, xbar) ≈ ref(X, xbar)
+  @test CoordinateDescent._gram(X, zeros(p)) ≈ X'X / n
+  @test issymmetric(CoordinateDescent._gram(X, xbar))
+  Xl = randn(rng, 30_000, 40) .+ 1.0                                      # 2 blocks of 26214 rows
+  xl = vec(mean(Xl; dims = 1))
+  @test CoordinateDescent._gram(Xl, xl) ≈ ref(Xl, xl)
+  @test CoordinateDescent._gram(sparse(X), xbar) ≈ ref(X, xbar)
+  @test CoordinateDescent._gram(Float32.(X), Float32.(xbar)) ≈ Float32.(ref(X, xbar)) rtol = 1e-4
+  @test CoordinateDescent._gram(big.(X[1:20, 1:3]), big.(xbar[1:3])) ≈ ref(X[1:20, 1:3], xbar[1:3])
+
+  # a sparse X on the Gram matrix, and NaN in the data
+  Xs = sprandn(rng, n, p, 0.3)
+  @test Vector(lasso(Xs, Y, λ, opt; intercept = true, gram = true).x) ≈
+        Vector(lasso(Xs, Y, λ, opt; intercept = true, gram = false).x) atol = 1e-7
+  Xn = copy(X); Xn[3, 4] = NaN
+  @test_throws ArgumentError lasso(Xn, Y, λ; gram = true)
+  Yn = copy(Y); Yn[5] = Inf
+  @test_throws ArgumentError lasso(X, Yn, λ; gram = true)
+end
+
 end

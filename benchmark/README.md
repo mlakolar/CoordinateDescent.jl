@@ -9,6 +9,7 @@ julia --project=benchmark benchmark/locpoly_bench.jl    # about a minute
 julia --project=benchmark benchmark/cd_bench.jl         # a few minutes
 julia --project=benchmark benchmark/order_anderson_bench.jl    # about 4 minutes
 julia --project=benchmark benchmark/scaledlasso_bench.jl       # about 10 minutes
+julia --project=benchmark benchmark/gram_bench.jl              # gram = true against false
 ```
 
 The checkout is found through `[sources]` in `Project.toml`, which Julia 1.11
@@ -91,6 +92,43 @@ solutions have about 2,980 nonzero coefficients, close to interpolating the
 3,000 observations. Each of the first three solves took 44,000 to 53,000
 passes, and the script took 19 minutes measuring a regime that users rarely
 fit.
+
+## gram_bench.jl
+
+Compares `lasso` and `LassoPath` on the Gram matrix (`gram = true`) and on the
+residuals (`gram = false`), to calibrate `gram = :auto`. The cases are:
+
+- n ∈ {1000, 5000, 20000} and p ∈ {50, 200, 1000}, or the sizes in
+  `GRAM_BENCH_NS` and `GRAM_BENCH_PS`;
+- independent and AR(1) columns;
+- the lasso with an intercept at 0.1 and 0.02 λmax, and a 100-level path.
+
+Each line gives the shortest time of three interleaved runs of each form, the
+passes, the largest difference of the coefficients, and what `:auto` picks.
+`GRAM_BENCH_QUICK=1` runs small sizes, as a check that the script runs.
+
+On one core of Discovery (AMD EPYC 7513, one BLAS thread, Julia 1.13.2), the
+default sizes and then n ∈ {500, 1000, 2000, 4000, 10000} with
+p ∈ {1000, 2000} gave these ratios of the time on the Gram matrix to the time
+on the residuals for the 100-level paths, over the two designs:
+
+| n \\ p | 50 | 200 | 1,000 | 2,000 |
+|---:|---:|---:|---:|---:|
+| 500 | | | 1.03–1.06 | 2.1–2.2 |
+| 1,000 | 0.12–0.14 | 0.17 | 0.56–0.60 | 1.3–1.4 |
+| 2,000 | | | 0.34–0.37 | 0.66–0.93 |
+| 4,000 | | | 0.11–0.14 | 0.37–0.38 |
+| 5,000 | 0.03–0.04 | 0.05–0.08 | 0.12–0.15 | |
+| 10,000 | | | 0.08–0.11 | 0.17–0.25 |
+| 20,000 | 0.02–0.03 | 0.04–0.06 | 0.08–0.13 | |
+
+At one λ the Gram matrix was slower in 93 of the 94 cases, by up to 42 times:
+forming it costs O(np²), more than the 7 to 210 passes that it makes cheaper.
+So `gram = :auto` uses it for paths on a dense X with n ≥ p and p ≤ 2,000
+(then A takes at most 32 MB), and never at one λ. The two forms agreed to 7e-5
+in the coefficients, except on the paths at n = p = 1000 of the first run
+(6e-4), whose 28,000 to 31,000 passes go down to 1e-4 λmax, close to
+interpolation.
 
 ## order_anderson_bench.jl
 
