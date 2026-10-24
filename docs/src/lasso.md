@@ -76,6 +76,30 @@ at `initλ`, by default ``\lambda``), ridge regression (`init = :ridge`) or a
 vector of coefficients. Large coefficients are penalized less, so that they are
 less biased, and a coefficient with ``\tilde\beta_j = 0`` stays at zero.
 
+## Penalized generalized linear models
+
+[`glmLasso`](@ref)`(X, y, λ, loss)` solves
+
+```math
+\min_{\beta_0, \beta}\; \frac{\sum_i w_i\,\ell(\beta_0 + x_i^\top\beta + o_i, y_i)}{\sum_i w_i} + \lambda\sum_j \omega_j|\beta_j|
+```
+
+for a scalar loss ``\ell`` of ProximalBase: `ProximalBase.Logistic()`, the
+negative log-likelihood of logistic regression (``y_i \in [0, 1]``, usually
+``\{0, 1\}``), the default; `ProximalBase.Poisson()`, Poisson regression with
+the log link (``y_i \ge 0``); `ProximalBase.Huber(δ)`; or a loss of your own.
+The conventions and defaults are those of glmnet: an unpenalized intercept, the
+weighted standard deviations of the columns as the loadings
+``\omega_j`` (`standardizeX`), and the observation weights ``w_i`` and offset
+``o_i`` of `weights` and `offset`. The problem is solved by proximal Newton,
+ProximalSolvers' `ProxNewton`, the method of glmnet: each step minimizes the
+weighted least-squares model of the loss at the current fit by coordinate
+descent, then backtracks. [`GLMLassoPath`](@ref) computes the solutions along a
+decreasing sequence of levels with the strong rule, and stops once the fit
+explains a fraction `devmax = 0.999` of the null deviance, as glmnet does:
+along a logistic path on separable data the coefficients grow without bound.
+The solution reports the `deviance` and the `nulldeviance`.
+
 ## The square-root lasso
 
 [`sqrtLasso`](@ref)`(X, y, λ)` solves the square-root lasso of Belloni,

@@ -7,6 +7,7 @@ tests = [
   "lasso",
   "cv",
   "penalties",
+  "glm",
   "varying_coefficient_lasso"
 ]
 

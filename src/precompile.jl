@@ -25,6 +25,7 @@ using PrecompileTools: @setup_workload, @compile_workload
     path = LassoPath(X, y; nλ = 5, intercept = true)
     LassoPath(X, y; nλ = 5, intercept = true, alpha = 0.5)
     refitLassoPath(path, X, y)
+    glmLasso(X, Float64.(y .> 0), 0.05)
     coordinateDescent!(SparseIterate(p), CDLeastSquaresLoss(y, X), NormL1(0.1), CDOptions())
     coordinateDescent!(SparseIterate(p), CDQuadraticLoss(X'X / n, -X'y / n), NormL1(0.1), CDOptions())
     locpoly(X[:, 1:2], z, y, [0.5], 1, GaussianKernel(0.2))
