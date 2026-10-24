@@ -64,6 +64,23 @@ each warm started from the previous one. The path of the elastic net at a
 fixed ``\alpha`` starts at ``\lambda_{\max}`` of the lasso divided by
 ``\alpha``.
 
+## Bounds on the coefficients
+
+`lower` and `upper` restrict the coefficients to a box,
+``l_j \le \beta_j \le u_j``, in [`lasso`](@ref), [`LassoPath`](@ref),
+[`CVLassoPath`](@ref), [`adaptiveLasso`](@ref) and [`glmLasso`](@ref), with
+any of the penalties above. Each is a number or a vector with a bound per
+coefficient. As for glmnet's `lower.limits` and `upper.limits`, zero must be
+feasible, ``l_j \le 0 \le u_j``: `lower = 0` gives the nonnegative lasso, and
+``l_j = u_j = 0`` keeps variable ``j`` out. The intercept is not bounded. The
+penalty becomes ProximalBase's `Constrained(g, IndBox(l, u))`, which keeps
+coordinate descent separable: each step clamps the scalar proximal step to
+``[l_j, u_j]``. A coefficient at zero is then optimal while the part of the
+gradient that points into the box is at most ``\lambda \omega_j``, so
+``\lambda_{\max}`` and the strong rule use only the directions the bounds allow;
+for the nonnegative lasso,
+``\lambda_{\max} = \max_j (X_j^\top y / n)_+ / \omega_j``.
+
 The adaptive lasso of Zou (2006), [`adaptiveLasso`](@ref)`(X, y, λ)`,
 minimizes
 

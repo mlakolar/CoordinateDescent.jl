@@ -7,6 +7,7 @@ tests = [
   "lasso",
   "cv",
   "penalties",
+  "bounds",
   "glm",
   "group",
   "multiresponse",

@@ -127,6 +127,19 @@ for (name, kw) in (("lasso", (;)), ("elastic net, α = 0.5", (alpha = 0.5,)),
   @printf("%-22s selects %2d variables, ‖β̂ - β‖ = %.3f\n", name, count(!iszero, est.x), norm(est.x - β))
 end
 
+println("\n== Bounds on the coefficients")
+
+# lower and upper bound the coefficients, numbers or one bound per
+# coefficient, as glmnet's lower.limits and upper.limits; zero must be
+# feasible, and lower = upper = 0 keeps a variable out. lower = 0 gives the
+# nonnegative lasso. Here it is the wrong model: β₂ and β₄ are negative, so
+# they are set to zero, and noise variables enter to fit what they explained.
+nn = lasso(X, y, λ; intercept = true, standardizeX = true, lower = 0)
+println("lower = 0: β̂[1:5] = ", round.(nn.x[1:5]; digits = 2), ", and ",
+        count(!iszero, nn.x[6:end]), " noise variables")
+cap = lasso(X, y, λ; intercept = true, standardizeX = true, lower = -1, upper = 1)
+println("with -1 ≤ βⱼ ≤ 1, β̂[1:5] = ", round.(cap.x[1:5]; digits = 2))
+
 println("\n== Number types and solver options")
 
 # lasso converts X, y and λ to a common floating point type: integer data

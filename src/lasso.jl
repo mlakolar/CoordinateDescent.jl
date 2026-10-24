@@ -15,7 +15,8 @@ Result returned by [`lasso`](@ref), [`sqrtLasso`](@ref),
 - `residuals::Vector`: `y - intercept - X * x`
 - `penalty`: the penalty at which `x` was computed, a `NormL1` for the ℓ1
   estimators, or the penalty of [`lasso`](@ref)'s `alpha` or `penalty` at the
-  level `λ`
+  level `λ`; with `lower` or `upper`, that penalty on the box of the bounds,
+  `Constrained(g, IndBox(l, u))`
 - `σ`: an estimate of the noise level (see the documentation of each solver),
   or `nothing`
 - `iterations::Int`: passes of coordinate descent over the coordinates, summed
@@ -246,9 +247,9 @@ end
 
 """
     lasso(X, y, λ, options=CDOptions(); intercept=false, standardizeX=false, gram=:auto, weights=nothing,
-          offset=nothing, alpha=1, penalty=nothing, rng=Random.default_rng(), kwargs...)
+          offset=nothing, alpha=1, penalty=nothing, lower=-Inf, upper=Inf, rng=Random.default_rng(), kwargs...)
     lasso(X, y, λ, ω, options=CDOptions(); intercept=false, gram=:auto, weights=nothing, offset=nothing,
-          rng=Random.default_rng(), kwargs...)
+          lower=-Inf, upper=Inf, rng=Random.default_rng(), kwargs...)
 
 Solve the lasso
 
@@ -327,6 +328,21 @@ at `λ` from zero. Use [`LassoPath`](@ref) for the solutions at many levels. For
 the steps of coordinate descent to be exact, MCP needs `a > 1` and SCAD
 `a > 2` on standardized columns. With `options.warmStart` false, a convex
 penalty other than the ℓ1 norm is also solved along such a path.
+
+# Bounds
+
+`lower` and `upper` bound the coefficients, `lower ≤ β ≤ upper`, as glmnet's
+`lower.limits` and `upper.limits` do: each is a number or a vector with a bound
+per coefficient, and zero must be feasible, `lower ≤ 0 ≤ upper`. For example,
+`lower = 0` gives the nonnegative lasso, and `upper = 0` with `lower = 0` for a
+coefficient keeps it at zero. The intercept is not bounded. The penalty becomes
+`Constrained(g, IndBox(l, u))`, which keeps coordinate descent separable, and
+λmax and screening use only the directions the bounds allow, so that λmax of
+the nonnegative lasso is `maxⱼ (Xⱼ'y / n)₊ / ωⱼ`. With `standardizeX` and a
+penalty other than the ℓ1 norm, which applies to `s .* β`, the bounds of the
+stored penalty are `s .* lower` and `s .* upper`. Bounds work with every
+penalty above, in `lasso`, [`LassoPath`](@ref), [`adaptiveLasso`](@ref)
+(through its keywords), [`CVLassoPath`](@ref) and [`glmLasso`](@ref).
 """
 function lasso(
   X::AbstractMatrix{T},
@@ -340,6 +356,8 @@ function lasso(
   offset::Union{Nothing, AbstractVector{<:Real}}=nothing,
   alpha::Real=1,
   penalty::Union{Nothing, AbstractFunction}=nothing,
+  lower::Union{Real, AbstractVector{<:Real}}=-Inf,
+  upper::Union{Real, AbstractVector{<:Real}}=Inf,
   rng::AbstractRNG=default_rng(),
   kwargs...) where {T<:AbstractFloat}
 
@@ -351,12 +369,13 @@ function lasso(
   if _isl1(template)
     m, _, gd = _lsmodel(X, y, intercept, _usegram(gram, X, false); w, o)
     g = _l1penalty(template, λ, standardizeX ? _loadings(X, intercept, w) : nothing)
+    g = _constrain(g, _box(T, lower, upper, size(X, 2)))
     return _lassoSolution(x, m, g, _solveLevels!(x, m, g, options; rng), intercept, X, y, gd; w, o)
   end
   s = standardizeX ? _scales(X, intercept, w) : nothing
   Xs = _scaleColumns(X, s)
   m, _, gd = _lsmodel(Xs, y, intercept, _usegram(gram, X, false); w, o)
-  g = _atlevel(template, λ)
+  g = _constrain(_atlevel(template, λ), _box(T, lower, upper, size(X, 2), s))
   _lassoSolution(x, m, g, _solveLevels!(x, m, g, options; rng), intercept, Xs, y, gd; w, o, scales = s)
 end
 
@@ -370,6 +389,8 @@ function lasso(
   gram::Union{Bool, Symbol}=:auto,
   weights::Union{Nothing, AbstractVector{<:Real}}=nothing,
   offset::Union{Nothing, AbstractVector{<:Real}}=nothing,
+  lower::Union{Real, AbstractVector{<:Real}}=-Inf,
+  upper::Union{Real, AbstractVector{<:Real}}=Inf,
   rng::AbstractRNG=default_rng(),
   kwargs...) where {T<:AbstractFloat}
 
@@ -378,8 +399,8 @@ function lasso(
   w, o = _weights(T, weights, size(X, 1)), _offset(T, offset, size(X, 1))
   x = SparseIterate(T, size(X, 2))
   m, _, gd = _lsmodel(X, y, intercept, _usegram(gram, X, false); w, o)
-  g = NormL1(λ, ω)
-  _lassoSolution(x, m, g, _solve!(x, m, g, options; rng), intercept, X, y, gd; w, o)
+  g = _constrain(NormL1(λ, ω), _box(T, lower, upper, size(X, 2)))
+  _lassoSolution(x, m, g, _solveLevels!(x, m, g, options; rng), intercept, X, y, gd; w, o)
 end
 
 function lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real,
@@ -721,8 +742,8 @@ feasibleLasso!(
 
 """
     LassoPath(X, y, λpath, options=CDOptions(); max_hat_s=Inf, standardizeX=true, intercept=false, screening=true,
-              gram=:auto, weights=nothing, offset=nothing, alpha=1, penalty=nothing, rng=Random.default_rng(),
-              kwargs...)
+              gram=:auto, weights=nothing, offset=nothing, alpha=1, penalty=nothing, lower=-Inf, upper=Inf,
+              rng=Random.default_rng(), kwargs...)
     LassoPath(X, y, options=CDOptions(); nλ=100, λminratio, kwargs...)
 
 Lasso solutions `β0path[k]` and `βpath[k]` of
@@ -775,7 +796,10 @@ is the local one reached from the previous solution, starting from zero at
 `λmax`. `penalty` holds the penalty at level one, `NormL1(1, ω)` for the lasso
 with loadings `ω`; the solution at `λpath[k]` minimizes the loss plus that
 penalty at level `λpath[k]`, applied to `scales .* β` when `scales` is not
-`nothing` (`standardizeX` with a penalty other than the ℓ1 norm).
+`nothing` (`standardizeX` with a penalty other than the ℓ1 norm). `lower` and
+`upper` bound the coefficients, as for [`lasso`](@ref); `penalty` is then
+`Constrained(g, IndBox(l, u))`, and `λmax` is the smallest level whose solution
+is zero under the bounds.
 """
 struct LassoPath{T<:AbstractFloat}
   λpath::Vector{T}
@@ -851,28 +875,32 @@ function LassoPath(
   screening::Bool=true, gram::Union{Bool, Symbol}=:auto,
   weights::Union{Nothing, AbstractVector{<:Real}}=nothing, offset::Union{Nothing, AbstractVector{<:Real}}=nothing,
   alpha::Real=1, penalty::Union{Nothing, AbstractFunction}=nothing,
+  lower::Union{Real, AbstractVector{<:Real}}=-Inf, upper::Union{Real, AbstractVector{<:Real}}=Inf,
   rng::AbstractRNG=default_rng(), kwargs...) where {T<:AbstractFloat}
 
   options = _options(options, kwargs)
   all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
   X, Y = _design(X), _response(Y)
   w, o = _weights(T, weights, size(X, 1)), _offset(T, offset, size(X, 1))
-  m, gd, g, s = _pathProblem(X, Y, intercept, standardizeX, gram, w, o, _template(T, penalty, alpha))
+  m, gd, g, s = _pathProblem(X, Y, intercept, standardizeX, gram, w, o, _template(T, penalty, alpha), lower, upper)
   _lassopath(m, gd, g, s, size(X, 2), λpath, options, size(X, 1), max_hat_s, intercept, screening, rng)
 end
 
 # the model (gd for the Gram form, see _lsmodel), the penalty at level one and
 # the column scales of a path: the ℓ1 norm with the loadings of standardizeX as
-# weights, or another penalty on the columns divided by their scales
-function _pathProblem(X::AbstractMatrix{T}, Y, intercept::Bool, standardizeX::Bool, gram, w, o, template) where {T}
+# weights, or another penalty on the columns divided by their scales; either on
+# the box of the bounds lower and upper
+function _pathProblem(X::AbstractMatrix{T}, Y, intercept::Bool, standardizeX::Bool, gram, w, o, template,
+                      lower, upper) where {T}
+  p = size(X, 2)
   if _isl1(template)
     m, _, gd = _lsmodel(X, Y, intercept, _usegram(gram, X, true); w, o)
-    ω = standardizeX ? _loadings(X, intercept, w) : ones(T, size(X, 2))
-    return m, gd, _l1penalty(template, one(T), ω), nothing
+    ω = standardizeX ? _loadings(X, intercept, w) : ones(T, p)
+    return m, gd, _constrain(_l1penalty(template, one(T), ω), _box(T, lower, upper, p)), nothing
   end
   s = standardizeX ? _scales(X, intercept, w) : nothing
   m, _, gd = _lsmodel(_scaleColumns(X, s), Y, intercept, _usegram(gram, X, true); w, o)
-  m, gd, template, s
+  m, gd, _constrain(template, _box(T, lower, upper, p, s)), s
 end
 
 # the path along λpath for the model m (gd for the Gram form, see _lsmodel), the
@@ -922,6 +950,8 @@ function LassoPath(
   offset::Union{Nothing, AbstractVector{<:Real}}=nothing,
   alpha::Real=1,
   penalty::Union{Nothing, AbstractFunction}=nothing,
+  lower::Union{Real, AbstractVector{<:Real}}=-Inf,
+  upper::Union{Real, AbstractVector{<:Real}}=Inf,
   rng::AbstractRNG=default_rng(),
   kwargs...) where {T<:AbstractFloat}
 
@@ -931,7 +961,7 @@ function LassoPath(
   X, Y = _design(X), _response(Y)
   p = size(X, 2)
   w, o = _weights(T, weights, size(X, 1)), _offset(T, offset, size(X, 1))
-  m, gd, g, s = _pathProblem(X, Y, intercept, standardizeX, gram, w, o, _template(T, penalty, alpha))
+  m, gd, g, s = _pathProblem(X, Y, intercept, standardizeX, gram, w, o, _template(T, penalty, alpha), lower, upper)
   λmax = lambda_max(m, g, SparseIterate(T, p)) * (1 + sqrt(eps(T)))
   λpath = nλ == 1 ? [λmax] : [λmax * T(λminratio)^(T(k) / (nλ - 1)) for k in 0:nλ-1]
   _lassopath(m, gd, g, s, p, λpath, options, size(X, 1), max_hat_s, intercept, screening, rng)
