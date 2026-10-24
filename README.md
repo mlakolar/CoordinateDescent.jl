@@ -16,6 +16,7 @@ and by blocks for the group lasso, whose coordinates are groups.
 
 Estimators:
 * Lasso, with an intercept, standardization and penalty loadings
+* Elastic net, MCP and SCAD, and the adaptive lasso
 * Group lasso
 * Square-root lasso
 * Scaled lasso, from the data or from sufficient statistics (`X'X/n`, `X'y/n`,
@@ -64,6 +65,8 @@ path = LassoPath(X, y; nλ=50, intercept=true)    # the lasso along 50 values of
 coef(path, 0.1)                                  # the coefficients at λ = 0.1
 cv = CVLassoPath(X, y; intercept=true)           # λ by 10-fold cross-validation
 coef(cv)                                         # the coefficients at cv.λ1se
+sol = lasso(X, y, 0.1; alpha=0.5)                # the elastic net; or penalty=MCP(1, 3), SCAD
+sol = adaptiveLasso(X, y, 0.1)                   # loadings 1/|β̃ⱼ| from a first lasso
 ```
 
 The [documentation](https://mlakolar.github.io/CoordinateDescent.jl/dev/) has

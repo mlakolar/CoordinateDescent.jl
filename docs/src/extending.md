@@ -84,7 +84,10 @@ coordinateDescent!(x, CDLeastSquaresLoss(y, X), MyElasticNet(0.1, 0.5))
 ```
 
 ProximalBase has this one built in, as `ElasticNet(λα, λ(1 - α))`, with
-`MCP`, `SCAD`, `NormL1Nonneg` and `IndBox`. `CDLeastSquaresLoss`,
+`MCP`, `SCAD`, `NormL1Nonneg` and `IndBox`. [`lasso`](@ref) and
+[`LassoPath`](@ref) take the built-in ones with standardization, an
+intercept, ``\lambda_{\max}`` and screening, as `alpha = 0.5` or
+`penalty = MCP(1, 3)` (see [The elastic net, MCP and SCAD](@ref)). `CDLeastSquaresLoss`,
 `CDWeightedLSLoss`, `CDQuadraticLoss` and every loss whose `descendCoordinate!`
 calls `prox_entry` accept such a penalty; `CDSqrtLassoLoss` and
 `CDSqrtQuadraticLoss`, whose updates are the exact minimizers for the ℓ1 norm,

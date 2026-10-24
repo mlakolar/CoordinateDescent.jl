@@ -40,6 +40,42 @@ it: [`coef`](@ref) (intercept first), [`predict`](@ref), [`residuals`](@ref),
 [`nobs`](@ref), [`dof`](@ref) (the number of nonzero coefficients, plus one for
 the intercept) and [`deviance`](@ref).
 
+## The elastic net, MCP and SCAD
+
+[`lasso`](@ref) and [`LassoPath`](@ref) take other penalties of ProximalBase
+in place of the ℓ1 norm, at the level ``\lambda``. `alpha < 1` gives the
+elastic net of glmnet,
+
+```math
+\lambda\Big(\alpha\sum_j |\beta_j| + \frac{1 - \alpha}{2}\|\beta\|^2\Big), \qquad 0 < \alpha \le 1,
+```
+
+and `penalty` another penalty whose level ``\lambda`` replaces: `NormL1(1, w)`
+and `NormL1Nonneg(1, w)`, the lasso and the nonnegative lasso with weights;
+`ElasticNet(1, λ2, w)`, with the ridge part ``\lambda_2`` fixed;
+`Scaled(ElasticNet(α, 1 - α, w), 1)`, the elastic net with weights on its ℓ1
+part; and the nonconvex `MCP(1, a)` and `SCAD(1, a)` of ncvreg, whose
+concavity ``a`` is kept. With `standardizeX`, the penalty applies to the
+coefficients of the standardized columns, as in glmnet and ncvreg, and the
+coefficients returned are those of the columns of ``X``. A nonconvex penalty
+has local solutions, and the one found depends on the start: as in ncvreg,
+`lasso` follows a path of levels from ``\lambda_{\max}`` down to ``\lambda``,
+each warm started from the previous one. The path of the elastic net at a
+fixed ``\alpha`` starts at ``\lambda_{\max}`` of the lasso divided by
+``\alpha``.
+
+The adaptive lasso of Zou (2006), [`adaptiveLasso`](@ref)`(X, y, λ)`,
+minimizes
+
+```math
+\frac{1}{2n}\|y - \beta_0 - X\beta\|^2 + \lambda\sum_j \frac{|\beta_j|}{|\tilde\beta_j|^\gamma}
+```
+
+with loadings from a first estimate ``\tilde\beta``: the lasso (`init = :lasso`,
+at `initλ`, by default ``\lambda``), ridge regression (`init = :ridge`) or a
+vector of coefficients. Large coefficients are penalized less, so that they are
+less biased, and a coefficient with ``\tilde\beta_j = 0`` stays at zero.
+
 ## The square-root lasso
 
 [`sqrtLasso`](@ref)`(X, y, λ)` solves the square-root lasso of Belloni,

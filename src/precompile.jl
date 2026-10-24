@@ -23,6 +23,7 @@ using PrecompileTools: @setup_workload, @compile_workload
     scaledLasso(X, y, 0.3, ones(p))
     feasibleLasso!(SparseIterate(p), X, y, 0.1)
     path = LassoPath(X, y; nλ = 5, intercept = true)
+    LassoPath(X, y; nλ = 5, intercept = true, alpha = 0.5)
     refitLassoPath(path, X, y)
     coordinateDescent!(SparseIterate(p), CDLeastSquaresLoss(y, X), NormL1(0.1), CDOptions())
     coordinateDescent!(SparseIterate(p), CDQuadraticLoss(X'X / n, -X'y / n), NormL1(0.1), CDOptions())
