@@ -308,6 +308,13 @@ net with weights on its ℓ1 part), and the nonconvex `MCP(1, a)` and
 `SCAD(1, a)`, whose concavity `a` is kept. The level of the penalty given is
 not used: `MCP(1, 3)` means "MCP with `a = 3`".
 
+`alpha` solves the objective of glmnet's documentation. glmnet's gaussian
+family scales `y` to unit standard deviation internally, which divides the
+ridge part by `sd(y)`, the population standard deviation of `y` (weighted
+with weights). So glmnet's solutions are those of
+`penalty = Scaled(ElasticNet(α, (1 - α) / sd(y)), 1)`, and they equal those of
+`alpha` when `sd(y) = 1`.
+
 With `standardizeX`, the penalty applies to the coefficients of the standardized
 columns `X[:, j] / sⱼ`, `sⱼ` their standard deviations, as in glmnet and ncvreg;
 the coefficients returned are those of the columns of `X`. For the ℓ1 norm this
