@@ -87,6 +87,9 @@ end
 function _glmProblem(X::AbstractMatrix{T}, y, loss, weights, offset, intercept::Bool, standardizeX::Bool,
                      template, lower, upper) where {T}
   p = size(X, 2)
+  _llaonly(template) &&
+    throw(ArgumentError("$(nameof(typeof(template))) needs local linear approximation, which the GLM fits do not " *
+                        "offer; lasso, LassoPath and CVLassoPath take it for least squares."))
   if _isl1(template)
     m, ω = _glmModel(X, y, loss, weights, offset, intercept, standardizeX)
     return m, _constrain(_l1penalty(template, one(T), ω), _box(T, lower, upper, p)), nothing

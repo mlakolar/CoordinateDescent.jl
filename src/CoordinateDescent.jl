@@ -53,6 +53,7 @@ export
   CDLeastSquaresLoss, CDWeightedLSLoss, CDQuadraticLoss, CDSqrtLassoLoss, CDSqrtQuadraticLoss,
   CDOptions, CDInfo,
   coordinateDescent!, solve!,
+  LLA,                 # ProximalSolvers' local linear approximation, for lla
 
   # generalized linear models
   glmLasso,

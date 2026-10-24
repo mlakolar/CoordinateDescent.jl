@@ -24,8 +24,10 @@ _atlevelone(::Type{T}, g::ElasticNet) where {T} = ElasticNet(one(T), T(g.λ2), g
 _atlevelone(::Type{T}, g::Scaled{<:ElasticNet}) where {T} = Scaled(ElasticNet(T(g.f.λ1), T(g.f.λ2), g.f.w), one(T))
 _atlevelone(::Type{T}, g::MCP) where {T} = MCP(one(T), T(g.a))
 _atlevelone(::Type{T}, g::SCAD) where {T} = SCAD(one(T), T(g.a))
+_atlevelone(::Type{T}, g::CappedL1) where {T} = CappedL1(one(T), T(g.a), g.w)
+_atlevelone(::Type{T}, g::LogPenalty) where {T} = LogPenalty(one(T), T(g.ε), g.w)
 _atlevelone(::Type, g::ProximalBase.BoxConstrained) = throw(ArgumentError("give bounds on the coefficients by lower and upper, not by Constrained in penalty."))
-_atlevelone(::Type, g) = throw(ArgumentError("penalty must be a NormL1, NormL1Nonneg, ElasticNet, Scaled(ElasticNet(α, 1 - α), c), MCP or SCAD, whose level λ replaces, but it is a $(typeof(g))."))
+_atlevelone(::Type, g) = throw(ArgumentError("penalty must be a NormL1, NormL1Nonneg, ElasticNet, Scaled(ElasticNet(α, 1 - α), c), MCP, SCAD, CappedL1 or LogPenalty, whose level λ replaces, but it is a $(typeof(g))."))
 
 # the penalty with level λ, as the paths of ProximalSolvers set it: the scale
 # of a scaled elastic net, whose two terms then move together, and λ1 of an
@@ -36,6 +38,8 @@ _atlevel(g::ElasticNet, λ) = ElasticNet(λ, g.λ2, g.w)
 _atlevel(g::Scaled{<:ElasticNet}, λ) = Scaled(g.f, λ)
 _atlevel(g::MCP, λ) = MCP(λ, g.a)
 _atlevel(g::SCAD, λ) = SCAD(λ, g.a)
+_atlevel(g::CappedL1, λ) = CappedL1(λ, g.a, g.w)
+_atlevel(g::LogPenalty, λ) = LogPenalty(λ, g.ε, g.w)
 _atlevel(c::ProximalBase.BoxConstrained, λ) = ProximalBase.BoxConstrained(_atlevel(c.f, λ), c.box)
 
 # The bounds lower ≤ β ≤ upper of lasso, LassoPath and glmLasso (numbers, or
@@ -103,19 +107,62 @@ function _unscale!(x::SparseIterate, s::Vector)
 end
 _unscale(β::SparseVector, s::Vector) = SparseVector(length(β), copy(β.nzind), β.nzval ./ s[β.nzind])
 
+# The method of local linear approximation of lasso and LassoPath for the
+# penalty template (at level one) and the bounds box, or nothing for the exact
+# coordinate steps: the stages, tolerance and start of lla with the coordinate
+# descent of options; with lla nothing, LLA(stages = 100) for CappedL1 and
+# LogPenalty, which have no exact path, and the exact steps for the others
+_llaonly(g) = g isa Union{CappedL1, LogPenalty}
+
+function _llamethod(template, lla::Union{Nothing, LLA}, box, options::CDOptions; rng::AbstractRNG = default_rng())
+  lla === nothing && !_llaonly(template) && return nothing
+  template isa Union{CappedL1, LogPenalty, MCP, SCAD} ||
+    throw(ArgumentError("lla applies to the penalties CappedL1, LogPenalty, MCP and SCAD, but the penalty is " *
+                        (template === nothing || template isa NormL1 ? "the ℓ1 norm." : "a $(typeof(template)).")))
+  box === nothing ||
+    throw(ArgumentError("local linear approximation, which $(nameof(typeof(template)))" *
+                        (lla === nothing ? " needs" : " uses with lla") * ", does not take bounds (lower and upper)."))
+  l = something(lla, LLA(; stages = 100))
+  LLA(_solver(options; rng); stages = l.stages, tol = l.tol, start = l.start)
+end
+
+# The convergence that a lasso solution reports: of coordinate descent, in every
+# stage for local linear approximation
+_cdconverged(r::CDResults) = r.converged
+_cdconverged(r::ReweightResults) = r.cd_converged
+
 # Minimizes f + g for lasso and LassoPath, g a penalty with a level: as
 # _solve!, which, when options.warmStart is false, follows a path of
 # options.numSteps levels from λmax for the ℓ1 norm, but for any penalty, and
 # always for a
 # nonconvex penalty (MCP, SCAD), whose local solution depends on the path, as in
-# ncvreg; the levels of a nonconvex path are solved to the full tolerance
-function _solveLevels!(x, m, g, options::CDOptions; rng::AbstractRNG = default_rng())
+# ncvreg; the levels of a nonconvex path are solved to the full tolerance. With
+# the method lla, by local linear approximation from zero
+function _solveLevels!(x, m, g, options::CDOptions; rng::AbstractRNG = default_rng(),
+                       lla::Union{Nothing, LLA} = nothing)
+  lla === nothing || return _solveLLA!(x, m, g, lla, options)
   convex = isconvex(g)
   path = options.numSteps > 0 && !(convex && options.warmStart)
   (path && !(g isa NormL1)) || return _solve!(x, m, g, options; rng)
   s = _solver(options; rng)
   fill!(x, zero(eltype(x)))
   solve!(x, m, g, s; continuation = options.numSteps, continuation_tol = convex ? sqrt(s.tol) : s.tol)
+end
+
+# One level of local linear approximation from zero. When every level starts
+# from the lasso (start = :lasso), the level does not depend on the others and
+# is solved directly; when it starts from the solution at the previous level,
+# along options.numSteps levels spaced geometrically from λmax, as in ncpen
+function _solveLLA!(x, m, g, method::LLA, options::CDOptions)
+  T = eltype(x)
+  fill!(x, zero(T))
+  method.start === :lasso && return solve!(x, m, g, method)
+  λmax, λ = lambda_max(m, g, x), T(g.λ)
+  (options.numSteps == 0 || !(zero(T) < λ < λmax)) && return solve!(x, m, g, method)
+  λs = exp.(range(log(λmax), log(λ); length = options.numSteps + 1))
+  path = solve_path(m, g, λs, method; x)
+  CDResults(x, path.values[end], sum(path.passes), all(path.converged), T(NaN), T(method.inner.tol),
+            sum(path.kkt_checks))
 end
 
 """

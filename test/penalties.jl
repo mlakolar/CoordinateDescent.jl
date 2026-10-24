@@ -147,6 +147,98 @@ atlevel(pen, λ) = pen isa MCP ? MCP(λ, pen.a) : SCAD(λ, pen.a)
     @test norm(Vector(pm.βpath[k])[1:5] - β[1:5]) < norm(Vector(pl.βpath[k])[1:5] - β[1:5])
   end
 
+  @testset "local linear approximation (lla)" begin
+    λ = 0.1
+    # the two-step estimator of Fan, Xue and Zou: the lasso, then the lasso with
+    # the weights p′(|b|)/λ at its solution, on the standardized columns
+    wmcp(b, λ, a) = max.(1 .- abs.(b) ./ (a * λ), 0.0)
+    wscad(b, λ, a) = [abs(t) <= λ ? 1.0 : max(a * λ - abs(t), 0.0) / ((a - 1) * λ) for t in b]
+    b1 = Vector(lasso(Xc, yc, λ; optTol = 1e-12).x)
+    for (pen, w) in ((MCP(1, 3), wmcp(b1, λ, 3)), (SCAD(1, 3.7), wscad(b1, λ, 3.7)))
+      sol = lasso(X, y, λ; penalty = pen, lla = LLA(), intercept = true, standardizeX = true, optTol = 1e-12)
+      b2 = lasso(Xc, yc, λ, w; optTol = 1e-12).x
+      @test Vector(sol.x) .* s ≈ Vector(b2) atol = 1e-7
+      @test sol.converged && sol.penalty == atlevel(pen, λ)
+    end
+
+    # CappedL1 by default iterates until the weights stop changing: the solution
+    # satisfies the optimality conditions of the weighted lasso with the weights
+    # (|bⱼ| < a) at itself, and the entries beyond the cap are not shrunk
+    a = 0.5
+    sol = lasso(X, y, λ; penalty = CappedL1(1, a), intercept = true, standardizeX = true, optTol = 1e-12)
+    b̃ = Vector(sol.x) .* s
+    w = Float64.(abs.(b̃) .< a)
+    grad = -Xc' * (yc - Xc * b̃) / n
+    @test maximum(j -> b̃[j] == 0 ? max(abs(grad[j]) - λ * w[j], 0.0) : abs(grad[j] + λ * w[j] * sign(b̃[j])), 1:p) < 1e-8
+    @test count(abs.(b̃) .> a) >= 3 && sol.converged && sol.penalty == CappedL1(λ, a)
+
+    # its path starts at λmax of the lasso, the slope at zero being λ, and with
+    # start = :lasso each level is that of lasso at the level
+    path = LassoPath(X, y; penalty = CappedL1(1, a), nλ = 20, intercept = true, optTol = 1e-12)
+    @test path.λpath[1] ≈ maximum(abs.(Xc' * yc / n)) * (1 + sqrt(eps()))
+    @test nnz(path.βpath[1]) == 0 && all(path.converged)
+    for k in (5, 10, 20)
+      solk = lasso(X, y, path.λpath[k]; penalty = CappedL1(1, a), intercept = true, standardizeX = true, optTol = 1e-12)
+      @test Vector(path.βpath[k]) ≈ Vector(solk.x) atol = 1e-6
+    end
+    # with warmStart = false each level is solved from zero, to the same solutions
+    pc = LassoPath(X, y, path.λpath[1:5]; penalty = CappedL1(1, a), intercept = true, warmStart = false, optTol = 1e-12)
+    @test all(k -> isapprox(Vector(pc.βpath[k]), Vector(path.βpath[k]); atol = 1e-6), 1:5)
+
+    # LogPenalty(λ, ε) has the slope λ/ε at zero, so λmax is ε times that of the lasso
+    pathl = LassoPath(X, y; penalty = LogPenalty(1, 0.5), nλ = 10, intercept = true, optTol = 1e-12)
+    @test pathl.λpath[1] ≈ 0.5 * maximum(abs.(Xc' * yc / n)) * (1 + sqrt(eps()))
+    @test nnz(pathl.βpath[1]) == 0 && nnz(pathl.βpath[end]) > 0
+    soll = lasso(X, y, pathl.λpath[8]; penalty = LogPenalty(1, 0.5), intercept = true, standardizeX = true,
+                 optTol = 1e-12)
+    @test soll.penalty == LogPenalty(pathl.λpath[8], 0.5)
+    @test Vector(soll.x) ≈ Vector(pathl.βpath[8]) atol = 1e-6
+
+    # start = :previous: lasso follows numSteps levels from λmax, as the path on
+    # the same levels does; with numSteps = 0 it starts from the lasso at λ
+    ll = LLA(; stages = 100, start = :previous)
+    λ10 = path.λpath[10]
+    sol = lasso(X, y, λ10; penalty = MCP(1, 3), lla = ll, intercept = true, standardizeX = true, optTol = 1e-12,
+                numSteps = 8)
+    λs = exp.(range(log(maximum(abs.(Xc' * yc / n))), log(λ10); length = 9))
+    pp = LassoPath(X, y, λs; penalty = MCP(1, 3), lla = ll, intercept = true, optTol = 1e-12)
+    @test Vector(sol.x) ≈ Vector(pp.βpath[end]) atol = 1e-8
+    sol0 = lasso(X, y, λ10; penalty = MCP(1, 3), lla = ll, intercept = true, standardizeX = true, optTol = 1e-12,
+                 numSteps = 0)
+    sol1 = lasso(X, y, λ10; penalty = MCP(1, 3), lla = LLA(; stages = 100), intercept = true, standardizeX = true,
+                 optTol = 1e-12)
+    @test Vector(sol0.x) ≈ Vector(sol1.x) atol = 1e-10
+
+    # the exact steps of MCP and SCAD refuse a column of variance at most 1/a
+    # without standardizeX; standardizeX or lla avoid the condition
+    Xs = copy(X); Xs[:, 4] .*= 0.1 / s[4]                 # variance 0.01
+    @test_throws ArgumentError lasso(Xs, y, λ; penalty = MCP(1, 3), intercept = true)
+    @test_throws ArgumentError LassoPath(Xs, y; penalty = SCAD(1, 3.7), standardizeX = false, intercept = true)
+    @test lasso(Xs, y, λ; penalty = MCP(1, 3), intercept = true, standardizeX = true).converged
+    soll = lasso(Xs, y, λ; penalty = MCP(1, 3), lla = LLA(), intercept = true, optTol = 1e-12)
+    c1 = Vector(lasso(Xs, y, λ; intercept = true, optTol = 1e-12).x)
+    @test Vector(soll.x) ≈ Vector(lasso(Xs, y, λ, wmcp(c1, λ, 3); intercept = true, optTol = 1e-12).x) atol = 1e-7
+
+    # CVLassoPath gives lla to its paths
+    cv = CVLassoPath(X, y; penalty = MCP(1, 3), lla = LLA(), nλ = 15, intercept = true, rng = Xoshiro(1))
+    full = LassoPath(X, y; penalty = MCP(1, 3), lla = LLA(), nλ = 15, intercept = true)
+    @test cv.λpath ≈ full.λpath
+    @test Vector(cv.path.βpath[end]) ≈ Vector(full.βpath[end]) atol = 1e-6
+
+    # lla is for these four penalties, without bounds, and the GLM fits refuse
+    # CappedL1 and LogPenalty
+    @test_throws ArgumentError lasso(X, y, λ; lla = LLA())
+    @test_throws ArgumentError lasso(X, y, λ; alpha = 0.5, lla = LLA())
+    @test_throws ArgumentError lasso(X, y, λ; penalty = ElasticNet(1, 0.1), lla = LLA())
+    @test_throws ArgumentError LassoPath(X, y; lla = LLA())
+    @test_throws ArgumentError lasso(X, y, λ; penalty = CappedL1(1, a), lower = 0)
+    @test_throws ArgumentError lasso(X, y, λ; penalty = MCP(1, 3), lla = LLA(), upper = 1)
+    @test_throws ArgumentError LassoPath(X, y; penalty = LogPenalty(1, 1), lower = -1)
+    yb = Float64.(y .> median(y))
+    @test_throws ArgumentError glmLasso(X, yb, 0.01; penalty = CappedL1(1, a))
+    @test_throws ArgumentError GLMLassoPath(X, yb; penalty = LogPenalty(1, 1))
+  end
+
   @testset "observation weights, sparse X, Float32" begin
     w = rand(Xoshiro(8), 1:3, n)
     idx = reduce(vcat, [fill(i, w[i]) for i in 1:n])

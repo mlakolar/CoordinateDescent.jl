@@ -87,6 +87,34 @@ each warm started from the previous one. The path of the elastic net at a
 fixed ``\alpha`` starts at ``\lambda_{\max}`` of the lasso divided by
 ``\alpha``.
 
+The exact coordinate steps of MCP and SCAD need each coordinate problem to be
+convex, ``a v_j > 1`` for MCP and ``(a - 1) v_j > 1`` for SCAD, where ``v_j``
+is the mean square of column ``j`` (centered with an intercept, weighted with
+weights). Standardized columns have ``v_j = 1``, so that ncvreg's conditions
+``a > 1`` and ``a > 2`` suffice; without `standardizeX`, a column with
+variance at most ``1/a`` fails, and the path throws an `ArgumentError`.
+
+### Local linear approximation
+
+`lla = LLA(...)` computes a nonconvex penalty by local linear approximation
+(reweighted ℓ1): a sequence of weighted lassos, each convex, with the weights
+``p_j'(|\beta_j|)/\lambda`` at the previous solution. Besides MCP and SCAD it
+takes the capped ℓ1 penalty `CappedL1(1, a)`, ``\lambda\min(|\beta_j|, a)``
+(T. Zhang 2010; the truncated ℓ1 penalty of Shen, Pan and Zhu 2012), and the
+log penalty `LogPenalty(1, ε)`, ``\lambda\log(1 + |\beta_j|/\varepsilon)``,
+which have no exact path:
+
+- `LLA()`, a lasso and one weighted lasso, is the two-step estimator of Fan,
+  Xue and Zou (2014), and needs no condition on ``a`` for MCP and SCAD;
+- `LLA(; stages = 100)` iterates until the weights stop changing, as the
+  multi-stage convex relaxation of Zhang (2010), the difference-of-convex
+  algorithm of Shen, Pan and Zhu (2012, glmtlp's `"tlp"`) and the reweighted ℓ1
+  of Candès, Wakin and Boyd (2008); `CappedL1` and `LogPenalty` use it when
+  `lla` is not given;
+- `start = :previous` takes the first weights of each level from the solution
+  at the previous level, as ncpen does, instead of starting each level from the
+  lasso.
+
 ## Bounds on the coefficients
 
 `lower` and `upper` restrict the coefficients to a box,
