@@ -922,4 +922,67 @@ end
   @test rand() == u
 end
 
+@testset "matrix and vector types" begin
+  n, p, s = 60, 25, 4
+  rng = Xoshiro(21)
+  X = randn(rng, n, p)
+  Y = X[:, 1:s] * ones(s) + 0.5 * randn(rng, n)
+  λ = 0.05
+  opt = CDOptions(; optTol = 1e-12, order = :cyclic)
+  close(a, b) = isapprox(Vector(a.x), Vector(b.x); atol = 1e-8) && isapprox(a.intercept, b.intercept; atol = 1e-8)
+
+  # the same solution from every type of the same matrix: a transpose or adjoint
+  # (copied once), a SparseMatrixCSC (kept sparse) and a view of some columns
+  # (read in place)
+  ref = lasso(X, Y, λ, opt; intercept = true, standardizeX = true)
+  for Xd in (copy(X')', transpose(copy(transpose(X))), sparse(X), view([X randn(rng, n)], :, 1:p))
+    @test close(lasso(Xd, Y, λ, opt; intercept = true, standardizeX = true), ref)
+    @test close(lasso(Xd, Y, λ, ones(p), opt), lasso(X, Y, λ, ones(p), opt))
+    @test close(sqrtLasso(Xd, Y, 1.0, opt), sqrtLasso(X, Y, 1.0, opt))
+    @test close(scaledLasso(Xd, Y, λ, ones(p), IterLassoOptions(; optionsCD = opt); intercept = true),
+                scaledLasso(X, Y, λ, ones(p), IterLassoOptions(; optionsCD = opt); intercept = true))
+    @test close(feasibleLasso!(SparseIterate(p), Xd, Y, λ, IterLassoOptions(; optionsCD = opt); intercept = true),
+                feasibleLasso!(SparseIterate(p), X, Y, λ, IterLassoOptions(; optionsCD = opt); intercept = true))
+    P1, P2 = LassoPath(Xd, Y, opt; nλ = 8, intercept = true), LassoPath(X, Y, opt; nλ = 8, intercept = true)
+    @test P1.λpath ≈ P2.λpath && all(isapprox.(P1.βpath, P2.βpath; atol = 1e-8))
+    R1, R2 = refitLassoPath(P1, Xd, Y), refitLassoPath(P2, X, Y)
+    @test keys(R1) == keys(R2) && all(isapprox(R1[S], R2[S]; atol = 1e-8) for S in keys(R1))
+  end
+
+  # rows selected by a view: a range of rows is read in place, a vector of rows
+  # is copied once; the response may be a view as well
+  for rows in (1:2:n, randperm(rng, n)[1:40])
+    @test close(lasso(view(X, rows, :), view(Y, rows), λ, opt; intercept = true),
+                lasso(X[rows, :], Y[rows], λ, opt; intercept = true))
+  end
+
+  # a sparse design stays sparse, also in its loadings, means and refits
+  Xs = sprandn(rng, n, p, 0.3)
+  Xs[:, 3] .= 2.0                                     # a constant column
+  Xs[:, 5] .= 0.0                                     # an empty one, which stores zeros
+  Ys = Matrix(Xs)[:, 1:s] * ones(s) + 0.5 * randn(rng, n)
+  @test CoordinateDescent._design(Xs) === Xs
+  @test CoordinateDescent._design(transpose(sparse(Matrix(Xs)'))) isa SparseMatrixCSC
+  @test CoordinateDescent._column_means(Xs) ≈ CoordinateDescent._column_means(Matrix(Xs))
+  @test CoordinateDescent._column_means(Xs)[[3, 5]] == [2.0, 0.0]          # exactly, as for dense columns
+  for intercept in (false, true)
+    @test CoordinateDescent._loadings(Xs, intercept) ≈ CoordinateDescent._loadings(Matrix(Xs), intercept)
+  end
+  e, xbar = randn(rng, n), CoordinateDescent._column_means(Matrix(Xs))
+  @test CoordinateDescent._getLoadings!(zeros(p), Xs, e, xbar) ≈ CoordinateDescent._getLoadings!(zeros(p), Matrix(Xs), e, xbar)
+  @test close(lasso(Xs, Ys, λ, opt; intercept = true, standardizeX = true),
+              lasso(Matrix(Xs), Ys, λ, opt; intercept = true, standardizeX = true))
+  @test close(feasibleLasso!(SparseIterate(p), Xs, Ys, λ, IterLassoOptions(; optionsCD = opt); intercept = true),
+              feasibleLasso!(SparseIterate(p), Matrix(Xs), Ys, λ, IterLassoOptions(; optionsCD = opt); intercept = true))
+
+  # integer and Float32 data of other array types are converted as before
+  @test close(lasso(transpose(round.(Int, 10 * X)'), Y, λ, opt), lasso(Float64.(round.(Int, 10 * X)), Y, λ, opt))
+  @test eltype(lasso(sparse(Float32.(X)), Float32.(Y), λ; optTol = 1e-5).x) == Float32
+  # and so are integer data for the refits of a path
+  Xi = round.(Int, 10 * X)
+  Pi = LassoPath(Float64.(Xi), Y, opt; nλ = 8, intercept = true)
+  Ri, Rf = refitLassoPath(Pi, Xi, Y), refitLassoPath(Pi, Float64.(Xi), Y)
+  @test keys(Ri) == keys(Rf) && all(Ri[S] == Rf[S] for S in keys(Rf))
+end
+
 end
