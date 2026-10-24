@@ -112,6 +112,8 @@ end
     @test length(last(pathm.activegroups)) > 3 && all(length(a) <= 3 for a in pathm.activegroups[1:end-1])
     pathn = GroupLassoPath(X, y, range(1.0, 0.1; length = 5), groups; standardize = :none)
     @test length(pathn.λpath) == 5
+    # integer data
+    @test GroupLassoPath(round.(Int, 10X), round.(Int, 10y), groups; nλ = 5).λpath isa Vector{Float64}
   end
 end
 
