@@ -42,8 +42,10 @@ function _localdesign(X::AbstractMatrix{T}, z::AbstractVector{T}, w, kernel, h::
   idx, v, Z
 end
 
-# the estimates of βⱼ⁽ʳ⁾(z₀) from the coefficients θ of the local fit
-function _derivatives!(B::AbstractArray{T, 3}, g::Int, θ::AbstractVector, h::T, q::Int) where {T}
+# the estimates of βⱼ⁽ʳ⁾(z₀) from the coefficients θ of the local fit, stored in
+# B[:, :, g]; the arguments are not typed, so that JET's analysis of the
+# callers with an unknown element type finds the method
+function _derivatives!(B, g::Int, θ, h, q::Int)
   for j in axes(B, 1), r in 0:q
     B[j, r+1, g] = θ[_coefrange(j, q)[r+1]] * factorial(r) / h^r
   end
