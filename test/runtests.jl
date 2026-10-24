@@ -9,6 +9,7 @@ tests = [
   "penalties",
   "bounds",
   "glm",
+  "glm_penalties",
   "group",
   "multiresponse",
   "hdm",
