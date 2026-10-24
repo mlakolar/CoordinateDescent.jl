@@ -87,11 +87,13 @@ for T in (LassoPath, CVLassoPath)
   end
 end
 
-function StatsAPI.fit(::Type{GLMLassoPath}, f::FormulaTerm, data, args...; contrasts = Dict{Symbol, Any}(),
-                      weights = nothing, offset = nothing, kwargs...)
-  _checkkeywords(kwargs)
-  _formulafit(f, data; contrasts, weights, offset) do X, y, intercept, groups, w, o
-    GLMLassoPath(X, y, args...; intercept, weights = w, offset = o, kwargs...)
+for T in (GLMLassoPath, CVGLMLassoPath)
+  @eval function StatsAPI.fit(::Type{$T}, f::FormulaTerm, data, args...; contrasts = Dict{Symbol, Any}(),
+                              weights = nothing, offset = nothing, kwargs...)
+    _checkkeywords(kwargs)
+    _formulafit(f, data; contrasts, weights, offset) do X, y, intercept, groups, w, o
+      $T(X, y, args...; intercept, weights = w, offset = o, kwargs...)
+    end
   end
 end
 

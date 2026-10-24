@@ -6,6 +6,7 @@ tests = [
   "coordinate_descent",
   "lasso",
   "cv",
+  "cv_glm",
   "penalties",
   "bounds",
   "glm",

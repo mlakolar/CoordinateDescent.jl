@@ -57,6 +57,7 @@ export
   # generalized linear models
   glmLasso,
   GLMLassoPath,
+  CVGLMLassoPath,
 
   # the group lasso
   groupLasso,

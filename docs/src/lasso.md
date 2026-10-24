@@ -138,7 +138,16 @@ descent, then backtracks. [`GLMLassoPath`](@ref) computes the solutions along a
 decreasing sequence of levels with the strong rule, and stops once the fit
 explains a fraction `devmax = 0.999` of the null deviance, as glmnet does:
 along a logistic path on separable data the coefficients grow without bound.
-The solution reports the `deviance` and the `nulldeviance`.
+The solution reports the `deviance` and the `nulldeviance`. `alpha` and
+`penalty` give the elastic net, MCP and SCAD, and `adaptiveLasso(X, y, λ, loss)`
+the adaptive lasso, as for least squares.
+
+[`CVGLMLassoPath`](@ref)`(X, y, loss)` chooses the level by ``K``-fold
+cross-validation, as [`CVLassoPath`](@ref) does for least squares, with the
+held-out measures of glmnet's `cv.glmnet`: the deviance (the default), the mean
+squared or absolute error of the predicted means, or the misclassification
+rate for logistic regression. Weights and offsets follow the observations into
+the folds.
 
 ## The square-root lasso
 

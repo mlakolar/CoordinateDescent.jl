@@ -73,6 +73,7 @@ sol = lasso(X, y, 0.1; lower=0)                  # the nonnegative lasso; also u
 sol = adaptiveLasso(X, y, 0.1)                   # loadings 1/|β̃ⱼ| from a first lasso
 yb = Float64.(rand(n) .< 1 ./ (1 .+ exp.(-X[:, 1])))
 sol = glmLasso(X, yb, 0.02)                      # logistic regression; also Poisson
+cv = CVGLMLassoPath(X, yb)                       # λ by cross-validation of the deviance
 sol = groupLasso(X, y, 0.1, [1:5, 6:10, 11:50])  # the group lasso, with orthonormalized groups
 sol = multiLasso(X, [y y.^2], 0.1)               # the same predictors for every response
 ```
