@@ -124,5 +124,10 @@ function StatsAPI.predict(path::LassoPath{T}, X::AbstractMatrix{<:Real}) where {
   Ŷ .+= transpose(path.β0path)
 end
 
+"""
+    fit(LassoPath, X, y, args...; kwargs...)
+
+The same as [`LassoPath`](@ref)`(X, y, args...; kwargs...)`.
+"""
 StatsAPI.fit(::Type{LassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) =
   LassoPath(X, y, args...; kwargs...)
