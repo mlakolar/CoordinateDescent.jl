@@ -358,9 +358,9 @@ parentheses:
 and "loose" is `CDOptions(; optTol = 1e-4)` with `newtonTol = 1e-5`.
 
 - **Against glmnet.**
-  - At their defaults, glmnet stops 100 to 1000 times further from the solution than `glmLasso`, which takes 0.6–1.5 times its time.
+  - At their defaults, glmnet stops 400 to 7000 times further from the solution than `glmLasso`, which takes 0.6–1.5 times its time.
   - At glmnet's accuracy or better, `glmLasso` with loose tolerances is 1.3–3 times faster.
   - At glmnet's tolerance 1e-10, which still leaves glmnet's paths less accurate than `glmLasso`'s defaults, `glmLasso` is 1.1–3.7 times faster.
 - **Against Lasso.jl.**
-  - On logistic paths, Lasso.jl at its defaults is 2.6–3.8 times faster than `glmLasso` at its defaults, and 10–100 times less accurate. With loose tolerances `glmLasso` takes 1.0–1.8 times Lasso.jl's time, at a similar accuracy.
+  - On logistic paths, Lasso.jl at its defaults is 2.6–3.8 times faster than `glmLasso` at its defaults, and 500 to 7000 times less accurate. With loose tolerances `glmLasso` takes 1.0–1.8 times Lasso.jl's time, and is still 2–5 times more accurate.
   - On Poisson paths, `glmLasso` is faster at the largest size (0.57) and within 1.6 times elsewhere.
