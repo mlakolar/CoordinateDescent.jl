@@ -152,6 +152,7 @@ StatsAPI.fit(::Type{LassoPath}, X::AbstractMatrix, y::AbstractVector, args...; k
 """
     fit(CVLassoPath, X, y, args...; kwargs...)
     fit(GLMLassoPath, X, y, args...; kwargs...)
+    fit(CVGLMLassoPath, X, y, args...; kwargs...)
     fit(GroupLassoPath, X, y, args...; kwargs...)
     fit(MultiLassoPath, X, Y, args...; kwargs...)
 
@@ -162,6 +163,8 @@ StatsAPI.fit(::Type{CVLassoPath}, X::AbstractMatrix, y::AbstractVector, args...;
   CVLassoPath(X, y, args...; kwargs...)
 StatsAPI.fit(::Type{GLMLassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) =
   GLMLassoPath(X, y, args...; kwargs...)
+StatsAPI.fit(::Type{CVGLMLassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) =
+  CVGLMLassoPath(X, y, args...; kwargs...)
 StatsAPI.fit(::Type{GroupLassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) =
   GroupLassoPath(X, y, args...; kwargs...)
 StatsAPI.fit(::Type{MultiLassoPath}, X::AbstractMatrix, Y::AbstractMatrix, args...; kwargs...) =

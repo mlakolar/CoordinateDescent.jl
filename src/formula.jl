@@ -18,7 +18,7 @@ grp = groupLasso(@formula(y ~ x1 + region + x2 & region), data, 0.05)   # a grou
 ```
 
 The formula methods are `fit` with [`LassoPath`](@ref), [`CVLassoPath`](@ref),
-[`GLMLassoPath`](@ref) and [`GroupLassoPath`](@ref), and [`lasso`](@ref),
+[`GLMLassoPath`](@ref), [`CVGLMLassoPath`](@ref) and [`GroupLassoPath`](@ref), and [`lasso`](@ref),
 [`sqrtLasso`](@ref), [`adaptiveLasso`](@ref), [`glmLasso`](@ref),
 [`groupLasso`](@ref) and [`rlasso`](@ref) with the formula and the table in
 place of `X` and `y`. The other arguments and keywords are those of the

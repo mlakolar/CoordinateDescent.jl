@@ -63,6 +63,10 @@ dependent data. With `threads`, the folds run as tasks on the available
 threads; each fold draws its random coordinate orders from a generator seeded
 from `rng`, so that the result does not depend on the number of threads.
 
+Observation `weights` and an `offset` (see [`lasso`](@ref)) follow the
+observations into the folds. The fold errors are then the weighted mean squared
+errors of `y - offset`, and the folds are weighted by their sums of weights.
+
 Returns a [`CVLassoPath`](@ref); `coef(cv)` and `predict(cv, X)` use the
 solution at `λ1se`, or at `λmin` with `λ = :λmin`.
 """
@@ -70,47 +74,85 @@ function CVLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, options::CDOpti
                      nfolds::Integer = 10, folds::Union{Nothing, AbstractVector{<:Integer}} = nothing,
                      rng::AbstractRNG = default_rng(), threads::Bool = true, nλ::Integer = 100,
                      λminratio::Real = (size(X, 1) < size(X, 2) ? 0.01 : 1e-4),
+                     weights::Union{Nothing, AbstractVector{<:Real}} = nothing,
+                     offset::Union{Nothing, AbstractVector{<:Real}} = nothing,
                      kwargs...) where {T<:AbstractFloat}
   n = size(X, 1)
   length(y) == n || throw(DimensionMismatch("X has $n rows and y has length $(length(y))"))
+  fl, K = _foldlabels(rng, n, nfolds, folds)
+  w, o = _weights(T, weights, n), _offset(T, offset, n)
+
+  seeds = rand(rng, UInt64, K + 1)
+  path = LassoPath(X, y, options; nλ, λminratio, rng = Xoshiro(seeds[end]), _wo(w, o)..., kwargs...)
+  λs = path.λpath
+  errs = fill(T(NaN), K, length(λs))
+  function fold!(k)
+    train, test = findall(!=(k), fl), findall(==(k), fl)
+    fp = LassoPath(X[train, :], y[train], λs, options; rng = Xoshiro(seeds[k]),
+                   _wo(_rows(w, train), _rows(o, train))..., kwargs...)
+    Ŷ = predict(fp, X[test, :])
+    for j in axes(Ŷ, 2)
+      errs[k, j] = _wmean(i -> abs2(y[test[i]] - _entry(o, test[i]) - Ŷ[i, j]), _rows(w, test), length(test))
+    end
+  end
+  _runfolds(fold!, K, threads)
+  cvm, cvse, jmin, j1se = _cvsummary(errs, _foldweights(T, fl, K, w))
+  CVLassoPath{T}(path, λs, cvm, cvse, [nnz(β) for β in path.βpath], λs[jmin], λs[j1se], fl)
+end
+
+# the fold of each of n observations, drawn from rng or the labels given, and
+# the number of folds K
+function _foldlabels(rng::AbstractRNG, n::Integer, nfolds::Integer, folds)
   fl = folds === nothing ? _folds(rng, n, nfolds) : collect(Int, folds)
   length(fl) == n || throw(DimensionMismatch("folds must have one label per observation"))
   K = maximum(fl)
   K >= 2 && all(k -> any(==(k), fl), 1:K) ||
     throw(ArgumentError("the fold labels must be 1, …, K for some K ≥ 2, each used at least once"))
+  fl, K
+end
 
-  seeds = rand(rng, UInt64, K + 1)
-  path = LassoPath(X, y, options; nλ, λminratio, rng = Xoshiro(seeds[end]), kwargs...)
-  λs = path.λpath
-  L = length(λs)
-  errs = fill(T(NaN), K, L)
-  function fold!(k)
-    train, test = findall(!=(k), fl), findall(==(k), fl)
-    fp = LassoPath(X[train, :], y[train], λs, options; rng = Xoshiro(seeds[k]), kwargs...)
-    Ŷ = predict(fp, X[test, :])
-    for j in axes(Ŷ, 2)
-      errs[k, j] = sum(i -> abs2(y[test[i]] - Ŷ[i, j]), eachindex(test)) / length(test)
-    end
-  end
+# the rows idx of the observation weights or the offset (nothing for none), the
+# entry i (zero for no offset), and the keywords that pass them on
+_rows(::Nothing, idx) = nothing
+_rows(v::AbstractVector, idx) = v[idx]
+_entry(::Nothing, i::Integer) = false
+_entry(v::AbstractVector, i::Integer) = v[i]
+_wo(w, o) = (; (w === nothing ? () : (weights = w,))..., (o === nothing ? () : (offset = o,))...)
+
+# the mean of f(i), i = 1, …, m, weighted by w (nothing for equal weights)
+_wmean(f, ::Nothing, m::Integer) = sum(f, 1:m) / m
+_wmean(f, w::AbstractVector, m::Integer) = sum(i -> w[i] * f(i), 1:m) / sum(w)
+
+# the weight of each fold in the averages: its number of observations, or the
+# sum of their weights
+_foldweights(::Type{T}, fl, K, ::Nothing) where {T} = T[count(==(k), fl) for k in 1:K]
+_foldweights(::Type{T}, fl, K, w::AbstractVector) where {T} = T[sum(w[i] for i in eachindex(fl) if fl[i] == k) for k in 1:K]
+
+function _runfolds(fold!, K::Integer, threads::Bool)
   if threads
     foreach(wait, [Threads.@spawn fold!(k) for k in 1:K])
   else
     foreach(fold!, 1:K)
   end
+end
 
-  nk = [count(==(k), fl) for k in 1:K]
+# The weighted mean cvm of the fold errors errs (K × L, NaN at the levels a fold
+# path did not reach) and its standard error cvse at each level, as in glmnet,
+# the level jmin that minimizes cvm, and the first (largest) level j1se whose
+# cvm is within cvse of the minimum.
+function _cvsummary(errs::Matrix{T}, wk::Vector{T}) where {T}
+  K, L = size(errs)
   cvm, cvse = Vector{T}(undef, L), Vector{T}(undef, L)
   for j in 1:L
     ok = findall(k -> !isnan(errs[k, j]), 1:K)
-    w = nk[ok]
+    w = wk[ok]
     m = sum(w .* errs[ok, j]) / sum(w)
     cvm[j] = m
     cvse[j] = length(ok) > 1 ? sqrt(sum(w .* abs2.(errs[ok, j] .- m)) / sum(w) / (length(ok) - 1)) : T(NaN)
   end
   jmin = argmin(cvm)
   bound = cvm[jmin] + (isnan(cvse[jmin]) ? zero(T) : cvse[jmin])
-  j1se = findfirst(j -> cvm[j] <= bound, 1:jmin)
-  CVLassoPath{T}(path, λs, cvm, cvse, [nnz(β) for β in path.βpath], λs[jmin], λs[j1se], fl)
+  cvm, cvse, jmin, findfirst(j -> cvm[j] <= bound, 1:jmin)
 end
 
 function CVLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, options::CDOptions = CDOptions(); kwargs...)
@@ -118,9 +160,9 @@ function CVLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, optio
   CVLassoPath(Xf, yf, options; kwargs...)
 end
 
-_cvlevel(cv::CVLassoPath, λ::Symbol) = λ === :λ1se ? cv.λ1se : λ === :λmin ? cv.λmin :
+_cvlevel(cv, λ::Symbol) = λ === :λ1se ? cv.λ1se : λ === :λmin ? cv.λmin :
   throw(ArgumentError("λ must be :λ1se, :λmin or a number, but it is :$λ."))
-_cvlevel(cv::CVLassoPath, λ::Real) = λ
+_cvlevel(cv, λ::Real) = λ
 
 """
     coef(cv::CVLassoPath; λ = :λ1se)
@@ -196,3 +238,151 @@ path; see [`ebic`](@ref).
 """
 StatsAPI.bic(path::LassoPath, X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}) =
   _criterion(path, X, y, (df, s) -> log(length(y)) * df)
+
+######################################################################
+#
+#   Cross-validation of penalized generalized linear models
+#
+######################################################################
+
+"""
+    CVGLMLassoPath
+
+Result returned by [`CVGLMLassoPath`](@ref)`(X, y, loss)`.
+
+# Fields
+- `path::GLMLassoPath`: the path on all the data
+- `λpath::Vector`: its levels, the grid of every fold
+- `cvm::Vector`, `cvse::Vector`: the cross-validated measure at each level, and
+  its standard error
+- `nnz::Vector{Int}`: the number of nonzero coefficients of `path` at each level
+- `λmin`, `λ1se`: the level with the smallest `cvm`, and the largest level
+  whose `cvm` is within one standard error of it
+- `folds::Vector{Int}`: the fold of each observation
+- `measure::Symbol`: the measure of the held-out error
+"""
+struct CVGLMLassoPath{T<:AbstractFloat, L}
+  path::GLMLassoPath{T, L}
+  λpath::Vector{T}
+  cvm::Vector{T}
+  cvse::Vector{T}
+  nnz::Vector{Int}
+  λmin::T
+  λ1se::T
+  folds::Vector{Int}
+  measure::Symbol
+end
+
+"""
+    CVGLMLassoPath(X, y, loss = ProximalBase.Logistic(), options = CDOptions(); measure = :deviance,
+                   nfolds = 10, folds = nothing, rng = Random.default_rng(), threads = true, nλ = 100,
+                   λminratio, weights = nothing, offset = nothing, kwargs...)
+
+K-fold cross-validation of the path of [`GLMLassoPath`](@ref) (with the same
+loss, options and keywords, such as `intercept`, `standardizeX`, `alpha` or
+`penalty`), as [`CVLassoPath`](@ref) does for least squares, with glmnet's
+measures of the held-out error (`type.measure` of `cv.glmnet`):
+
+- `:deviance`, the default: `2 ∑ᵢ wᵢ (ℓ(ηᵢ, yᵢ) - minᵤ ℓ(u, yᵢ)) / ∑ᵢ wᵢ`, for
+  the logistic and Poisson losses;
+- `:mse` and `:mae`: the mean squared and absolute errors of the predicted
+  means `μᵢ` (probabilities for logistic regression);
+- `:class`: the misclassification rate of `μᵢ > 1/2`, for logistic regression.
+
+The path on all the data gives the levels; each fold's path is computed on the
+other folds at those levels, with their observation `weights` and `offset`,
+and the measure is computed on the held-out fold, weighted by its weights and
+with its offset in the linear predictor. `cvm` averages the folds, weighted by
+their sums of weights (their sizes without weights), and `cvse` is its standard
+error, `λmin` minimizes `cvm` and `λ1se` is the largest level within `cvse` of
+the minimum. A fold path that stops early (`max_hat_s`, `devmax`) leaves its
+remaining levels out of the averages. The folds and threads are as for
+[`CVLassoPath`](@ref): the result does not depend on the number of threads.
+
+Returns a [`CVGLMLassoPath`](@ref); `coef(cv)` and `predict(cv, X)` use the
+solution at `λ1se`, or at `λmin` with `λ = :λmin`.
+"""
+function CVGLMLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T},
+                        loss::ProximalBase.ScalarLoss = ProximalBase.Logistic(), options::CDOptions = CDOptions();
+                        measure::Symbol = :deviance, nfolds::Integer = 10,
+                        folds::Union{Nothing, AbstractVector{<:Integer}} = nothing,
+                        rng::AbstractRNG = default_rng(), threads::Bool = true, nλ::Integer = 100,
+                        λminratio::Real = (size(X, 1) < size(X, 2) ? 0.01 : 1e-4),
+                        weights::Union{Nothing, AbstractVector{<:Real}} = nothing,
+                        offset::Union{Nothing, AbstractVector{<:Real}} = nothing,
+                        kwargs...) where {T<:AbstractFloat}
+  _checkmeasure(loss, measure, T)
+  n = size(X, 1)
+  length(y) == n || throw(DimensionMismatch("X has $n rows and y has length $(length(y))"))
+  fl, K = _foldlabels(rng, n, nfolds, folds)
+  w = weights === nothing ? nothing : convert(Vector{T}, weights)
+  o = offset === nothing ? nothing : convert(Vector{T}, offset)
+  w === nothing || length(w) == n || throw(DimensionMismatch("weights has length $(length(w)), but X has $n rows"))
+  o === nothing || length(o) == n || throw(DimensionMismatch("offset has length $(length(o)), but X has $n rows"))
+
+  seeds = rand(rng, UInt64, K + 1)
+  path = GLMLassoPath(X, y, loss, options; nλ, λminratio, weights = w, offset = o, rng = Xoshiro(seeds[end]),
+                      kwargs...)
+  λs = path.λpath
+  errs = fill(T(NaN), K, length(λs))
+  function fold!(k)
+    train, test = findall(!=(k), fl), findall(==(k), fl)
+    fp = GLMLassoPath(X[train, :], y[train], λs, loss, options; weights = _rows(w, train), offset = _rows(o, train),
+                      rng = Xoshiro(seeds[k]), kwargs...)
+    H = predict(fp, X[test, :]; type = :link, offset = _rows(o, test))
+    for j in axes(H, 2)
+      errs[k, j] = _wmean(i -> _cvmeasure(loss, measure, H[i, j], y[test[i]]), _rows(w, test), length(test))
+    end
+  end
+  _runfolds(fold!, K, threads)
+  cvm, cvse, jmin, j1se = _cvsummary(errs, _foldweights(T, fl, K, w))
+  CVGLMLassoPath{T, typeof(loss)}(path, λs, cvm, cvse, [nnz(β) for β in path.βpath], λs[jmin], λs[j1se], fl,
+                                  measure)
+end
+
+function CVGLMLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real},
+                        loss::ProximalBase.ScalarLoss = ProximalBase.Logistic(), options::CDOptions = CDOptions();
+                        kwargs...)
+  T, Xf, yf = _float_data(X, y)
+  CVGLMLassoPath(Xf, yf, loss, options; kwargs...)
+end
+
+function _checkmeasure(loss, measure::Symbol, ::Type{T}) where {T}
+  measure in (:deviance, :mse, :mae, :class) ||
+    throw(ArgumentError("measure must be :deviance, :mse, :mae or :class, but it is :$measure."))
+  measure === :class && !(loss isa ProximalBase.Logistic) &&
+    throw(ArgumentError("measure = :class needs logistic regression."))
+  measure === :deviance && isnan(ProximalSolvers._saturated(loss, one(T))) &&
+    throw(ArgumentError("the deviance of the loss $(typeof(loss)) is not known; use measure = :mse or :mae."))
+  measure in (:mse, :mae) && _inverselink(loss, zero(T))      # throws when the mean of the response is not known
+  nothing
+end
+
+# the held-out error of one observation with linear predictor η and response y
+function _cvmeasure(loss, measure::Symbol, η::T, y::T) where {T}
+  measure === :deviance && return 2 * (T(loss(η, y)) - ProximalSolvers._saturated(loss, y))
+  μ = _inverselink(loss, η)
+  measure === :mse && return abs2(y - μ)
+  measure === :mae && return abs(y - μ)
+  T((μ > 1 / 2) != (y > 1 / 2))                              # :class
+end
+
+"""
+    coef(cv::CVGLMLassoPath; λ = :λ1se)
+    predict(cv::CVGLMLassoPath, X; λ = :λ1se, type = :response, offset = nothing)
+
+The coefficients (`[β₀; β]` with an intercept), and the predictions at the rows
+of `X` on the scale of the response or of the linear predictor (see
+[`glmLasso`](@ref)), of the path on all the data at `cv.λ1se`, at `cv.λmin` with
+`λ = :λmin`, or at a level `λ` within the path.
+"""
+StatsAPI.coef(cv::CVGLMLassoPath; λ::Union{Symbol, Real} = :λ1se) = coef(cv.path, _cvlevel(cv, λ))
+
+function StatsAPI.predict(cv::CVGLMLassoPath, X::AbstractMatrix{<:Real}; λ::Union{Symbol, Real} = :λ1se,
+                          type::Symbol = :response, offset = nothing)
+  b = coef(cv; λ)
+  p = length(b) - cv.path.intercept
+  _checkcolumns(X, p)
+  η = cv.path.intercept ? Vector(X * b[2:end]) .+ b[1] : Vector(X * b)
+  _glmscale(cv.path.loss, _addoffset!(η, offset), type)
+end
