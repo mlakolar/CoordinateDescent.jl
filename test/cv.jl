@@ -34,6 +34,7 @@ using LinearAlgebra, Random, SparseArrays, Statistics, Test
     b = coef(cv)
     @test predict(cv, X) ≈ b[1] .+ X * b[2:end]
     @test_throws ArgumentError coef(cv; λ = :bogus)
+    @test coef(cv; λ = cv.λpath[5]) == coef(cv.path, cv.λpath[5])
     # random folds are balanced, and reproducible from the generator, with or
     # without threads
     cv1 = CVLassoPath(X, y; nfolds = 7, nλ = 20, rng = Xoshiro(3))
@@ -46,6 +47,8 @@ using LinearAlgebra, Random, SparseArrays, Statistics, Test
     # the levels of the fold paths that stop early are left out
     cvs = CVLassoPath(X, y; folds, nλ = 30, max_hat_s = 10)
     @test all(isfinite, cvs.cvm)
+    # integer data
+    @test CVLassoPath(round.(Int, 10X), round.(Int, 10y); nfolds = 3, nλ = 5, rng = Xoshiro(5)).λpath isa Vector{Float64}
   end
 
   @testset "information criteria" begin

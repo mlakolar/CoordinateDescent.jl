@@ -92,9 +92,8 @@ function CVLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, options::CDOpti
       errs[k, j] = sum(i -> abs2(y[test[i]] - Ŷ[i, j]), eachindex(test)) / length(test)
     end
   end
-  if threads && Threads.nthreads() > 1
-    tasks = [Threads.@spawn fold!(k) for k in 1:K]
-    foreach(wait, tasks)
+  if threads
+    foreach(wait, [Threads.@spawn fold!(k) for k in 1:K])
   else
     foreach(fold!, 1:K)
   end
