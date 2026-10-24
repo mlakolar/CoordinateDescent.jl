@@ -311,7 +311,7 @@ function _findLargestCorrelations(
   storage = Array{T}(undef, p)
   mul!(storage, transpose(X), y)
   @. storage = abs(storage)
-  S = storage .>= nlargest(s, storage)[end]
+  S = storage .>= _sthlargest(storage, s)
 end
 
 function _findLargestCorrelations(
@@ -329,8 +329,11 @@ function _findLargestCorrelations(
     end
     storage[j] = abs(val)
   end
-  S = storage .>= nlargest(s, storage)[end]
+  S = storage .>= _sthlargest(storage, s)
 end
+
+# the s-th largest entry of v, or its smallest when s > length(v)
+_sthlargest(v::AbstractVector, s::Int) = partialsort(v, min(s, length(v)); rev = true)
 
 
 # column scales out[j] = sqrt(∑ᵢ X[i,j]² / n), without centering

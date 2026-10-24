@@ -797,6 +797,22 @@ end
   @test_throws ArgumentError IterLassoOptions(;σinit=0)
 end
 
+@testset "the columns most correlated with y" begin
+  # |X'y| = (3, 1, 3, 2, 1): the two largest are columns 1 and 3, the three
+  # largest also column 4, and the four largest, with the tie at 1, all
+  X = Matrix(1.0I, 5, 5)
+  y = [3.0, -1.0, -3.0, 2.0, 1.0]
+  find = CoordinateDescent._findLargestCorrelations
+  @test find(X, y, 1) == find(X, y, 2) == [true, false, true, false, false]
+  @test find(X, y, 3) == [true, false, true, true, false]
+  @test find(X, y, 4) == trues(5)
+  @test find(X, y, 9) == trues(5)                     # s larger than p: all columns
+  @test find(ones(5), X, y, 3) == find(X, y, 3)       # the weighted form
+  w = [1.0, 1.0, 1.0, 1.0, 4.0]                       # |w .* y| = (3, 1, 3, 2, 4)
+  @test find(w, X, y, 1) == [false, false, false, false, true]
+  @test find(w, X, y, 2) == [true, false, true, false, true]
+end
+
 @testset "sqrt-lasso near a perfect fit" begin
   # with y on the span of a column, ‖r‖² - (X[:, k]'r)² / ‖X[:, k]‖² is zero
   # up to rounding, which made its square root throw a DomainError
