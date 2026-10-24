@@ -413,3 +413,37 @@ and "loose" is `CDOptions(; optTol = 1e-4)` with `newtonTol = 1e-5`.
 - **Against Lasso.jl.**
   - On logistic paths, Lasso.jl at its defaults is 2.6–3.8 times faster than `glmLasso` at its defaults, and 500 to 7000 times less accurate. With loose tolerances `glmLasso` takes 1.0–1.8 times Lasso.jl's time, and is still 2–5 times more accurate.
   - On Poisson paths, `glmLasso` is faster at the largest size (0.57) and within 1.6 times elsewhere.
+
+## glm_penalties/
+
+`glm_penalties/compare_glm_penalties.jl` compares `GLMLassoPath` with `alpha`
+against R's glmnet 5.1 and with MCP and SCAD against R's ncvreg 3.16.0, for
+logistic regression on three designs (n = 400, p = 40, AR(0.5); n = 600,
+p = 100; n = 150, p = 300) and Poisson regression on one (n = 400, p = 40), at
+the same 25 levels from λmax down to 5% of it:
+
+```sh
+julia --project=benchmark/glm_penalties benchmark/glm_penalties/compare_glm_penalties.jl gen DIR
+Rscript benchmark/glm_penalties/compare_glm_penalties.R DIR      # needs glmnet and ncvreg
+julia --project=benchmark/glm_penalties benchmark/glm_penalties/compare_glm_penalties.jl compare DIR
+```
+
+Results on Discovery (runs `20261024T1234Z-cd-glm-penalties` and
+`20261024T1259Z-cd-glm-penalties2`, the second with ProximalSolvers#65):
+
+- **The elastic net equals glmnet's** (α ∈ {0.2, 0.5, 0.8}): identical supports
+  at all levels and coefficients within 3e-6 on all four designs.
+- **MCP and SCAD are stationary:** the largest violation of the stationarity
+  conditions over a path is below 5e-13 on the three designs with n > p,
+  and below 3e-5 on the design with p > n, whose paths approach separation.
+- **ncvreg's GLM solutions are not stationary for these penalties** (violations
+  3e-3 to 9e-2 at a = 3, 3.7, 6 and 7). Its `binomial` and `poisson` coordinate
+  steps scale the concavity by the weighted curvature of each column at the
+  current fit (`glm.c`: the MCP step divides by `v (1 - 1/γ)` with
+  `v = xⱼ'Wxⱼ/n`, where the exact step divides by `v - 1/γ`), a penalty that
+  changes with the fit; so the paths differ after the first level. At the
+  first level where they differ, ours have the lower value of the objective
+  with the penalty as documented (ncvreg's may be better for its own). In
+  the gaussian family `v = 1` and the two agree (`penalties/`). ncvreg also
+  stops paths early when the model is saturated (p > n); the levels it
+  returned are compared.
