@@ -186,9 +186,13 @@ atlevel(pen, λ) = pen isa MCP ? MCP(λ, pen.a) : SCAD(λ, pen.a)
     @test all(k -> isapprox(Vector(pc.βpath[k]), Vector(path.βpath[k]); atol = 1e-6), 1:5)
 
     # LogPenalty(λ, ε) has the slope λ/ε at zero, so λmax is ε times that of the lasso
-    pathl = LassoPath(X, y; penalty = LogPenalty(1, 0.5), nλ = 10, intercept = true)
+    pathl = LassoPath(X, y; penalty = LogPenalty(1, 0.5), nλ = 10, intercept = true, optTol = 1e-12)
     @test pathl.λpath[1] ≈ 0.5 * maximum(abs.(Xc' * yc / n)) * (1 + sqrt(eps()))
     @test nnz(pathl.βpath[1]) == 0 && nnz(pathl.βpath[end]) > 0
+    soll = lasso(X, y, pathl.λpath[8]; penalty = LogPenalty(1, 0.5), intercept = true, standardizeX = true,
+                 optTol = 1e-12)
+    @test soll.penalty == LogPenalty(pathl.λpath[8], 0.5)
+    @test Vector(soll.x) ≈ Vector(pathl.βpath[8]) atol = 1e-6
 
     # start = :previous: lasso follows numSteps levels from λmax, as the path on
     # the same levels does; with numSteps = 0 it starts from the lasso at λ
