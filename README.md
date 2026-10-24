@@ -59,6 +59,12 @@ sol = lasso(X, y, 0.1; intercept=true, standardizeX=true)
 # solutions along 50 values of λ, from the smallest one with a zero solution
 path = LassoPath(X, y; nλ=50, intercept=true)    # or fit(LassoPath, X, y; ...)
 path.λpath, path.βpath, path.β0path
+
+# λ by 10-fold cross-validation (the one-standard-error rule), or by an
+# information criterion along the path
+cv = CVLassoPath(X, y; nfolds=10, intercept=true)
+cv.λ1se, cv.λmin, coef(cv)
+path.λpath[argmin(bic(path, X, y))]
 coef(path), coef(path, 0.1), predict(path, Xnew)  # coefficients and fitted values along the path
 
 # lower-level interface: solve! (or coordinateDescent!, which returns x)
