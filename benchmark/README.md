@@ -461,6 +461,36 @@ Results on Discovery (runs `20261024T1234Z-cd-glm-penalties` and
   stops paths early when the model is saturated (p > n); the levels it
   returned are compared.
 
+## lla/
+
+`lla/compare_lla.jl` compares the paths of local linear approximation (`lla`,
+#69) with R's glmtlp 2.0.3 and ncpen 1.0.1, gaussian with an intercept, on two
+designs (n = 200, p = 50; n = 100, p = 300; columns on different scales), at
+30 levels from λmax down to 5% of it (10% for p > n), on the columns as given
+and standardized:
+
+```sh
+julia --project=benchmark/lla benchmark/lla/compare_lla.jl gen DIR
+Rscript benchmark/lla/compare_lla.R DIR      # needs glmtlp and ncpen
+julia --project=benchmark/lla benchmark/lla/compare_lla.jl compare DIR
+```
+
+Results on Discovery (run `20261024T1618Z-cd-lla`):
+
+- **glmtlp's `"tlp"`** (τ = 0.25, its difference-of-convex steps to
+  convergence) equals `LassoPath(...; penalty = CappedL1(1, 0.25), intercept =
+  true)` with `lla` at its default: coefficients within 5e-14 and intercepts
+  within 1e-14 on both designs, for glmtlp's `standardize` FALSE and TRUE as
+  `standardizeX`, with the same supports. `lasso` at single levels gives the
+  same solutions.
+- **ncpen with `x.standardize = FALSE`** equals `lla = LLA(; stages = 1000,
+  start = :previous)` with `standardizeX = false`: MCP within 5e-10, SCAD within
+  8e-10 and the TLP within 2e-14, with the same supports.
+- **ncpen's own standardization** (`x.standardize = TRUE`) gives paths that
+  differ by about 1e-2. Dividing the columns by their standard deviations, with
+  n or with n - 1, does not reproduce it either, so the documentation claims
+  agreement with ncpen only on the columns as given.
+
 ## sparsegroup/
 
 `sparsegroup/compare_sparsegroup.jl` compares `SparseGroupLassoPath` with R's

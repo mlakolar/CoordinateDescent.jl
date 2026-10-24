@@ -833,11 +833,14 @@ columns with `standardizeX`. Along a path of a nonconvex penalty, each solution
 is the local one reached from the previous solution, starting from zero at
 `λmax`. Without `standardizeX`, the exact steps of MCP and SCAD need the
 condition on `a` described for [`lasso`](@ref). `lla` computes the path by
-local linear approximation, as described there: with `penalty =
-CappedL1(1, a)` (and `lla = nothing`, which then means `LLA(; stages = 100)`)
-it is the path of glmtlp's `"tlp"`, and with `lla = LLA(; stages = 100, start
-= :previous)` that of ncpen. Its `λmax` is that of the first stage, the lasso
-with the weights `pⱼ′(0)/λ`. `penalty` holds the penalty at level one, `NormL1(1, ω)` for the lasso
+local linear approximation, as described there. With `penalty =
+CappedL1(1, a)` and `intercept = true` (and `lla = nothing`, which then means
+`LLA(; stages = 100)`) it is the path of glmtlp's `"tlp"` with `tau = a`, with
+`standardizeX` as glmtlp's `standardize`. With `lla = LLA(; stages = 1000,
+start = :previous)`, `standardizeX = false` and `intercept = true`, the paths
+of MCP, SCAD and `CappedL1` are those of ncpen with `x.standardize = FALSE`
+(ncpen's own standardization differs from `standardizeX`). Its `λmax` is that
+of the first stage, the lasso with the weights `pⱼ′(0)/λ`. `penalty` holds the penalty at level one, `NormL1(1, ω)` for the lasso
 with loadings `ω`; the solution at `λpath[k]` minimizes the loss plus that
 penalty at level `λpath[k]`, applied to `scales .* β` when `scales` is not
 `nothing` (`standardizeX` with a penalty other than the ℓ1 norm). `lower` and
