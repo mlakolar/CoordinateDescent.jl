@@ -107,9 +107,8 @@ println("== One λ")
 f = MyLogisticLoss(y, X1)
 λ = 0.05
 x = SparseIterate(p + 1)
-info = CDInfo()
-coordinateDescent!(x, f, NormL1(λ, ω), CDOptions(), info)
-println("selects ", findall(!iszero, x[2:end]), " in $(info.iterations) passes; intercept ", round(x[1]; digits = 2))
+r = solve!(x, f, NormL1(λ, ω), CDOptions())
+println("selects ", findall(!iszero, x[2:end]), " in $(r.passes) passes; intercept ", round(x[1]; digits = 2))
 
 # the solution satisfies |∂f/∂βⱼ| ≤ λωⱼ where βⱼ = 0, and ∂f/∂βⱼ = -λωⱼ sign(βⱼ)
 # elsewhere
@@ -121,8 +120,8 @@ kkt = maximum(j -> iszero(x[j]) ? max(abs(grad[j]) - λ * ω[j], 0.0) : abs(grad
 # it finds with gradient, and screens each level with the strong rule, which
 # uses fullGradient!: a user-defined loss gets both
 xp = SparseIterate(p + 1)
-coordinateDescent!(xp, f, NormL1(λ, ω), CDOptions(; warmStart = false), info)
-@printf("from zero along a path: %d passes, solutions differ by %.1e\n", info.iterations, norm(xp - x, Inf))
+r = solve!(xp, f, NormL1(λ, ω), CDOptions(; warmStart = false))
+@printf("from zero along a path: %d passes, solutions differ by %.1e\n", r.passes, norm(xp - x, Inf))
 
 println("\n== Choosing λ on a validation set")
 

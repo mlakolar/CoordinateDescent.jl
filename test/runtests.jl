@@ -5,6 +5,11 @@ using Aqua
 tests = [
   "coordinate_descent",
   "lasso",
+  "cv",
+  "penalties",
+  "glm",
+  "group",
+  "multiresponse",
   "hdm",
   "varying_coefficient_lasso"
 ]

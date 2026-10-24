@@ -138,7 +138,7 @@ function rlasso(X::AbstractMatrix{T}, y::AbstractVector{T}, options::CDOptions =
     if post
       b, e = _ols(X, y, S, xbar, ȳ)
     else
-      b, e = T[x[k] for k in S], copy(residuals(m))
+      b, e = T[x[k] for k in S], copy(ProximalSolvers.residuals(m))
     end
     s1 = std(e)
     _getLoadings!(Γ, X, e, xbar)
