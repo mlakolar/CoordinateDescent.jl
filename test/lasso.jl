@@ -1122,4 +1122,87 @@ end
   @test_throws ArgumentError lasso(X, Yn, λ; gram = true)
 end
 
+@testset "observation weights and offsets" begin
+  rng = Xoshiro(51)
+  n, p, s = 120, 15, 4
+  X = randn(rng, n, p) .+ 0.5 .* randn(rng, 1, p)
+  Y = 1.0 .+ X[:, 1:s] * ones(s) + randn(rng, n)
+  λ = 0.05
+  opt = CDOptions(; optTol = 1e-12, order = :cyclic)
+  k = rand(rng, 1:3, n)
+  rows = reduce(vcat, [fill(i, k[i]) for i in 1:n])
+  close(a, b; atol = 1e-7) = isapprox(Vector(a.x), Vector(b.x); atol) && isapprox(a.intercept, b.intercept; atol)
+
+  # integer weights give the fit of the replicated rows, also standardized and
+  # on the Gram matrix
+  for intercept in (false, true), gram in (false, true)
+    a = lasso(X, Y, λ, opt; intercept, standardizeX = true, gram, weights = k)
+    b = lasso(X[rows, :], Y[rows], λ, opt; intercept, standardizeX = true, gram)
+    @test close(a, b)
+    @test a.weights == k && b.weights === nothing
+    @test a.σ ≈ sqrt(sum(abs2, b.residuals) / length(rows))
+    @test deviance(a) ≈ deviance(b)
+    a = sqrtLasso(X, Y, 1.0, opt; intercept, gram, weights = k)
+    b = sqrtLasso(X[rows, :], Y[rows], 1.0, opt; intercept, gram)
+    @test close(a, b; atol = 1e-6)
+  end
+  for intercept in (false, true)
+    iopt = IterLassoOptions(; optionsCD = opt)
+    a = scaledLasso(X, Y, λ, ones(p), iopt; intercept, weights = k)
+    b = scaledLasso(X[rows, :], Y[rows], λ, ones(p), iopt; intercept)
+    @test close(a, b; atol = 1e-6) && isapprox(a.σ, b.σ; rtol = 1e-6)
+    P1 = LassoPath(X, Y, opt; nλ = 10, intercept, weights = k)
+    P2 = LassoPath(X[rows, :], Y[rows], opt; nλ = 10, intercept)
+    @test P1.λpath ≈ P2.λpath
+    @test all(isapprox(Vector(P1.βpath[j]), Vector(P2.βpath[j]); atol = 1e-6) for j in eachindex(P2.βpath))
+    @test P1.β0path ≈ P2.β0path atol = 1e-6
+  end
+
+  # unit weights and a zero offset are the same as none: today's fit, exactly
+  ref = lasso(X, Y, λ, opt; intercept = true)
+  for kw in ((weights = ones(n),), (offset = zeros(n),), (weights = ones(Int, n), offset = zeros(n)))
+    a = lasso(X, Y, λ, opt; intercept = true, kw...)
+    @test Vector(a.x) == Vector(ref.x) && a.iterations == ref.iterations && a.weights === nothing
+  end
+
+  # an offset o gives the fit of y - o, also with weights and on the Gram matrix
+  o = randn(rng, n)
+  w = rand(rng, n) .+ 0.5
+  for gram in (false, true)
+    @test close(lasso(X, Y, λ, opt; intercept = true, offset = o, gram), lasso(X, Y .- o, λ, opt; intercept = true, gram))
+    a = lasso(X, Y, λ, opt; intercept = true, weights = w, offset = o, gram)
+    b = lasso(X, Y .- o, λ, opt; intercept = true, weights = w, gram)
+    @test close(a, b)
+    @test a.residuals ≈ Y .- o .- a.intercept .- X * Vector(a.x)
+    @test predict(a, X) ≈ Y .- o .- a.residuals                 # without the offset
+  end
+  @test close(sqrtLasso(X, Y, 1.0, opt; offset = o), sqrtLasso(X, Y .- o, 1.0, opt))
+
+  # at λ = 0, the weighted intercept and coefficients of weighted least squares
+  a = lasso(X, Y, 0.0, opt; intercept = true, weights = w)
+  Z = [ones(n) X]
+  @test [a.intercept; Vector(a.x)] ≈ (Z' * (w .* Z)) \ (Z' * (w .* Y)) atol = 1e-6
+
+  # zero weights leave observations out
+  wz = copy(w); wz[1:10] .= 0
+  @test close(lasso(X, Y, λ, opt; intercept = true, weights = wz),
+              lasso(X[11:end, :], Y[11:end], λ, opt; intercept = true, weights = w[11:end]))
+
+  # the weighted loadings and Gram matrix, also of a sparse X
+  xw = X' * w / sum(w)
+  @test CoordinateDescent._loadings(X, true, w) ≈ sqrt.(vec(sum(w .* (X .- xw') .^ 2; dims = 1)) / sum(w))
+  @test CoordinateDescent._loadings(sparse(X), true, w) ≈ CoordinateDescent._loadings(X, true, w)
+  Gw = (X .- xw')' * (w .* (X .- xw')) / sum(w)
+  @test CoordinateDescent._gram(X, xw, w) ≈ Gw
+  @test CoordinateDescent._gram(sparse(X), xw, w) ≈ Gw
+  @test CoordinateDescent._column_means(X, w) ≈ xw
+
+  # checks of the weights and the offset
+  @test_throws ArgumentError lasso(X, Y, λ; weights = -w)
+  @test_throws ArgumentError lasso(X, Y, λ; weights = zeros(n))
+  @test_throws DimensionMismatch lasso(X, Y, λ; weights = w[1:end-1])
+  @test_throws ArgumentError lasso(X, Y, λ; offset = fill(NaN, n))
+  @test_throws DimensionMismatch LassoPath(X, Y; offset = o[1:end-1])
+end
+
 end

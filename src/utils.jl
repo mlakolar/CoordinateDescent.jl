@@ -282,6 +282,28 @@ _design(X::AbstractMatrix) = issparse(X) ? sparse(X) : Matrix(X)
 _response(y::StridedVector) = y
 _response(y::AbstractVector) = Vector(y)
 
+# Observation weights and an offset as the solvers take them, after checks: a
+# Vector{T}, or nothing for unit weights and for a zero offset, which are the
+# same as none
+function _weights(::Type{T}, w, n::Int) where {T}
+  w === nothing && return nothing
+  length(w) == n || throw(DimensionMismatch("X has $n rows, but the weights have length $(length(w))"))
+  all(v -> isfinite(v) && v >= 0, w) || throw(ArgumentError("the weights must be finite and nonnegative."))
+  sum(w) > 0 || throw(ArgumentError("the weights must have a positive sum."))
+  all(isone, w) ? nothing : convert(Vector{T}, w)
+end
+
+function _offset(::Type{T}, o, n::Int) where {T}
+  o === nothing && return nothing
+  length(o) == n || throw(DimensionMismatch("X has $n rows, but the offset has length $(length(o))"))
+  all(isfinite, o) || throw(ArgumentError("the offset contains NaN or Inf."))
+  all(iszero, o) ? nothing : convert(Vector{T}, o)
+end
+
+# y - o, the response that the offset leaves
+_minus(y, ::Nothing) = y
+_minus(y, o) = y .- o
+
 
 # NaN or Inf in the data would give a meaningless solution that is reported as
 # converged: shrinking a NaN gives zero, so a coordinate with a NaN gradient
@@ -301,6 +323,18 @@ function _column_means(X::AbstractMatrix{T}) where {T}
   end
   xbar
 end
+
+# the column means weighted by w, ∑ᵢ wᵢ Xᵢⱼ / ∑ᵢ wᵢ, with constant columns exact
+function _column_means(X::AbstractMatrix{T}, w::AbstractVector{T}) where {T}
+  xbar = Vector{T}((transpose(X) * w) ./ sum(w))
+  size(X, 1) > 0 || return xbar
+  for k in axes(X, 2)
+    c = X[1, k]
+    all(==(c), view(X, :, k)) && (xbar[k] = c)
+  end
+  xbar
+end
+_column_means(X::AbstractMatrix, ::Nothing) = _column_means(X)
 
 # the same over the stored entries: a column is constant when it is all zero
 # (whatever it stores) or stores n equal values
