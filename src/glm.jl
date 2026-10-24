@@ -55,7 +55,7 @@ function _loadings(X::AbstractMatrix{T}, intercept::Bool, w::AbstractVector{T}) 
       continue
     end
     a = zero(T)
-    @simd for i in 1:n
+    for i in 1:n
       a += w[i] * (X[i, k] - c) * (X[i, k] - c)
     end
     ω[k] = sqrt(a / sw)
