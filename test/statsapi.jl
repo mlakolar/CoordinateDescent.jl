@@ -41,6 +41,8 @@ logistic(z) = 1 / (1 + exp(-z))
     @test predict(sp, X) ≈ exp.(predict(sp, X; type = :link))
     sh = glmLasso(X, X * β .+ randn(rng, n), 0.05, ProximalBase.Huber(1.0))
     @test predict(sh, X) ≈ predict(sh, X; type = :link)
+    # a loss whose mean is not known has only the link scale
+    @test_throws ArgumentError CoordinateDescent._inverselink(ProximalBase.SquaredHinge(), 0.0)
 
     path = GLMLassoPath(X, y; nλ = 15)
     B = coef(path)
