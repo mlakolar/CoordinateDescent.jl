@@ -447,6 +447,12 @@ Least squares refits on the supports along a [`LassoPath`](@ref). Returns a
 `Dict` that maps each distinct support `S` (a vector of column indices) to
 `X[:, S] \\ y`, or, when the path has an intercept, to `[1 X[:, S]] \\ y`,
 whose first entry is the intercept.
+
+Consecutive supports along a path differ by a few columns, so the Cholesky
+factor of `X[:, S]'X[:, S]` is updated from one support to the next
+(ProximalSolvers' `RefitCache`) instead of computed again. A support with at
+least `n` columns, or one whose columns are nearly collinear, is refit by
+`\\`, which gives the minimum-norm solution.
 """
 function refitLassoPath(
   path::LassoPath{T},
@@ -455,12 +461,25 @@ function refitLassoPath(
 
   λpath = path.λpath
   βpath = path.βpath
+  n, p = size(X)
+  x = SparseIterate(T, p)
+  m = ProximalSolvers.cdmodel(LeastSquaresLoss(Y, X), x; intercept = path.intercept)
+  cache = ProximalSolvers.RefitCache(T)
 
   out = Dict{Vector{Int64},Vector{T}}()
   for i=1:length(λpath)
     S = findall(!iszero, βpath[i])
     if haskey(out, S)
       continue
+    end
+    if !isempty(S) && length(S) + path.intercept < n
+      fill!(x, zero(T))                 # removes the stored entries
+      refit!(x, m; support = S, cache)
+      if !isempty(cache.S)        # refit from the factor; empty after a fallback
+        β = T[x[k] for k in S]
+        out[S] = path.intercept ? [ProximalSolvers.intercept(m, x); β] : β
+        continue
+      end
     end
     out[S] = path.intercept ? [ones(T, length(Y)) X[:, S]] \ Y : X[:, S] \ Y
   end

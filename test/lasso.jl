@@ -667,6 +667,32 @@ end
   for S in supports
     @test rf[S] ≈ X[:, S] \ Y
   end
+
+  # a long path, with and without an intercept: every refit is that of \
+  n, p = 150, 400
+  X = randn(n, p)
+  Y = X[:, 1:20] * randn(20) + randn(n)
+  for intercept in (false, true)
+    path = LassoPath(X, Y; nλ=60, λminratio=0.01, intercept=intercept)
+    rf = refitLassoPath(path, X, Y)
+    for (S, β) in rf
+      @test β ≈ (intercept ? [ones(n) X[:, S]] : X[:, S]) \ Y rtol=1e-8
+    end
+  end
+  # supports with n columns or more, and collinear columns, are refit by \
+  Xd = [X[:, 1:3] X[:, 1] randn(n, 2)]
+  path = LassoPath(Xd, Y, [0.05, 0.01, 0.001], CDOptions(;optTol=1e-8); standardizeX=false)
+  rf = refitLassoPath(path, Xd, Y)
+  for (S, β) in rf
+    @test β ≈ Xd[:, S] \ Y
+  end
+  Xw = randn(10, 40)
+  Yw = randn(10)
+  path = LassoPath(Xw, Yw; nλ=20, λminratio=1e-3)
+  rf = refitLassoPath(path, Xw, Yw)
+  for (S, β) in rf
+    @test β ≈ Xw[:, S] \ Yw
+  end
 end
 
 @testset "convergence reporting" begin
