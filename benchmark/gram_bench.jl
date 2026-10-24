@@ -3,7 +3,8 @@
 # with an intercept at 0.1 and 0.02 λmax, and a 100-level LassoPath; the shortest
 # time of three interleaved runs of each form, the passes and the largest
 # difference of the coefficients. GRAM_BENCH_QUICK=1 runs small sizes, as a check
-# that the script runs.
+# that the script runs; GRAM_BENCH_NS and GRAM_BENCH_PS (comma-separated) set
+# other sizes.
 #
 #     julia --project=benchmark benchmark/gram_bench.jl
 
@@ -12,8 +13,9 @@ using CoordinateDescent, LinearAlgebra, Printf, Random, Statistics
 LinearAlgebra.BLAS.set_num_threads(1)
 
 const QUICK = get(ENV, "GRAM_BENCH_QUICK", "0") == "1"
-const NS = QUICK ? (200, 600) : (1000, 5000, 20000)
-const PS = QUICK ? (20, 100) : (50, 200, 1000)
+sizes(key, quick, full) = haskey(ENV, key) ? Tuple(parse.(Int, split(ENV[key], ","))) : (QUICK ? quick : full)
+const NS = sizes("GRAM_BENCH_NS", (200, 600), (1000, 5000, 20000))
+const PS = sizes("GRAM_BENCH_PS", (20, 100), (50, 200, 1000))
 
 # n × p columns, independent or AR(1) with correlation 0.5 between neighbors,
 # and ten nonzero coefficients
