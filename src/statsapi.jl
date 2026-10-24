@@ -98,7 +98,7 @@ function StatsAPI.coef(path::LassoPath{T}, λ::Real) where {T}
   λs = path.λpath
   isempty(λs) && throw(ArgumentError("the path is empty."))
   λs[end] <= λ <= λs[1] || throw(ArgumentError("λ = $λ is outside the range [$(λs[end]), $(λs[1])] of the path."))
-  k = findlast(>=(λ), λs)
+  k = findlast(>=(λ), λs)::Int        # λs[end] ≤ λ, so k exists
   coefk(j) = path.intercept ? _prepend(path.β0path[j], path.βpath[j]) : path.βpath[j]
   (λs[k] == λ || k == length(λs)) && return coefk(k)
   t = T((λs[k] - λ) / (λs[k] - λs[k+1]))

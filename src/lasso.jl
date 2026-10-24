@@ -536,7 +536,7 @@ function refitLassoPath(
   βpath = path.βpath
   Y = _response(Y)
 
-  out = Dict{Vector{Int64},Vector{T}}()
+  out = Dict{Vector{Int},Vector{T}}()
   for i=1:length(λpath)
     S = findall(!iszero, βpath[i])
     if haskey(out, S)

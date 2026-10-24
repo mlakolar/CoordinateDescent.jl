@@ -6,7 +6,7 @@ folder, which loads CoordinateDescent from this checkout:
 ```
 julia --project=benchmark -e 'using Pkg; Pkg.instantiate()'
 julia --project=benchmark benchmark/locpoly_bench.jl    # about a minute
-julia --project=benchmark benchmark/cd_bench.jl         # about 20 minutes
+julia --project=benchmark benchmark/cd_bench.jl         # a few minutes
 julia --project=benchmark benchmark/order_anderson_bench.jl    # about 4 minutes
 julia --project=benchmark benchmark/scaledlasso_bench.jl       # about 10 minutes
 ```
@@ -58,28 +58,39 @@ differences in parts 3 and 4 come from the stopping rule (`optTol = 1e-8`).
 
 ## cd_bench.jl
 
-Times, with `@time`, the lasso solvers on one problem with n = 3000, p = 5000
-and 100 nonzero coefficients: `scaledLasso!` from its default start and from a
-given noise level, and `coordinateDescent!` at λ = 0.001 with and without warm
-start, with unit and with standardized penalty loadings. The first call of each
-method includes compilation; the last call repeats the one before it.
+Times the lasso solvers on one problem with n = 3000, p = 5000 and 100 nonzero
+coefficients:
 
-On the same laptop with Julia 1.13.2 and the default 6 BLAS threads (indicative
-only), the script takes 19 minutes:
+- `scaledLasso!` from its default start and from a given noise level (with
+  `@time`);
+- the lasso at 0.05 λmax and 0.01 λmax, from zero and along a path of 50
+  penalty levels from λmax, with unit and with standardized loadings. λmax is
+  the smallest penalty with a zero solution, for each kind of loadings. Each
+  solve reports its time, passes and number of nonzeros.
 
-| call | time |
-|---|---:|
-| `scaledLasso!`, noise level started by screening (with compilation) | 1.4 s |
-| `scaledLasso!`, noise level started at a given value | 0.06 s |
-| `coordinateDescent!` at λ = 0.001 from zero | 175 s |
-| `coordinateDescent!` at λ = 0.001 along 50 penalty levels from λmax | 208 s |
-| the same two with standardized loadings, 100 levels on the path | 191 s, 274 s |
-| the last call again | 269 s |
+`CD_BENCH_N` and `CD_BENCH_P` set a smaller problem, as a quick check that the
+script runs.
 
-λ = 0.001 is about 3e-4 λmax. With p > n, the solutions there have about 2,980
-nonzero coefficients, close to interpolating the 3,000 observations, and the
-first three solves at λ = 0.001 take 44,000 to 53,000 passes to meet the
-default stopping rule.
+On Discovery (an EPYC 7513 core, Julia 1.13.2, one BLAS thread; run
+20261023T2353Z-cd-gram-bench), the script takes about 15 seconds:
+
+| solve | time (s) | passes | nonzeros |
+|---|---:|---:|---:|
+| `scaledLasso!`, noise level started by screening (with compilation) | 1.95 | | |
+| `scaledLasso!`, noise level started at a given value | 0.03 | | |
+| 0.05 λmax, unit loadings, from zero / along 50 levels | 0.05 / 0.25 | 41 / 506 | 454 |
+| 0.05 λmax, standardized loadings, from zero / along 50 levels | 0.04 / 0.25 | 38 / 490 | 455 |
+| 0.01 λmax, unit loadings, from zero / along 50 levels | 0.80 / 2.21 | 285 / 1232 | 2058 |
+| 0.01 λmax, standardized loadings, from zero / along 50 levels | 0.74 / 2.20 | 264 / 1231 | 2058 |
+
+The path costs more than the direct start here because every intermediate
+level is solved to the full tolerance (ProximalSolvers issue #19).
+
+Until version 0.7, the script solved at λ = 0.001, about 3e-4 λmax. There the
+solutions have about 2,980 nonzero coefficients, close to interpolating the
+3,000 observations. Each of the first three solves took 44,000 to 53,000
+passes, and the script took 19 minutes measuring a regime that users rarely
+fit.
 
 ## order_anderson_bench.jl
 

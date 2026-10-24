@@ -112,7 +112,7 @@ views or ranges; they are converted to the floating point type of `X`, `z` and
 function locpolyl1(
   X::Matrix{T}, z::Vector{T}, y::Vector{T},
   zgrid::Vector{T},
-  degree::Int64,
+  degree::Integer,
   kernel::SmoothingKernel{T},
   λ0::T,
   refit::Bool,
@@ -175,7 +175,7 @@ function locpolyl1(
 
   T = float(promote_type(eltype(X), eltype(z), eltype(y)))
   locpolyl1(convert(Matrix{T}, X), convert(Vector{T}, z), convert(Vector{T}, y), convert(Vector{T}, zgrid),
-            Int64(degree), _kernel(T, kernel), T(λ0), refit, options)
+            Int(degree), _kernel(T, kernel), T(λ0), refit, options)
 end
 
 """
@@ -198,7 +198,7 @@ As for `locpolyl1`, the data can be arrays of any type with real entries.
 """
 function lvocv_locpolyl1(
     X::Matrix{T}, z::Vector{T}, y::Vector{T},
-    degree::Int64,                                     # degree of the polynomial
+    degree::Integer,                                     # degree of the polynomial
     hArr::Vector{T},
     kernelType::Type{<:SmoothingKernel},
     λ0::T,
@@ -267,7 +267,7 @@ function lvocv_locpolyl1(
     options::CDOptions=CDOptions())
 
     T = float(promote_type(eltype(X), eltype(z), eltype(y)))
-    lvocv_locpolyl1(convert(Matrix{T}, X), convert(Vector{T}, z), convert(Vector{T}, y), Int64(degree),
+    lvocv_locpolyl1(convert(Matrix{T}, X), convert(Vector{T}, z), convert(Vector{T}, y), Int(degree),
                     convert(Vector{T}, hArr), _kerneltype(T, kernelType), T(λ0), options)
 end
 
@@ -285,7 +285,7 @@ selected variables and `βr` is the [`locpoly`](@ref) estimate on `X[:, S]`.
 function refit_locpolyl1(
     X::Matrix{T}, z::Vector{T}, y::Vector{T},
     z0::T,
-    degree::Int64,
+    degree::Integer,
     kernel::SmoothingKernel{T},
     β::Union{SparseIterate{T}, SparseVector{T}}
     ) where {T <: AbstractFloat}
@@ -293,7 +293,7 @@ function refit_locpolyl1(
     p = size(X, 2)
     S = BitArray(undef, p)
     get_nonzero_coordinates!(S, β, p, degree, false)
-    βr = locpoly(view(X, :, S), z, y, z0, degree, kernel)
+    βr = locpoly(X[:, S], z, y, z0, degree, kernel)
     (βr, S)
 end
 
@@ -312,7 +312,7 @@ function _locpoly!(
   z::AbstractVector{T},
   y::AbstractVector{T},
   z0::T,
-  degree::Int64,
+  degree::Integer,
   kernel::SmoothingKernel{T}) where {T <: AbstractFloat}
 
   w .= sqrt.(evaluate.(Ref(kernel), z, Ref(z0)))    # square root of kernel weights
@@ -342,13 +342,13 @@ The data can be arrays of any type with real entries, such as views, and
 """
 locpoly(
   X::AbstractMatrix{T}, z::Vector{T}, y::Vector{T},
-  z0::T, degree::Int64, kernel::SmoothingKernel=GaussianKernel(one(T))) where {T <: AbstractFloat} =
+  z0::T, degree::Integer, kernel::SmoothingKernel=GaussianKernel(one(T))) where {T <: AbstractFloat} =
     _locpoly!(Array{T}(undef, length(y), size(X, 2) * (degree+1)), similar(y), X, z, y, z0, degree, kernel)
 
 function locpoly(
   X::AbstractMatrix{T}, z::Vector{T}, y::Vector{T},
   zgrid::Vector{T},
-  degree::Int64,                                     # degree of the polynomial
+  degree::Integer,                                     # degree of the polynomial
   kernel::SmoothingKernel{T}=GaussianKernel(one(T))) where {T <: AbstractFloat}
 
   n, p = size(X)
@@ -369,7 +369,7 @@ function locpoly(
   X::AbstractMatrix{<:Real}, z::AbstractVector{<:Real}, y::AbstractVector{<:Real},
   z0::Real, degree::Integer, kernel::SmoothingKernel=GaussianKernel(1.0))
   T = float(promote_type(eltype(X), eltype(z), eltype(y)))
-  locpoly(convert(AbstractMatrix{T}, X), convert(Vector{T}, z), convert(Vector{T}, y), T(z0), Int64(degree),
+  locpoly(convert(AbstractMatrix{T}, X), convert(Vector{T}, z), convert(Vector{T}, y), T(z0), Int(degree),
           _kernel(T, kernel))
 end
 
@@ -378,7 +378,7 @@ function locpoly(
   zgrid::AbstractVector{<:Real}, degree::Integer, kernel::SmoothingKernel=GaussianKernel(1.0))
   T = float(promote_type(eltype(X), eltype(z), eltype(y)))
   locpoly(convert(AbstractMatrix{T}, X), convert(Vector{T}, z), convert(Vector{T}, y), convert(Vector{T}, zgrid),
-          Int64(degree), _kernel(T, kernel))
+          Int(degree), _kernel(T, kernel))
 end
 
 """
@@ -394,7 +394,7 @@ function getResiduals!(
      X::AbstractMatrix{T}, z::Vector{T}, y::Vector{T},
      zgrid::Vector{T},
      βhat::Union{Matrix{T}, SparseMatrixCSC{T}},
-     degree::Int64
+     degree::Integer
     ) where {T <: AbstractFloat}
 
     n, p = size(X)
@@ -425,7 +425,7 @@ getStandardError(
     X::AbstractMatrix{T}, z::AbstractVector{T},
     σ2::T,
     z0::T,
-    degree::Int64,                                     # degree of the polynomial
+    degree::Integer,                                     # degree of the polynomial
     kernel::SmoothingKernel{T}) where {T <: AbstractFloat} =
   getStandardErrorHEW(X, z, fill(σ2, length(z)), z0, degree, kernel)
 
@@ -444,7 +444,7 @@ function getStandardErrorHEW(
     X::AbstractMatrix{T}, z::AbstractVector{T},
     ϵ_sqr::AbstractVector{T},
     z0::T,
-    degree::Int64,                                     # degree of the polynomial
+    degree::Integer,                                     # degree of the polynomial
     kernel::SmoothingKernel{T}) where {T <: AbstractFloat}
 
     n, p = size(X)
@@ -479,7 +479,7 @@ it. Returns the vector of summed squared prediction errors, one per bandwidth.
 """
 function lvocv_locpoly(
     X::Matrix{T}, z::Vector{T}, y::Vector{T},
-    degree::Int64,                                     # degree of the polynomial
+    degree::Integer,                                     # degree of the polynomial
     hArr::Vector{T},
     kernelType::Type{<:SmoothingKernel}) where {T <: AbstractFloat}
 
@@ -523,7 +523,7 @@ function split_locpoly(
     X::Matrix{T}, z::Vector{T}, y::Vector{T},
     Xtest::Matrix{T}, ztest::Vector{T}, ytest::Vector{T},
     zgrid::Vector{T},
-    degree::Int64,                                     # degree of the polynomial
+    degree::Integer,                                     # degree of the polynomial
     hArr::Vector{T},
     kernelType::Type{<:SmoothingKernel}) where {T <: AbstractFloat}
 
@@ -640,7 +640,7 @@ function _expand_wX!(
   wX::AbstractMatrix{T},
   w::AbstractVector{T},
   X::AbstractMatrix{T},
-  z::AbstractVector{T}, z0::T, degree::Int64) where {T <: AbstractFloat}
+  z::AbstractVector{T}, z0::T, degree::Integer) where {T <: AbstractFloat}
 
   n, p = size(X)
   for j=1:p
@@ -665,7 +665,7 @@ end
 function _expand_X!(
   tX::Matrix{T},
   X::AbstractMatrix{T},
-  z::AbstractVector{T}, z0::T, degree::Int64) where {T <: AbstractFloat}
+  z::AbstractVector{T}, z0::T, degree::Integer) where {T <: AbstractFloat}
 
   n, p = size(X)
   for j=1:p
@@ -689,7 +689,7 @@ end
 function _expand_Xt_w_X!(
   Xt_w_X::Matrix{T},
   w::AbstractVector{T}, X::AbstractMatrix{T},
-  z::AbstractVector{T}, z0::T, degree::Int64) where {T <: AbstractFloat}
+  z::AbstractVector{T}, z0::T, degree::Integer) where {T <: AbstractFloat}
 
   n, p = size(X)
   fill!(Xt_w_X, zero(T))
@@ -737,7 +737,7 @@ end
 function _expand_Xt_w_Y!(
   Xt_w_Y::Vector{T},
   w::AbstractVector{T}, X::AbstractMatrix{T}, z::AbstractVector{T}, y::AbstractVector{T},
-  z0::T, degree::Int64) where {T <: AbstractFloat}
+  z0::T, degree::Integer) where {T <: AbstractFloat}
 
   n, p = size(X)
   fill!(Xt_w_Y, zero(T))
