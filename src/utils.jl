@@ -356,17 +356,6 @@ function _column_means(X::SparseMatrixCSC{T}) where {T}
   xbar
 end
 
-
-# the weighted least squares coefficients argmin_β ∑ᵢ wᵢ (yᵢ - Xᵢ'β)², from a
-# pivoted QR factorization of √w X rather than the normal equations; when they
-# are not unique, as when X has more columns than there are positive weights,
-# the one of minimum norm
-function _wls(X::AbstractMatrix, w::AbstractVector, y::AbstractVector)
-  sw = sqrt.(w)
-  qr(sw .* X, ColumnNorm()) \ (sw .* y)
-end
-
-
 # residuals of the least squares fit of y on the s columns of X most correlated
 # with y (both centered with an intercept), and on a constant with an
 # intercept; storage is overwritten and returned
