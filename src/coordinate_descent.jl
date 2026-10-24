@@ -139,6 +139,15 @@ function coordinateDescent!(
   x
 end
 
+"""
+    solve!(x, f, g, options::CDOptions; rng=Random.default_rng(), kwargs...)
+
+The method of `ProximalSolvers.solve!` for the options of this package: the same
+as [`coordinateDescent!`](@ref), but it returns a `ProximalSolvers.CDResults`,
+with the number of `passes`, whether the stopping rule was met (`converged`),
+the largest scaled change of a coordinate in the last pass (`maxchange`) and
+the `tolerance` it was compared with.
+"""
 function ProximalSolvers.solve!(
   x::Union{SparseIterate, SymmetricSparseIterate, AtomIterate, Vector{<:AbstractFloat}},
   f::Union{CDModel, AbstractFunction, CoordinateDifferentiableFunction},
