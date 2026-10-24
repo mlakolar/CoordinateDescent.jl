@@ -557,8 +557,8 @@ end
 end
 
 @testset "data changed in place" begin
-  # locpolyl1 changes the weights and the design in place between solves; the
-  # cached column norms must follow
+  # the weights and the design may change in place between solves; the cached
+  # column norms must follow
   n, p = 100, 20
   X = randn(n, p)
   Y = X[:,1:3] * ones(3) + randn(n)

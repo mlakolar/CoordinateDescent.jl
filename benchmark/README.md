@@ -29,9 +29,45 @@ with `locpoly`; `varying/new` this checkout):
 julia --project=benchmark/varying/old benchmark/varying/bench.jl old old.jls
 julia --project=benchmark/varying/new benchmark/varying/bench.jl new new.jls
 julia benchmark/varying/compare.jl old.jls new.jls
+julia --project=benchmark/varying/old benchmark/varying/lassocv.jl old
+julia --project=benchmark/varying/new benchmark/varying/lassocv.jl new
 ```
 
-RESULTS_PLACEHOLDER
+The fits use the Epanechnikov kernel with h = 0.15, degree 1 and 50 grid
+points. The unpenalized estimates and the leave-one-out errors of the two
+versions agree to 1e-15, and the lasso (λ = 0.1, h = 0.2, 20 grid points)
+selects the same 40 variables, summed over the grid points. The table gives the
+fastest of three rounds on USC CARC Discovery on 24 October 2026: one core of an
+AMD EPYC 7513, Julia 1.13.2, one BLAS thread (Slurm job 13379175, run
+20261024T1531Z-cd-varying-ab4).
+
+| case | old | new | new/old |
+|---|---:|---:|---:|
+| fit, n = 500, p = 3 | 1.73 ms | 0.72 ms | 0.42 |
+| fit, n = 2000, p = 3 | 6.78 ms | 2.48 ms | 0.37 |
+| fit, n = 2000, p = 10 | 25.5 ms | 7.42 ms | 0.29 |
+| fit with `se = true`, n = 500, p = 3 | | 8.81 ms | |
+| fit with `se = true`, n = 2000, p = 3 | | 108 ms | |
+| fit with `se = true`, n = 2000, p = 10 | | 294 ms | |
+| leave-one-out CV, three bandwidths, n = 300 | 22.8 ms | 12.7 ms | 0.56 |
+| leave-one-out CV, three bandwidths, n = 1000 | 221 ms | 106 ms | 0.48 |
+| lasso, n = 500, p = 50 | 2.37 ms | 1.87 ms | 0.79 |
+| group lasso, n = 500, p = 50 | | 8.50 ms | |
+
+The standard errors need the fitted values at every observation, a local fit
+at each zᵢ, so `se = true` costs 10 to 40 fits. The old `locpoly` computed none.
+
+`lassocv.jl` times the leave-one-out cross-validation of the lasso with n = 100,
+p = 60, degree 1 (120 columns in each local fit) and h = 0.2, 0.3, 0.4, where
+#38 found the old code slow at a small penalty level. The old
+`lvocv_locpolyl1` solves a scaled lasso, so its errors differ; the noise
+variance is 0.09. One run each (Slurm job 13379208, run
+20261024T1533Z-cd-varying-lassocv):
+
+| λ | old (scaled lasso) | new, `:lasso` | new, `:group` |
+|---|---:|---:|---:|
+| 0.1 | 0.77 s, errors 0.70, 0.80, 6.93 | 0.02 s, errors 0.80, 0.17, 0.20 | 0.15 s, errors 0.21, 0.19, 0.21 |
+| 0.003 | 4.98 s, errors 1.30, 0.90, 1.08 | 0.64 s, errors 0.36, 0.50, 0.63 | 2.47 s, errors 0.33, 0.42, 0.63 |
 
 ## cd_bench.jl
 
@@ -221,7 +257,8 @@ version 0.6.0, on the cases of the momentum benchmark of 0.6:
 - `LassoPath` with 100 λ, an intercept and standardized columns;
 - `CDQuadraticLoss(X'X/n, -X'y/n)` at 0.02 λmax;
 - each on designs A, E and F, and `locpolyl1` on the model of
-  `examples/07_varying_coefficient.jl`.
+  `examples/07_varying_coefficient.jl`. Since #38 removed `locpolyl1`, the new
+  side skips that case; `varying/` above compares its replacement.
 
 The old side, in `old/`, is CoordinateDescent 0.6.0 from the registry on
 ProximalBase 0.4.1. It runs with its default options, which use momentum, and
