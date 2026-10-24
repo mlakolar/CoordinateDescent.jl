@@ -6,6 +6,14 @@
 # level where the solution bifurcates; the first level where they differ is
 # reported with the objectives and optimality conditions of both.
 #
+# For logistic regression ncvreg's coordinate steps majorize the loss with the
+# curvature 1/4, and are exact only for a > 4 (MCP) and a > 5 (SCAD) (Breheny
+# and Huang, 2011); at the defaults a = 3 and 3.7 its solutions need not be
+# stationary. So MCP and SCAD are compared at the defaults and at a = 6 and 7,
+# and the largest violation of the stationarity conditions of each program is
+# reported. ncvreg stops a path early when the model is saturated (p > n); the
+# levels it returned are compared.
+#
 #     julia --project=benchmark/glm_penalties benchmark/glm_penalties/compare_glm_penalties.jl gen DIR
 #     Rscript benchmark/glm_penalties/compare_glm_penalties.R DIR      # needs glmnet and ncvreg
 #     julia --project=benchmark/glm_penalties benchmark/glm_penalties/compare_glm_penalties.jl compare DIR
@@ -18,7 +26,8 @@ using ProximalBase: MCP, SCAD, Logistic, Poisson
 const SETTINGS = [(family = "binomial", n = 400, p = 40, ρ = 0.5), (family = "binomial", n = 600, p = 100, ρ = 0.0),
                   (family = "binomial", n = 150, p = 300, ρ = 0.3), (family = "poisson", n = 400, p = 40, ρ = 0.3)]
 const PENALTIES = [("enet0.2", (alpha = 0.2,)), ("enet0.5", (alpha = 0.5,)), ("enet0.8", (alpha = 0.8,)),
-                   ("MCP", (penalty = MCP(1, 3),)), ("SCAD", (penalty = SCAD(1, 3.7),))]
+                   ("MCP", (penalty = MCP(1, 3),)), ("SCAD", (penalty = SCAD(1, 3.7),)),
+                   ("MCP6", (penalty = MCP(1, 6),)), ("SCAD7", (penalty = SCAD(1, 7),))]
 loss(family) = family == "binomial" ? Logistic() : Poisson()
 
 function dataset(s; seed)
@@ -80,10 +89,13 @@ function compare(dir)
       λs = vec(readdlm(joinpath(dir, "lambda_$(key)_$tag.csv"), ','))
       R = readdlm(joinpath(dir, "R_$(key)_$tag.csv"), ',')
       path = GLMLassoPath(X, y, λs, loss(s.family), CDOptions(; optTol = 1e-12); devmax = 1, newtonTol = 1e-14, kw...)
-      ours = coefs(path)
+      ours = coefs(path)[:, axes(R, 2)]           # ncvreg may stop early
       same = all(findall(!iszero, ours[2:end, j]) == findall(!iszero, R[2:end, j]) for j in axes(R, 2))
-      @printf "%-8s %-8s n=%3d p=%3d | same supports at all %d levels: %-5s | max |Δcoef| %.1e (largest %.2f)\n" s.family tag s.n s.p size(R, 2) same maximum(abs, ours .- R) maximum(abs, R)
+      @printf "%-8s %-8s n=%3d p=%3d | same supports at all %2d levels: %-5s | max |Δcoef| %.1e (largest %.2f)\n" s.family tag s.n s.p size(R, 2) same maximum(abs, ours .- R) maximum(abs, R)
       if haskey(kw, :penalty)
+        vo = maximum(j -> local_check(X, y, s.family, ours[1, j], ours[2:end, j], kw.penalty, λs[j])[2], axes(R, 2))
+        vr = maximum(j -> local_check(X, y, s.family, R[1, j], R[2:end, j], kw.penalty, λs[j])[2], axes(R, 2))
+        @printf "    largest stationarity violation over the levels: %.1e here, %.1e ncvreg\n" vo vr
         j = findfirst(j -> maximum(abs, ours[:, j] .- R[:, j]) > 1e-5, axes(R, 2))
         if j !== nothing
           oo, ko = local_check(X, y, s.family, ours[1, j], ours[2:end, j], kw.penalty, λs[j])

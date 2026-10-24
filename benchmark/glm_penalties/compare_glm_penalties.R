@@ -17,9 +17,10 @@ for (f in list.files(dir, pattern = "^X_.*\\.csv$")) {
     if (startsWith(tag, "enet")) {
       a <- as.numeric(sub("enet", "", tag))
       fit <- glmnet(X, y, family = family, alpha = a, lambda = lam, standardize = TRUE, thresh = 1e-14, maxit = 1e7)
-    } else {
-      fit <- ncvreg(X, y, family = family, penalty = tag, gamma = if (tag == "MCP") 3 else 3.7, lambda = lam,
-                    eps = 1e-12, max.iter = 1e7)
+    } else {                                               # MCP, SCAD, or with the concavity: MCP6, SCAD7
+      pen <- sub("[0-9.]+$", "", tag)
+      gam <- if (grepl("[0-9]$", tag)) as.numeric(sub("^[A-Z]+", "", tag)) else if (pen == "MCP") 3 else 3.7
+      fit <- ncvreg(X, y, family = family, penalty = pen, gamma = gam, lambda = lam, eps = 1e-12, max.iter = 1e7)
     }
     wr(fit, paste0("R_", key, "_", tag, ".csv"))
   }
