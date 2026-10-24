@@ -322,3 +322,45 @@ form the sufficient statistics.
   and 7–73 times faster than the default of 0.6.0, with coefficients within
   7e-7 of the solution. Without `check = false`, checking `S` for every column
   costs `O(p²)` each, which dominated for p ≥ 1000.
+
+## glm/
+
+`glm/glm_bench.jl` compares `GLMLassoPath` with GLMNet.jl (glmnet's Fortran)
+and Lasso.jl on logistic and Poisson lasso paths with an intercept and
+standardized columns, the same objective in all three. Each path has the same
+100 levels, from λmax down to 0.01 λmax. The columns are Gaussian with AR(1)
+correlation 0.5, and there are 10 nonzero coefficients. Accuracy is the
+largest coefficient difference from a glmnet path at tolerance 1e-13, relative
+to the largest coefficient. Times are the minimum of 3 interleaved runs after
+a warm-up, with one BLAS thread. The script has its own environment:
+
+```
+julia --project=benchmark/glm -e 'using Pkg; Pkg.instantiate()'
+julia --project=benchmark/glm benchmark/glm/glm_bench.jl
+```
+
+On Discovery (Julia 1.13.2, AMD EPYC 7513, 2026-10-24, run
+`20261024T0053Z-cd-glm-bench`), seconds, with the relative error in
+parentheses:
+
+| | n | p | glmLasso | glmLasso, loose | glmnet | glmnet, tol 1e-10 | Lasso.jl |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| logistic | 1000 | 100 | 0.064 (9e-7) | 0.031 (5e-4) | 0.070 (1e-3) | 0.137 (5e-5) | 0.018 (1e-3) |
+| logistic | 1000 | 2000 | 0.886 (2e-5) | 0.248 (4e-3) | 0.626 (8e-3) | 1.845 (7e-4) | 0.231 (1e-2) |
+| logistic | 10000 | 100 | 0.516 (3e-7) | 0.310 (4e-4) | 0.413 (2e-3) | 0.649 (2e-5) | 0.177 (2e-3) |
+| logistic | 10000 | 2000 | 11.08 (5e-7) | 4.26 (4e-4) | 7.25 (9e-4) | 17.20 (2e-5) | 4.25 (1e-3) |
+| Poisson | 1000 | 100 | 0.024 (2e-7) | 0.013 (9e-5) | 0.040 (4e-4) | 0.074 (2e-5) | 0.015 (9e-5) |
+| Poisson | 1000 | 2000 | 0.226 (2e-6) | 0.111 (6e-4) | 0.285 (1e-3) | 0.832 (4e-5) | 0.188 (5e-4) |
+| Poisson | 10000 | 100 | 0.171 (2e-7) | 0.109 (5e-5) | 0.279 (2e-4) | 0.412 (2e-5) | 0.188 (1e-5) |
+| Poisson | 10000 | 2000 | 2.136 (1e-7) | 1.552 (5e-5) | 2.105 (2e-4) | 2.428 (1e-5) | 3.726 (1e-5) |
+
+"glmLasso" is the default tolerances (`optTol = 1e-7`, `newtonTol = 1e-8`),
+and "loose" is `CDOptions(; optTol = 1e-4)` with `newtonTol = 1e-5`.
+
+- **Against glmnet.**
+  - At their defaults, glmnet stops 100 to 1000 times further from the solution than `glmLasso`, which takes 0.6–1.5 times its time.
+  - At glmnet's accuracy or better, `glmLasso` with loose tolerances is 1.3–3 times faster.
+  - At glmnet's tolerance 1e-10, which still leaves glmnet's paths less accurate than `glmLasso`'s defaults, `glmLasso` is 1.1–3.7 times faster.
+- **Against Lasso.jl.**
+  - On logistic paths, Lasso.jl at its defaults is 2.6–3.8 times faster than `glmLasso` at its defaults, and 10–100 times less accurate. With loose tolerances `glmLasso` takes 1.0–1.8 times Lasso.jl's time, at a similar accuracy.
+  - On Poisson paths, `glmLasso` is faster at the largest size (0.57) and within 1.6 times elsewhere.
