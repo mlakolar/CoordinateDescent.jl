@@ -7,9 +7,14 @@
 """
     CDOptions(; maxIter=100_000, optTol=1e-7, order=:random, warmStart=true,
                 numSteps=50, relativeTol=true, anderson=0, momentum=nothing)
+    CDOptions(o::CDOptions; changes...)
 
 Options for [`coordinateDescent!`](@ref) and the lasso solvers, which run the
 coordinate descent of ProximalSolvers (`ProximalSolvers.CDSolver`) with them.
+The second form copies `o` with the fields named in `changes` replaced, as in
+`CDOptions(o; warmStart=false)`. The solvers also take these fields as keyword
+arguments, `lasso(X, y, λ; maxIter=10_000, optTol=1e-8)`, which change the
+options passed to them.
 
 - `maxIter`: maximum number of passes over the coordinates; reaching it without
   convergence gives a warning
@@ -20,8 +25,9 @@ coordinate descent of ProximalSolvers (`ProximalSolvers.CDSolver`) with them.
   least squares loss these scales are `‖X[:, k]‖ / √n` and `‖y‖ / √n`.
   Otherwise `|Δxₖ|` is compared with `optTol`
 - `order`: the order in which a pass visits the coordinates
-  - `:random`: a new random order in every pass, drawn from the global random
-    number generator
+  - `:random`: a new random order in every pass, drawn from the random number
+    generator `rng` that the solvers take as a keyword argument, by default the
+    global one (`Random.default_rng()`)
   - `:cyclic`: the order `1, 2, …`
   The cyclic order can be faster on some designs, but much slower when the
   columns are strongly correlated with each other. `randomize = true` and
@@ -40,13 +46,13 @@ coordinate descent of ProximalSolvers (`ProximalSolvers.CDSolver`) with them.
   it off
 """
 struct CDOptions
-  maxIter::Int64
+  maxIter::Int
   optTol::Float64
   order::Symbol             # :random or :cyclic
   warmStart::Bool           # when running CD, should we do path following or not
-  numSteps::Int64           # when pathFollowing, how many points are there on the path
+  numSteps::Int             # when pathFollowing, how many points are there on the path
   relativeTol::Bool         # changes measured relative to the scales of the loss
-  anderson::Int64           # memory of Anderson acceleration, 0 for none
+  anderson::Int             # memory of Anderson acceleration, 0 for none
   momentum::Union{Bool, Nothing}   # Nesterov momentum, nothing for the default
 
   function CDOptions(maxIter, optTol, order::Symbol, warmStart, numSteps, relativeTol, anderson, momentum)
@@ -96,21 +102,43 @@ Base.getproperty(o::CDOptions, s::Symbol) =
   s === :randomize ? getfield(o, :order) !== :cyclic : getfield(o, s)
 Base.propertynames(::CDOptions, private::Bool=false) = (fieldnames(CDOptions)..., :randomize)
 
-# the options with warmStart = true and every other field unchanged
-_withWarmStart(o::CDOptions) =
-  CDOptions(o.maxIter, o.optTol, o.order, true, o.numSteps, o.relativeTol, o.anderson, o.momentum)
+const _CDOPTIONS_KEYWORDS = (:maxIter, :optTol, :order, :randomize, :warmStart, :numSteps, :relativeTol,
+                             :anderson, :momentum)
 
-# the coordinate descent of ProximalSolvers with these options
-_solver(o::CDOptions) =
+# the keyword arguments changes must name fields of options of type O
+function _check_keywords(::Type{O}, valid, changes) where {O}
+  for k in keys(changes)
+    k in valid || throw(ArgumentError("unsupported keyword argument $k: the fields of $O are $(join(valid, ", "))."))
+  end
+end
+
+function CDOptions(o::CDOptions; changes...)
+  _check_keywords(CDOptions, _CDOPTIONS_KEYWORDS, changes)
+  # randomize replaces order unless both are given
+  order = haskey(changes, :randomize) ? (;) : (; order = o.order)
+  CDOptions(; maxIter = o.maxIter, optTol = o.optTol, order..., warmStart = o.warmStart, numSteps = o.numSteps,
+            relativeTol = o.relativeTol, anderson = o.anderson, momentum = o.momentum, changes...)
+end
+
+# the options with the fields named in the keyword arguments kw replaced, as the
+# solvers take them
+_options(o, kw) = isempty(kw) ? o : typeof(o)(o; kw...)
+
+# the options with warmStart = true and every other field unchanged
+_withWarmStart(o::CDOptions) = CDOptions(o; warmStart = true)
+
+# the coordinate descent of ProximalSolvers with these options, drawing its
+# random orders from rng
+_solver(o::CDOptions; rng::AbstractRNG = default_rng()) =
   CDSolver(; maxpasses = o.maxIter, tol = o.optTol, order = o.order, relative = o.relativeTol,
-           anderson = o.anderson, momentum = o.momentum)
+           anderson = o.anderson, momentum = o.momentum, rng)
 
 # Minimizes f + g by the coordinate descent of ProximalSolvers, from x when
 # options.warmStart is true. Otherwise x is set to zero and, for NormL1 and
 # GroupNormL2, the problem is solved along options.numSteps penalty levels from
 # λmax down to g. f is a CDModel or a loss of ProximalBase. Returns a CDResults.
-function _solve!(x, f, g, options::CDOptions)
-  s = _solver(options)
+function _solve!(x, f, g, options::CDOptions; rng::AbstractRNG = default_rng())
+  s = _solver(options; rng)
   options.warmStart && return solve!(x, f, g, s)
   fill!(x, zero(eltype(x)))
   if g isa Union{NormL1, GroupNormL2} && options.numSteps > 0
@@ -125,7 +153,10 @@ end
     CDInfo()
 
 Convergence information that [`coordinateDescent!`](@ref) fills in when it is
-passed as the last argument.
+passed as the last argument. Deprecated: `solve!(x, f, g, options)` (see
+[`coordinateDescent!`](@ref)) returns the same information, and more, in a
+`ProximalSolvers.CDResults`: `passes` for `iterations`, `converged`,
+`maxchange` for `maxChange`, `tolerance`, and the objective `minimum`.
 
 - `iterations`: number of passes over the coordinates, including those on the
   path of penalties when `warmStart` is false
@@ -135,7 +166,7 @@ passed as the last argument.
 - `tolerance`: the threshold `maxChange` is compared with
 """
 mutable struct CDInfo
-  iterations::Int64
+  iterations::Int
   converged::Bool
   maxChange::Float64
   tolerance::Float64
@@ -155,12 +186,15 @@ end
 """
     IterLassoOptions(; maxIter=20, optTol=1e-2, initProcedure=:Screening,
                        sinit=5, σinit=1.0, optionsCD=CDOptions())
+    IterLassoOptions(o::IterLassoOptions; changes...)
 
 Options for [`feasibleLasso!`](@ref), which alternates a lasso fit with an
 update of the penalty loadings, and for [`scaledLasso!`](@ref), which uses only
 `optionsCD` (since version 0.6.1 it solves the square-root lasso in one run of
 coordinate descent instead of alternating a lasso fit with an update of the
-noise level).
+noise level). The second form copies `o` with the fields named in `changes`
+replaced. The two solvers also take these fields as keyword arguments, as in
+`feasibleLasso!(x, X, y, λ0; maxIter=50)`.
 
 - `maxIter`: maximum number of outer iterations
 - `optTol`: tolerance on the relative change of the noise level or loadings
@@ -175,10 +209,10 @@ noise level).
   `warmStart` is not used there
 """
 struct IterLassoOptions
-  maxIter::Int64
+  maxIter::Int
   optTol::Float64
   initProcedure::Symbol    # :Screening, :InitStd, :WarmStart
-  sinit::Int64             # how many columns of X to use to estimate initial variance or obtain initial residuals
+  sinit::Int               # how many columns of X to use to estimate initial variance or obtain initial residuals
   σinit::Float64
   optionsCD::CDOptions
 
@@ -202,6 +236,12 @@ IterLassoOptions(;
   σinit::Real=1.,
   optionsCD::CDOptions=CDOptions()) =
   IterLassoOptions(Int(maxIter), Float64(optTol), initProcedure, Int(sinit), Float64(σinit), optionsCD)
+
+function IterLassoOptions(o::IterLassoOptions; changes...)
+  _check_keywords(IterLassoOptions, fieldnames(IterLassoOptions), changes)
+  IterLassoOptions(; maxIter = o.maxIter, optTol = o.optTol, initProcedure = o.initProcedure, sinit = o.sinit,
+                   σinit = o.σinit, optionsCD = o.optionsCD, changes...)
+end
 
 
 
@@ -229,6 +269,41 @@ function _float_data(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real})
   T, convert(AbstractMatrix{T}, X), convert(AbstractVector{T}, y)
 end
 
+# The design matrix as coordinate descent reads it, column by column: a strided
+# matrix (a Matrix, or a view of a range of rows or of some columns) or a
+# SparseMatrixCSC as it is, and any other matrix (a transpose, a view of
+# selected rows, …) copied once, into a SparseMatrixCSC if it is sparse and into
+# a Matrix otherwise
+_design(X::Union{StridedMatrix, SparseMatrixCSC}) = X
+_design(X::AbstractMatrix) = issparse(X) ? sparse(X) : Matrix(X)
+
+# the response as the losses read it: a strided vector as it is, any other
+# vector (a range, a view of selected entries, a SparseVector, …) copied once
+_response(y::StridedVector) = y
+_response(y::AbstractVector) = Vector(y)
+
+# Observation weights and an offset as the solvers take them, after checks: a
+# Vector{T}, or nothing for unit weights and for a zero offset, which are the
+# same as none
+function _weights(::Type{T}, w, n::Int) where {T}
+  w === nothing && return nothing
+  length(w) == n || throw(DimensionMismatch("X has $n rows, but the weights have length $(length(w))"))
+  all(v -> isfinite(v) && v >= 0, w) || throw(ArgumentError("the weights must be finite and nonnegative."))
+  sum(w) > 0 || throw(ArgumentError("the weights must have a positive sum."))
+  all(isone, w) ? nothing : convert(Vector{T}, w)
+end
+
+function _offset(::Type{T}, o, n::Int) where {T}
+  o === nothing && return nothing
+  length(o) == n || throw(DimensionMismatch("X has $n rows, but the offset has length $(length(o))"))
+  all(isfinite, o) || throw(ArgumentError("the offset contains NaN or Inf."))
+  all(iszero, o) ? nothing : convert(Vector{T}, o)
+end
+
+# y - o, the response that the offset leaves
+_minus(y, ::Nothing) = y
+_minus(y, o) = y .- o
+
 
 # NaN or Inf in the data would give a meaningless solution that is reported as
 # converged: shrinking a NaN gives zero, so a coordinate with a NaN gradient
@@ -249,12 +324,47 @@ function _column_means(X::AbstractMatrix{T}) where {T}
   xbar
 end
 
+# the column means weighted by w, ∑ᵢ wᵢ Xᵢⱼ / ∑ᵢ wᵢ, with constant columns exact
+function _column_means(X::AbstractMatrix{T}, w::AbstractVector{T}) where {T}
+  xbar = Vector{T}((transpose(X) * w) ./ sum(w))
+  size(X, 1) > 0 || return xbar
+  for k in axes(X, 2)
+    c = X[1, k]
+    all(==(c), view(X, :, k)) && (xbar[k] = c)
+  end
+  xbar
+end
+_column_means(X::AbstractMatrix, ::Nothing) = _column_means(X)
+
+# the same over the stored entries: a column is constant when it is all zero
+# (whatever it stores) or stores n equal values
+function _column_means(X::SparseMatrixCSC{T}) where {T}
+  n, p = size(X)
+  xbar = zeros(T, p)
+  n > 0 || return xbar
+  vals = nonzeros(X)
+  for k in 1:p
+    r = nzrange(X, k)
+    a = zero(T)
+    for j in r
+      a += vals[j]
+    end
+    xbar[k] = a / n
+    if all(j -> iszero(vals[j]), r)
+      xbar[k] = zero(T)
+    elseif length(r) == n && all(j -> vals[j] == vals[first(r)], r)
+      xbar[k] = vals[first(r)]
+    end
+  end
+  xbar
+end
+
 
 # the weighted least squares coefficients argmin_β ∑ᵢ wᵢ (yᵢ - Xᵢ'β)², from a
 # pivoted QR factorization of √w X rather than the normal equations; when they
 # are not unique, as when X has more columns than there are positive weights,
 # the one of minimum norm
-function _wls(X::AbstractMatrix{T}, w::AbstractVector{T}, y::AbstractVector{T}) where {T <: AbstractFloat}
+function _wls(X::AbstractMatrix, w::AbstractVector, y::AbstractVector)
   sw = sqrt.(w)
   qr(sw .* X, ColumnNorm()) \ (sw .* y)
 end
@@ -272,11 +382,11 @@ function _findInitResiduals!(
 
   if intercept
     S = _findLargestCorrelations(X, y .- mean(y), s)
-    Z = [ones(T, length(y)) X[:, S]]
+    Z = [ones(T, length(y)) Matrix(X[:, S])]
     mul!(storage, Z, Z \ y)
   else
     S = _findLargestCorrelations(X, y, s)
-    Xs = view(X, :, S)
+    Xs = issparse(X) ? Matrix(X[:, S]) : view(X, :, S)
     mul!(storage, Xs, Xs \ y)
   end
   @. storage = y - storage
@@ -377,6 +487,25 @@ function _getLoadings!(out::Vector{T}, X::AbstractMatrix{T}, e::AbstractVector{T
       v += abs2((X[i, j] - c) * e[i])
     end
     out[j] = sqrt(v / n)
+  end
+  out
+end
+
+# the same over the stored entries: the entries that are not stored contribute
+# (x̄[j] e[i])², which is x̄[j]² ∑ᵢ e[i]² less what the stored rows took
+function _getLoadings!(out::Vector{T}, X::SparseMatrixCSC{T}, e::AbstractVector{T},
+                       xbar::AbstractVector{T}=zeros(T, size(X, 2))) where {T <: AbstractFloat}
+  n, p = size(X)
+  rows, vals = rowvals(X), nonzeros(X)
+  E2 = sum(abs2, e)
+  @inbounds for j=1:p
+    c = xbar[j]
+    v = c * c * E2
+    for k in nzrange(X, j)
+      i = rows[k]
+      v += abs2((vals[k] - c) * e[i]) - abs2(c * e[i])
+    end
+    out[j] = sqrt(max(v, zero(T)) / n)
   end
   out
 end
