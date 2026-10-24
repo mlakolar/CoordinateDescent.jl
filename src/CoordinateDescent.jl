@@ -24,8 +24,8 @@ module CoordinateDescent
 using ProximalBase
 using ProximalSolvers
 using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel
-using StatsAPI: StatsAPI, aic, bic, coef, confint, deviance, dof, fit, fitted, nobs, nulldeviance, predict, residuals,
-  stderror, vcov
+using StatsAPI: StatsAPI, aic, bic, coef, coefnames, confint, deviance, dof, fit, fitted, nobs, nulldeviance, predict,
+  residuals, responsename, stderror, vcov
 using Random: AbstractRNG, Xoshiro, default_rng, randperm
 using SparseArrays
 using SpecialFunctions: erfc, erfcinv
@@ -40,6 +40,9 @@ export
 
   # the StatsAPI interface of the solutions
   coef, predict, residuals, nobs, dof, deviance, fit, fitted, nulldeviance, stderror, vcov, confint,
+
+  # models fitted from a formula (with StatsModels)
+  FormulaFit, coefnames, responsename,
 
   # cross-validation and information criteria along a path
   CVLassoPath,
@@ -84,6 +87,7 @@ include("multiresponse.jl")
 include("cv.jl")
 include("hdm.jl")
 include("statsapi.jl")
+include("formula.jl")
 include("varying_coefficient_lasso.jl")
 
 include("precompile.jl")

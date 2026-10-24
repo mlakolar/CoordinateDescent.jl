@@ -13,6 +13,7 @@ tests = [
   "multiresponse",
   "hdm",
   "statsapi",
+  "formula",
   "varying_coefficient_lasso"
 ]
 
