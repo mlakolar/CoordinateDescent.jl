@@ -81,6 +81,18 @@ coordinateDescent!(x, CDLeastSquaresLoss(y, X), g)
 [norm(x[G]) for G in groups]         # the first group is selected
 ```
 
+With several responses that share the predictors, `multiLasso` and
+`MultiLassoPath` fit the multi-response lasso,
+`‖Y - 1β₀' - XB‖²_F / (2n) + λ ∑ₖ ωₖ ‖B[k, :]‖₂`, which selects the same
+predictors for every response (glmnet's `mgaussian`), by exact block steps on
+the rows of `B`:
+
+```julia
+Y = X[:, 1:3] * randn(3, 4) + randn(n, 4)          # four responses
+sol = multiLasso(X, Y, 0.1)                         # sol.B (p × 4, sparse), sol.intercept, sol.activerows
+path = MultiLassoPath(X, Y; nλ = 50)
+```
+
 Coordinate descent stops when no coordinate changes by more than `optTol` in a
 pass, the change of coefficient `k` measured in units of `‖y‖ / ‖X[:, k]‖`, so
 the result does not depend on the units of the data (`CDOptions(; relativeTol =

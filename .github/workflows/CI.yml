@@ -55,12 +55,14 @@ jobs:
       # 0.1.1, which has SqrtQuadraticFunction, is on its master. Julia 1.11 and
       # later take it from [sources] in Project.toml; Julia 1.10 ignores
       # [sources]. Remove this step and [sources] once 0.1.1 is registered.
+      # This branch needs ProximalSolvers' multiresponse (PR #55): back to
+      # master once it merges.
       - name: Add ProximalSolvers from GitHub on Julia 1.10
         if: matrix.version == 'lts'
         shell: julia --color=yes --project=. {0}
         run: |
           using Pkg
-          Pkg.add(url="https://github.com/mlakolar/ProximalSolvers.jl", rev="master")
+          Pkg.add(url="https://github.com/mlakolar/ProximalSolvers.jl", rev="multiresponse")
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
