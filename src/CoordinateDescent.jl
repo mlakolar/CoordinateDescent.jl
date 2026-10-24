@@ -3,7 +3,8 @@
 
 Lasso estimators computed by coordinate descent: [`lasso`](@ref),
 [`sqrtLasso`](@ref), [`scaledLasso`](@ref), [`feasibleLasso!`](@ref),
-[`LassoPath`](@ref), and the varying-coefficient estimators [`locpoly`](@ref)
+[`LassoPath`](@ref), the inference after selection of R's hdm ([`rlasso`](@ref),
+[`postLasso`](@ref), [`doubleSelection`](@ref)), and the varying-coefficient estimators [`locpoly`](@ref)
 and [`locpolyl1`](@ref). They run the coordinate descent, the penalty paths and
 the reweighting of ProximalSolvers.jl on the losses and penalties of
 ProximalBase.jl, as does [`coordinateDescent!`](@ref), which minimizes
@@ -20,6 +21,7 @@ using ProximalBase
 using ProximalSolvers
 using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel, residuals
 using SparseArrays
+using SpecialFunctions: erfc, erfcinv
 using Statistics
 using LinearAlgebra
 
@@ -34,6 +36,12 @@ export
   CDOptions, CDInfo,
   coordinateDescent!,
 
+  # inference after selection, as in R's hdm
+  theoryLambda,
+  rlasso,
+  postLasso,
+  doubleSelection,
+
   # var coef
   GaussianKernel, SmoothingKernel, EpanechnikovKernel, evaluate, createKernel,
   locpoly, locpolyl1
@@ -42,6 +50,7 @@ include("utils.jl")
 include("losses.jl")
 include("coordinate_descent.jl")
 include("lasso.jl")
+include("hdm.jl")
 include("varying_coefficient_lasso.jl")
 
 include("precompile.jl")
