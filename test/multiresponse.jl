@@ -55,6 +55,10 @@ end
   @test all(norm(path.Bpath[k] - path0.Bpath[k]) < 1e-5 for k in eachindex(path.λpath))
   pathm = MultiLassoPath(X, Y; nλ = 50, max_rows = 4)
   @test length(last(pathm.activerows)) > 4 && all(length(a) <= 4 for a in pathm.activerows[1:end-1])
+  # integer data, and a range of levels
+  @test MultiLassoPath(round.(Int, X), round.(Int, Y); nλ = 5).λpath isa Vector{Float64}
+  pr = MultiLassoPath(X, Y, range(path.λpath[1], path.λpath[10]; length = 4))
+  @test length(pr.λpath) == 4 && pr.λpath[4] ≈ path.λpath[10]
 end
 
 end
