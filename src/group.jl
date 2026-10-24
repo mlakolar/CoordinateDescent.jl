@@ -108,6 +108,10 @@ Result returned by [`groupLasso`](@ref).
 - `activegroups::Vector{Int}`: the groups with nonzero coefficients
 - `iterations::Int`, `converged::Bool`: the passes of coordinate descent and
   whether it met its stopping rule
+- `hasintercept::Bool`, `nobs::Int`: whether the solver fitted an intercept, and
+  the number of observations
+
+[`coef`](@ref), [`predict`](@ref), [`nobs`](@ref) and [`dof`](@ref) apply to it.
 """
 struct GroupLassoSolution{T}
   x::SparseVector{T, Int}
@@ -118,6 +122,8 @@ struct GroupLassoSolution{T}
   activegroups::Vector{Int}
   iterations::Int
   converged::Bool
+  hasintercept::Bool
+  nobs::Int
 end
 
 """
@@ -158,7 +164,7 @@ function groupLasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T, groups::A
   r = _solve!(x, m, GroupNormL2(λ, g1.groups, g1.w), options)
   β = _coefficients(d, Vector(x), p)
   GroupLassoSolution{T}(β, _groupIntercept(X, y, β, intercept), λ, gs, w, _activegroups(gs, β), r.passes,
-                        r.converged)
+                        r.converged, intercept, size(X, 1))
 end
 
 function groupLasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real, groups::AbstractVector,
@@ -188,6 +194,8 @@ solution with more than `max_groups` nonzero groups; the returned `λpath` then
 contains only the values that were solved for. `activegroups[k]` lists the
 nonzero groups at `λpath[k]`, and `iterations[k]` and `converged[k]` are the
 passes of coordinate descent there and whether it met its stopping rule.
+`coef`, `predict` and `nobs` apply to the path, as for [`LassoPath`](@ref), and
+`fit(GroupLassoPath, X, y, ...)` is `GroupLassoPath(X, y, ...)`.
 """
 struct GroupLassoPath{T<:AbstractFloat}
   λpath::Vector{T}
@@ -200,6 +208,7 @@ struct GroupLassoPath{T<:AbstractFloat}
   intercept::Bool
   groups::Vector{Vector{Int}}
   groupweights::Vector{T}
+  nobs::Int
 end
 
 function GroupLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, λpath::Vector{T}, groups::AbstractVector,
@@ -214,7 +223,7 @@ function GroupLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, λpath::Vect
   βpath = [_coefficients(d, θ, p) for θ in path.solutions]
   GroupLassoPath{T}(path.λ, βpath, [_groupIntercept(X, y, β, intercept) for β in βpath],
                     [_activegroups(gs, β) for β in βpath], path.passes, path.converged, path.kkt_checks,
-                    intercept, gs, w)
+                    intercept, gs, w, size(X, 1))
 end
 
 function GroupLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, groups::AbstractVector,

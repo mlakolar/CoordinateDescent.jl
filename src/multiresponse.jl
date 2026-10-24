@@ -33,6 +33,12 @@ Result returned by [`multiLasso`](@ref).
   for all the responses
 - `iterations::Int`, `converged::Bool`: the passes of coordinate descent over
   the rows and whether it met its stopping rule
+- `hasintercept::Bool`, `nobs::Int`: whether the solver fitted intercepts, and
+  the number of observations
+
+[`coef`](@ref) (a `(p + 1) × q` matrix, the intercepts in the first row),
+[`predict`](@ref) (an `n × q` matrix), [`nobs`](@ref) and [`dof`](@ref) apply
+to it.
 """
 struct MultiLassoSolution{T}
   B::SparseMatrixCSC{T, Int}
@@ -41,6 +47,8 @@ struct MultiLassoSolution{T}
   activerows::Vector{Int}
   iterations::Int
   converged::Bool
+  hasintercept::Bool
+  nobs::Int
 end
 
 """
@@ -69,7 +77,8 @@ function multiLasso(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, λ::T, options::
   m, groups, x, ω = _multiProblem(X, Y, intercept, standardizeX)
   r = _solve!(x, m, GroupNormL2(λ, groups, ω), options)
   B = sparse(reshape(Vector(x), p, q))
-  MultiLassoSolution{T}(B, ProximalSolvers.intercept(m, x), λ, _activerows(B), r.passes, r.converged)
+  MultiLassoSolution{T}(B, ProximalSolvers.intercept(m, x), λ, _activerows(B), r.passes, r.converged, intercept,
+                        size(X, 1))
 end
 
 function multiLasso(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real}, λ::Real, options::CDOptions = CDOptions();
@@ -97,7 +106,10 @@ strong rule, and the optimality conditions of the others are checked
 afterwards (`kktChecks[k]` times at `λpath[k]`). The path stops early after the
 first solution with more than `max_rows` nonzero rows; the returned `λpath`
 then contains only the values that were solved for. `activerows[k]` lists the
-selected predictors at `λpath[k]`.
+selected predictors at `λpath[k]`. `coef` and `predict` give a vector with a
+matrix per level (`coef(path, λ)` one matrix, interpolated in `λ`), `nobs` the
+number of observations, and `fit(MultiLassoPath, X, Y, ...)` is
+`MultiLassoPath(X, Y, ...)`.
 """
 struct MultiLassoPath{T<:AbstractFloat}
   λpath::Vector{T}
@@ -108,6 +120,7 @@ struct MultiLassoPath{T<:AbstractFloat}
   converged::Vector{Bool}
   kktChecks::Vector{Int}
   intercept::Bool
+  nobs::Int
 end
 
 function MultiLassoPath(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, λpath::Vector{T}, options::CDOptions = CDOptions();
@@ -120,7 +133,8 @@ function MultiLassoPath(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, λpath::Vect
   path = solve_path(m, GroupNormL2(one(T), groups, ω), λpath, _solver(options); x, screening, maxnnz = max_rows,
                     callback = (k, λ, x, m) -> (push!(β0path, ProximalSolvers.intercept(m, x)); false))
   Bpath = [sparse(reshape(Vector(θ), p, q)) for θ in path.solutions]
-  MultiLassoPath{T}(path.λ, Bpath, β0path, _activerows.(Bpath), path.passes, path.converged, path.kkt_checks, intercept)
+  MultiLassoPath{T}(path.λ, Bpath, β0path, _activerows.(Bpath), path.passes, path.converged, path.kkt_checks, intercept,
+                    size(X, 1))
 end
 
 function MultiLassoPath(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, options::CDOptions = CDOptions();
