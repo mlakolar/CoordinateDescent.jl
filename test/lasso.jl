@@ -261,6 +261,11 @@ end
   Y = X[:,1:s] * randn(s) + randn(n)
 
   λ0 = 0.1
+  # with maxIter = 0 nothing is updated and nothing is warned: x stays where the
+  # initial procedure leaves it, and the loadings come from its residuals
+  sol0 = @test_logs feasibleLasso!(SparseIterate(p), X, Y, λ0; maxIter = 0, initProcedure = :WarmStart)
+  @test nnz(sol0.x) == 0 && !sol0.converged
+  @test sol0.penalty.w ≈ vec(sqrt.(sum(abs2, X .* Y, dims=1) / n))
   for initProcedure in (:Screening, :InitStd, :WarmStart)
     opt = IterLassoOptions(;maxIter=100, optTol=1e-6, initProcedure=initProcedure,
                            optionsCD=CDOptions(;maxIter=5000, optTol=1e-10))

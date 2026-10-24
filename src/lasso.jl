@@ -702,8 +702,11 @@ lasso
 and the update of the loadings `Γⱼ = sqrt(∑ᵢ (Xᵢⱼ - x̄ⱼ)² rᵢ² / n)` from the
 residuals `r = y - β̂₀ - Xβ̂`, until the relative change in `Γ` is below
 `options.optTol` (by `ProximalSolvers.reweight!`), or warns after
-`options.maxIter` iterations. The intercept `β₀` is not penalized; it and the
-column means `x̄ⱼ` are zero unless `intercept` is true.
+`options.maxIter` iterations. With `maxIter = 0` there is no update: `x` is
+left as the initial procedure leaves it, the loadings are those of its
+residuals, and `converged` is false, without a warning. The intercept `β₀` is
+not penalized; it and the column means `x̄ⱼ` are zero unless `intercept` is
+true.
 
 The initial residuals are chosen by `options.initProcedure` (see
 [`IterLassoOptions`](@ref)); with `:InitStd` they come from a lasso with
@@ -754,7 +757,7 @@ function feasibleLasso!(
     NormL1(λ0, Γnew), maximum(abs.(g.w .- Γnew)) / maximum(Γnew)
   end
   res = _reweight!(x, m, NormL1(λ0, Γ), update, options; rng)
-  res.converged || @warn "feasibleLasso! did not converge in maxIter = $(options.maxIter) iterations (relative change of the penalty loadings in the last iteration $(round(res.change; sigdigits = 3)) > optTol = $(options.optTol)). Increase maxIter in IterLassoOptions."
+  res.converged || options.maxIter == 0 || @warn "feasibleLasso! did not converge in maxIter = $(options.maxIter) iterations (relative change of the penalty loadings in the last iteration $(round(res.change; sigdigits = 3)) > optTol = $(options.optTol)). Increase maxIter in IterLassoOptions."
 
   r = ProximalSolvers.residuals(m)
   LassoSolution{T, typeof(res.penalty)}(x, r, res.penalty, std(r), passes + res.passes,
