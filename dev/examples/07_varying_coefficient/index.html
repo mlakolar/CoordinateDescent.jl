@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Varying-coefficient models · CoordinateDescent.jl</title><meta name="title" content="Varying-coefficient models · CoordinateDescent.jl"/><meta property="og:title" content="Varying-coefficient models · CoordinateDescent.jl"/><meta property="twitter:title" content="Varying-coefficient models · CoordinateDescent.jl"/><meta name="description" content="Documentation for CoordinateDescent.jl."/><meta property="og:description" content="Documentation for CoordinateDescent.jl."/><meta property="twitter:description" content="Documentation for CoordinateDescent.jl."/><meta property="og:url" content="https://mlakolar.github.io/CoordinateDescent.jl/stable/examples/07_varying_coefficient/"/><meta property="twitter:url" content="https://mlakolar.github.io/CoordinateDescent.jl/stable/examples/07_varying_coefficient/"/><link rel="canonical" href="https://mlakolar.github.io/CoordinateDescent.jl/stable/examples/07_varying_coefficient/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">CoordinateDescent.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../lasso/">The lasso and its tuning-free variants</a></li><li><a class="tocitem" href="../../paths/">Paths, screening and solver options</a></li><li><a class="tocitem" href="../../group/">The group lasso</a></li><li><a class="tocitem" href="../../extending/">Writing a loss or a penalty</a></li><li><a class="tocitem" href="../../varying/">Varying-coefficient models</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../01_lasso/">The lasso</a></li><li><a class="tocitem" href="../02_solver_options/">Options of coordinate descent: CDOptions, keywords, and what a run reports</a></li><li><a class="tocitem" href="../03_lasso_path/">Lasso paths, refitting, and choosing λ</a></li><li><a class="tocitem" href="../04_sqrt_scaled_feasible/">Choosing the penalty without knowing the noise level</a></li><li><a class="tocitem" href="../05_group_lasso/">The group lasso</a></li><li><a class="tocitem" href="../06_losses/">The losses and the low-level interface</a></li><li class="is-active"><a class="tocitem" href>Varying-coefficient models</a><ul class="internal"><li><a class="tocitem" href="#locpoly"><span>locpoly</span></a></li><li><a class="tocitem" href="#Kernels,-bandwidths-and-degrees"><span>Kernels, bandwidths and degrees</span></a></li><li><a class="tocitem" href="#Standard-errors"><span>Standard errors</span></a></li><li><a class="tocitem" href="#Many-variables:-locpolyl1"><span>Many variables: locpolyl1</span></a></li></ul></li><li><a class="tocitem" href="../08_custom_loss/">A loss of your own: ℓ1-penalized logistic regression</a></li><li><a class="tocitem" href="../09_custom_penalty/">A penalty of your own: the elastic net and the minimax concave penalty</a></li></ul></li><li><span class="tocitem">API reference</span><ul><li><a class="tocitem" href="../../api/estimators/">Estimators</a></li><li><a class="tocitem" href="../../api/solutions/">Solutions</a></li><li><a class="tocitem" href="../../api/coordinate_descent/">Coordinate descent, losses and options</a></li><li><a class="tocitem" href="../../api/varying/">Varying-coefficient models</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Varying-coefficient models</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Varying-coefficient models</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/mlakolar/CoordinateDescent.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/mlakolar/CoordinateDescent.jl/blob/master/examples/07_varying_coefficient.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Varying-coefficient-models"><a class="docs-heading-anchor" href="#Varying-coefficient-models">Varying-coefficient models</a><a id="Varying-coefficient-models-1"></a><a class="docs-heading-anchor-permalink" href="#Varying-coefficient-models" title="Permalink"></a></h1><pre><code class="nohighlight hljs">yᵢ = ∑ⱼ Xᵢⱼ βⱼ(zᵢ) + εᵢ</code></pre><p>by local polynomial regression: near a point z0, each βⱼ(z) is approximated by a polynomial of degree q in z - z0, fit by kernel-weighted least squares (locpoly), or by the kernel-weighted lasso when there are many variables and few of the βⱼ are nonzero (locpolyl1).</p><p>The estimate at z0 is a vector of p(q + 1) coefficients ordered by variable: entries (j - 1)(q + 1) + 1 to j(q + 1) hold βⱼ(z0), βⱼ&#39;(z0), βⱼ&#39;&#39;(z0) / 2, and so on. The functions that are not exported are called with the CoordinateDescent. prefix.</p><pre><code class="language-julia hljs">using CoordinateDescent
+using LinearAlgebra, Printf, Random, Statistics
+
+Random.seed!(7)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Random.TaskLocalRNG()</code></pre><p>three coefficient functions: an intercept sin(2πz), a hump 4z(1 - z) and a constant, with z uniform on [0, 1]</p><pre><code class="language-julia hljs">n = 500
+z = rand(n)
+X = [ones(n) randn(n, 2)]
+βtrue = [z -&gt; sin(2π * z), z -&gt; 4z * (1 - z), z -&gt; 1.0]
+y = sum(X[:, j] .* βtrue[j].(z) for j in 1:3) + 0.3 * randn(n)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">500-element Vector{Float64}:
+ -0.4460810330337606
+ -0.9684610154096478
+ -0.5739235805843015
+ -1.0148600329323256
+ -1.8472988862432105
+ -0.6803825381909324
+ -0.4386894835288181
+  1.577227838756734
+ -0.40875407373964956
+  0.18547291512735964
+  ⋮
+ -0.443089228721738
+  0.9373036913791211
+  2.0349928141252946
+  0.9184456276692123
+ -0.44121042872149047
+ -0.5866260086264761
+ -0.46366331760559776
+  0.9755525713136185
+  3.7108254924574293</code></pre><h2 id="locpoly"><a class="docs-heading-anchor" href="#locpoly">locpoly</a><a id="locpoly-1"></a><a class="docs-heading-anchor-permalink" href="#locpoly" title="Permalink"></a></h2><p>locpoly(X, z, y, zgrid, degree, kernel) returns a p(q + 1) × length(zgrid) matrix, and locpoly(X, z, y, z0, degree, kernel) the vector at one point. EpanechnikovKernel(h) has bandwidth h: it gives weight to the observations with |zᵢ - z0| &lt; h.</p><pre><code class="language-julia hljs">zgrid = collect(0.1:0.2:0.9)
+degree = 1
+B = locpoly(X, z, y, zgrid, degree, EpanechnikovKernel(0.15))
+levels = 1:(degree + 1):size(B, 1)                  # the rows of β₁(z0), β₂(z0), β₃(z0)
+println(&quot;   z0   β̂₁(z0) (true)    β̂₂(z0) (true)    β̂₃(z0) (true)&quot;)
+for (k, z0) in enumerate(zgrid)
+  @printf(&quot;  %.1f&quot;, z0)
+  for j in 1:3
+    @printf(&quot;  %6.3f (%6.3f)&quot;, B[levels[j], k], βtrue[j](z0))
+  end
+  println()
+end
+b = locpoly(X, z, y, 0.5, degree, EpanechnikovKernel(0.15))
+@printf(&quot;at z0 = 0.5 alone: β̂₁ = %.3f, and its derivative β̂₁&#39; = %.2f (true %.2f)\n&quot;, b[1], b[2], 2π * cos(π))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">   z0   β̂₁(z0) (true)    β̂₂(z0) (true)    β̂₃(z0) (true)
+  0.1   0.542 ( 0.588)   0.337 ( 0.360)   0.990 ( 1.000)
+  0.3   0.858 ( 0.951)   0.821 ( 0.840)   1.008 ( 1.000)
+  0.5  -0.017 ( 0.000)   0.935 ( 1.000)   1.006 ( 1.000)
+  0.7  -0.851 (-0.951)   0.813 ( 0.840)   0.932 ( 1.000)
+  0.9  -0.572 (-0.588)   0.304 ( 0.360)   0.958 ( 1.000)
+at z0 = 0.5 alone: β̂₁ = -0.017, and its derivative β̂₁&#39; = -6.04 (true -6.28)</code></pre><h2 id="Kernels,-bandwidths-and-degrees"><a class="docs-heading-anchor" href="#Kernels,-bandwidths-and-degrees">Kernels, bandwidths and degrees</a><a id="Kernels,-bandwidths-and-degrees-1"></a><a class="docs-heading-anchor-permalink" href="#Kernels,-bandwidths-and-degrees" title="Permalink"></a></h2><p>GaussianKernel(h) is exp(-(zᵢ - z0)² / h) / h: h is a variance, 2σ² for a kernel with standard deviation σ. Small bandwidths give noisy estimates and large ones biased estimates; a higher degree reduces the bias where the functions curve. The error is the root mean square error of β̂₁ on a fine grid.</p><pre><code class="language-julia hljs">zfine = collect(0.05:0.01:0.95)
+rmse(B) = sqrt(mean(abs2, B[1, :] - βtrue[1].(zfine)))
+println(&quot;  kernel                 degree  RMSE of β̂₁&quot;)
+for (name, kernel) in ((&quot;Epanechnikov h = 0.05&quot;, EpanechnikovKernel(0.05)),
+                       (&quot;Epanechnikov h = 0.15&quot;, EpanechnikovKernel(0.15)),
+                       (&quot;Epanechnikov h = 0.40&quot;, EpanechnikovKernel(0.40)),
+                       (&quot;Gaussian σ = 0.06&quot;, GaussianKernel(2 * 0.06^2))),
+    degree in (0, 1, 2)
+  @printf(&quot;  %-21s  %6d  %10.3f\n&quot;, name, degree, rmse(locpoly(X, z, y, zfine, degree, kernel)))
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">  kernel                 degree  RMSE of β̂₁
+  Epanechnikov h = 0.05       0       0.040
+  Epanechnikov h = 0.05       1       0.037
+  Epanechnikov h = 0.05       2       0.054
+  Epanechnikov h = 0.15       0       0.092
+  Epanechnikov h = 0.15       1       0.079
+  Epanechnikov h = 0.15       2       0.030
+  Epanechnikov h = 0.40       0       0.314
+  Epanechnikov h = 0.40       1       0.294
+  Epanechnikov h = 0.40       2       0.057
+  Gaussian σ = 0.06           0       0.078
+  Gaussian σ = 0.06           1       0.068
+  Gaussian σ = 0.06           2       0.029</code></pre><p>Leave-one-out cross-validation: lvocv_locpoly predicts each yᵢ from the fit at zᵢ without observation i, for each bandwidth in hs, and returns the sums of squared errors. createKernel(KernelType, h) is how it builds the kernels.</p><pre><code class="language-julia hljs">hs = [0.05, 0.1, 0.15, 0.2, 0.3, 0.4]
+cv = CoordinateDescent.lvocv_locpoly(X, z, y, 1, hs, EpanechnikovKernel{Float64})
+h = hs[argmin(cv)]
+println(&quot;\nleave-one-out errors &quot;, round.(cv / n; digits = 4), &quot; for h = &quot;, hs, &quot;: h = $h&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
+leave-one-out errors [0.0936, 0.0925, 0.0945, 0.1008, 0.1285, 0.1713] for h = [0.05, 0.1, 0.15, 0.2, 0.3, 0.4]: h = 0.1</code></pre><h2 id="Standard-errors"><a class="docs-heading-anchor" href="#Standard-errors">Standard errors</a><a id="Standard-errors-1"></a><a class="docs-heading-anchor-permalink" href="#Standard-errors" title="Permalink"></a></h2><p>getStandardError(X, z, σ², z0, degree, kernel) returns the variances of β̂ⱼ(z0) under homoscedastic noise with variance σ², and getStandardErrorHEW with the squared residuals in place of σ² is robust to heteroscedasticity. getResiduals! computes the residuals of a fit on a grid, interpolating the coefficients linearly between the grid points.</p><pre><code class="language-julia hljs">kernel = EpanechnikovKernel(h)
+Bfine = locpoly(X, z, y, zfine, 1, kernel)
+r = CoordinateDescent.getResiduals!(zeros(n), X, z, y, zfine, Bfine, 1)
+σ2 = mean(abs2, r)
+@printf(&quot;σ̂ = %.3f (true 0.3)\n&quot;, sqrt(σ2))
+println(&quot;   z0  β̂₂(z0)  95% interval      true  robust interval&quot;)
+for z0 in (0.2, 0.5, 0.8)
+  bz = locpoly(X, z, y, z0, 1, kernel)
+  se = sqrt.(CoordinateDescent.getStandardError(X, z, σ2, z0, 1, kernel))
+  seHEW = sqrt.(CoordinateDescent.getStandardErrorHEW(X, z, r .^ 2, z0, 1, kernel))
+  @printf(&quot;  %.1f  %6.3f  [%5.3f, %5.3f]  %5.3f  [%5.3f, %5.3f]\n&quot;, z0, bz[3], bz[3] - 1.96se[2], bz[3] + 1.96se[2],
+          βtrue[2](z0), bz[3] - 1.96seHEW[2], bz[3] + 1.96seHEW[2])
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">σ̂ = 0.295 (true 0.3)
+   z0  β̂₂(z0)  95% interval      true  robust interval
+  0.2   0.656  [0.597, 0.714]  0.640  [0.598, 0.714]
+  0.5   0.953  [0.893, 1.013]  1.000  [0.888, 1.018]
+  0.8   0.637  [0.567, 0.706]  0.640  [0.580, 0.693]</code></pre><h2 id="Many-variables:-locpolyl1"><a class="docs-heading-anchor" href="#Many-variables:-locpolyl1">Many variables: locpolyl1</a><a id="Many-variables:-locpolyl1-1"></a><a class="docs-heading-anchor-permalink" href="#Many-variables:-locpolyl1" title="Permalink"></a></h2><p>Of p = 50 variables, three have varying coefficients and the others none. locpolyl1(X, z, y, zgrid, degree, kernel, λ0, refit) solves at each grid point the weighted lasso     ∑ᵢ wᵢ (yᵢ - X̃ᵢ&#39;β)² / (2n) + λ0 ∑ₖ sₖ |βₖ|, with wᵢ = K_h(zᵢ, z0), the expanded design X̃ and sₖ the weighted standard deviations of its columns, each problem warm started from the previous grid point. It returns sparse matrices B and BR, with BR the weighted least squares refit on the selected variables when refit is true. Options of coordinate descent go last.</p><pre><code class="language-julia hljs">p = 50
+Xh = randn(n, p)
+yh = Xh[:, 1] .* sin.(2π * z) + Xh[:, 2] .* 4z .* (1 .- z) + Xh[:, 3] + 0.3 * randn(n)
+zgrid = collect(0.1:0.2:0.9)
+B, BR = locpolyl1(Xh, z, yh, zgrid, 1, EpanechnikovKernel(0.2), 0.1, true, CDOptions(; optTol = 1e-8))
+println(&quot;   z0  selected  β̂₁ lasso  refit  true&quot;)
+for (k, z0) in enumerate(zgrid)
+  S = CoordinateDescent.get_nonzero_coordinates(B[:, k], p, 1, false)
+  @printf(&quot;  %.1f  %-8s  %8.3f  %5.3f  %5.3f\n&quot;, z0, string(findall(S)), B[1, k], BR[1, k], βtrue[1](z0))
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">   z0  selected  β̂₁ lasso  refit  true
+  0.1  [1, 2, 3]     0.475  0.546  0.588
+  0.3  [1, 2, 3]     0.784  0.853  0.951
+  0.5  [1, 2, 3]     0.000  0.015  0.000
+  0.7  [1, 2, 3]    -0.662  -0.795  -0.951
+  0.9  [1, 2, 3]    -0.400  -0.502  -0.588</code></pre><p>The bandwidth of locpolyl1 can be chosen by leave-one-out cross-validation as well: lvocv_locpolyl1 fits at each zᵢ without observation i, with the penalty λ0 σ̂ and the noise level σ̂ estimated as in the scaled lasso, and predicts yᵢ from the least squares refit on the selected variables. Here σ̂ ≈ 0.3, so λ0 = 0.3 gives about the penalty used above. A λ0 that is too small selects more variables than the observations near zᵢ can refit, and the errors blow up. It solves n lasso problems per bandwidth, so this uses the first 200 observations.</p><pre><code class="language-julia hljs">m = 200
+cvl = CoordinateDescent.lvocv_locpolyl1(Xh[1:m, :], z[1:m], yh[1:m], 1, [0.1, 0.2, 0.4],
+                                        EpanechnikovKernel{Float64}, 0.3)
+println(&quot;\nleave-one-out errors of locpolyl1 for h = 0.1, 0.2, 0.4: &quot;, round.(cvl / m; digits = 4))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
+leave-one-out errors of locpolyl1 for h = 0.1, 0.2, 0.4: [0.1879, 0.1283, 0.2047]</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../06_losses/">« The losses and the low-level interface</a><a class="docs-footer-nextpage" href="../08_custom_loss/">A loss of your own: ℓ1-penalized logistic regression »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Saturday 24 October 2026 11:05">Saturday 24 October 2026</span>. Using Julia version 1.13.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
