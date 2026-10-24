@@ -16,7 +16,7 @@ and by blocks for the group lasso, whose coordinates are groups.
 
 Estimators:
 * Lasso, with an intercept, standardization and penalty loadings
-* Elastic net, MCP and SCAD, and the adaptive lasso
+* Elastic net, MCP and SCAD, bounds on the coefficients, and the adaptive lasso
 * Penalized logistic and Poisson regression, by proximal Newton
 * Group lasso, and the multi-response lasso
 * Square-root lasso
@@ -69,6 +69,7 @@ coef(path, 0.1)                                  # the coefficients at λ = 0.1
 cv = CVLassoPath(X, y; intercept=true)           # λ by 10-fold cross-validation
 coef(cv)                                         # the coefficients at cv.λ1se
 sol = lasso(X, y, 0.1; alpha=0.5)                # the elastic net; or penalty=MCP(1, 3), SCAD
+sol = lasso(X, y, 0.1; lower=0)                  # the nonnegative lasso; also upper, per coefficient
 sol = adaptiveLasso(X, y, 0.1)                   # loadings 1/|β̃ⱼ| from a first lasso
 yb = Float64.(rand(n) .< 1 ./ (1 .+ exp.(-X[:, 1])))
 sol = glmLasso(X, yb, 0.02)                      # logistic regression; also Poisson

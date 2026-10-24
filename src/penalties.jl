@@ -24,6 +24,7 @@ _atlevelone(::Type{T}, g::ElasticNet) where {T} = ElasticNet(one(T), T(g.λ2), g
 _atlevelone(::Type{T}, g::Scaled{<:ElasticNet}) where {T} = Scaled(ElasticNet(T(g.f.λ1), T(g.f.λ2), g.f.w), one(T))
 _atlevelone(::Type{T}, g::MCP) where {T} = MCP(one(T), T(g.a))
 _atlevelone(::Type{T}, g::SCAD) where {T} = SCAD(one(T), T(g.a))
+_atlevelone(::Type, g::ProximalBase.BoxConstrained) = throw(ArgumentError("give bounds on the coefficients by lower and upper, not by Constrained in penalty."))
 _atlevelone(::Type, g) = throw(ArgumentError("penalty must be a NormL1, NormL1Nonneg, ElasticNet, Scaled(ElasticNet(α, 1 - α), c), MCP or SCAD, whose level λ replaces, but it is a $(typeof(g))."))
 
 # the penalty with level λ, as the paths of ProximalSolvers set it: the scale
@@ -35,6 +36,35 @@ _atlevel(g::ElasticNet, λ) = ElasticNet(λ, g.λ2, g.w)
 _atlevel(g::Scaled{<:ElasticNet}, λ) = Scaled(g.f, λ)
 _atlevel(g::MCP, λ) = MCP(λ, g.a)
 _atlevel(g::SCAD, λ) = SCAD(λ, g.a)
+_atlevel(c::ProximalBase.BoxConstrained, λ) = ProximalBase.BoxConstrained(_atlevel(c.f, λ), c.box)
+
+# The bounds lower ≤ β ≤ upper of lasso, LassoPath and glmLasso (numbers, or
+# vectors with a bound per coefficient) as a box on the coefficients that the
+# penalty applies to: s .* β when the columns are divided by the scales s, β
+# for s = nothing. Returns nothing without bounds. As in glmnet, zero must be
+# feasible, lower ≤ 0 ≤ upper, so that paths start from zero at λmax.
+function _box(::Type{T}, lower, upper, p::Int, s = nothing) where {T}
+  all(==(-Inf), lower) && all(==(Inf), upper) && return nothing
+  l, u = _bound(T, lower, p, "lower"), _bound(T, upper, p, "upper")
+  all(<=(0), l) || throw(ArgumentError("the lower bounds must be nonpositive, so that zero is feasible, as in glmnet."))
+  all(>=(0), u) || throw(ArgumentError("the upper bounds must be nonnegative, so that zero is feasible, as in glmnet."))
+  s === nothing ? IndBox(l, u) : IndBox(l .* s, u .* s)
+end
+
+function _bound(::Type{T}, b::Real, p::Int, name) where {T}
+  isnan(b) && throw(ArgumentError("$name is NaN."))
+  T(b)
+end
+
+function _bound(::Type{T}, b::AbstractVector{<:Real}, p::Int, name) where {T}
+  length(b) == p || throw(DimensionMismatch("$name has length $(length(b)), but X has $p columns."))
+  any(isnan, b) && throw(ArgumentError("$name contains NaN."))
+  convert(Vector{T}, b)
+end
+
+# the penalty g restricted to the box (g itself for nothing)
+_constrain(g, ::Nothing) = g
+_constrain(g, box::IndBox) = Constrained(g, box)
 
 # the ℓ1 penalties, whose standardization is computed as loadings
 _isl1(template) = template === nothing || template isa Union{NormL1, NormL1Nonneg}

@@ -13,7 +13,8 @@ Result returned by [`glmLasso`](@ref).
 - `x::SparseIterate`: the estimated coefficients `β`
 - `intercept`: the unpenalized intercept `β₀`, zero unless the solver was
   called with `intercept = true`
-- `penalty::NormL1`: the penalty at which `x` was computed
+- `penalty`: the penalty at which `x` was computed, `NormL1(λ, ω)`, or
+  `Constrained(NormL1(λ, ω), IndBox(lower, upper))` with bounds
 - `loss`: the scalar loss of the model, such as `ProximalBase.Logistic()`
 - `linearpredictor::Vector`: `η = β₀ + Xβ + offset`
 - `deviance`: `2 ∑ᵢ wᵢ (ℓ(ηᵢ, yᵢ) - minᵤ ℓ(u, yᵢ))`, twice the negative
@@ -73,7 +74,7 @@ _newton(options::CDOptions, newtonTol, newtonMaxIter) =
 """
     glmLasso(X, y, λ, loss = ProximalBase.Logistic(), options = CDOptions();
              intercept = true, standardizeX = true, weights = nothing, offset = nothing,
-             newtonTol = 1e-8, newtonMaxIter = 100)
+             lower = -Inf, upper = Inf, newtonTol = 1e-8, newtonMaxIter = 100)
 
 Solve the penalized generalized linear model
 
@@ -89,6 +90,8 @@ zero unless `intercept` is true. With `standardizeX` the loadings `ωⱼ` are th
 standard deviations of the columns, weighted by `w` and centered at their
 weighted means with an intercept, so that the coefficients are on the scale of
 the data; otherwise `ωⱼ = 1`. These are glmnet's conventions and defaults.
+`lower` and `upper` bound the coefficients, `lower ≤ β ≤ upper`, as for
+[`lasso`](@ref).
 
 The problem is solved by proximal Newton (ProximalSolvers' `ProxNewton`, the
 method of glmnet): each step minimizes the weighted least-squares model of the
@@ -111,14 +114,17 @@ function glmLasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T,
                   intercept::Bool = true, standardizeX::Bool = true,
                   weights::Union{Nothing, AbstractVector{<:Real}} = nothing,
                   offset::Union{Nothing, AbstractVector{<:Real}} = nothing,
+                  lower::Union{Real, AbstractVector{<:Real}} = -Inf, upper::Union{Real, AbstractVector{<:Real}} = Inf,
                   newtonTol::Real = 1e-8, newtonMaxIter::Integer = 100) where {T<:AbstractFloat}
   λ >= 0 || throw(ArgumentError("λ must be nonnegative, but it is $λ."))
   p = size(X, 2)
   m, ω = _glmModel(X, y, loss, weights, offset, intercept, standardizeX)
   method = _newton(options, newtonTol, newtonMaxIter)
   x = SparseIterate(T, p)
-  g = NormL1(λ, ω)
-  λmax = options.warmStart ? zero(T) : lambda_max(m, NormL1(one(T), ω), x)
+  box = _box(T, lower, upper, p)
+  g = _constrain(NormL1(λ, ω), box)
+  g1 = _constrain(NormL1(one(T), ω), box)
+  λmax = options.warmStart ? zero(T) : lambda_max(m, g1, x)
   if options.warmStart || options.numSteps == 0 || λ >= λmax
     ProximalSolvers.initialize!(m, x)            # the intercept of the fit with β = 0
     r = solve!(x, m, g, method)
@@ -126,7 +132,7 @@ function glmLasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T,
   else
     λs = [λmax * (λ / λmax)^(T(k) / options.numSteps) for k in 0:options.numSteps]
     λs[end] = λ
-    path = solve_path(m, NormL1(one(T), ω), λs, method; x, devmax = 1)
+    path = solve_path(m, g1, λs, method; x, devmax = 1)
     iterations, converged = sum(path.passes), last(path.converged)
   end
   GLMLassoSolution{T, typeof(loss), typeof(g)}(x, ProximalSolvers.intercept(m, x), g, loss,
@@ -145,7 +151,8 @@ end
     GLMLassoPath(X, y, loss = ProximalBase.Logistic(), options = CDOptions(); nλ = 100, λminratio, kwargs...)
     GLMLassoPath(X, y, λpath, loss = ProximalBase.Logistic(), options = CDOptions();
                  intercept = true, standardizeX = true, weights = nothing, offset = nothing,
-                 screening = true, max_hat_s = Inf, devmax = 0.999, newtonTol = 1e-8, newtonMaxIter = 100)
+                 lower = -Inf, upper = Inf, screening = true, max_hat_s = Inf, devmax = 0.999,
+                 newtonTol = 1e-8, newtonMaxIter = 100)
 
 Solutions `β0path[k]` and `βpath[k]` of the penalized generalized linear model
 of [`glmLasso`](@ref) along a decreasing sequence `λpath`, each one warm
@@ -191,16 +198,18 @@ function GLMLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, λpath::Vector
                       intercept::Bool = true, standardizeX::Bool = true,
                       weights::Union{Nothing, AbstractVector{<:Real}} = nothing,
                       offset::Union{Nothing, AbstractVector{<:Real}} = nothing,
+                      lower::Union{Real, AbstractVector{<:Real}} = -Inf, upper::Union{Real, AbstractVector{<:Real}} = Inf,
                       screening::Bool = true, max_hat_s = Inf, devmax::Real = 0.999,
                       newtonTol::Real = 1e-8, newtonMaxIter::Integer = 100) where {T<:AbstractFloat}
   all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
   p = size(X, 2)
   m, ω = _glmModel(X, y, loss, weights, offset, intercept, standardizeX)
+  g = _constrain(NormL1(one(T), ω), _box(T, lower, upper, p))
   D0 = ProximalSolvers.nulldeviance(m)
   β0path, devratio = T[], T[]
   record(k, λ, x, m) = (push!(β0path, ProximalSolvers.intercept(m, x));
                         push!(devratio, 1 - ProximalSolvers.deviance(m) / D0); false)
-  path = solve_path(m, NormL1(one(T), ω), λpath, _newton(options, newtonTol, newtonMaxIter);
+  path = solve_path(m, g, λpath, _newton(options, newtonTol, newtonMaxIter);
                     x = SparseIterate(T, p), screening, maxnnz = max_hat_s, devmax, callback = record)
   GLMLassoPath{T, typeof(loss)}(path.λ, path.solutions, β0path, devratio, path.passes, path.converged,
                                 path.kkt_checks, intercept, loss, D0)
@@ -211,14 +220,17 @@ function GLMLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T},
                       nλ::Integer = 100, λminratio::Real = (size(X, 1) < size(X, 2) ? 0.01 : 1e-4),
                       intercept::Bool = true, standardizeX::Bool = true,
                       weights::Union{Nothing, AbstractVector{<:Real}} = nothing,
-                      offset::Union{Nothing, AbstractVector{<:Real}} = nothing, kwargs...) where {T<:AbstractFloat}
+                      offset::Union{Nothing, AbstractVector{<:Real}} = nothing,
+                      lower::Union{Real, AbstractVector{<:Real}} = -Inf, upper::Union{Real, AbstractVector{<:Real}} = Inf,
+                      kwargs...) where {T<:AbstractFloat}
   nλ >= 1 || throw(ArgumentError("nλ must be positive"))
   0 < λminratio <= 1 || throw(ArgumentError("λminratio must be in (0, 1]"))
   p = size(X, 2)
   m, ω = _glmModel(X, y, loss, weights, offset, intercept, standardizeX)
-  λmax = lambda_max(m, NormL1(one(T), ω), SparseIterate(T, p)) * (1 + sqrt(eps(T)))
+  g = _constrain(NormL1(one(T), ω), _box(T, lower, upper, p))
+  λmax = lambda_max(m, g, SparseIterate(T, p)) * (1 + sqrt(eps(T)))
   λpath = nλ == 1 ? [λmax] : [λmax * T(λminratio)^(T(k) / (nλ - 1)) for k in 0:nλ-1]
-  GLMLassoPath(X, y, λpath, loss, options; intercept, standardizeX, weights, offset, kwargs...)
+  GLMLassoPath(X, y, λpath, loss, options; intercept, standardizeX, weights, offset, lower, upper, kwargs...)
 end
 
 function GLMLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λpath::AbstractVector{<:Real},
