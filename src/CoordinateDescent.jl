@@ -3,7 +3,8 @@
 
 Lasso estimators computed by coordinate descent: [`lasso`](@ref),
 [`sqrtLasso`](@ref), [`scaledLasso`](@ref), [`feasibleLasso!`](@ref),
-[`LassoPath`](@ref), and the varying-coefficient estimators [`locpoly`](@ref)
+[`LassoPath`](@ref), the penalized generalized linear models [`glmLasso`](@ref) and
+[`GLMLassoPath`](@ref), and the varying-coefficient estimators [`locpoly`](@ref)
 and [`locpolyl1`](@ref). They run the coordinate descent, the penalty paths and
 the reweighting of ProximalSolvers.jl on the losses and penalties of
 ProximalBase.jl, as does [`coordinateDescent!`](@ref), which minimizes
@@ -18,7 +19,9 @@ module CoordinateDescent
 
 using ProximalBase
 using ProximalSolvers
-using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel, residuals
+using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel
+using StatsAPI: StatsAPI, aic, bic, coef, deviance, dof, fit, nobs, predict, residuals
+using Random: AbstractRNG, Xoshiro, default_rng, randperm
 using SparseArrays
 using Statistics
 using LinearAlgebra
@@ -26,13 +29,25 @@ using LinearAlgebra
 export
   lasso, sqrtLasso, feasibleLasso!, scaledLasso, scaledLasso!,
   LassoPath, refitLassoPath,
+  adaptiveLasso,
   IterLassoOptions,
+
+  # the StatsAPI interface of the solutions
+  coef, predict, residuals, nobs, dof, deviance, fit,
+
+  # cross-validation and information criteria along a path
+  CVLassoPath,
+  aic, bic, ebic,
 
   # CD
   CoordinateDifferentiableFunction,
   CDLeastSquaresLoss, CDWeightedLSLoss, CDQuadraticLoss, CDSqrtLassoLoss, CDSqrtQuadraticLoss,
   CDOptions, CDInfo,
-  coordinateDescent!,
+  coordinateDescent!, solve!,
+
+  # generalized linear models
+  glmLasso,
+  GLMLassoPath,
 
   # var coef
   GaussianKernel, SmoothingKernel, EpanechnikovKernel, evaluate, createKernel,
@@ -42,6 +57,10 @@ include("utils.jl")
 include("losses.jl")
 include("coordinate_descent.jl")
 include("lasso.jl")
+include("penalties.jl")
+include("glm.jl")
+include("statsapi.jl")
+include("cv.jl")
 include("varying_coefficient_lasso.jl")
 
 include("precompile.jl")

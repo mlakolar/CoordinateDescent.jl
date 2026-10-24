@@ -59,10 +59,10 @@ end
 # Like lasso, sqrtLasso takes an intercept, unstandardized columns, explicit
 # loadings and solver options
 y = 3.0 .+ X * β + randn(n)
-fit = sqrtLasso(X, y, λsqrt; intercept = true)
-@printf("with intercept = true: β̂₀ = %.2f, %d nonzeros\n", fit.intercept, nonzeros(fit.x))
-fit = sqrtLasso(X, y .- 3.0, λsqrt, ones(p), CDOptions(; optTol = 1e-10))
-@printf("with ωⱼ = 1 and optTol = 1e-10: %d nonzeros\n", nonzeros(fit.x))
+sol = sqrtLasso(X, y, λsqrt; intercept = true)
+@printf("with intercept = true: β̂₀ = %.2f, %d nonzeros\n", sol.intercept, nonzeros(sol.x))
+sol = sqrtLasso(X, y .- 3.0, λsqrt, ones(p), CDOptions(; optTol = 1e-10))
+@printf("with ωⱼ = 1 and optTol = 1e-10: %d nonzeros\n", nonzeros(sol.x))
 
 println("\n== Scaled lasso")
 
