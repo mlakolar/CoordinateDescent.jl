@@ -8,6 +8,7 @@
 #     julia --project=examples examples/01_lasso.jl
 
 using CoordinateDescent
+using ProximalBase: MCP, SCAD
 using LinearAlgebra, Printf, Random, Statistics
 
 Random.seed!(1)
@@ -95,15 +96,35 @@ println("with ω₂₀ = ω₃₀ = 0 the lasso selects ", support(sol.x))
 # The adaptive lasso (Zou, 2006) takes ωⱼ = 1 / |β̃ⱼ| from a first estimate β̃,
 # here least squares (n > p). Large coefficients are penalized less, so they
 # are less biased, and small ones more, so fewer variables that do not matter
-# are selected as λ decreases.
+# are selected as λ decreases. adaptiveLasso(X, y, λ; init = β̃) is
+# lasso(X, y, λ, 1 ./ abs.(β̃)).
 β̃ = X \ y
 println("\n           lasso               adaptive lasso")
 println("     λ  nonzeros  ‖β̂ - β‖   nonzeros  ‖β̂ - β‖")
 for λ in (0.2, 0.1, 0.05, 0.02)
   a = lasso(X, y, λ)
-  b = lasso(X, y, λ, 1 ./ abs.(β̃))
+  b = adaptiveLasso(X, y, λ; init = β̃)
   @printf("%6.2f  %8d  %7.3f   %8d  %7.3f\n",
           λ, count(!iszero, a.x), norm(a.x - β), count(!iszero, b.x), norm(b.x - β))
+end
+
+# By default the first estimate is the lasso at the same λ (init = :lasso, or
+# :ridge, at the level initλ): a variable that it drops stays out.
+c = adaptiveLasso(X, y, 0.05)
+println("from a first lasso at λ = 0.05, the adaptive lasso selects ", support(c.x))
+
+println("\n== Other penalties")
+
+# alpha < 1 gives the elastic net λ(α‖β‖₁ + (1 - α)‖β‖²/2) of glmnet, which
+# keeps groups of correlated variables together; penalty gives MCP or SCAD,
+# whose level λ replaces. With standardizeX the penalty applies to the
+# coefficients of the standardized columns, as in glmnet and ncvreg. At the
+# level λ of the theory, MCP and SCAD leave the coefficients larger than aλ
+# unshrunk, so their estimates are closer to β.
+for (name, kw) in (("lasso", (;)), ("elastic net, α = 0.5", (alpha = 0.5,)),
+                   ("MCP, a = 3", (penalty = MCP(1, 3),)), ("SCAD, a = 3.7", (penalty = SCAD(1, 3.7),)))
+  est = lasso(X, y, λ; intercept = true, standardizeX = true, kw...)
+  @printf("%-22s selects %2d variables, ‖β̂ - β‖ = %.3f\n", name, count(!iszero, est.x), norm(est.x - β))
 end
 
 println("\n== Number types and solver options")

@@ -28,6 +28,7 @@ using LinearAlgebra
 export
   lasso, sqrtLasso, feasibleLasso!, scaledLasso, scaledLasso!,
   LassoPath, refitLassoPath,
+  adaptiveLasso,
   IterLassoOptions,
 
   # the StatsAPI interface of the solutions
@@ -47,6 +48,7 @@ include("utils.jl")
 include("losses.jl")
 include("coordinate_descent.jl")
 include("lasso.jl")
+include("penalties.jl")
 include("statsapi.jl")
 include("varying_coefficient_lasso.jl")
 

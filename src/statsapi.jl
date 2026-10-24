@@ -66,7 +66,8 @@ StatsAPI.nobs(path::LassoPath) = path.nobs
 
 The number of nonzero coefficients, plus one for an intercept: an unbiased
 estimate of the degrees of freedom of the lasso (Zou, Hastie and Tibshirani,
-*On the "degrees of freedom" of the lasso*, 2007).
+*On the "degrees of freedom" of the lasso*, 2007). For the elastic net, MCP and
+SCAD it is the count that glmnet and ncvreg report, not an unbiased estimate.
 """
 StatsAPI.dof(sol::LassoSolution) = nnz(_sparsevec(sol.x)) + sol.hasintercept
 

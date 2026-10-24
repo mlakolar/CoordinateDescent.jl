@@ -61,6 +61,12 @@ path = LassoPath(X, y; nλ=50, intercept=true)    # or fit(LassoPath, X, y; ...)
 path.λpath, path.βpath, path.β0path
 coef(path), coef(path, 0.1), predict(path, Xnew)  # coefficients and fitted values along the path
 
+# the elastic net λ(α‖β‖₁ + (1 - α)‖β‖²/2) of glmnet, and MCP and SCAD as in
+# ncvreg, on the standardized columns; λ replaces the level of the penalty
+sol = lasso(X, y, 0.1; alpha=0.5, intercept=true, standardizeX=true)
+path = LassoPath(X, y; penalty=MCP(1, 3), intercept=true)
+sol = adaptiveLasso(X, y, 0.1)   # loadings 1/|β̃ⱼ| from a first lasso (Zou, 2006)
+
 # lower-level interface: solve! (or coordinateDescent!, which returns x)
 x = SparseIterate(p)
 f = CDLeastSquaresLoss(y, X)
@@ -125,9 +131,9 @@ each one prints its results:
 
 | script | shows |
 |---|---|
-| [01_lasso.jl](examples/01_lasso.jl) | `lasso`: the penalty level, an intercept, standardization, penalty loadings, the adaptive lasso |
+| [01_lasso.jl](examples/01_lasso.jl) | `lasso`: the penalty level, an intercept, standardization, penalty loadings, `adaptiveLasso`, the elastic net, MCP and SCAD |
 | [02_solver_options.jl](examples/02_solver_options.jl) | `CDOptions`, its fields as keywords, and what `solve!` reports: the tolerance and its units, the order of the coordinates, warm starts and the path from λmax, `maxIter`, `rng`, Float32 |
-| [03_lasso_path.jl](examples/03_lasso_path.jl) | `LassoPath` and `refitLassoPath`: grids, early stopping, standardization, screening, cross-validation |
+| [03_lasso_path.jl](examples/03_lasso_path.jl) | `LassoPath` and `refitLassoPath`: grids, early stopping, standardization, screening, cross-validation, elastic-net and MCP paths |
 | [04_sqrt_scaled_feasible.jl](examples/04_sqrt_scaled_feasible.jl) | penalties that do not need the noise level: `sqrtLasso`, `scaledLasso`, `feasibleLasso!` and `IterLassoOptions` |
 | [05_group_lasso.jl](examples/05_group_lasso.jl) | the group lasso: weights, unpenalized groups, the optimality conditions, choosing λ on a validation set |
 | [06_losses.jl](examples/06_losses.jl) | `coordinateDescent!` with each loss: weighted least squares, a weighted bootstrap, a quadratic loss from `X'X` or from a covariance matrix |
@@ -235,7 +241,9 @@ coordinateDescent!(x, CDLeastSquaresLoss(y, X), MyElasticNet(0.1, 0.5))
 ```
 
 ProximalBase has this one built in, as `ElasticNet(λα, λ(1 - α))`, with
-`MCP`, `SCAD`, `NormL1Nonneg` and `IndBox`. `CDLeastSquaresLoss`,
+`MCP`, `SCAD`, `NormL1Nonneg` and `IndBox`. `lasso` and `LassoPath` take the
+built-in ones with standardization, an intercept, λmax and screening, as
+`alpha = 0.5` or `penalty = MCP(1, 3)`. `CDLeastSquaresLoss`,
 `CDWeightedLSLoss`, `CDQuadraticLoss` and every loss whose `descendCoordinate!`
 calls `prox_entry` accept such a penalty; `CDSqrtLassoLoss` and
 `CDSqrtQuadraticLoss`, whose updates are the exact minimizers for the ℓ1 norm,

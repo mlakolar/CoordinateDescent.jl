@@ -11,6 +11,7 @@
 #     julia --project=examples examples/03_lasso_path.jl
 
 using CoordinateDescent
+using ProximalBase: MCP
 using LinearAlgebra, Printf, Random, Statistics
 
 Random.seed!(3)
@@ -114,13 +115,13 @@ println("\n== Choosing λ by cross-validation")
 
 # K-fold cross-validation on the λ grid of the full data: the path is fit
 # without one fold, and its predictions are scored on that fold
-function cvlasso(X, y, λpath; K = 5)
+function cvlasso(X, y, λpath; K = 5, kwargs...)
   n = size(X, 1)
   fold = shuffle!(mod1.(1:n, K))
   mse = zeros(length(λpath), K)
   for k in 1:K
     train, test = fold .!= k, fold .== k
-    pathk = fit(LassoPath, X[train, :], y[train], λpath; intercept = true)
+    pathk = fit(LassoPath, X[train, :], y[train], λpath; intercept = true, kwargs...)
     mse[:, k] = vec(mean(abs2, y[test] .- predict(pathk, X[test, :]); dims = 1))
   end
   vec(mean(mse; dims = 2)), vec(std(mse; dims = 2)) / sqrt(K)
@@ -134,6 +135,21 @@ println("                       λ  nonzeros  CV error  ‖β̂ - β‖")
 for (name, i) in (("minimum CV error", imin), ("one standard error", i1se))
   @printf("  %-18s  %6.4f  %8d  %8.3f  %8.3f\n", name, path.λpath[i], nonzeros(path.βpath[i]),
           cvm[i], norm(path.βpath[i] - β))
+end
+
+println("\n== The elastic net and MCP")
+
+# LassoPath(X, y; alpha) is glmnet's elastic-net path, whose λmax is that of
+# the lasso divided by α, and LassoPath(X, y; penalty = MCP(1, 3)) the path of
+# ncvreg, each solution the local one reached from the previous. MCP stops
+# shrinking coefficients larger than aλ, so its estimates at the same λ are less
+# biased; cvlasso works on any path.
+for (name, kw) in (("elastic net, α = 0.5", (alpha = 0.5,)), ("MCP, a = 3", (penalty = MCP(1, 3),)))
+  pk = LassoPath(X, y; intercept = true, kw...)
+  ck, _ = cvlasso(X, y, pk.λpath; kw...)
+  i = argmin(ck)
+  @printf("  %-20s  λmax %6.3f  at the minimum CV error: λ = %6.4f, %3d nonzeros, CV error %6.3f, ‖β̂ - β‖ = %.3f\n",
+          name, pk.λpath[1], pk.λpath[i], nonzeros(pk.βpath[i]), ck[i], norm(pk.βpath[i] - β))
 end
 
 println("\n== Least squares refits")
