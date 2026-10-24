@@ -24,13 +24,9 @@ Base.@deprecate_binding fullGradient! full_gradient! false
 
 # The old solver returned the iterate. Keep that contract for one release;
 # the new solver returns CDResults, like ProximalSolvers.solve!.
-function _coordinate_descent_iterate!(x, args...; kwargs...)
-  coordinate_descent!(x, args...; kwargs...)
-  x
-end
-Base.@deprecate coordinateDescent!(args...; kwargs...) _coordinate_descent_iterate!(args...; kwargs...)
+Base.@deprecate coordinateDescent!(args...; kwargs...) coordinate_descent!(args...; kwargs...).minimizer
 
-function _coordinate_descent_iterate!(
+function coordinateDescent!(
   x::Union{SparseIterate, SymmetricSparseIterate, AtomIterate, Vector{<:AbstractFloat}},
   f::Union{CDModel, AbstractFunction, CoordinateDifferentiableFunction},
   g::AbstractFunction,
@@ -38,6 +34,9 @@ function _coordinate_descent_iterate!(
   info::CDInfo;
   kwargs...)
 
+  Base.depwarn("coordinateDescent!(x, f, g, options, info) is deprecated; use " *
+               "r = coordinate_descent!(x, f, g, options) for the iterate and convergence information.",
+               :coordinateDescent!)
   _record!(info, solve!(x, f, g, options; kwargs...))
   x
 end

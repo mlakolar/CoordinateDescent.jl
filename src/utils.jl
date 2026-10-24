@@ -176,8 +176,8 @@ end
 """
     CDInfo()
 
-Convergence information that [`coordinate_descent!`](@ref) fills in when it is
-passed as the last argument. Deprecated: `solve!(x, f, g, options)` (see
+Convergence information that the deprecated `coordinateDescent!` fills in when it is
+passed as the last argument. Deprecated: `coordinate_descent!(x, f, g, options)` (see
 [`coordinate_descent!`](@ref)) returns the same information, and more, in a
 `ProximalSolvers.CDResults`: `passes` for `iterations`, `converged`,
 `maxchange` for `max_change`, `tolerance`, and the objective `minimum`.
