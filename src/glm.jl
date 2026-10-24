@@ -27,6 +27,11 @@ Result returned by [`glmLasso`](@ref).
   Newton steps
 - `converged::Bool`: whether proximal Newton, and coordinate descent at each of
   its steps, met their stopping rules
+- `hasintercept::Bool`: whether the solver fitted an intercept
+
+The functions of StatsAPI apply to it: [`coef`](@ref), [`predict`](@ref) (on
+the scale of the response or of the linear predictor), `fitted`,
+[`nobs`](@ref), [`dof`](@ref), [`deviance`](@ref) and `nulldeviance`.
 """
 struct GLMLassoSolution{T, L, S}
   x::SparseIterate{T, 1}
@@ -38,6 +43,7 @@ struct GLMLassoSolution{T, L, S}
   nulldeviance::T
   iterations::Int
   converged::Bool
+  hasintercept::Bool
 end
 
 # the responses that the built-in scalar losses accept
@@ -138,7 +144,7 @@ function glmLasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T,
   GLMLassoSolution{T, typeof(loss), typeof(g)}(x, ProximalSolvers.intercept(m, x), g, loss,
                                                copy(ProximalSolvers.linear_predictor(m)),
                                                ProximalSolvers.deviance(m), ProximalSolvers.nulldeviance(m),
-                                               iterations, converged)
+                                               iterations, converged, intercept)
 end
 
 function glmLasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real,
@@ -178,7 +184,9 @@ explained fraction `devratio[k] = 1 - deviance / nulldeviance` tends to one.
 `devmax = 1` turns this off. The returned `λpath` then contains only the values
 that were solved for. `iterations[k]` and `converged[k]` are the passes of
 coordinate descent at `λpath[k]`, summed over the proximal Newton steps, and
-whether the solve met its stopping rules.
+whether the solve met its stopping rules. `nobs` is the number of observations.
+`coef`, `predict` and `nobs` apply to the path, as for [`LassoPath`](@ref), and
+`fit(GLMLassoPath, X, y, ...)` is `GLMLassoPath(X, y, ...)`.
 """
 struct GLMLassoPath{T<:AbstractFloat, L}
   λpath::Vector{T}
@@ -191,6 +199,7 @@ struct GLMLassoPath{T<:AbstractFloat, L}
   intercept::Bool
   loss::L
   nulldeviance::T
+  nobs::Int
 end
 
 function GLMLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, λpath::Vector{T},
@@ -212,7 +221,7 @@ function GLMLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, λpath::Vector
   path = solve_path(m, g, λpath, _newton(options, newtonTol, newtonMaxIter);
                     x = SparseIterate(T, p), screening, maxnnz = max_hat_s, devmax, callback = record)
   GLMLassoPath{T, typeof(loss)}(path.λ, path.solutions, β0path, devratio, path.passes, path.converged,
-                                path.kkt_checks, intercept, loss, D0)
+                                path.kkt_checks, intercept, loss, D0, size(X, 1))
 end
 
 function GLMLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T},

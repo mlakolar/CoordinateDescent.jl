@@ -93,19 +93,27 @@ linearly in `λ` between the two neighboring values of `λpath` (as glmnet's
 `coef(fit, s = λ)`), and exact at the values of `λpath`; `λ` must be within
 the range of `λpath`.
 """
-function StatsAPI.coef(path::LassoPath{T}) where {T}
-  p = isempty(path.βpath) ? 0 : length(path.βpath[1])
-  B = isempty(path.βpath) ? spzeros(T, p, 0) : reduce(hcat, path.βpath)
-  path.intercept || return B
-  dropzeros!(vcat(sparse(reshape(path.β0path, 1, :)), B))
+StatsAPI.coef(path::LassoPath{T}) where {T} = _coefmatrix(T, path.βpath, path.β0path, path.intercept)
+StatsAPI.coef(path::LassoPath{T}, λ::Real) where {T} = _coefat(T, path.λpath, _coefk(path), λ)
+
+# the coefficients along a path, a column per level, with the intercepts in the
+# first row when the path has them
+function _coefmatrix(::Type{T}, βpath, β0path, intercept::Bool) where {T}
+  p = isempty(βpath) ? 0 : length(βpath[1])
+  B = isempty(βpath) ? spzeros(T, p, 0) : reduce(hcat, βpath)
+  intercept || return B
+  dropzeros!(vcat(sparse(reshape(β0path, 1, :)), B))
 end
 
-function StatsAPI.coef(path::LassoPath{T}, λ::Real) where {T}
-  λs = path.λpath
+# the coefficients at the k-th level of a path with βpath, β0path and intercept
+_coefk(path) = k -> path.intercept ? _prepend(path.β0path[k], path.βpath[k]) : path.βpath[k]
+
+# the coefficients at λ, coefk(k) at the levels λs, interpolated linearly in λ
+# between neighboring levels
+function _coefat(::Type{T}, λs, coefk, λ::Real) where {T}
   isempty(λs) && throw(ArgumentError("the path is empty."))
   λs[end] <= λ <= λs[1] || throw(ArgumentError("λ = $λ is outside the range [$(λs[end]), $(λs[1])] of the path."))
   k = findlast(>=(λ), λs)::Int        # λs[end] ≤ λ, so k exists
-  coefk(j) = path.intercept ? _prepend(path.β0path[j], path.βpath[j]) : path.βpath[j]
   (λs[k] == λ || k == length(λs)) && return coefk(k)
   t = T((λs[k] - λ) / (λs[k] - λs[k+1]))
   dropzeros!((1 - t) * coefk(k) + t * coefk(k + 1))
@@ -117,12 +125,20 @@ end
 The fitted values `β₀ .+ X * β` along the path: a matrix with one column per
 value of `path.λpath`.
 """
-function StatsAPI.predict(path::LassoPath{T}, X::AbstractMatrix{<:Real}) where {T}
-  p = isempty(path.βpath) ? size(X, 2) : length(path.βpath[1])
+StatsAPI.predict(path::LassoPath{T}, X::AbstractMatrix{<:Real}) where {T} = _predictpath(T, path.βpath, path.β0path, X)
+
+# the fitted values β₀ .+ X * β at each level of a path, a column per level
+function _predictpath(::Type{T}, βpath, β0path, X::AbstractMatrix) where {T}
+  p = isempty(βpath) ? size(X, 2) : length(βpath[1])
   size(X, 2) == p || throw(DimensionMismatch("X has $(size(X, 2)) columns, but the path has $p coefficients."))
-  B = isempty(path.βpath) ? spzeros(T, p, 0) : reduce(hcat, path.βpath)
+  B = isempty(βpath) ? spzeros(T, p, 0) : reduce(hcat, βpath)
   Ŷ = Matrix(X * B)
-  Ŷ .+= transpose(path.β0path)
+  Ŷ .+= transpose(β0path)
+end
+
+function _checkcolumns(X::AbstractMatrix, p::Integer)
+  size(X, 2) == p || throw(DimensionMismatch("X has $(size(X, 2)) columns, but the model has $p coefficients."))
+  nothing
 end
 
 """
@@ -132,3 +148,277 @@ The same as [`LassoPath`](@ref)`(X, y, args...; kwargs...)`.
 """
 StatsAPI.fit(::Type{LassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) =
   LassoPath(X, y, args...; kwargs...)
+
+"""
+    fit(CVLassoPath, X, y, args...; kwargs...)
+    fit(GLMLassoPath, X, y, args...; kwargs...)
+    fit(GroupLassoPath, X, y, args...; kwargs...)
+    fit(MultiLassoPath, X, Y, args...; kwargs...)
+
+The same as calling the constructor, for example
+[`GLMLassoPath`](@ref)`(X, y, args...; kwargs...)`.
+"""
+StatsAPI.fit(::Type{CVLassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) =
+  CVLassoPath(X, y, args...; kwargs...)
+StatsAPI.fit(::Type{GLMLassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) =
+  GLMLassoPath(X, y, args...; kwargs...)
+StatsAPI.fit(::Type{GroupLassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) =
+  GroupLassoPath(X, y, args...; kwargs...)
+StatsAPI.fit(::Type{MultiLassoPath}, X::AbstractMatrix, Y::AbstractMatrix, args...; kwargs...) =
+  MultiLassoPath(X, Y, args...; kwargs...)
+
+######################################################################
+#
+#   Generalized linear models
+#
+######################################################################
+
+# the mean of the response at the linear predictor η: the inverse of the
+# canonical link of the logistic and Poisson losses, η itself for least squares
+# and the Huber loss
+_inverselink(::ProximalBase.Logistic, η::Real) = η >= 0 ? inv(1 + exp(-η)) : exp(η) / (1 + exp(η))
+_inverselink(::ProximalBase.Poisson, η::Real) = exp(η)
+_inverselink(::Union{ProximalBase.Squared, ProximalBase.Huber}, η::Real) = η
+_inverselink(loss, ::Real) =
+  throw(ArgumentError("the mean of the response is not known for the loss $(typeof(loss)); use type = :link."))
+
+function _glmscale(loss, η::AbstractArray, type::Symbol)
+  type === :link && return η
+  type === :response && return _inverselink.(Ref(loss), η)
+  throw(ArgumentError("type must be :response or :link, but it is :$type."))
+end
+
+function _addoffset!(η::AbstractArray, offset)
+  offset === nothing && return η
+  length(offset) == size(η, 1) ||
+    throw(DimensionMismatch("offset has length $(length(offset)), but X has $(size(η, 1)) rows."))
+  η .+= offset
+end
+
+"""
+    coef(sol::GLMLassoSolution)
+    predict(sol::GLMLassoSolution, X; type = :response, offset = nothing)
+    fitted(sol::GLMLassoSolution)
+
+The coefficients `[β₀; β]` (`β` without an intercept), as a `SparseVector`. The
+predictions at the rows of `X`, on the scale of the response (`type =
+:response`, the probabilities of logistic regression and the means of Poisson
+regression) or of the linear predictor `β₀ + Xβ + offset` (`type = :link`).
+`fitted` is the response scale at the data of the fit. `nobs`, `dof` (nonzero
+coefficients, plus one for the intercept), `deviance` and `nulldeviance` apply
+too.
+"""
+function StatsAPI.coef(sol::GLMLassoSolution)
+  β = _sparsevec(sol.x)
+  sol.hasintercept ? _prepend(sol.intercept, β) : β
+end
+
+function StatsAPI.predict(sol::GLMLassoSolution, X::AbstractMatrix{<:Real}; type::Symbol = :response, offset = nothing)
+  _checkcolumns(X, length(sol.x))
+  η = Vector(X * _sparsevec(sol.x)) .+ sol.intercept
+  _glmscale(sol.loss, _addoffset!(η, offset), type)
+end
+
+StatsAPI.fitted(sol::GLMLassoSolution) = _glmscale(sol.loss, sol.linearpredictor, :response)
+StatsAPI.nobs(sol::GLMLassoSolution) = length(sol.linearpredictor)
+StatsAPI.dof(sol::GLMLassoSolution) = nnz(_sparsevec(sol.x)) + sol.hasintercept
+StatsAPI.deviance(sol::GLMLassoSolution) = sol.deviance
+StatsAPI.nulldeviance(sol::GLMLassoSolution) = sol.nulldeviance
+
+"""
+    coef(path::GLMLassoPath)
+    coef(path::GLMLassoPath, λ)
+    predict(path::GLMLassoPath, X; type = :response, offset = nothing)
+
+The coefficients along the path (a sparse matrix, a column per level, the
+intercepts in the first row) or at `λ` (interpolated linearly in `λ`), as for
+[`LassoPath`](@ref), and the predictions at the rows of `X` at every level, on
+the scale of the response or of the linear predictor (see `predict` for a
+[`GLMLassoSolution`](@ref)).
+"""
+StatsAPI.coef(path::GLMLassoPath{T}) where {T} = _coefmatrix(T, path.βpath, path.β0path, path.intercept)
+StatsAPI.coef(path::GLMLassoPath{T}, λ::Real) where {T} = _coefat(T, path.λpath, _coefk(path), λ)
+
+function StatsAPI.predict(path::GLMLassoPath{T}, X::AbstractMatrix{<:Real}; type::Symbol = :response,
+                          offset = nothing) where {T}
+  _glmscale(path.loss, _addoffset!(_predictpath(T, path.βpath, path.β0path, X), offset), type)
+end
+
+StatsAPI.nobs(path::GLMLassoPath) = path.nobs
+StatsAPI.nulldeviance(path::GLMLassoPath) = path.nulldeviance
+
+######################################################################
+#
+#   The group lasso
+#
+######################################################################
+
+"""
+    coef(sol::GroupLassoSolution)
+    predict(sol::GroupLassoSolution, X)
+
+The coefficients `[β₀; β]` (`β` without an intercept) as a `SparseVector`, and
+the fitted values `β₀ .+ X * β` at the rows of `X`. `nobs` and `dof` (the
+nonzero coefficients, plus one for the intercept) apply too.
+"""
+StatsAPI.coef(sol::GroupLassoSolution) = sol.hasintercept ? _prepend(sol.intercept, sol.x) : sol.x
+
+function StatsAPI.predict(sol::GroupLassoSolution, X::AbstractMatrix{<:Real})
+  _checkcolumns(X, length(sol.x))
+  Vector(X * sol.x) .+ sol.intercept
+end
+
+StatsAPI.nobs(sol::GroupLassoSolution) = sol.nobs
+StatsAPI.dof(sol::GroupLassoSolution) = nnz(sol.x) + sol.hasintercept
+
+"""
+    coef(path::GroupLassoPath)
+    coef(path::GroupLassoPath, λ)
+    predict(path::GroupLassoPath, X)
+
+As for [`LassoPath`](@ref).
+"""
+StatsAPI.coef(path::GroupLassoPath{T}) where {T} = _coefmatrix(T, path.βpath, path.β0path, path.intercept)
+StatsAPI.coef(path::GroupLassoPath{T}, λ::Real) where {T} = _coefat(T, path.λpath, _coefk(path), λ)
+StatsAPI.predict(path::GroupLassoPath{T}, X::AbstractMatrix{<:Real}) where {T} =
+  _predictpath(T, path.βpath, path.β0path, X)
+StatsAPI.nobs(path::GroupLassoPath) = path.nobs
+
+######################################################################
+#
+#   The multi-response lasso
+#
+######################################################################
+
+# [β₀'; B], the intercepts of the responses in the first row
+_prependrow(β0::AbstractVector, B::SparseMatrixCSC) = dropzeros!(vcat(sparse(reshape(β0, 1, :)), B))
+
+"""
+    coef(sol::MultiLassoSolution)
+    predict(sol::MultiLassoSolution, X)
+
+The `p × q` coefficients `B` as a sparse matrix, with the intercepts of the
+responses in a first row when the solver fitted them, and the `n × q` fitted
+values `1β₀' + XB` at the rows of `X`. `nobs` and `dof` (the nonzero
+coefficients, plus one intercept per response) apply too.
+"""
+StatsAPI.coef(sol::MultiLassoSolution) = sol.hasintercept ? _prependrow(sol.intercept, sol.B) : sol.B
+
+function StatsAPI.predict(sol::MultiLassoSolution, X::AbstractMatrix{<:Real})
+  _checkcolumns(X, size(sol.B, 1))
+  Matrix(X * sol.B) .+ transpose(sol.intercept)
+end
+
+StatsAPI.nobs(sol::MultiLassoSolution) = sol.nobs
+StatsAPI.dof(sol::MultiLassoSolution) = nnz(sol.B) + sol.hasintercept * size(sol.B, 2)
+
+"""
+    coef(path::MultiLassoPath)
+    coef(path::MultiLassoPath, λ)
+    predict(path::MultiLassoPath, X)
+
+The coefficient matrices along the path, one per level (with the intercepts in
+the first row when the path has them), or the matrix at `λ`, interpolated
+linearly in `λ` between neighboring levels; and the matrices of fitted values
+at the rows of `X`, one per level.
+"""
+StatsAPI.coef(path::MultiLassoPath) = [_multicoef(path, k) for k in eachindex(path.λpath)]
+StatsAPI.coef(path::MultiLassoPath{T}, λ::Real) where {T} = _coefat(T, path.λpath, k -> _multicoef(path, k), λ)
+_multicoef(path::MultiLassoPath, k::Int) = path.intercept ? _prependrow(path.β0path[k], path.Bpath[k]) : path.Bpath[k]
+
+function StatsAPI.predict(path::MultiLassoPath, X::AbstractMatrix{<:Real})
+  isempty(path.Bpath) || _checkcolumns(X, size(path.Bpath[1], 1))
+  [Matrix(X * path.Bpath[k]) .+ transpose(path.β0path[k]) for k in eachindex(path.λpath)]
+end
+
+StatsAPI.nobs(path::MultiLassoPath) = path.nobs
+
+######################################################################
+#
+#   Inference after selection
+#
+######################################################################
+
+"""
+    coef(sol::RLassoSolution)
+    predict(sol::RLassoSolution, X)
+
+The coefficients `[β₀; β]` (`β` without an intercept) as a `SparseVector`, and
+the fitted values `β₀ .+ X * β` at the rows of `X`. `residuals`, `nobs`, `dof`
+(the selected columns, plus one for the intercept) and `deviance` (the
+residual sum of squares) apply too.
+"""
+StatsAPI.coef(sol::RLassoSolution) = sol.hasintercept ? _prepend(sol.intercept, sol.x) : sol.x
+
+function StatsAPI.predict(sol::RLassoSolution, X::AbstractMatrix{<:Real})
+  _checkcolumns(X, length(sol.x))
+  Vector(X * sol.x) .+ sol.intercept
+end
+
+StatsAPI.residuals(sol::RLassoSolution) = sol.residuals
+StatsAPI.nobs(sol::RLassoSolution) = length(sol.residuals)
+StatsAPI.dof(sol::RLassoSolution) = length(sol.selected) + sol.hasintercept
+StatsAPI.deviance(sol::RLassoSolution) = sum(abs2, sol.residuals)
+
+"""
+    coef(r::PostLassoResult)
+    stderror(r::PostLassoResult)
+    vcov(r::PostLassoResult)
+    confint(r::PostLassoResult; level = 0.95)
+
+The least-squares coefficients `[β₀; β]` (`β` without an intercept) and their
+HC1 standard errors as `SparseVector`s, zero off the selected columns, and
+their covariance as a sparse matrix. `confint` gives normal intervals
+`coef ± z stderror` at `level`, as a matrix with a row per coefficient; those
+off the selected columns are `[0, 0]`, since the coefficients were not
+estimated. `predict`, `residuals`, `nobs`, `dof` (the coefficients estimated)
+and `deviance` (the residual sum of squares) apply too.
+"""
+StatsAPI.coef(r::PostLassoResult) = r.hasintercept ? _prepend(r.intercept, r.x) : r.x
+StatsAPI.stderror(r::PostLassoResult) = r.hasintercept ? _prepend(r.se_intercept, r.se) : r.se
+
+function StatsAPI.vcov(r::PostLassoResult{T}) where {T}
+  idx = r.hasintercept ? [1; r.selected .+ 1] : r.selected
+  k = length(r.x) + r.hasintercept
+  I, J = repeat(idx, outer = length(idx)), repeat(idx, inner = length(idx))
+  sparse(I, J, vec(r.vcov), k, k)
+end
+
+function StatsAPI.confint(r::PostLassoResult{T}; level::Real = 0.95) where {T}
+  0 < level < 1 || throw(ArgumentError("level must be in (0, 1), but it is $level."))
+  z = _qnorm(1 - (1 - T(level)) / 2)
+  b, se = Vector(coef(r)), Vector(stderror(r))
+  [b .- z .* se b .+ z .* se]
+end
+
+function StatsAPI.predict(r::PostLassoResult, X::AbstractMatrix{<:Real})
+  _checkcolumns(X, length(r.x))
+  Vector(X * r.x) .+ r.intercept
+end
+
+StatsAPI.residuals(r::PostLassoResult) = r.residuals
+StatsAPI.nobs(r::PostLassoResult) = length(r.residuals)
+StatsAPI.dof(r::PostLassoResult) = length(r.selected) + r.hasintercept
+StatsAPI.deviance(r::PostLassoResult) = sum(abs2, r.residuals)
+
+"""
+    coef(te::TreatmentEffect)
+    stderror(te::TreatmentEffect)
+    vcov(te::TreatmentEffect)
+    confint(te::TreatmentEffect; level = 0.95)
+
+The estimate of the treatment effect as a model with one coefficient: a vector
+of length one, its standard error, a 1 × 1 covariance, and the normal
+confidence interval at `level` as a 1 × 2 matrix (`te.ci` holds the one at the
+level of [`doubleSelection`](@ref)). `nobs` is the number of observations.
+"""
+StatsAPI.coef(te::TreatmentEffect) = [te.estimate]
+StatsAPI.stderror(te::TreatmentEffect) = [te.se]
+StatsAPI.vcov(te::TreatmentEffect) = fill(te.se^2, 1, 1)
+StatsAPI.nobs(te::TreatmentEffect) = te.n
+
+function StatsAPI.confint(te::TreatmentEffect{T}; level::Real = 0.95) where {T}
+  0 < level < 1 || throw(ArgumentError("level must be in (0, 1), but it is $level."))
+  z = _qnorm(1 - (1 - T(level)) / 2)
+  [te.estimate - z * te.se te.estimate + z * te.se]
+end

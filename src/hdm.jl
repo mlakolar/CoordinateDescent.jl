@@ -67,6 +67,10 @@ Result returned by [`rlasso`](@ref).
   standard deviation
 - `iterations::Int`: the lasso fits of the procedure
 - `post::Bool`
+- `hasintercept::Bool`: whether the procedure fitted an intercept
+
+[`coef`](@ref), [`predict`](@ref), [`residuals`](@ref), [`nobs`](@ref),
+[`dof`](@ref) and [`deviance`](@ref) apply to it.
 """
 struct RLassoSolution{T}
   x::SparseVector{T, Int}
@@ -78,6 +82,7 @@ struct RLassoSolution{T}
   σ::T
   iterations::Int
   post::Bool
+  hasintercept::Bool
 end
 
 """
@@ -133,7 +138,7 @@ function rlasso(X::AbstractMatrix{T}, y::AbstractVector{T}, options::CDOptions =
     S = sort!([k for k in activecoordinates(x) if !iszero(x[k])])
     if isempty(S)          # nothing selected: the intercept only, as hdm returns it
       e = y .- ȳ
-      return RLassoSolution{T}(spzeros(T, p), ȳ, Int[], λ0, Γ, e, std(e), it, post)
+      return RLassoSolution{T}(spzeros(T, p), ȳ, Int[], λ0, Γ, e, std(e), it, post, intercept)
     end
     if post
       b, e = _ols(X, y, S, xbar, ȳ)
@@ -146,7 +151,7 @@ function rlasso(X::AbstractMatrix{T}, y::AbstractVector{T}, options::CDOptions =
     s0 = s1
   end
   β = sparsevec(S, b, p)
-  RLassoSolution{T}(β, ȳ - dot(xbar, β), S, λ0, Γ, e, std(e), iterations, post)
+  RLassoSolution{T}(β, ȳ - dot(xbar, β), S, λ0, Γ, e, std(e), iterations, post, intercept)
 end
 
 function rlasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, options::CDOptions = CDOptions(); kwargs...)
@@ -161,7 +166,13 @@ Result returned by [`postLasso`](@ref): the least-squares coefficients `x`
 (a `SparseVector`, zero off the selected columns) and `intercept`, their
 heteroskedasticity-robust (HC1) standard errors `se` and `se_intercept`, the
 `selected` columns, the `residuals`, and `vcov`, the HC1 covariance of
-`[β₀; β_S]` (of `β_S` without an intercept).
+`[β₀; β_S]` (of `β_S` without an intercept), and `hasintercept`.
+
+The functions of StatsAPI apply to it, with `[β₀; β]` (`β` without an
+intercept) as the coefficients: [`coef`](@ref), `stderror`, `vcov` (a sparse
+matrix, zero off the selected columns), `confint` (normal intervals, zero
+width off the selected columns), [`predict`](@ref), [`residuals`](@ref),
+[`nobs`](@ref), [`dof`](@ref) and [`deviance`](@ref).
 """
 struct PostLassoResult{T}
   x::SparseVector{T, Int}
@@ -171,6 +182,7 @@ struct PostLassoResult{T}
   selected::Vector{Int}
   residuals::Vector{T}
   vcov::Matrix{T}
+  hasintercept::Bool
 end
 
 _support(sol::LassoSolution) = sort!([k for k in activecoordinates(sol.x) if !iszero(sol.x[k])])
@@ -205,7 +217,7 @@ function postLasso(X::AbstractMatrix{T}, y::AbstractVector{T}, sol; intercept::B
   i0 = intercept ? 1 : 0
   se = sqrt.(max.(diag(V), zero(T)))
   PostLassoResult{T}(sparsevec(S, coef[i0+1:end], p), intercept ? coef[1] : zero(T),
-                     sparsevec(S, se[i0+1:end], p), intercept ? se[1] : zero(T), S, e, V)
+                     sparsevec(S, se[i0+1:end], p), intercept ? se[1] : zero(T), S, e, V, intercept)
 end
 
 postLasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, sol; kwargs...) =
@@ -218,7 +230,8 @@ Result returned by [`doubleSelection`](@ref): the `estimate` of the effect of
 the treatment, its standard error `se`, the `t` statistic and the two-sided
 `pvalue` against zero (normal approximation), the confidence interval `ci` at
 the requested level, the `selected` controls, the `method` and the number of
-observations `n`.
+observations `n`. `coef`, `stderror`, `vcov` and `confint` (at any `level`)
+give the estimate as a model with one coefficient, and `nobs` is `n`.
 """
 struct TreatmentEffect{T}
   estimate::T

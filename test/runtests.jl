@@ -12,6 +12,7 @@ tests = [
   "group",
   "multiresponse",
   "hdm",
+  "statsapi",
   "varying_coefficient_lasso"
 ]
 
