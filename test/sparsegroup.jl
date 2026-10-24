@@ -97,6 +97,10 @@ end
 
   @testset "errors and conversions" begin
     @test sparseGroupLasso(round.(Int, 10X), y, 0.05, groups).converged
+    Xi = round.(Int, 10X)
+    pi_ = SparseGroupLassoPath(Xi, y, groups; nλ = 5, rng = Xoshiro(2))
+    @test pi_.λpath == SparseGroupLassoPath(Float64.(Xi), y, groups; nλ = 5, rng = Xoshiro(2)).λpath
+    @test length(SparseGroupLassoPath(Xi, y, [1, 0.5], groups).λpath) == 2          # λpath of integers and floats
     @test_throws ArgumentError sparseGroupLasso(X, y, 0.05, groups; alpha = 1.5)
     @test_throws ArgumentError sparseGroupLasso(X, y, -0.05, groups)
     @test_throws ArgumentError sparseGroupLasso(X, y, 0.05, [1:5, 6:10])                       # columns in no group
