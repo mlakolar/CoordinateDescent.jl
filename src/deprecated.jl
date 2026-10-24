@@ -56,14 +56,62 @@ function _legacy_property(s::Symbol, aliases)
   s
 end
 
-Base.getproperty(o::CDOptions, s::Symbol) = s === :randomize ? getfield(o, :order) !== :cyclic :
-  getfield(o, _legacy_property(s, _CD_OPTION_PROPERTIES))
+@inline function Base.getproperty(o::CDOptions, s::Symbol)
+  s === :randomize && return getfield(o, :order) !== :cyclic
+  if s === :maxIter
+    Base.depwarn("property maxIter is deprecated; use max_iter.", :maxIter)
+    return getfield(o, :max_iter)
+  end
+  if s === :optTol
+    Base.depwarn("property optTol is deprecated; use opt_tol.", :optTol)
+    return getfield(o, :opt_tol)
+  end
+  if s === :warmStart
+    Base.depwarn("property warmStart is deprecated; use warm_start.", :warmStart)
+    return getfield(o, :warm_start)
+  end
+  if s === :numSteps
+    Base.depwarn("property numSteps is deprecated; use num_steps.", :numSteps)
+    return getfield(o, :num_steps)
+  end
+  if s === :relativeTol
+    Base.depwarn("property relativeTol is deprecated; use relative_tol.", :relativeTol)
+    return getfield(o, :relative_tol)
+  end
+  getfield(o, s)
+end
 Base.propertynames(::CDOptions, private::Bool=false) =
   (fieldnames(CDOptions)..., :randomize, first.(_CD_OPTION_PROPERTIES)...)
-Base.getproperty(o::IterLassoOptions, s::Symbol) = getfield(o, _legacy_property(s, _ITER_OPTION_PROPERTIES))
+
+@inline function Base.getproperty(o::IterLassoOptions, s::Symbol)
+  if s === :maxIter
+    Base.depwarn("property maxIter is deprecated; use max_iter.", :maxIter)
+    return getfield(o, :max_iter)
+  end
+  if s === :optTol
+    Base.depwarn("property optTol is deprecated; use opt_tol.", :optTol)
+    return getfield(o, :opt_tol)
+  end
+  if s === :initProcedure
+    Base.depwarn("property initProcedure is deprecated; use init_procedure.", :initProcedure)
+    return getfield(o, :init_procedure)
+  end
+  if s === :optionsCD
+    Base.depwarn("property optionsCD is deprecated; use options_cd.", :optionsCD)
+    return getfield(o, :options_cd)
+  end
+  getfield(o, s)
+end
 Base.propertynames(::IterLassoOptions, private::Bool=false) =
   (fieldnames(IterLassoOptions)..., first.(_ITER_OPTION_PROPERTIES)...)
-Base.getproperty(o::CDInfo, s::Symbol) = getfield(o, _legacy_property(s, (:maxChange => :max_change,)))
+
+@inline function Base.getproperty(o::CDInfo, s::Symbol)
+  if s === :maxChange
+    Base.depwarn("property maxChange is deprecated; use max_change.", :maxChange)
+    return getfield(o, :max_change)
+  end
+  getfield(o, s)
+end
 function Base.setproperty!(o::CDInfo, s::Symbol, v)
   field = _legacy_property(s, (:maxChange => :max_change,))
   setfield!(o, field, convert(fieldtype(CDInfo, field), v))
@@ -72,7 +120,13 @@ Base.propertynames(::CDInfo, private::Bool=false) = (fieldnames(CDInfo)..., :max
 
 for P in (LassoPath, GLMLassoPath, GroupLassoPath, SparseGroupLassoPath, MultiLassoPath)
   @eval begin
-    Base.getproperty(p::$P, s::Symbol) = getfield(p, _legacy_property(s, (:kktChecks => :kkt_checks,)))
+    @inline function Base.getproperty(p::$P, s::Symbol)
+      if s === :kktChecks
+        Base.depwarn("property kktChecks is deprecated; use kkt_checks.", :kktChecks)
+        return getfield(p, :kkt_checks)
+      end
+      getfield(p, s)
+    end
     Base.propertynames(p::$P, private::Bool=false) = (fieldnames(typeof(p))..., :kktChecks)
   end
 end

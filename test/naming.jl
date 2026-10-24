@@ -4,6 +4,9 @@ using CoordinateDescent, ProximalBase, ProximalSolvers, Test, Random, LinearAlge
 @testset "Julia naming and integer inputs" begin
   o = CDOptions(; max_iter=Int32(100), num_steps=Int32(5), anderson=Int32(0))
   @test o.max_iter isa Int
+  @test (@inferred getproperty(o, :max_iter)) === 100
+  @test (@inferred getproperty(o, :opt_tol)) === o.opt_tol
+  @test (@inferred getproperty(IterLassoOptions(), :options_cd)) isa CDOptions
   @test o.num_steps isa Int
   @test IterLassoOptions(; max_iter=Int32(2), sinit=Int32(3)).sinit isa Int
   @test CDOptions(o; opt_tol=1e-9).max_iter == o.max_iter
