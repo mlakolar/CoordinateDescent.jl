@@ -1082,15 +1082,21 @@ end
     @test nobs(P1) == n
   end
 
-  # :auto takes the Gram matrix for a dense X with n ≥ 2p and p ≤ 500 (2000
-  # for a path), the residuals otherwise
-  @test CoordinateDescent._usegram(:auto, X, false)
-  @test !CoordinateDescent._usegram(:auto, X[1:60, :], false)            # n < 2p
-  @test !CoordinateDescent._usegram(:auto, sparse(X), false)
-  @test !CoordinateDescent._usegram(:auto, falses(2000, 600), false)     # p > 500
-  @test CoordinateDescent._usegram(:auto, falses(2000, 600), true)
+  # :auto takes the Gram matrix for a path on a dense X with n ≥ p and
+  # p ≤ 2000, the residuals otherwise and at one λ
+  @test CoordinateDescent._usegram(:auto, X, true)
+  @test CoordinateDescent._usegram(:auto, X[1:p, :], true)                # n = p
+  @test !CoordinateDescent._usegram(:auto, X[1:p-1, :], true)             # n < p
+  @test !CoordinateDescent._usegram(:auto, X, false)                      # one λ
+  @test !CoordinateDescent._usegram(:auto, sparse(X), true)
+  @test CoordinateDescent._usegram(:auto, falses(2000, 2000), true)
+  @test !CoordinateDescent._usegram(:auto, falses(3000, 2001), true)      # p > 2000
   @test CoordinateDescent._usegram(true, sparse(X), false) && !CoordinateDescent._usegram(false, X, true)
   @test_throws ArgumentError lasso(X, Y, λ; gram = :yes)
+  a, b = lasso(X, Y, λ, opt), lasso(X, Y, λ, opt; gram = false)
+  @test a.x == b.x && a.iterations == b.iterations
+  P1, P2 = LassoPath(X, Y, opt; nλ = 15), LassoPath(X, Y, opt; nλ = 15, gram = true)
+  @test P1.βpath == P2.βpath && P1.iterations == P2.iterations
 
   # the Gram matrix of the centered columns, also from several blocks of rows,
   # from a sparse X and in Float32

@@ -81,16 +81,16 @@ function _loadings(X::SparseMatrixCSC{T}, intercept::Bool) where {T}
 end
 
 # whether to solve on the Gram matrix: gram is true, false or :auto, which picks
-# it for dense data with at least twice as many rows as columns and not too
-# many columns (more along a path, which takes more passes than one λ)
-const _GRAM_PMAX = 500
-const _GRAM_PMAX_PATH = 2000
+# it for a path on dense data with at least as many rows as columns and not too
+# many columns; at one λ, forming the Gram matrix costs more than the few passes
+# it makes cheaper (benchmark/gram_bench.jl)
+const _GRAM_PMAX = 2000
 
 function _usegram(gram, X::AbstractMatrix, path::Bool)
   gram isa Bool && return gram
   gram === :auto || throw(ArgumentError("gram must be true, false or :auto, but it is $gram."))
   n, p = size(X)
-  !issparse(X) && n >= 2p && p <= (path ? _GRAM_PMAX_PATH : _GRAM_PMAX)
+  path && !issparse(X) && n >= p && p <= _GRAM_PMAX
 end
 
 # A = (X - 1x̄')'(X - 1x̄')/n, the Gram matrix of the centered columns, formed from
@@ -211,10 +211,10 @@ With `gram = true`, coordinate descent works on the Gram matrix of the
 (centered) columns, `A = X'X / n`, instead of the residuals. Each coordinate
 step then costs `O(p)` instead of `O(n)`, after `O(np²)` operations and `p²`
 numbers of memory to form `A`. The loss, the stopping rule and so the
-solution are the same, to the tolerance. It pays off when `n` is much larger
-than `p`, more along a path than at one `λ`. The default, `gram = :auto`, uses
-it for a dense `X` with `n ≥ 2p` and `p ≤ $(_GRAM_PMAX)`
-(`p ≤ $(_GRAM_PMAX_PATH)` for [`LassoPath`](@ref)).
+solution are the same, to the tolerance. Forming `A` pays off over the many
+passes of a path when `n ≥ p`, but rarely at one `λ`. The default,
+`gram = :auto`, uses it for [`LassoPath`](@ref) on a dense `X` with `n ≥ p`
+and `p ≤ $(_GRAM_PMAX)`, and never at one `λ`.
 """
 function lasso(
   X::AbstractMatrix{T},
