@@ -21,11 +21,13 @@ StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 CoordinateDescentStatsModelsExt = "StatsModels"
 
 [sources]
+KernelSmoothing = {url = "https://github.com/mlakolar/KernelSmoothing.jl", rev = "master"}
 ProximalBase = {url = "https://github.com/mlakolar/ProximalBase.jl", rev = "master"}
 ProximalSolvers = {url = "https://github.com/mlakolar/ProximalSolvers.jl", rev = "master"}
 
 [compat]
 Aqua = "0.8"
+KernelSmoothing = "0.1"
 LinearAlgebra = "1"
 PrecompileTools = "1"
 ProximalBase = "0.5"
@@ -41,8 +43,9 @@ julia = "1.10"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+KernelSmoothing = "724a8e84-0a16-41a9-ba90-78f60180b487"
 StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Aqua", "StatsModels", "Test"]
+test = ["Aqua", "KernelSmoothing", "StatsModels", "Test"]

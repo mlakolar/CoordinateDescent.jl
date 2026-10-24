@@ -8,8 +8,8 @@ Lasso estimators computed by coordinate descent: [`lasso`](@ref),
 [`GroupLassoPath`](@ref), the multi-response lasso [`multiLasso`](@ref) and
 [`MultiLassoPath`](@ref), the inference after selection of R's hdm
 ([`rlasso`](@ref), [`postLasso`](@ref), [`doubleSelection`](@ref)), and the
-varying-coefficient estimators [`locpoly`](@ref)
-and [`locpolyl1`](@ref). They run the coordinate descent, the penalty paths and
+varying-coefficient models [`varyingCoefficient`](@ref) and
+[`varyingCoefficientLasso`](@ref), with the kernels of KernelSmoothing.jl. They run the coordinate descent, the penalty paths and
 the reweighting of ProximalSolvers.jl on the losses and penalties of
 ProximalBase.jl, as does [`coordinateDescent!`](@ref), which minimizes
 `f(x) + g(x)` for a loss `f` (a [`CoordinateDifferentiableFunction`](@ref) or a
@@ -75,9 +75,8 @@ export
   postLasso,
   doubleSelection,
 
-  # var coef
-  GaussianKernel, SmoothingKernel, EpanechnikovKernel, evaluate, createKernel,
-  locpoly, locpolyl1
+  # varying-coefficient models (kernels from KernelSmoothing.jl)
+  varyingCoefficient, varyingCoefficientLasso, varyingCoefficientCV, varyingCoefficientLassoCV
 
 include("utils.jl")
 include("losses.jl")
@@ -92,7 +91,7 @@ include("cv.jl")
 include("hdm.jl")
 include("statsapi.jl")
 include("formula.jl")
-include("varying_coefficient_lasso.jl")
+include("varying.jl")
 
 include("precompile.jl")
 

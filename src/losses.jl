@@ -41,8 +41,8 @@ model of ProximalSolvers for `(1/n) * GLMLoss(ProximalBase.Squared(), y, X;
 weights = w)`. It caches the residuals `r = y - Xβ` and the weighted squared
 column norms.
 
-`y`, `X` and `w` are read in place, so changing them (as [`locpolyl1`](@ref)
-does) changes the loss for the next solve. They are checked for `NaN` or `Inf`
+`y`, `X` and `w` are read in place, so changing them changes the loss for the
+next solve. They are checked for `NaN` or `Inf`
 and the weights for negative entries only when the loss is built, so build it
 from initialized buffers. A coefficient whose column does not enter the loss
 (`∑ᵢ wᵢ Xᵢₖ² = 0`) goes to the minimizer of the penalty nearest zero.

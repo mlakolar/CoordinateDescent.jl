@@ -323,7 +323,7 @@ end
     Y = X[:,1:s] * β + randn(n)
 
     loadingX = Array{Float64}(undef, p)
-    CoordinateDescent._stdX!(loadingX, X)
+    loadingX .= vec(sqrt.(sum(abs2, X; dims = 1) ./ size(X, 1)))     # the uncentered scales of the columns
 
     λ1 = 0.3
     λ2 = 0.1
@@ -833,10 +833,6 @@ end
   @test find(X, y, 3) == [true, false, true, true, false]
   @test find(X, y, 4) == trues(5)
   @test find(X, y, 9) == trues(5)                     # s larger than p: all columns
-  @test find(ones(5), X, y, 3) == find(X, y, 3)       # the weighted form
-  w = [1.0, 1.0, 1.0, 1.0, 4.0]                       # |w .* y| = (3, 1, 3, 2, 4)
-  @test find(w, X, y, 1) == [false, false, false, false, true]
-  @test find(w, X, y, 2) == [true, false, true, false, true]
 end
 
 @testset "sqrt-lasso near a perfect fit" begin
@@ -873,7 +869,6 @@ end
   @test CDOptions(CDOptions(; momentum = false); optTol = 1e-3).momentum === false
   @test_throws ArgumentError CDOptions(o; maxiter = 1)                       # not a field
   @test_throws ArgumentError CDOptions(o; momentum = true)                   # momentum needs order = :random
-  @test CoordinateDescent._withWarmStart(o) == CDOptions(o; warmStart = true)
   io = IterLassoOptions(; maxIter = 7, optTol = 1e-4, initProcedure = :InitStd, sinit = 2, σinit = 0.5,
                         optionsCD = o)
   io2 = IterLassoOptions(io; σinit = 2.0)

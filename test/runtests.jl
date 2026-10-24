@@ -15,9 +15,9 @@ tests = [
   "sparsegroup",
   "multiresponse",
   "hdm",
+  "varying",
   "statsapi",
   "formula",
-  "varying_coefficient_lasso"
 ]
 
 @testset "CoordinateDescent" begin
@@ -28,6 +28,8 @@ tests = [
   end
 
   @testset "Aqua" begin
-    Aqua.test_all(CoordinateDescent)
+    # KernelSmoothing is a test dependency; on Julia 1.10, which ignores
+    # [sources], CI adds it by URL, which also lists it in [deps]
+    Aqua.test_all(CoordinateDescent; stale_deps = (ignore = [:KernelSmoothing],))
   end
 end

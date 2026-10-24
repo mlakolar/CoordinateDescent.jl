@@ -56,7 +56,9 @@ function locpoly_case()
                       (vec(Matrix(B[1])), 0)))
 end
 
-cases() = [design_cases(1); design_cases(6); design_cases(8); locpoly_case()]
+# locpolyl1 is gone since #38; benchmark/varying compares its replacement
+cases() = [design_cases(1); design_cases(6); design_cases(8);
+           isdefined(CoordinateDescent, :locpolyl1) ? [locpoly_case()] : Tuple{String, Function}[]]
 
 results = Dict{Tuple{String, String}, Any}()
 for (case, run) in cases()
