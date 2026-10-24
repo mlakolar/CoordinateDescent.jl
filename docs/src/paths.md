@@ -30,8 +30,36 @@ sequence has `nλ = 100` levels spaced evenly on the log scale from
 - **Refitting.** [`refitLassoPath`](@ref) refits least squares on each distinct
   support of the path.
 
-Cross-validation over the path is a loop over the folds; the example on lasso
-paths does it.
+## Choosing λ
+
+[`CVLassoPath`](@ref)`(X, y)` chooses the level by ``K``-fold
+cross-validation (`nfolds = 10`), with the options and keywords of
+[`LassoPath`](@ref). The path on all the data gives the levels, the path of
+each fold is computed on the other folds at those levels, and the mean squared
+error on the held-out fold estimates the prediction error at each level;
+standardization and the intercept are computed on each training fold. `cvm`
+averages the fold errors weighted by the fold sizes and `cvse` is its standard
+error, as in glmnet; `λmin` minimizes `cvm`, and `λ1se` is the largest level
+whose `cvm` is within `cvse` of the minimum, the one-standard-error rule.
+`coef(cv)` and `predict(cv, X)` use the solution at `λ1se`, or at `λmin` with
+`λ = :λmin`. The folds are a balanced random assignment drawn from `rng`, or
+the fold labels `folds`, for example blocked folds for dependent data. They
+run as tasks on the available threads, and the result does not depend on the
+number of threads.
+
+The information criteria [`aic`](@ref), [`bic`](@ref) and [`ebic`](@ref) of a
+path, one value per level, choose the level without refitting:
+
+```math
+\mathrm{AIC} = n\log(\mathrm{RSS}/n) + 2\,\mathrm{df}, \qquad
+\mathrm{BIC} = n\log(\mathrm{RSS}/n) + \log(n)\,\mathrm{df}, \qquad
+\mathrm{EBIC} = \mathrm{BIC} + 2\gamma\log\binom{p}{s},
+```
+
+where ``\mathrm{df}`` is the number of nonzero coefficients, plus one for an
+intercept, and the extended BIC of Chen and Chen (2008), for ``s`` nonzero
+coefficients among ``p``, accounts for the size of the model space:
+`path.λpath[argmin(bic(path, X, y))]` is the level that BIC chooses.
 
 ## Solver options
 

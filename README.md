@@ -21,7 +21,8 @@ Estimators:
 * Scaled lasso, from the data or from sufficient statistics (`X'X/n`, `X'y/n`,
   `y'y/n`, or a covariance matrix, one variable on the others)
 * Feasible (heteroscedastic) lasso
-* Lasso paths and refitting
+* Lasso paths, with λ chosen by cross-validation or an information criterion,
+  and refitting
 * Varying-coefficient models by local polynomial regression with an ℓ1 penalty
 
 CoordinateDescent is one of five Julia packages for high-dimensional statistics,
@@ -61,6 +62,8 @@ sol.x, sol.intercept                             # sparse coefficients, intercep
 coef(sol), predict(sol, X)                       # StatsAPI: also residuals, nobs, dof, deviance
 path = LassoPath(X, y; nλ=50, intercept=true)    # the lasso along 50 values of λ
 coef(path, 0.1)                                  # the coefficients at λ = 0.1
+cv = CVLassoPath(X, y; intercept=true)           # λ by 10-fold cross-validation
+coef(cv)                                         # the coefficients at cv.λ1se
 ```
 
 The [documentation](https://mlakolar.github.io/CoordinateDescent.jl/dev/) has
