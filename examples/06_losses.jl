@@ -1,6 +1,7 @@
 # The losses and the low-level interface
 #
-#     coordinateDescent!(x, f, g, options = CDOptions(), info = CDInfo())
+#     coordinateDescent!(x, f, g, options = CDOptions(); kwargs...)
+#     r = solve!(x, f, g, options = CDOptions(); kwargs...)
 #
 # minimizes f(x) + g(x) for a loss f and a penalty g from ProximalBase:
 # NormL1(λ) for λ ‖x‖₁, NormL1(λ, ω) for λ ∑ⱼ ωⱼ |xⱼ|, ZeroFunction() for no

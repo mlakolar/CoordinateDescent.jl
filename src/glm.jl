@@ -39,30 +39,6 @@ struct GLMLassoSolution{T, L, S}
   converged::Bool
 end
 
-# the penalty loadings of standardized columns with observation weights w: the
-# weighted standard deviations sqrt(∑ᵢ wᵢ (Xᵢⱼ - x̄ⱼ)² / ∑ᵢ wᵢ), centered at the
-# weighted means x̄ⱼ with an intercept and at zero otherwise
-_loadings(X::AbstractMatrix, intercept::Bool, ::Nothing) = _loadings(X, intercept)
-function _loadings(X::AbstractMatrix{T}, intercept::Bool, w::AbstractVector{T}) where {T}
-  n, p = size(X)
-  sw = sum(w)
-  xbar = intercept ? Vector{T}(transpose(X) * w ./ sw) : zeros(T, p)
-  ω = Vector{T}(undef, p)
-  @inbounds for k in 1:p
-    c = xbar[k]
-    if intercept && all(==(X[1, k]), view(X, :, k))     # a constant column, exactly zero once centered
-      ω[k] = zero(T)
-      continue
-    end
-    a = zero(T)
-    for i in 1:n
-      a += w[i] * (X[i, k] - c) * (X[i, k] - c)
-    end
-    ω[k] = sqrt(a / sw)
-  end
-  ω
-end
-
 # the responses that the built-in scalar losses accept
 _check_response(::ProximalBase.Logistic, y) =
   all(t -> 0 <= t <= 1, y) || throw(ArgumentError("logistic regression needs responses in [0, 1]"))
