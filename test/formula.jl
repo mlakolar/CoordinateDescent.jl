@@ -60,10 +60,10 @@ logistic(z) = 1 / (1 + exp(-z))
   end
 
   @testset "other estimators" begin
-    s = sqrtLasso(@formula(y ~ x1 + x2 + g), data, 0.5)
+    s = sqrt_lasso(@formula(y ~ x1 + x2 + g), data, 0.5)
     @test s.model isa CoordinateDescent.LassoSolution && length(coef(s)) == 5
-    @test Vector(coef(s)) ≈ Vector(coef(sqrtLasso(X, y, 0.5; intercept = true))) atol = 1e-5
-    a = adaptiveLasso(@formula(y ~ x1 + x2 + g), data, 0.05)
+    @test Vector(coef(s)) ≈ Vector(coef(sqrt_lasso(X, y, 0.5; intercept = true))) atol = 1e-5
+    a = adaptive_lasso(@formula(y ~ x1 + x2 + g), data, 0.05)
     @test coefnames(a) == ["(Intercept)", "x1", "x2", "g: b", "g: c"]
 
     cv = fit(CVLassoPath, @formula(y ~ x1 + x2 + g), data; nfolds = 5, nλ = 15, rng = Xoshiro(3))
@@ -73,8 +73,8 @@ logistic(z) = 1 / (1 + exp(-z))
 
     yb = Float64.(rand(rng, n) .< logistic.(x1 .- x2))
     db = (; data..., yb)
-    gl = glmLasso(@formula(yb ~ x1 + x2 + g), db, 0.02)
-    gm = glmLasso(X, yb, 0.02)
+    gl = glm_lasso(@formula(yb ~ x1 + x2 + g), db, 0.02)
+    gm = glm_lasso(X, yb, 0.02)
     @test Vector(coef(gl)) ≈ Vector(coef(gm)) atol = 1e-6
     @test predict(gl, db; type = :link) ≈ predict(gm, X; type = :link) atol = 1e-6
     gp = fit(GLMLassoPath, @formula(yb ~ x1 + x2 + g), db; nλ = 10)
@@ -84,13 +84,13 @@ logistic(z) = 1 / (1 + exp(-z))
     @test predict(pp, data) ≈ exp.(predict(pp, data; type = :link))
 
     # the group lasso: one group per term, or the groups given
-    grp = groupLasso(@formula(y ~ x1 + g + x2), data, 0.05)
+    grp = group_lasso(@formula(y ~ x1 + g + x2), data, 0.05)
     @test grp.model.groups == [[1], [2, 3], [4]]
     @test coefnames(grp) == ["(Intercept)", "x1", "g: b", "g: c", "x2"]
-    @test groupLasso(@formula(y ~ x1 + g + x2), data, 0.05; groups = [1:1, 2:4]).model.groups == [[1], [2, 3, 4]]
+    @test group_lasso(@formula(y ~ x1 + g + x2), data, 0.05; groups = [1:1, 2:4]).model.groups == [[1], [2, 3, 4]]
     gpath = fit(GroupLassoPath, @formula(y ~ x1 + g + x2), data; nλ = 8)
     λs = gpath.model.λpath
-    gq = fit(GroupLassoPath, @formula(y ~ x1 + g + x2), data, λs, CDOptions(; optTol = 1e-10))
+    gq = fit(GroupLassoPath, @formula(y ~ x1 + g + x2), data, λs, CDOptions(; opt_tol = 1e-10))
     @test gq.model.λpath == λs && gq.model.groups == [[1], [2, 3], [4]]
 
     r = rlasso(@formula(y ~ x1 + x2 + g), data)

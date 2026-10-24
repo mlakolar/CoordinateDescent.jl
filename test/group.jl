@@ -12,7 +12,7 @@ function kkt_group(G, θ, groups, λ, w)
   end
 end
 
-@testset "groupLasso and GroupLassoPath" begin
+@testset "group_lasso and GroupLassoPath" begin
   rng = Xoshiro(21)
   n, J = 200, 12
   sizes = [3, 2, 4, 1, 3, 2, 5, 3, 2, 4, 1, 3]
@@ -28,7 +28,7 @@ end
   λ = 0.1
 
   @testset "orthonormal groups" begin
-    sol = groupLasso(X, y, λ, groups)
+    sol = group_lasso(X, y, λ, groups)
     @test sol.converged
     @test sol.groups == collect.(groups) && sol.groupweights ≈ w
     # the problem in θ_G = R̃_G β_G on the orthonormalized design Z
@@ -45,14 +45,14 @@ end
     @test kkt_group(-Z' * r / n, θ, groups, λ, w) < 1e-6
     # the same solution as coordinate descent on Z, mapped back
     xz = AtomIterate(p, groups)
-    coordinateDescent!(xz, CDLeastSquaresLoss(y, Z; intercept = true), GroupNormL2(λ, groups, w), CDOptions(; optTol = 1e-10))
+    coordinate_descent!(xz, CDLeastSquaresLoss(y, Z; intercept = true), GroupNormL2(λ, groups, w), CDOptions(; opt_tol = 1e-10))
     βz = reduce(vcat, [Rs[k] \ xz[G] for (k, G) in enumerate(groups)])
     @test Vector(sol.x) ≈ βz atol = 1e-5
     @test sol.activegroups == [k for (k, G) in enumerate(groups) if norm(βz[G]) > 0]
     # invariant to a change of basis within a group: scaling a column scales
     # its coefficient and nothing else
     Xs = copy(X); Xs[:, 5] .*= 7
-    sols = groupLasso(Xs, y, λ, groups)
+    sols = group_lasso(Xs, y, λ, groups)
     @test sols.x[5] ≈ sol.x[5] / 7 rtol = 1e-5
     @test Vector(sols.x)[[1:4; 6:p]] ≈ Vector(sol.x)[[1:4; 6:p]] atol = 1e-6
     @test sols.intercept ≈ sol.intercept atol = 1e-6
@@ -60,37 +60,37 @@ end
     # the fit is the one without it
     Xd = [X X[:, 1] .- 2 .* X[:, 3]]
     gd = [i == 1 ? [1, 2, 3, p + 1] : collect(G) for (i, G) in enumerate(groups)]
-    sold = groupLasso(Xd, y, λ, gd; groupweights = w)            # the weights of the groups without it
+    sold = group_lasso(Xd, y, λ, gd; groupweights = w)            # the weights of the groups without it
     @test Xd * Vector(sold.x) ≈ X * Vector(sol.x) atol = 1e-6
     @test count(!iszero, Vector(sold.x)[[1, 2, 3, p + 1]]) <= 3
     # a zero group weight keeps a group in the model
     wz = copy(w); wz[12] = 0
-    solz = groupLasso(X, y, 0.5, groups; groupweights = wz)
+    solz = group_lasso(X, y, 0.5, groups; groupweights = wz)
     @test 12 in solz.activegroups
     # without an intercept
-    sol0 = groupLasso(X, y .- 2, λ, groups; intercept = false)
+    sol0 = group_lasso(X, y .- 2, λ, groups; intercept = false)
     @test sol0.intercept == 0
-    # warmStart = false: along numSteps levels from λmax
-    solw = groupLasso(X, y, λ, groups, CDOptions(; warmStart = false, numSteps = 20))
+    # warm_start = false: along num_steps levels from λmax
+    solw = group_lasso(X, y, λ, groups, CDOptions(; warm_start = false, num_steps = 20))
     @test Vector(solw.x) ≈ Vector(sol.x) atol = 1e-5
-    @test_throws ArgumentError groupLasso(X, y, λ, groups[1:end-1])          # a column in no group
-    @test_throws ArgumentError groupLasso(X, y, λ, [groups; [1:1]])          # a column in two groups
-    @test_throws ArgumentError groupLasso(X, y, -1.0, groups)
-    @test_throws ArgumentError groupLasso(X, y, λ, groups; standardize = :bogus)
+    @test_throws ArgumentError group_lasso(X, y, λ, groups[1:end-1])          # a column in no group
+    @test_throws ArgumentError group_lasso(X, y, λ, [groups; [1:1]])          # a column in two groups
+    @test_throws ArgumentError group_lasso(X, y, -1.0, groups)
+    @test_throws ArgumentError group_lasso(X, y, λ, groups; standardize = :bogus)
   end
 
   @testset "columns as given" begin
-    sol = groupLasso(X, y, λ, groups; standardize = :none)
+    sol = group_lasso(X, y, λ, groups; standardize = :none)
     r = y .- sol.intercept .- X * Vector(sol.x)
     Xc = X .- mean(X; dims = 1)
     @test kkt_group(-Xc' * r / n, Vector(sol.x), groups, λ, w) < 1e-6
     # groups need not be contiguous
     perm = randperm(rng, p)
     gp = [perm[G] for G in groups]
-    solp = groupLasso(X[:, invperm(perm)], y, λ, gp; standardize = :none)
+    solp = group_lasso(X[:, invperm(perm)], y, λ, gp; standardize = :none)
     @test Vector(solp.x)[perm] ≈ Vector(sol.x) atol = 1e-5
     # integer data
-    soli = groupLasso(round.(Int, 10X), round.(Int, 10y), 1.0, groups)
+    soli = group_lasso(round.(Int, 10X), round.(Int, 10y), 1.0, groups)
     @test soli.converged
   end
 
@@ -99,9 +99,9 @@ end
     @test length(path.λpath) == 30 && all(path.converged) && path.intercept
     @test nnz(path.βpath[1]) == 0 && isempty(path.activegroups[1])
     @test !isempty(path.activegroups[2])                      # λmax is the smallest level with a zero solution
-    @test all(path.kktChecks .>= 1)
+    @test all(path.kkt_checks .>= 1)
     for k in (8, 30)
-      sol = groupLasso(X, y, path.λpath[k], groups, CDOptions(; optTol = 1e-10))
+      sol = group_lasso(X, y, path.λpath[k], groups, CDOptions(; opt_tol = 1e-10))
       @test Vector(path.βpath[k]) ≈ Vector(sol.x) atol = 1e-5
       @test path.β0path[k] ≈ sol.intercept atol = 1e-5
       @test path.activegroups[k] == sol.activegroups

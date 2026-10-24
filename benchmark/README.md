@@ -74,7 +74,7 @@ variance is 0.09. One run each (Slurm job 13379208, run
 Times the lasso solvers on one problem with n = 3000, p = 5000 and 100 nonzero
 coefficients:
 
-- `scaledLasso!` from its default start and from a given noise level (with
+- `scaled_lasso!` from its default start and from a given noise level (with
   `@time`);
 - the lasso at 0.05 λmax and 0.01 λmax, from zero and along a path of 50
   penalty levels from λmax, with unit and with standardized loadings. λmax is
@@ -89,8 +89,8 @@ On Discovery (an EPYC 7513 core, Julia 1.13.2, one BLAS thread; run
 
 | solve | time (s) | passes | nonzeros |
 |---|---:|---:|---:|
-| `scaledLasso!`, noise level started by screening (with compilation) | 1.95 | | |
-| `scaledLasso!`, noise level started at a given value | 0.03 | | |
+| `scaled_lasso!`, noise level started by screening (with compilation) | 1.95 | | |
+| `scaled_lasso!`, noise level started at a given value | 0.03 | | |
 | 0.05 λmax, unit loadings, from zero / along 50 levels | 0.05 / 0.25 | 41 / 506 | 454 |
 | 0.05 λmax, standardized loadings, from zero / along 50 levels | 0.04 / 0.25 | 38 / 490 | 455 |
 | 0.01 λmax, unit loadings, from zero / along 50 levels | 0.80 / 2.21 | 285 / 1232 | 2058 |
@@ -151,7 +151,7 @@ has no `order = :active`; the script no longer times that order.
 
 Compares the orders of the coordinates, Anderson acceleration (issue #9) and
 momentum (issue #20) on the lasso `‖y - Xβ‖² / (2n) + λ‖β‖₁`, solved from β = 0
-with the default stopping rule (`optTol = 1e-7`):
+with the default stopping rule (`opt_tol = 1e-7`):
 
 - `order = :cyclic`, and `:random` and `:active` without momentum (the default
   before version 0.6 was `:random` without momentum);
@@ -181,7 +181,7 @@ turn. Each solver runs until it has half a second of runs, and at least 3 runs
 passes and time; for the deterministic ones, the shortest time. The results
 below are from an Apple M3 Pro with Julia 1.13.2 and one BLAS thread. Every
 solution is as accurate as the cyclic one, except that the cyclic order stops
-at `maxIter = 100 000` for E' at 0.01 λmax.
+at `max_iter = 100 000` for E' at 0.01 λmax.
 
 ### One λ: milliseconds (passes)
 
@@ -282,22 +282,22 @@ version at `0623e11` on ProximalSolvers `c247846` (then named ProximalSolvers).
 |---|---:|---:|---:|---:|---:|---|---:|
 | A CDQuadraticLoss | 245.9 | 1050.4 | 234.4 | 0.95 | 0.22 | 1224 / 1224 | 0e+00 |
 | A LassoPath | 497.8 | 2218.3 | 498.6 | 1.00 | 0.22 | 7387 / 7387 | 4e-14 |
-| A feasibleLasso! | 1.5 | 1.5 | 1.5 | 1.01 | 1.01 | 2 / 2 | 0e+00 |
+| A feasible_lasso! | 1.5 | 1.5 | 1.5 | 1.01 | 1.01 | 2 / 2 | 0e+00 |
 | A lasso | 25.9 | 54.6 | 25.1 | 0.97 | 0.46 | 397 / 397 | 5e-15 |
-| A scaledLasso | 2.0 | 2.2 | 1.9 | 0.96 | 0.88 | 27 / 27 | 7e-16 |
-| A sqrtLasso | 5.8 | 5.5 | 5.8 | 1.01 | 1.06 | 11 / 11 | 0e+00 |
+| A scaled_lasso | 2.0 | 2.2 | 1.9 | 0.96 | 0.88 | 27 / 27 | 7e-16 |
+| A sqrt_lasso | 5.8 | 5.5 | 5.8 | 1.01 | 1.06 | 11 / 11 | 0e+00 |
 | E CDQuadraticLoss | 49.0 | 123.1 | 48.6 | 0.99 | 0.39 | 328 / 328 | 0e+00 |
 | E LassoPath | 174.6 | 467.9 | 168.8 | 0.97 | 0.36 | 4548 / 4548 | 2e-14 |
-| E feasibleLasso! | 4.8 | 4.5 | 4.5 | 0.94 | 1.01 | 154 / 154 | 2e-15 |
+| E feasible_lasso! | 4.8 | 4.5 | 4.5 | 0.94 | 1.01 | 154 / 154 | 2e-15 |
 | E lasso | 4.1 | 5.1 | 4.1 | 1.00 | 0.79 | 108 / 108 | 3e-15 |
-| E scaledLasso | 1.9 | 1.6 | 1.8 | 0.95 | 1.13 | 84 / 84 | 0e+00 |
-| E sqrtLasso | 8.5 | 9.7 | 8.4 | 0.99 | 0.87 | 19 / 19 | 0e+00 |
+| E scaled_lasso | 1.9 | 1.6 | 1.8 | 0.95 | 1.13 | 84 / 84 | 0e+00 |
+| E sqrt_lasso | 8.5 | 9.7 | 8.4 | 0.99 | 0.87 | 19 / 19 | 0e+00 |
 | F CDQuadraticLoss | 61.9 | 169.2 | 61.7 | 1.00 | 0.36 | 427 / 427 | 0e+00 |
 | F LassoPath | 227.9 | 715.7 | 216.3 | 0.95 | 0.30 | 6428 / 6428 | 4e-14 |
-| F feasibleLasso! | 4.7 | 4.8 | 4.5 | 0.95 | 0.93 | 282 / 282 | 3e-15 |
+| F feasible_lasso! | 4.7 | 4.8 | 4.5 | 0.95 | 0.93 | 282 / 282 | 3e-15 |
 | F lasso | 5.4 | 9.1 | 5.3 | 0.96 | 0.58 | 161 / 161 | 4e-15 |
-| F scaledLasso | 2.2 | 2.9 | 2.1 | 0.96 | 0.73 | 146 / 146 | 1e-15 |
-| F sqrtLasso | 12.1 | 18.5 | 12.0 | 0.99 | 0.65 | 32 / 32 | 0e+00 |
+| F scaled_lasso | 2.2 | 2.9 | 2.1 | 0.96 | 0.73 | 146 / 146 | 1e-15 |
+| F sqrt_lasso | 12.1 | 18.5 | 12.0 | 0.99 | 0.65 | 32 / 32 | 0e+00 |
 | locpolyl1 | 0.8 | 0.7 | 0.8 | 1.03 | 1.11 | 0 / 0 | 9e-16 |
 
 - **The coordinate descent moved without a change, momentum included.**
@@ -314,9 +314,9 @@ version at `0623e11` on ProximalSolvers `c247846` (then named ProximalSolvers).
 ## scaledlasso_bench.jl
 
 Compares the scaled lasso of version 0.6.0, which alternated lasso fits with
-updates of σ̂ until the relative change of σ̂ was below `optTol` (1e-2 by
+updates of σ̂ until the relative change of σ̂ was below `opt_tol` (1e-2 by
 default, and 1e-6), with the square-root lasso solved in one run of coordinate
-descent: from the data (`scaledLasso`) and from sufficient statistics
+descent: from the data (`scaled_lasso`) and from sufficient statistics
 (`CDSqrtQuadraticLoss`). Part 1 fits regressions with independent or AR(1)
 columns, ten nonzero coefficients, unit noise, `λ = √(2 log p / n)` and the
 column standard deviations as loadings. Part 2 is the precision matrix
@@ -327,10 +327,10 @@ the columns (built with `check = false`, with an infinite weight on the
 response). Seconds on one CPU of USC CARC Discovery (AMD EPYC 7513, Julia
 1.13.2; run `20261023T1216Z-cd-scaledlasso`, commit `e6a0bd2`), and in
 parentheses the largest difference of the coefficients from a solution at
-`optTol = 1e-12`, relative to its largest coefficient. "A, b, c" is the time to
+`opt_tol = 1e-12`, relative to its largest coefficient. "A, b, c" is the time to
 form the sufficient statistics.
 
-| n | p | ρ | 0.6.0, optTol = 1e-2 | 0.6.0, optTol = 1e-6 | scaledLasso | from A, b, c | A, b, c | passes 0.6.0 / new |
+| n | p | ρ | 0.6.0, opt_tol = 1e-2 | 0.6.0, opt_tol = 1e-6 | scaled_lasso | from A, b, c | A, b, c | passes 0.6.0 / new |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 1000 | 200 | 0.0 | 0.000544 (3e-04) | 0.000904 (5e-08) | 0.000186 (6e-10) | 4.93e-05 (2e-09) | 0.0017 | 35 / 10 |
 | 1000 | 200 | 0.5 | 0.000462 (3e-04) | 0.000715 (1e-07) | 0.000207 (4e-07) | 5.76e-05 (1e-07) | 0.00161 | 85 / 20 |
@@ -348,7 +348,7 @@ form the sufficient statistics.
 | 200 | 5000 | 0.5 | 0.00428 (2e-03) | 0.00978 (3e-07) | 0.00116 (1e-07) | 0.0329 (1e-07) | 0.173 | 99 / 22 |
 | 200 | 5000 | 0.9 | 0.00414 (4e-04) | 0.00618 (5e-06) | 0.00159 (4e-06) | 0.0337 (4e-06) | 0.171 | 266 / 181 |
 
-| problem | 0.6.0, optTol = 1e-2 | 0.6.0, optTol = 1e-6 | scaledLasso | from S |
+| problem | 0.6.0, opt_tol = 1e-2 | 0.6.0, opt_tol = 1e-6 | scaled_lasso | from S |
 |---|---:|---:|---:|---:|
 | AR(1), p = 200, n = 100 | 0.026 (6e-03) | 0.066 (6e-07) | 0.0125 (1e-07) | 0.002 (1e-07) |
 | band, p = 200, n = 100 | 0.0261 (3e-02) | 0.0508 (3e-06) | 0.00864 (5e-07) | 0.00255 (6e-07) |
@@ -369,18 +369,18 @@ form the sufficient statistics.
 | band, p = 1000, n = 2000 | 4.26 (6e-04) | 6.13 (4e-07) | 3.55 (3e-07) | 0.08 (3e-07) |
 | Erdős–Rényi, p = 1000, n = 2000 | 3.8 (3e-03) | 5.36 (4e-07) | 3.08 (3e-07) | 0.0524 (6e-07) |
 
-- **Faster, and at the solution.** In all but one case the new `scaledLasso`
+- **Faster, and at the solution.** In all but one case the new `scaled_lasso`
   was 1.2–5.4 times faster than the default of 0.6.0, whose coefficients were
   off by 2e-5 to 3e-2; the exception (n = 5000, p = 500, ρ = 0.9) was 3% slower,
   with an error of 3e-6 against 3e-4. At the accuracy of the new version (0.6.0
-  with `optTol = 1e-6`) it was 1.2–19 times faster.
+  with `opt_tol = 1e-6`) it was 1.2–19 times faster.
 - **Sufficient statistics pay off when n > p.** From `A`, `b` and `c` the fit
   was 3.6–20 times faster than from the data when n > p, not counting forming
   them, which costs `O(np²)` (29 ms for n = 5000, p = 500, as much as 4–12 fits
   from the data). When p ≥ n it was slower, up to 25 times for p = 5000,
   n = 200: a coordinate update costs `O(p)` instead of `O(n)`.
 - **The precision matrix estimator.** From the shared `S`, all the columns took
-  2–90 ms, 3.4–62 times faster than the new `scaledLasso` on copies of the data
+  2–90 ms, 3.4–62 times faster than the new `scaled_lasso` on copies of the data
   and 7–73 times faster than the default of 0.6.0, with coefficients within
   7e-7 of the solution. Without `check = false`, checking `S` for every column
   costs `O(p²)` each, which dominated for p ≥ 1000.
@@ -405,7 +405,7 @@ On Discovery (Julia 1.13.2, AMD EPYC 7513, 2026-10-24, run
 `20261024T0053Z-cd-glm-bench`), seconds, with the relative error in
 parentheses:
 
-| | n | p | glmLasso | glmLasso, loose | glmnet | glmnet, tol 1e-10 | Lasso.jl |
+| | n | p | glm_lasso | glm_lasso, loose | glmnet | glmnet, tol 1e-10 | Lasso.jl |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | logistic | 1000 | 100 | 0.064 (9e-7) | 0.031 (5e-4) | 0.070 (1e-3) | 0.137 (5e-5) | 0.018 (1e-3) |
 | logistic | 1000 | 2000 | 0.886 (2e-5) | 0.248 (4e-3) | 0.626 (8e-3) | 1.845 (7e-4) | 0.231 (1e-2) |
@@ -416,16 +416,16 @@ parentheses:
 | Poisson | 10000 | 100 | 0.171 (2e-7) | 0.109 (5e-5) | 0.279 (2e-4) | 0.412 (2e-5) | 0.188 (1e-5) |
 | Poisson | 10000 | 2000 | 2.136 (1e-7) | 1.552 (5e-5) | 2.105 (2e-4) | 2.428 (1e-5) | 3.726 (1e-5) |
 
-"glmLasso" is the default tolerances (`optTol = 1e-7`, `newtonTol = 1e-8`),
-and "loose" is `CDOptions(; optTol = 1e-4)` with `newtonTol = 1e-5`.
+"glm_lasso" is the default tolerances (`opt_tol = 1e-7`, `newton_tol = 1e-8`),
+and "loose" is `CDOptions(; opt_tol = 1e-4)` with `newton_tol = 1e-5`.
 
 - **Against glmnet.**
-  - At their defaults, glmnet stops 400 to 7000 times further from the solution than `glmLasso`, which takes 0.6–1.5 times its time.
-  - At glmnet's accuracy or better, `glmLasso` with loose tolerances is 1.3–3 times faster.
-  - At glmnet's tolerance 1e-10, which still leaves glmnet's paths less accurate than `glmLasso`'s defaults, `glmLasso` is 1.1–3.7 times faster.
+  - At their defaults, glmnet stops 400 to 7000 times further from the solution than `glm_lasso`, which takes 0.6–1.5 times its time.
+  - At glmnet's accuracy or better, `glm_lasso` with loose tolerances is 1.3–3 times faster.
+  - At glmnet's tolerance 1e-10, which still leaves glmnet's paths less accurate than `glm_lasso`'s defaults, `glm_lasso` is 1.1–3.7 times faster.
 - **Against Lasso.jl.**
-  - On logistic paths, Lasso.jl at its defaults is 2.6–3.8 times faster than `glmLasso` at its defaults, and 500 to 7000 times less accurate. With loose tolerances `glmLasso` takes 1.0–1.8 times Lasso.jl's time, and is still 2–5 times more accurate.
-  - On Poisson paths, `glmLasso` is faster at the largest size (0.57) and within 1.6 times elsewhere.
+  - On logistic paths, Lasso.jl at its defaults is 2.6–3.8 times faster than `glm_lasso` at its defaults, and 500 to 7000 times less accurate. With loose tolerances `glm_lasso` takes 1.0–1.8 times Lasso.jl's time, and is still 2–5 times more accurate.
+  - On Poisson paths, `glm_lasso` is faster at the largest size (0.57) and within 1.6 times elsewhere.
 
 ## glm_penalties/
 
@@ -481,10 +481,10 @@ Results on Discovery (run `20261024T1618Z-cd-lla`):
   convergence) equals `LassoPath(...; penalty = CappedL1(1, 0.25), intercept =
   true)` with `lla` at its default: coefficients within 5e-14 and intercepts
   within 1e-14 on both designs, for glmtlp's `standardize` FALSE and TRUE as
-  `standardizeX`, with the same supports. `lasso` at single levels gives the
+  `standardize_x`, with the same supports. `lasso` at single levels gives the
   same solutions.
 - **ncpen with `x.standardize = FALSE`** equals `lla = LLA(; stages = 1000,
-  start = :previous)` with `standardizeX = false`: MCP within 5e-10, SCAD within
+  start = :previous)` with `standardize_x = false`: MCP within 5e-10, SCAD within
   8e-10 and the TLP within 2e-14, with the same supports.
 - **ncpen's own standardization** (`x.standardize = TRUE`) gives paths that
   differ by about 1e-2. Dividing the columns by their standard deviations, with
@@ -512,7 +512,7 @@ Results on Discovery (runs `20261024T1354Z-cd-sparsegroup` and
   (√n times their standard deviation), so their level is ours divided by √n;
   SGL returns the coefficients of its standardized columns and no intercept.
   With that, the solutions of both satisfy the optimality conditions of
-  `sparseGroupLasso`'s objective up to their tolerances (sparsegl 3e-3 to 2e-2,
+  `sparse_group_lasso`'s objective up to their tolerances (sparsegl 3e-3 to 2e-2,
   SGL 7e-7 to 3e-3), against 1e-12 for ours.
 - **Against sparsegl on the full paths**, the coefficients agree to 2e-3 through
   1.2e-2, and our objective is lower than or equal to sparsegl's at every level of

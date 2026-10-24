@@ -60,22 +60,22 @@ w = sqrt.(length.(groups))
 w[10] = 0
 gw = GroupNormL2(λ, groups, w)
 xw = AtomIterate(p, groups)
-coordinateDescent!(xw, f, gw)
+coordinate_descent!(xw, f, gw)
 println("with w₁₀ = 0: selected variables ", selected(xw))
 
 println("\n== Starting from zero along a path of penalties")
 
-# With warmStart = false, coordinate descent solves along numSteps penalty
+# With warm_start = false, coordinate descent solves along num_steps penalty
 # levels from λmax = maxₖ ‖∇_Gₖ f(0)‖ / wₖ down to λ, screening the groups with
 # the sequential strong rule at each level. As for the lasso
 # (02_solver_options.jl), this costs more passes than a direct start unless a
 # direct start converges slowly.
 λsmall = 0.01
-for (warmStart, numSteps) in ((true, 50), (false, 10), (false, 50))
+for (warm_start, num_steps) in ((true, 50), (false, 10), (false, 50))
   xs = AtomIterate(p, groups)
-  res = solve!(xs, f, GroupNormL2(λsmall, groups), CDOptions(; warmStart, numSteps))
-  @printf("warmStart = %-5s numSteps = %-3s: %4d passes, %d groups selected\n", warmStart,
-          warmStart ? "-" : string(numSteps), res.passes, length(selected(xs)))
+  res = solve!(xs, f, GroupNormL2(λsmall, groups), CDOptions(; warm_start, num_steps))
+  @printf("warm_start = %-5s num_steps = %-3s: %4d passes, %d groups selected\n", warm_start,
+          warm_start ? "-" : string(num_steps), res.passes, length(selected(xs)))
 end
 
 println("\n== Choosing λ on a validation set")
@@ -93,7 +93,7 @@ println("       λ  groups  validation error")
 best = (Inf, 0.0)
 for λk in λmax * exp10.(range(0, -2.5; length = 15))
   gk = GroupNormL2(λk, groups)
-  coordinateDescent!(xt, ft, gk)                  # warm start from the previous λ
+  coordinate_descent!(xt, ft, gk)                  # warm start from the previous λ
   pred = ProximalSolvers.intercept(ft, xt) .+ X[valid, :] * xt
   err = mean(abs2, y[valid] - pred)
   @printf("  %6.4f  %6d  %16.4f\n", λk, length(selected(xt)), err)
@@ -110,25 +110,25 @@ println("\n== The quadratic loss, and a dense starting point")
 Xc = X .- mean(X; dims = 1)
 yc = y .- mean(y)
 xq = zeros(p)
-coordinateDescent!(xq, CDQuadraticLoss(Xc' * Xc / n, -Xc' * yc / n), g, CDOptions(; optTol = 1e-10))
+coordinate_descent!(xq, CDQuadraticLoss(Xc' * Xc / n, -Xc' * yc / n), g, CDOptions(; opt_tol = 1e-10))
 xl = AtomIterate(p, groups)
-coordinateDescent!(xl, f, g, CDOptions(; optTol = 1e-10))
+coordinate_descent!(xl, f, g, CDOptions(; opt_tol = 1e-10))
 @printf("largest difference to the least squares loss: %.1e\n", norm(xq - Vector(xl), Inf))
 
-println("\n== The estimators: groupLasso and GroupLassoPath")
+println("\n== The estimators: group_lasso and GroupLassoPath")
 
-# groupLasso(X, y, λ, groups) and GroupLassoPath(X, y, groups) fit an
+# group_lasso(X, y, λ, groups) and GroupLassoPath(X, y, groups) fit an
 # intercept and, by default, orthonormalize each group: the penalty
 # λ ∑ₖ wₖ ‖X̃_Gₖ β_Gₖ‖₂ / √n on the fitted values of the group (X̃ centered)
 # does not depend on the basis of the group, so rescaling a column of the
 # polynomial basis changes only its own coefficient, and every block step is
 # exact. standardize = :none penalizes λ ∑ₖ wₖ ‖β_Gₖ‖₂ as above.
-sol = groupLasso(X, y, λ, groups)
+sol = group_lasso(X, y, λ, groups)
 println("orthonormal groups: selected variables ", sol.activegroups, " in $(sol.iterations) passes")
-sol_none = groupLasso(X, y, λ, groups; standardize = :none)
+sol_none = group_lasso(X, y, λ, groups; standardize = :none)
 println("columns as given:   selected variables ", sol_none.activegroups)
 Xs = copy(X); Xs[:, 2] .*= 10
-@printf("scaling column 2 by 10 divides its coefficient by %.2f\n", sol.x[2] / groupLasso(Xs, y, λ, groups).x[2])
+@printf("scaling column 2 by 10 divides its coefficient by %.2f\n", sol.x[2] / group_lasso(Xs, y, λ, groups).x[2])
 
 # The path from λmax, with the group strong rule, and λ chosen on the validation set
 path = GroupLassoPath(X[train, :], y[train], groups; nλ = 30)

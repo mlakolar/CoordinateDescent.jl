@@ -14,7 +14,7 @@
 # S = X'X/n, with an infinite weight on the response. Times are the best of up
 # to 5 runs within a budget (one run for long ones), on one thread; the
 # accuracy is the largest difference of the coefficients from a solution at
-# optTol = 1e-12 (relative to the largest coefficient), and of σ̂.
+# opt_tol = 1e-12 (relative to the largest coefficient), and of σ̂.
 
 using CoordinateDescent, ProximalBase, ProximalSolvers
 using LinearAlgebra, Printf, Random, SparseArrays, Statistics
@@ -34,21 +34,21 @@ function best_time(f; runs=5, budget=2.0, warmup=true)
   v, best
 end
 
-# the scaledLasso! of CoordinateDescent 0.6.0: lasso fits at the penalty λσ̂,
+# the scaled_lasso! of CoordinateDescent 0.6.0: lasso fits at the penalty λσ̂,
 # alternated with σ̂ = ‖y - Xβ̂‖/√n until the relative change of σ̂ is below
-# optTol, starting from the residual standard deviation of least squares on the
+# opt_tol, starting from the residual standard deviation of least squares on the
 # 5 columns most correlated with y
-function alternating!(x, X, y, λ, ω, optTol; maxIter=100, optionsCD=CDOptions())
+function alternating!(x, X, y, λ, ω, opt_tol; max_iter=100, options_cd=CDOptions())
   n = size(X, 1)
   f = CDLeastSquaresLoss(y, X)
-  σ = std(CoordinateDescent._findInitResiduals!(X, y, 5, copy(y)))
+  σ = std(CoordinateDescent._find_init_residuals!(X, y, 5, copy(y)))
   info = CDInfo()
   passes = 0
-  for _ in 1:maxIter
-    coordinateDescent!(x, f, NormL1(λ * σ, ω), optionsCD, info)
+  for _ in 1:max_iter
+    coordinate_descent!(x, f, NormL1(λ * σ, ω), options_cd, info)
     passes += info.iterations
     σnew = norm(ProximalSolvers.residuals(f)) / sqrt(n)
-    done = abs(σnew - σ) / σ < optTol
+    done = abs(σnew - σ) / σ < opt_tol
     σ = σnew
     done && break
   end
@@ -70,7 +70,7 @@ end
 function part1()
   println("## Regression\n")
   println("Seconds, and in parentheses the largest difference of the coefficients from the solution:\n")
-  println("| n | p | ρ | 0.6.0, optTol = 1e-2 | 0.6.0, optTol = 1e-6 | scaledLasso | from A, b, c | A, b, c | passes 0.6.0 / new |")
+  println("| n | p | ρ | 0.6.0, opt_tol = 1e-2 | 0.6.0, opt_tol = 1e-6 | scaled_lasso | from A, b, c | A, b, c | passes 0.6.0 / new |")
   println("|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
   rng = Xoshiro(1)
   sizes = QUICK ? ((300, 100),) : ((1000, 200), (5000, 500), (1000, 1000), (200, 1000), (200, 5000))
@@ -78,15 +78,15 @@ function part1()
     X, y = regression(n, p, ρ, rng)
     λ = sqrt(2 * log(p) / n)
     ω = vec(sqrt.(sum(abs2, X; dims=1) / n))
-    tight = IterLassoOptions(; optionsCD=CDOptions(; optTol=1e-12, maxIter=100_000))
-    ref = scaledLasso(X, y, λ, ω, tight)
+    tight = IterLassoOptions(; options_cd=CDOptions(; opt_tol=1e-12, max_iter=100_000))
+    ref = scaled_lasso(X, y, λ, ω, tight)
     scale = maximum(abs, ref.x)
     err(x) = maximum(abs, Vector(x) - Vector(ref.x)) / scale
     (x1, _, passes1), t1 = best_time(() -> alternating!(SparseIterate(p), X, y, λ, ω, 1e-2))
     (x2, _, _), t2 = best_time(() -> alternating!(SparseIterate(p), X, y, λ, ω, 1e-6))
-    s3, t3 = best_time(() -> scaledLasso(X, y, λ, ω))
+    s3, t3 = best_time(() -> scaled_lasso(X, y, λ, ω))
     (A, b, c), tabc = best_time(() -> (X'X / n, -X'y / n, dot(y, y) / n))
-    s4, t4 = best_time(() -> scaledLasso!(SparseIterate(p), CDSqrtQuadraticLoss(A, b, c), λ, ω))
+    s4, t4 = best_time(() -> scaled_lasso!(SparseIterate(p), CDSqrtQuadraticLoss(A, b, c), λ, ω))
     @printf("| %d | %d | %.1f | %.3g (%.0e) | %.3g (%.0e) | %.3g (%.0e) | %.3g (%.0e) | %.3g | %d / %d |\n",
             n, p, ρ, t1, err(x1), t2, err(x2), t3, err(s3.x), t4, err(s4.x), tabc, passes1, s3.iterations)
   end
@@ -129,7 +129,7 @@ end
 function part2()
   println("\n## The precision matrix estimator of Sun and Zhang (2013): all p columns\n")
   println("Seconds, and in parentheses the largest difference of the coefficients from the solution:\n")
-  println("| problem | 0.6.0, optTol = 1e-2 | 0.6.0, optTol = 1e-6 | scaledLasso | from S |")
+  println("| problem | 0.6.0, opt_tol = 1e-2 | 0.6.0, opt_tol = 1e-6 | scaled_lasso | from S |")
   println("|---|---:|---:|---:|---:|")
   rng = Xoshiro(2)
   sizes = QUICK ? ((50, 25),) : ((200, 100), (200, 400), (500, 250), (500, 1000), (1000, 500), (1000, 2000))
@@ -147,10 +147,10 @@ function part2()
     function fromS(j, others; options=CDOptions())
       ω = copy(w)
       ω[j] = Inf
-      s = scaledLasso!(SparseIterate(p), CDSqrtQuadraticLoss(S, -S[:, j], S[j, j]; check=false), λ, ω, options)
+      s = scaled_lasso!(SparseIterate(p), CDSqrtQuadraticLoss(S, -S[:, j], S[j, j]; check=false), λ, ω, options)
       Vector(s.x)[others], s.σ
     end
-    ref, _ = columns((j, others) -> fromS(j, others; options=CDOptions(; optTol=1e-12, maxIter=100_000)), p)
+    ref, _ = columns((j, others) -> fromS(j, others; options=CDOptions(; opt_tol=1e-12, max_iter=100_000)), p)
     scale = maximum(abs, ref)
     err(B) = maximum(abs, B - ref) / scale
     (B1, _), t1 = best_time(() -> columns((j, o) -> data(j, o, (Xo, y, ω) -> begin
@@ -158,7 +158,7 @@ function part2()
     (B2, _), t2 = best_time(() -> columns((j, o) -> data(j, o, (Xo, y, ω) -> begin
         x, σ, _ = alternating!(SparseIterate(p - 1), Xo, y, λ, ω, 1e-6); (x, σ) end), p); runs=1, budget=0, warmup=false)
     (B3, _), t3 = best_time(() -> columns((j, o) -> data(j, o, (Xo, y, ω) -> begin
-        s = scaledLasso(Xo, y, λ, ω); (s.x, s.σ) end), p); runs=1, budget=0, warmup=false)
+        s = scaled_lasso(Xo, y, λ, ω); (s.x, s.σ) end), p); runs=1, budget=0, warmup=false)
     (B4, _), t4 = best_time(() -> columns(fromS, p); runs=3, budget=5.0)
     name = Dict("ar1" => "AR(1)", "band" => "band", "er" => "Erdős–Rényi")[model]
     @printf("| %s, p = %d, n = %d | %.3g (%.0e) | %.3g (%.0e) | %.3g (%.0e) | %.3g (%.0e) |\n",

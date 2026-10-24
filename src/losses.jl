@@ -80,7 +80,7 @@ the value of the quadratic, so a coordinate update costs `O(p)` instead of
 when n > p, and when many fits share `A`. It also solves the scaled lasso of one
 variable on the others from their covariance matrix `S`: `A = S`,
 `b = -S[:, j]` and `c = S[j, j]`, with an infinite penalty weight on coordinate
-`j`, which keeps it at zero (see [`scaledLasso!`](@ref)).
+`j`, which keeps it at zero (see [`scaled_lasso!`](@ref)).
 
 As for [`CDSqrtLassoLoss`](@ref), coordinate descent minimizes `f + g` over a
 coordinate exactly, for `NormL1` only. `A`, `b` and `c` must not contain `NaN`
@@ -123,28 +123,28 @@ end
 """
     CoordinateDifferentiableFunction
 
-Supertype of user-defined smooth losses `f` that [`coordinateDescent!`](@ref)
+Supertype of user-defined smooth losses `f` that [`coordinate_descent!`](@ref)
 can minimize. A subtype caches whatever it needs (for example residuals) to
 make coordinate updates cheap, and implements
 
 - `initialize!(f, x)`: set the cache for the iterate `x`
 - `gradient(f, x, k)`: coordinate `k` of the gradient of `f` at `x`
-- `numCoordinates(f)`: number of coordinates
-- `descendCoordinate!(f, g, x, k)`: update coordinate `k` of `x` and the cache
+- `num_coordinates(f)`: number of coordinates
+- `descend_coordinate!(f, g, x, k)`: update coordinate `k` of `x` and the cache
 
-and optionally `coordinateScale(f, k)` and `responseScale(f)`, which make the
+and optionally `coordinate_scale(f, k)` and `response_scale(f)`, which make the
 stopping rule independent of the units of the data (see [`CDOptions`](@ref)),
-`fullGradient!(grad, f, x)`, a faster way to compute the whole gradient, and
+`full_gradient!(grad, f, x)`, a faster way to compute the whole gradient, and
 `f(x)`, the value of `f` at `x` from the cache, which Anderson acceleration
 needs (`anderson` in [`CDOptions`](@ref)). These functions are not exported;
 extend them as `CoordinateDescent.initialize!` and so on. The four required
 functions have no methods of their own, so a missing method raises a
 `MethodError` that lists the methods that exist.
 
-The penalty `g` enters only through `descendCoordinate!`. A loss whose step
+The penalty `g` enters only through `descend_coordinate!`. A loss whose step
 ends with the proximal operator of `g` on coordinate `k`,
 `ProximalBase.prox_coordinate!(x, g, k, γ)`, works with every separable penalty
-of ProximalBase and with user-defined ones (see [`coordinateDescent!`](@ref)).
+of ProximalBase and with user-defined ones (see [`coordinate_descent!`](@ref)).
 
 Coordinate descent runs on ProximalSolvers, which takes such a loss through a
 model (`ProximalSolvers.CDModel`); a loss written for ProximalSolvers directly, as a
@@ -156,7 +156,7 @@ abstract type CoordinateDifferentiableFunction end
     initialize!(f, x)
 
 Set the internal cache of `f` (for example the residuals) for the iterate `x`.
-Called by [`coordinateDescent!`](@ref) before the first pass.
+Called by [`coordinate_descent!`](@ref) before the first pass.
 """
 function initialize! end
 
@@ -169,46 +169,46 @@ which must be current for `x`.
 function gradient end
 
 """
-    numCoordinates(f)
+    num_coordinates(f)
 
 Number of coordinates (or blocks of coordinates) over which coordinate descent
 iterates.
 """
-function numCoordinates end
+function num_coordinates end
 
 """
-    descendCoordinate!(f, g, x, k)
+    descend_coordinate!(f, g, x, k)
 
 Update coordinate `k` of `x` to decrease `f(x) + g(x)`, and return the change
 of the coordinate. The cache of `f` must be updated for the new `x`.
 """
-function descendCoordinate! end
+function descend_coordinate! end
 
 """
-    coordinateScale(f, k)
+    coordinate_scale(f, k)
 
-The scale of coordinate `k` for the relative stopping rule (see `optTol` in
+The scale of coordinate `k` for the relative stopping rule (see `opt_tol` in
 [`CDOptions`](@ref)): the change of `x[k]` is multiplied by it. Defaults to 1.
 """
-coordinateScale(f, k) = 1
+coordinate_scale(f, k) = 1
 
 """
-    responseScale(f)
+    response_scale(f)
 
-The scale that `optTol` is multiplied by in the relative stopping rule (see
+The scale that `opt_tol` is multiplied by in the relative stopping rule (see
 [`CDOptions`](@ref)). Defaults to 1.
 """
-responseScale(f) = 1
+response_scale(f) = 1
 
 """
-    fullGradient!(grad, f, x)
+    full_gradient!(grad, f, x)
 
 Write the gradient of `f` at `x` into `grad`, from the cache of `f`, which must
 be current for `x`, and return `grad`. Used to find the largest useful penalty
-level when `warmStart` is false. Defaults to `gradient(f, x, k)` for every
+level when `warm_start` is false. Defaults to `gradient(f, x, k)` for every
 coordinate.
 """
-function fullGradient!(grad, f, x)
+function full_gradient!(grad, f, x)
   for k in eachindex(grad)
     grad[k] = gradient(f, x, k)
   end
@@ -216,7 +216,7 @@ function fullGradient!(grad, f, x)
 end
 
 # The model of ProximalSolvers for a user-defined loss: each coordinate step is the
-# loss's descendCoordinate!, and the optional functions give the scales of the
+# loss's descend_coordinate!, and the optional functions give the scales of the
 # stopping rule, the value and the gradient
 struct _LossModel{T, F<:CoordinateDifferentiableFunction} <: CDModel{T}
   f::F
@@ -225,24 +225,24 @@ end
 _LossModel(f::CoordinateDifferentiableFunction, x) = _LossModel{float(eltype(x)), typeof(f)}(f)
 
 function ProximalSolvers.initialize!(m::_LossModel, x)
-  numCoordinates(m.f) == ncoordinates(x) || throw(DimensionMismatch(
-    "the loss has $(numCoordinates(m.f)) coordinates and the iterate $(ncoordinates(x))"))
+  num_coordinates(m.f) == ncoordinates(x) || throw(DimensionMismatch(
+    "the loss has $(num_coordinates(m.f)) coordinates and the iterate $(ncoordinates(x))"))
   initialize!(m.f, x)
   m
 end
 
 ProximalSolvers.coordinate_step!(m::_LossModel{T}, g, x::SparseIterate{T}, k::Int) where {T} =
-  descendCoordinate!(m.f, g, x, k)
+  descend_coordinate!(m.f, g, x, k)
 ProximalSolvers.coordinate_step!(m::_LossModel{T}, g, x::SymmetricSparseIterate{T}, k::Int) where {T} =
-  descendCoordinate!(m.f, g, x, k)
+  descend_coordinate!(m.f, g, x, k)
 
-ProximalSolvers.coordinate_scale(m::_LossModel{T}, x, k::Int) where {T} = T(coordinateScale(m.f, k))
-ProximalSolvers.response_scale(m::_LossModel{T}, x) where {T} = T(responseScale(m.f))
+ProximalSolvers.coordinate_scale(m::_LossModel{T}, x, k::Int) where {T} = T(coordinate_scale(m.f, k))
+ProximalSolvers.response_scale(m::_LossModel{T}, x) where {T} = T(response_scale(m.f))
 
 # the value from the cache when the loss is callable, NaN otherwise
 ProximalSolvers.loss_value(m::_LossModel{T}, x) where {T} = applicable(m.f, x) ? T(m.f(x)) : T(NaN)
 
-ProximalSolvers.gradient!(G::AbstractVector, m::_LossModel, x::SparseIterate) = fullGradient!(G, m.f, x)
+ProximalSolvers.gradient!(G::AbstractVector, m::_LossModel, x::SparseIterate) = full_gradient!(G, m.f, x)
 
 # the gradient over the entries of the p × p matrix, from the coordinates of
 # the lower triangle: λmax compares |G[r, c]| with the weight of (r, c), as

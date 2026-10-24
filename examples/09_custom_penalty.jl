@@ -1,7 +1,7 @@
 # A penalty of your own: the elastic net and the minimax concave penalty
 #
 # A penalty g(x) = ∑ₖ gₖ(xₖ) that separates across coordinates plugs into
-# coordinateDescent! as a subtype of ProximalBase.AbstractFunction that says it
+# coordinate_descent! as a subtype of ProximalBase.AbstractFunction that says it
 # is separable and has the proximal operator of one entry, and the value of
 # the penalty, g(x):
 #
@@ -11,8 +11,8 @@
 # CDLeastSquaresLoss, CDWeightedLSLoss and CDQuadraticLoss take a proximal
 # step with it, and so does any loss whose coordinate step calls prox_entry,
 # such as the logistic loss of 08_custom_loss.jl. Path following from λmax
-# (warmStart = false) and screening are implemented for NormL1 and GroupNormL2
-# only: with another penalty, warmStart = false starts from zero and solves at
+# (warm_start = false) and screening are implemented for NormL1 and GroupNormL2
+# only: with another penalty, warm_start = false starts from zero and solves at
 # g directly, and a path is a loop over penalties with warm starts, as below.
 #
 # ProximalBase has both penalties of this example built in, ElasticNet and
@@ -90,7 +90,7 @@ f = CDLeastSquaresLoss(y, X)
 println("  α   nonzeros  of the 15  β̂[1:5]                          sd of β̂[1:15]")
 for α in (1.0, 0.5, 0.1)
   x = SparseIterate(p)
-  coordinateDescent!(x, f, MyElasticNet(0.3, α))
+  coordinate_descent!(x, f, MyElasticNet(0.3, α))
   @printf("  %.1f  %8d  %9d  %-30s  %13.3f\n", α, count(!iszero, x), count(!iszero, x[1:15]),
           string(round.(x[1:5]; digits = 2)), std(x[1:15]))
 end
@@ -99,21 +99,21 @@ end
 # whose loss divides by n + p instead of n: a check of the proximal operator
 λ, α = 0.3, 0.5
 xe = SparseIterate(p)
-coordinateDescent!(xe, f, MyElasticNet(λ, α), CDOptions(; optTol = 1e-12))
+coordinate_descent!(xe, f, MyElasticNet(λ, α), CDOptions(; opt_tol = 1e-12))
 xa = SparseIterate(p)
-coordinateDescent!(xa, CDLeastSquaresLoss([y; zeros(p)], [X; sqrt(n * λ * (1 - α)) * I(p)]),
-                   NormL1(n / (n + p) * λ * α), CDOptions(; optTol = 1e-12))
+coordinate_descent!(xa, CDLeastSquaresLoss([y; zeros(p)], [X; sqrt(n * λ * (1 - α)) * I(p)]),
+                   NormL1(n / (n + p) * λ * α), CDOptions(; opt_tol = 1e-12))
 @printf("the lasso on augmented data agrees to %.1e\n", norm(xe - xa, Inf))
 
 # the quadratic loss takes the penalty too
 xq = SparseIterate(p)
-coordinateDescent!(xq, CDQuadraticLoss(X' * X / n, -X' * y / n), MyElasticNet(λ, α), CDOptions(; optTol = 1e-12))
+coordinate_descent!(xq, CDQuadraticLoss(X' * X / n, -X' * y / n), MyElasticNet(λ, α), CDOptions(; opt_tol = 1e-12))
 @printf("so does CDQuadraticLoss(X'X / n, -X'y / n): %.1e\n", norm(xq - xa, Inf))
 @printf("objective at the solution: %.6f\n", sum(abs2, y - X * xe) / (2n) + MyElasticNet(λ, α)(xe))
 
 # ProximalBase's ElasticNet(λ1, λ2) is λ1 ‖x‖₁ + (λ2/2) ‖x‖²
 xb = SparseIterate(p)
-coordinateDescent!(xb, f, ElasticNet(λ * α, λ * (1 - α)), CDOptions(; optTol = 1e-12))
+coordinate_descent!(xb, f, ElasticNet(λ * α, λ * (1 - α)), CDOptions(; opt_tol = 1e-12))
 @printf("ProximalBase's ElasticNet agrees to %.1e\n", norm(xb - xe, Inf))
 
 println("\n== The minimax concave penalty")
@@ -135,8 +135,8 @@ xl, xm = SparseIterate(p), SparseIterate(p)
 kept = nothing
 println("       λ   lasso: nonzeros  ‖β̂ - β‖   MCP: nonzeros  ‖β̂ - β‖")
 for (k, λk) in enumerate(λs)
-  coordinateDescent!(xl, f, NormL1(λk))
-  coordinateDescent!(xm, f, MyMCP(λk, 3.0))
+  coordinate_descent!(xl, f, NormL1(λk))
+  coordinate_descent!(xm, f, MyMCP(λk, 3.0))
   @printf("  %6.3f  %15d  %8.3f  %13d  %8.3f\n", λk, count(!iszero, xl), norm(xl - β),
           count(!iszero, xm), norm(xm - β))
   k == 6 && (global kept = (λk, Vector(xl), Vector(xm)))
@@ -148,7 +148,7 @@ end
 # ProximalBase's MCP(λ, a) is the same penalty with γ = a, along the same path
 xb = SparseIterate(p)
 for λj in λs[1:6]
-  coordinateDescent!(xb, f, MCP(λj, 3.0))
+  coordinate_descent!(xb, f, MCP(λj, 3.0))
 end
 @printf("ProximalBase's MCP agrees to %.1e\n", norm(Vector(xb) - bm, Inf))
 
@@ -156,7 +156,7 @@ end
 # above reports: here the columns are scaled by 1/2, so the step is 4 > γ = 3.
 # ProximalBase's MCP takes the global minimizer of the nonconvex step instead.
 try
-  coordinateDescent!(SparseIterate(p), CDLeastSquaresLoss(y, X / 2), MyMCP(0.1, 3.0))
+  coordinate_descent!(SparseIterate(p), CDLeastSquaresLoss(y, X / 2), MyMCP(0.1, 3.0))
 catch err
   println("with ‖X[:, k]‖² = n / 4: ", sprint(showerror, err))
 end

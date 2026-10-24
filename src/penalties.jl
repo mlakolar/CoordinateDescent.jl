@@ -6,7 +6,7 @@
 ######################################################################
 
 # The penalty of lasso and LassoPath at level one: nothing for the lasso (NormL1
-# with the loadings of standardizeX), the elastic net Scaled(ElasticNet(α, 1 - α), 1)
+# with the loadings of standardize_x), the elastic net Scaled(ElasticNet(α, 1 - α), 1)
 # for alpha < 1, or the template penalty with its level set to one and its
 # parameters converted to T
 function _template(::Type{T}, penalty, alpha::Real) where {T}
@@ -42,7 +42,7 @@ _atlevel(g::CappedL1, λ) = CappedL1(λ, g.a, g.w)
 _atlevel(g::LogPenalty, λ) = LogPenalty(λ, g.ε, g.w)
 _atlevel(c::ProximalBase.BoxConstrained, λ) = ProximalBase.BoxConstrained(_atlevel(c.f, λ), c.box)
 
-# The bounds lower ≤ β ≤ upper of lasso, LassoPath and glmLasso (numbers, or
+# The bounds lower ≤ β ≤ upper of lasso, LassoPath and glm_lasso (numbers, or
 # vectors with a bound per coefficient) as a box on the coefficients that the
 # penalty applies to: s .* β when the columns are divided by the scales s, β
 # for s = nothing. Returns nothing without bounds. As in glmnet, zero must be
@@ -84,7 +84,7 @@ _combine(w::AbstractArray, ω::AbstractVector{T}) where {T} = T.(vec(w)) .* ω
 _combine(::Nothing, ::Nothing) = nothing
 
 # the scales of the columns standardized for a penalty other than the ℓ1 norm:
-# the loadings of standardizeX, with one for a column of zero spread, which
+# the loadings of standardize_x, with one for a column of zero spread, which
 # then has no effect on the fit
 function _scales(X::AbstractMatrix, intercept::Bool, w)
   s = _loadings(X, intercept, w)
@@ -93,9 +93,9 @@ function _scales(X::AbstractMatrix, intercept::Bool, w)
 end
 
 # the columns of X divided by the scales s, a copy (X itself for nothing)
-_scaleColumns(X::AbstractMatrix, ::Nothing) = X
-_scaleColumns(X::AbstractMatrix, s::Vector) = X ./ transpose(s)
-_scaleColumns(X::SparseMatrixCSC, s::Vector) = X * Diagonal(inv.(s))
+_scale_columns(X::AbstractMatrix, ::Nothing) = X
+_scale_columns(X::AbstractMatrix, s::Vector) = X ./ transpose(s)
+_scale_columns(X::SparseMatrixCSC, s::Vector) = X * Diagonal(inv.(s))
 
 # the coefficients of the columns of the data from those of the columns divided
 # by s
@@ -132,41 +132,41 @@ _cdconverged(r::CDResults) = r.converged
 _cdconverged(r::ReweightResults) = r.cd_converged
 
 # Minimizes f + g for lasso and LassoPath, g a penalty with a level: as
-# _solve!, which, when options.warmStart is false, follows a path of
-# options.numSteps levels from λmax for the ℓ1 norm, but for any penalty, and
+# _solve!, which, when options.warm_start is false, follows a path of
+# options.num_steps levels from λmax for the ℓ1 norm, but for any penalty, and
 # always for a
 # nonconvex penalty (MCP, SCAD), whose local solution depends on the path, as in
 # ncvreg; the levels of a nonconvex path are solved to the full tolerance. With
 # the method lla, by local linear approximation from zero
-function _solveLevels!(x, m, g, options::CDOptions; rng::AbstractRNG = default_rng(),
+function _solve_levels!(x, m, g, options::CDOptions; rng::AbstractRNG = default_rng(),
                        lla::Union{Nothing, LLA} = nothing)
-  lla === nothing || return _solveLLA!(x, m, g, lla, options)
+  lla === nothing || return _solve_lla!(x, m, g, lla, options)
   convex = isconvex(g)
-  path = options.numSteps > 0 && !(convex && options.warmStart)
+  path = options.num_steps > 0 && !(convex && options.warm_start)
   (path && !(g isa NormL1)) || return _solve!(x, m, g, options; rng)
   s = _solver(options; rng)
   fill!(x, zero(eltype(x)))
-  solve!(x, m, g, s; continuation = options.numSteps, continuation_tol = convex ? sqrt(s.tol) : s.tol)
+  solve!(x, m, g, s; continuation = options.num_steps, continuation_tol = convex ? sqrt(s.tol) : s.tol)
 end
 
 # One level of local linear approximation from zero. When every level starts
 # from the lasso (start = :lasso), the level does not depend on the others and
 # is solved directly; when it starts from the solution at the previous level,
-# along options.numSteps levels spaced geometrically from λmax, as in ncpen
-function _solveLLA!(x, m, g, method::LLA, options::CDOptions)
+# along options.num_steps levels spaced geometrically from λmax, as in ncpen
+function _solve_lla!(x, m, g, method::LLA, options::CDOptions)
   T = eltype(x)
   fill!(x, zero(T))
   method.start === :lasso && return solve!(x, m, g, method)
   λmax, λ = lambda_max(m, g, x), T(g.λ)
-  (options.numSteps == 0 || !(zero(T) < λ < λmax)) && return solve!(x, m, g, method)
-  λs = exp.(range(log(λmax), log(λ); length = options.numSteps + 1))
+  (options.num_steps == 0 || !(zero(T) < λ < λmax)) && return solve!(x, m, g, method)
+  λs = exp.(range(log(λmax), log(λ); length = options.num_steps + 1))
   path = solve_path(m, g, λs, method; x)
   CDResults(x, path.values[end], sum(path.passes), all(path.converged), T(NaN), T(method.inner.tol),
             sum(path.kkt_checks))
 end
 
 """
-    adaptiveLasso(X, y, λ, options=CDOptions(); init=:lasso, initλ=λ, γ=1, intercept=false, standardizeX=false,
+    adaptive_lasso(X, y, λ, options=CDOptions(); init=:lasso, initλ=λ, γ=1, intercept=false, standardize_x=false,
                   kwargs...)
 
 The adaptive lasso of Zou (2006),
@@ -178,10 +178,10 @@ penalized less, so that they are less biased, and small ones more, so that
 fewer variables that do not matter are selected. `β̃` is
 
 - `init = :lasso`: the [`lasso`](@ref) at `initλ`, by default `λ`, with
-  `intercept`, `standardizeX` and the keywords `kwargs`;
+  `intercept`, `standardize_x` and the keywords `kwargs`;
 - `init = :ridge`: ridge regression at `initλ`,
   `‖y - β₀ - Xβ‖² / (2n) + initλ ‖β‖² / 2`, on the standardized columns with
-  `standardizeX` (glmnet's `alpha = 0`);
+  `standardize_x` (glmnet's `alpha = 0`);
 - `init = β̃`, a vector: for example least squares, `X \\ y` when `n > p`, or the
   coefficients of a lasso whose level was chosen by cross-validation.
 
@@ -195,9 +195,11 @@ fits. Returns the [`LassoSolution`](@ref) of the second fit, whose `penalty` is
 Reference: H. Zou (2006). The adaptive lasso and its oracle properties.
 *Journal of the American Statistical Association* 101(476), 1418–1429.
 """
-function adaptiveLasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T, options::CDOptions=CDOptions();
+function adaptive_lasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T, options::CDOptions=CDOptions();
                        init::Union{Symbol, AbstractVector{<:Real}}=:lasso, initλ::Real=λ, γ::Real=1,
-                       intercept::Bool=false, standardizeX::Bool=false, kwargs...) where {T<:AbstractFloat}
+                       intercept::Bool=false, standardize_x::Union{Nothing, Bool}=nothing, kwargs...) where {T<:AbstractFloat}
+  standardize_x, kwargs = _legacy_keyword(standardize_x, kwargs, Val(:standardizeX), Val(:standardize_x), false)
+  standardize_x::Bool
   λ > 0 || throw(ArgumentError("λ must be positive, but it is $λ."))
   γ > 0 || throw(ArgumentError("γ must be positive, but it is $γ."))
   p = size(X, 2)
@@ -205,44 +207,46 @@ function adaptiveLasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T, option
     length(init) == p || throw(DimensionMismatch("init has length $(length(init)), but X has $p columns."))
     init
   elseif init === :lasso
-    lasso(X, y, T(initλ), options; intercept, standardizeX, kwargs...).x
+    lasso(X, y, T(initλ), options; intercept, standardize_x, kwargs...).x
   elseif init === :ridge
-    lasso(X, y, zero(T), options; intercept, standardizeX, penalty = ElasticNet(zero(T), T(initλ)), kwargs...).x
+    lasso(X, y, zero(T), options; intercept, standardize_x, penalty = ElasticNet(zero(T), T(initλ)), kwargs...).x
   else
     throw(ArgumentError("init must be :lasso, :ridge or a vector of $p coefficients, but it is :$init."))
   end
-  lasso(X, y, λ, _adaptiveLoadings(T, β̃, γ), options; intercept, kwargs...)
+  lasso(X, y, λ, _adaptive_loadings(T, β̃, γ), options; intercept, kwargs...)
 end
 
-function adaptiveLasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real,
+function adaptive_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real,
                        options::CDOptions=CDOptions(); kwargs...)
   T, Xf, yf = _float_data(X, y)
-  adaptiveLasso(Xf, yf, T(λ), options; kwargs...)
+  adaptive_lasso(Xf, yf, T(λ), options; kwargs...)
 end
 
 # the loadings 1/|β̃ⱼ|^γ of the adaptive lasso, infinite where β̃ⱼ = 0
-_adaptiveLoadings(::Type{T}, β̃, γ::Real) where {T} =
+_adaptive_loadings(::Type{T}, β̃, γ::Real) where {T} =
   T[iszero(β̃[j]) ? T(Inf) : inv(abs(T(β̃[j])))^T(γ) for j in eachindex(β̃)]
 
 """
-    adaptiveLasso(X, y, λ, loss::ProximalBase.ScalarLoss, options=CDOptions(); init=:lasso, initλ=λ, γ=1,
-                  intercept=true, standardizeX=true, kwargs...)
+    adaptive_lasso(X, y, λ, loss::ProximalBase.ScalarLoss, options=CDOptions(); init=:lasso, initλ=λ, γ=1,
+                  intercept=true, standardize_x=true, kwargs...)
 
 The adaptive lasso of a generalized linear model: as above, with the loss of
-[`glmLasso`](@ref) (`ProximalBase.Logistic()`, `ProximalBase.Poisson()`, ...)
-in place of least squares. The first estimate `β̃` is the [`glmLasso`](@ref)
+[`glm_lasso`](@ref) (`ProximalBase.Logistic()`, `ProximalBase.Poisson()`, ...)
+in place of least squares. The first estimate `β̃` is the [`glm_lasso`](@ref)
 fit at `initλ` (`init = :lasso`), the ridge-penalized fit
 `∑ᵢ wᵢ ℓ(β₀ + xᵢ'β + oᵢ, yᵢ) / ∑ᵢ wᵢ + initλ ‖β‖² / 2` on the standardized
-columns with `standardizeX` (`init = :ridge`, glmnet's `alpha = 0`), or a given
-vector; the second fit is `glmLasso` with the loadings `ωⱼ = 1/|β̃ⱼ|^γ` and no
+columns with `standardize_x` (`init = :ridge`, glmnet's `alpha = 0`), or a given
+vector; the second fit is `glm_lasso` with the loadings `ωⱼ = 1/|β̃ⱼ|^γ` and no
 standardization. The keywords `kwargs` (`weights`, `offset`, `lower`, `upper`,
-`newtonTol`, `newtonMaxIter`) apply to both fits. Returns the
+`newton_tol`, `newton_max_iter`) apply to both fits. Returns the
 [`GLMLassoSolution`](@ref) of the second fit.
 """
-function adaptiveLasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T, loss::ProximalBase.ScalarLoss,
+function adaptive_lasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T, loss::ProximalBase.ScalarLoss,
                        options::CDOptions=CDOptions(); init::Union{Symbol, AbstractVector{<:Real}}=:lasso,
-                       initλ::Real=λ, γ::Real=1, intercept::Bool=true, standardizeX::Bool=true,
+                       initλ::Real=λ, γ::Real=1, intercept::Bool=true, standardize_x::Union{Nothing, Bool}=nothing,
                        kwargs...) where {T<:AbstractFloat}
+  standardize_x, kwargs = _legacy_keyword(standardize_x, kwargs, Val(:standardizeX), Val(:standardize_x), true)
+  standardize_x::Bool
   λ > 0 || throw(ArgumentError("λ must be positive, but it is $λ."))
   γ > 0 || throw(ArgumentError("γ must be positive, but it is $γ."))
   p = size(X, 2)
@@ -250,19 +254,19 @@ function adaptiveLasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T, loss::
     length(init) == p || throw(DimensionMismatch("init has length $(length(init)), but X has $p columns."))
     init
   elseif init === :lasso
-    glmLasso(X, y, T(initλ), loss, options; intercept, standardizeX, kwargs...).x
+    glm_lasso(X, y, T(initλ), loss, options; intercept, standardize_x, kwargs...).x
   elseif init === :ridge
-    glmLasso(X, y, zero(T), loss, options; intercept, standardizeX, penalty = ElasticNet(zero(T), T(initλ)),
+    glm_lasso(X, y, zero(T), loss, options; intercept, standardize_x, penalty = ElasticNet(zero(T), T(initλ)),
              kwargs...).x
   else
     throw(ArgumentError("init must be :lasso, :ridge or a vector of $p coefficients, but it is :$init."))
   end
-  glmLasso(X, y, λ, loss, options; intercept, standardizeX = false, penalty = NormL1(one(T), _adaptiveLoadings(T, β̃, γ)),
+  glm_lasso(X, y, λ, loss, options; intercept, standardize_x = false, penalty = NormL1(one(T), _adaptive_loadings(T, β̃, γ)),
            kwargs...)
 end
 
-function adaptiveLasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real, loss::ProximalBase.ScalarLoss,
+function adaptive_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real, loss::ProximalBase.ScalarLoss,
                        options::CDOptions=CDOptions(); kwargs...)
   T, Xf, yf = _float_data(X, y)
-  adaptiveLasso(Xf, yf, T(λ), loss, options; kwargs...)
+  adaptive_lasso(Xf, yf, T(λ), loss, options; kwargs...)
 end

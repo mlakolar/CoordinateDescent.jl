@@ -88,7 +88,7 @@ function compare(dir)
     for (tag, kw) in PENALTIES
       λs = vec(readdlm(joinpath(dir, "lambda_$(key)_$tag.csv"), ','))
       R = readdlm(joinpath(dir, "R_$(key)_$tag.csv"), ',')
-      path = GLMLassoPath(X, y, λs, loss(s.family), CDOptions(; optTol = 1e-12); devmax = 1, newtonTol = 1e-14, kw...)
+      path = GLMLassoPath(X, y, λs, loss(s.family), CDOptions(; opt_tol = 1e-12); devmax = 1, newton_tol = 1e-14, kw...)
       ours = coefs(path)[:, axes(R, 2)]           # ncvreg may stop early
       same = all(findall(!iszero, ours[2:end, j]) == findall(!iszero, R[2:end, j]) for j in axes(R, 2))
       @printf "%-8s %-8s n=%3d p=%3d | same supports at all %2d levels: %-5s | max |Δcoef| %.1e (largest %.2f)\n" s.family tag s.n s.p size(R, 2) same maximum(abs, ours .- R) maximum(abs, R)

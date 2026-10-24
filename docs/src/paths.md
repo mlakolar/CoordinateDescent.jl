@@ -9,14 +9,14 @@ sequence has `nλ = 100` levels spaced evenly on the log scale from
 `λminratio` times ``\lambda_{\max}``, with `λminratio` 0.01 when ``p > n`` and
 ``10^{-4}`` otherwise; `LassoPath(X, y, λpath)` takes levels of your own. Unlike
 [`lasso`](@ref), a path standardizes the columns by default
-(`standardizeX = true`).
+(`standardize_x = true`).
 
 - **Screening.** Each level ``\lambda_k`` is solved first over the coordinates
   kept by the sequential strong rule of Tibshirani et al. (2012), those with
   ``|X_j^\top r(\lambda_{k-1})| / n \ge (2\lambda_k - \lambda_{k-1})\,\omega_j``
   for the residuals ``r(\lambda_{k-1})`` at the previous level. The optimality
   conditions of the other coordinates are checked afterwards; those that
-  violate them are added, and the level is solved again. `kktChecks[k]` counts
+  violate them are added, and the level is solved again. `kkt_checks[k]` counts
   the checks at level ``k``.
 - **Early stopping.** `max_hat_s` stops the path after the first solution with
   more nonzero coefficients.
@@ -27,7 +27,7 @@ sequence has `nλ = 100` levels spaced evenly on the log scale from
   interpolated linearly in ``\lambda`` between levels as glmnet does, and
   [`predict`](@ref)`(path, X)` the fitted values along the path.
   [`fit`](@ref)`(LassoPath, X, y)` is the same as `LassoPath(X, y)`.
-- **Refitting.** [`refitLassoPath`](@ref) refits least squares on each distinct
+- **Refitting.** [`refit_lasso_path`](@ref) refits least squares on each distinct
   support of the path.
 
 ## Choosing λ
@@ -65,15 +65,15 @@ coefficients among ``p``, accounts for the size of the model space:
 
 Every solver takes the options of coordinate descent as a [`CDOptions`](@ref)
 argument, and its fields as keywords, which replace those of the options:
-`lasso(X, y, λ; maxIter = 10_000, optTol = 1e-8)`. The scaled and the feasible
-lasso take [`IterLassoOptions`](@ref), whose field `optionsCD` holds the
+`lasso(X, y, λ; max_iter = 10_000, opt_tol = 1e-8)`. The scaled and the feasible
+lasso take [`IterLassoOptions`](@ref), whose field `options_cd` holds the
 options of their lasso fits.
 
 - **The stopping rule.** Coordinate descent stops when no coordinate changes by
-  more than `optTol` (by default ``10^{-7}``) in a pass, the change of
+  more than `opt_tol` (by default ``10^{-7}``) in a pass, the change of
   coefficient ``j`` measured in units of ``\|y\| / \|X_j\|``, so that the result
-  does not depend on the units of the data (`relativeTol = false` measures it
-  in the units of the coefficients). It also stops after `maxIter` passes (by
+  does not depend on the units of the data (`relative_tol = false` measures it
+  in the units of the coefficients). It also stops after `max_iter` passes (by
   default 100,000), and then warns that the solution may be inaccurate.
 - **The order.** Each pass visits the coordinates in a new random order
   (`order = :random`) drawn from the keyword `rng`, so a seeded generator, such
@@ -90,18 +90,18 @@ options of their lasso fits.
   extrapolates from the last passes. It is faster than momentum when few passes
   are needed and when ``n \gg p``, and much slower when the columns share a
   common factor.
-- **Warm starts.** [`coordinateDescent!`](@ref) starts from the iterate it is
-  given. With `warmStart = false` it starts from zero and, for `NormL1` and
-  `GroupNormL2`, solves along a path of `numSteps` levels from
+- **Warm starts.** [`coordinate_descent!`](@ref) starts from the iterate it is
+  given. With `warm_start = false` it starts from zero and, for `NormL1` and
+  `GroupNormL2`, solves along a path of `num_steps` levels from
   ``\lambda_{\max}`` down to the penalty.
 
-[`coordinateDescent!`](@ref) and [`solve!`](@ref) run coordinate descent on a
+[`coordinate_descent!`](@ref) and [`solve!`](@ref) run coordinate descent on a
 loss and a penalty directly; `solve!` reports the passes and whether the
 stopping rule was met.
 
 ## The Gram form
 
-With `gram = true`, [`lasso`](@ref), [`sqrtLasso`](@ref) and [`LassoPath`](@ref)
+With `gram = true`, [`lasso`](@ref), [`sqrt_lasso`](@ref) and [`LassoPath`](@ref)
 run coordinate descent on the Gram matrix of the centered columns,
 ``A = X^\top X / n``, instead of the residuals. A coordinate step then costs
 ``O(p)`` instead of ``O(n)``, after ``O(np^2)`` operations and ``p^2`` numbers of

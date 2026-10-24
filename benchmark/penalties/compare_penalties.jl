@@ -92,15 +92,15 @@ function compare(dir)
     for a in ALPHAS
       λs = vec(readdlm(joinpath(dir, "lambda_enet$(a)_$k.csv"), ','))
       R = readdlm(joinpath(dir, "glmnet_enet$(a)_$k.csv"), ',')
-      path = LassoPath(X, y, λs; alpha = a, intercept = true, optTol = 1e-12)
+      path = LassoPath(X, y, λs; alpha = a, intercept = true, opt_tol = 1e-12)
       report("alpha = $a (glmnet)", s, coefs(path), R)
-      path = LassoPath(X, y, λs; penalty = Scaled(ElasticNet(a, (1 - a) / sdy), 1), intercept = true, optTol = 1e-12)
+      path = LassoPath(X, y, λs; penalty = Scaled(ElasticNet(a, (1 - a) / sdy), 1), intercept = true, opt_tol = 1e-12)
       report("alpha = $a, ridge/sd(y) (glmnet)", s, coefs(path), R)
     end
     for (name, pen) in PENALTIES, order in (:random, :cyclic)
       λs = vec(readdlm(joinpath(dir, "lambda_$(name)_$k.csv"), ','))
       R = readdlm(joinpath(dir, "ncvreg_$(name)_$k.csv"), ',')
-      path = LassoPath(X, y, λs; penalty = pen, intercept = true, optTol = 1e-12, order, rng = Xoshiro(k))
+      path = LassoPath(X, y, λs; penalty = pen, intercept = true, opt_tol = 1e-12, order, rng = Xoshiro(k))
       report("$name, $order order (ncvreg)", s, coefs(path), R)
       report_local(X, y, λs, pen, coefs(path), R)
     end

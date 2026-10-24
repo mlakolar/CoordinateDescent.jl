@@ -1,9 +1,9 @@
-# glmLasso paths against GLMNet.jl (glmnet's Fortran) and Lasso.jl (Julia
+# glm_lasso paths against GLMNet.jl (glmnet's Fortran) and Lasso.jl (Julia
 # coordinate descent), on logistic and Poisson lasso paths with an intercept
 # and standardized columns: the same objective in all three, the same 100
 # levels from λmax down to 0.01 λmax. Each package runs at its default
-# tolerances; at those, glmnet and Lasso.jl stop much earlier than glmLasso, so
-# glmLasso also runs at looser tolerances (optTol 1e-4, newtonTol 1e-5) and
+# tolerances; at those, glmnet and Lasso.jl stop much earlier than glm_lasso, so
+# glm_lasso also runs at looser tolerances (opt_tol 1e-4, newton_tol 1e-5) and
 # glmnet at a tighter one (1e-10). The accuracy of each is the largest
 # difference from a reference path that glmnet computes at the tolerance 1e-13,
 # relative to the largest reference coefficient.
@@ -43,7 +43,7 @@ function design(n, p, family; seed = 2026)
 end
 
 ours(X, y, λs, loss) = GLMLassoPath(X, y, λs, loss; devmax = 1)
-ours_loose(X, y, λs, loss) = GLMLassoPath(X, y, λs, loss, CDOptions(; optTol = 1e-4); devmax = 1, newtonTol = 1e-5)
+ours_loose(X, y, λs, loss) = GLMLassoPath(X, y, λs, loss, CDOptions(; opt_tol = 1e-4); devmax = 1, newton_tol = 1e-5)
 glmnet(X, y, λs, family; tol = 1e-7) = family === :logistic ?
   GLMNet.glmnet(X, [1 .- y y], Binomial(); lambda = λs, tol = tol) :
   GLMNet.glmnet(X, y, Poisson(); lambda = λs, tol = tol)
@@ -77,11 +77,11 @@ function bench(n, p, family)
   nl(k) = size(coefs(res[k]), 2)
   err(k) = relerr(coefs(res[k]), R)
   @printf "%-8s n=%5d p=%5d |" family n p
-  for (k, name) in ((:ours, "glmLasso"), (:ours_loose, "glmLasso loose"), (:glmnet, "glmnet"),
+  for (k, name) in ((:ours, "glm_lasso"), (:ours_loose, "glm_lasso loose"), (:glmnet, "glmnet"),
                     (:glmnet_tight, "glmnet 1e-10"), (:lassojl, "Lasso.jl"))
     @printf " %s %.3f s (%d, %.0e) |" name times[k] nl(k) err(k)
   end
-  @printf " glmLasso/glmnet %.2f, loose/glmnet %.2f, glmLasso/glmnet 1e-10 %.2f, glmLasso/Lasso.jl %.2f\n" times[:ours] / times[:glmnet] times[:ours_loose] / times[:glmnet] times[:ours] / times[:glmnet_tight] times[:ours] / times[:lassojl]
+  @printf " glm_lasso/glmnet %.2f, loose/glmnet %.2f, glm_lasso/glmnet 1e-10 %.2f, glm_lasso/Lasso.jl %.2f\n" times[:ours] / times[:glmnet] times[:ours_loose] / times[:glmnet] times[:ours] / times[:glmnet_tight] times[:ours] / times[:lassojl]
   flush(stdout)
 end
 

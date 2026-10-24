@@ -1,3 +1,34 @@
+# Normalize deprecated option keywords before applying defaults or copies.
+const _OPTION_ALIASES = (:maxIter => :max_iter, :optTol => :opt_tol,
+  :warmStart => :warm_start, :numSteps => :num_steps, :relativeTol => :relative_tol,
+  :initProcedure => :init_procedure, :optionsCD => :options_cd)
+
+function _option_keywords(kw)
+  result = (; kw...)
+  for (old, new) in _OPTION_ALIASES
+    if haskey(result, old)
+      haskey(result, new) && throw(ArgumentError("pass $new or its deprecated spelling $old, not both."))
+      Base.depwarn("keyword $old is deprecated; use $new.", old)
+      value = getproperty(result, old)
+      result = merge(Base.structdiff(result, NamedTuple{(old,)}((nothing,))), NamedTuple{(new,)}((value,)))
+    end
+  end
+  result
+end
+
+# Named estimator keywords use nothing to distinguish an omitted value from
+# an explicitly supplied one, including one equal to the default.
+function _legacy_keyword(value, kwargs, ::Val{old}, ::Val{new}, default) where {old, new}
+  kw = (; kwargs...)
+  if haskey(kw, old)
+    value === nothing || throw(ArgumentError("pass $new or its deprecated spelling $old, not both."))
+    Base.depwarn("keyword $old is deprecated; use $new.", old)
+    value = getproperty(kw, old)
+    kw = Base.structdiff(kw, NamedTuple{(old,)}((nothing,)))
+  end
+  (value === nothing ? default : value), kw
+end
+
 ####################################
 #
 # options
@@ -5,25 +36,25 @@
 ####################################
 
 """
-    CDOptions(; maxIter=100_000, optTol=1e-7, order=:random, warmStart=true,
-                numSteps=50, relativeTol=true, anderson=0, momentum=nothing)
+    CDOptions(; max_iter=100_000, opt_tol=1e-7, order=:random, warm_start=true,
+                num_steps=50, relative_tol=true, anderson=0, momentum=nothing)
     CDOptions(o::CDOptions; changes...)
 
-Options for [`coordinateDescent!`](@ref) and the lasso solvers, which run the
+Options for [`coordinate_descent!`](@ref) and the lasso solvers, which run the
 coordinate descent of ProximalSolvers (`ProximalSolvers.CDSolver`) with them.
 The second form copies `o` with the fields named in `changes` replaced, as in
-`CDOptions(o; warmStart=false)`. The solvers also take these fields as keyword
-arguments, `lasso(X, y, λ; maxIter=10_000, optTol=1e-8)`, which change the
+`CDOptions(o; warm_start=false)`. The solvers also take these fields as keyword
+arguments, `lasso(X, y, λ; max_iter=10_000, opt_tol=1e-8)`, which change the
 options passed to them.
 
-- `maxIter`: maximum number of passes over the coordinates; reaching it without
+- `max_iter`: maximum number of passes over the coordinates; reaching it without
   convergence gives a warning
-- `optTol`: convergence tolerance on the largest change of a coordinate in a
-  pass. With `relativeTol`, the change of coordinate `k` is measured as
-  `|Δxₖ| ⋅ coordinateScale(f, k)` and compared with `optTol ⋅ responseScale(f)`,
+- `opt_tol`: convergence tolerance on the largest change of a coordinate in a
+  pass. With `relative_tol`, the change of coordinate `k` is measured as
+  `|Δxₖ| ⋅ coordinate_scale(f, k)` and compared with `opt_tol ⋅ response_scale(f)`,
   so that the tolerance does not depend on the units of the data; for the
   least squares loss these scales are `‖X[:, k]‖ / √n` and `‖y‖ / √n`.
-  Otherwise `|Δxₖ|` is compared with `optTol`
+  Otherwise `|Δxₖ|` is compared with `opt_tol`
 - `order`: the order in which a pass visits the coordinates
   - `:random`: a new random order in every pass, drawn from the random number
     generator `rng` that the solvers take as a keyword argument, by default the
@@ -32,38 +63,38 @@ options passed to them.
   The cyclic order can be faster on some designs, but much slower when the
   columns are strongly correlated with each other. `randomize = true` and
   `randomize = false` are the same as `order = :random` and `order = :cyclic`
-- `warmStart`: start from the supplied iterate; otherwise start from zero and
+- `warm_start`: start from the supplied iterate; otherwise start from zero and
   follow a path of decreasing penalties
-- `numSteps`: number of penalty levels on that path when `warmStart` is false
-- `relativeTol`: see `optTol`; losses that do not define the scales, such as
+- `num_steps`: number of penalty levels on that path when `warm_start` is false
+- `relative_tol`: see `opt_tol`; losses that do not define the scales, such as
   user-defined ones, use the absolute rule either way
 - `anderson`: the memory `K` of Anderson acceleration, `0` for none (see
-  [`coordinateDescent!`](@ref)); it needs `order = :cyclic`
+  [`coordinate_descent!`](@ref)); it needs `order = :cyclic`
 - `momentum`: Nesterov momentum on the passes over the active set (see
-  [`coordinateDescent!`](@ref)). The default, `nothing`, uses it where it is
+  [`coordinate_descent!`](@ref)). The default, `nothing`, uses it where it is
   known to help: with `order = :random`, a `SparseIterate` and a built-in loss.
   `true` asks for it with any loss, and needs `order = :random`; `false` turns
   it off
 """
 struct CDOptions
-  maxIter::Int
-  optTol::Float64
+  max_iter::Int
+  opt_tol::Float64
   order::Symbol             # :random or :cyclic
-  warmStart::Bool           # when running CD, should we do path following or not
-  numSteps::Int             # when pathFollowing, how many points are there on the path
-  relativeTol::Bool         # changes measured relative to the scales of the loss
+  warm_start::Bool           # when running CD, should we do path following or not
+  num_steps::Int             # when pathFollowing, how many points are there on the path
+  relative_tol::Bool         # changes measured relative to the scales of the loss
   anderson::Int             # memory of Anderson acceleration, 0 for none
   momentum::Union{Bool, Nothing}   # Nesterov momentum, nothing for the default
 
-  function CDOptions(maxIter, optTol, order::Symbol, warmStart, numSteps, relativeTol, anderson, momentum)
-    o = new(maxIter, optTol, order, warmStart, numSteps, relativeTol, anderson, momentum)
-    o.maxIter >= 0 || throw(ArgumentError("maxIter must be nonnegative, but it is $(o.maxIter)."))
-    o.optTol >= 0 || throw(ArgumentError("optTol must be nonnegative, but it is $(o.optTol)."))
+  function CDOptions(max_iter, opt_tol, order::Symbol, warm_start, num_steps, relative_tol, anderson, momentum)
+    o = new(max_iter, opt_tol, order, warm_start, num_steps, relative_tol, anderson, momentum)
+    o.max_iter >= 0 || throw(ArgumentError("max_iter must be nonnegative, but it is $(o.max_iter)."))
+    o.opt_tol >= 0 || throw(ArgumentError("opt_tol must be nonnegative, but it is $(o.opt_tol)."))
     o.order === :active &&
       throw(ArgumentError("order = :active was removed in version 0.7; use order = :random."))
     o.order in (:random, :cyclic) ||
       throw(ArgumentError("order must be :random or :cyclic, but it is :$(o.order)."))
-    o.numSteps >= 0 || throw(ArgumentError("numSteps must be nonnegative, but it is $(o.numSteps)."))
+    o.num_steps >= 0 || throw(ArgumentError("num_steps must be nonnegative, but it is $(o.num_steps)."))
     o.anderson >= 0 || throw(ArgumentError("anderson must be nonnegative, but it is $(o.anderson)."))
     o.anderson == 0 || o.order === :cyclic ||
       throw(ArgumentError("anderson needs order = :cyclic, since the extrapolation assumes the same order in every pass."))
@@ -75,34 +106,29 @@ end
 
 # the positional forms of version 0.5.5, without momentum, and of versions
 # before it, with randomize in place of order; momentum takes its default
-CDOptions(maxIter, optTol, order::Symbol, warmStart, numSteps, relativeTol, anderson) =
-  CDOptions(maxIter, optTol, order, warmStart, numSteps, relativeTol, anderson, nothing)
-CDOptions(maxIter, optTol, randomize::Bool, warmStart, numSteps, relativeTol) =
-  CDOptions(maxIter, optTol, randomize ? :random : :cyclic, warmStart, numSteps, relativeTol, 0, nothing)
+CDOptions(max_iter, opt_tol, order::Symbol, warm_start, num_steps, relative_tol, anderson) =
+  CDOptions(max_iter, opt_tol, order, warm_start, num_steps, relative_tol, anderson, nothing)
+CDOptions(max_iter, opt_tol, randomize::Bool, warm_start, num_steps, relative_tol) =
+  CDOptions(max_iter, opt_tol, randomize ? :random : :cyclic, warm_start, num_steps, relative_tol, 0, nothing)
 
-function CDOptions(;
-  maxIter::Real=100_000,
-  optTol::Real=1e-7,
-  order::Union{Symbol, Nothing}=nothing,
-  randomize::Union{Bool, Nothing}=nothing,
-  warmStart::Bool=true,
-  numSteps::Real=50,
-  relativeTol::Bool=true,
-  anderson::Real=0,
-  momentum::Union{Bool, Nothing}=nothing)
+function CDOptions(; kwargs...)
+  kw = _option_keywords(kwargs)
+  _check_keywords(CDOptions, _CDOPTIONS_KEYWORDS, kw)
+  _cdoptions(; kw...)
+end
 
+function _cdoptions(;
+  max_iter::Real=100_000, opt_tol::Real=1e-7,
+  order::Union{Symbol, Nothing}=nothing, randomize::Union{Bool, Nothing}=nothing,
+  warm_start::Bool=true, num_steps::Real=50, relative_tol::Bool=true,
+  anderson::Real=0, momentum::Union{Bool, Nothing}=nothing)
   order === nothing || randomize === nothing ||
     throw(ArgumentError("Pass order or randomize, not both."))
   o = order !== nothing ? order : randomize === false ? :cyclic : :random
-  CDOptions(Int(maxIter), Float64(optTol), o, warmStart, Int(numSteps), relativeTol, Int(anderson), momentum)
+  CDOptions(Int(max_iter), Float64(opt_tol), o, warm_start, Int(num_steps), relative_tol, Int(anderson), momentum)
 end
 
-# randomize, a field before version 0.5.5
-Base.getproperty(o::CDOptions, s::Symbol) =
-  s === :randomize ? getfield(o, :order) !== :cyclic : getfield(o, s)
-Base.propertynames(::CDOptions, private::Bool=false) = (fieldnames(CDOptions)..., :randomize)
-
-const _CDOPTIONS_KEYWORDS = (:maxIter, :optTol, :order, :randomize, :warmStart, :numSteps, :relativeTol,
+const _CDOPTIONS_KEYWORDS = (:max_iter, :opt_tol, :order, :randomize, :warm_start, :num_steps, :relative_tol,
                              :anderson, :momentum)
 
 # the keyword arguments changes must name fields of options of type O
@@ -113,11 +139,12 @@ function _check_keywords(::Type{O}, valid, changes) where {O}
 end
 
 function CDOptions(o::CDOptions; changes...)
+  changes = _option_keywords(changes)
   _check_keywords(CDOptions, _CDOPTIONS_KEYWORDS, changes)
   # randomize replaces order unless both are given
   order = haskey(changes, :randomize) ? (;) : (; order = o.order)
-  CDOptions(; maxIter = o.maxIter, optTol = o.optTol, order..., warmStart = o.warmStart, numSteps = o.numSteps,
-            relativeTol = o.relativeTol, anderson = o.anderson, momentum = o.momentum, changes...)
+  CDOptions(; max_iter = o.max_iter, opt_tol = o.opt_tol, order..., warm_start = o.warm_start, num_steps = o.num_steps,
+            relative_tol = o.relative_tol, anderson = o.anderson, momentum = o.momentum, changes...)
 end
 
 # the options with the fields named in the keyword arguments kw replaced, as the
@@ -127,19 +154,19 @@ _options(o, kw) = isempty(kw) ? o : typeof(o)(o; kw...)
 # the coordinate descent of ProximalSolvers with these options, drawing its
 # random orders from rng
 _solver(o::CDOptions; rng::AbstractRNG = default_rng()) =
-  CDSolver(; maxpasses = o.maxIter, tol = o.optTol, order = o.order, relative = o.relativeTol,
+  CDSolver(; maxpasses = o.max_iter, tol = o.opt_tol, order = o.order, relative = o.relative_tol,
            anderson = o.anderson, momentum = o.momentum, rng)
 
 # Minimizes f + g by the coordinate descent of ProximalSolvers, from x when
-# options.warmStart is true. Otherwise x is set to zero and, for NormL1 and
-# GroupNormL2, the problem is solved along options.numSteps penalty levels from
+# options.warm_start is true. Otherwise x is set to zero and, for NormL1 and
+# GroupNormL2, the problem is solved along options.num_steps penalty levels from
 # λmax down to g. f is a CDModel or a loss of ProximalBase. Returns a CDResults.
 function _solve!(x, f, g, options::CDOptions; rng::AbstractRNG = default_rng())
   s = _solver(options; rng)
-  options.warmStart && return solve!(x, f, g, s)
+  options.warm_start && return solve!(x, f, g, s)
   fill!(x, zero(eltype(x)))
-  if g isa Union{NormL1, GroupNormL2} && options.numSteps > 0
-    solve!(x, f, g, s; continuation = options.numSteps)
+  if g isa Union{NormL1, GroupNormL2} && options.num_steps > 0
+    solve!(x, f, g, s; continuation = options.num_steps)
   else
     solve!(x, f, g, s)
   end
@@ -149,23 +176,23 @@ end
 """
     CDInfo()
 
-Convergence information that [`coordinateDescent!`](@ref) fills in when it is
+Convergence information that [`coordinate_descent!`](@ref) fills in when it is
 passed as the last argument. Deprecated: `solve!(x, f, g, options)` (see
-[`coordinateDescent!`](@ref)) returns the same information, and more, in a
+[`coordinate_descent!`](@ref)) returns the same information, and more, in a
 `ProximalSolvers.CDResults`: `passes` for `iterations`, `converged`,
-`maxchange` for `maxChange`, `tolerance`, and the objective `minimum`.
+`maxchange` for `max_change`, `tolerance`, and the objective `minimum`.
 
 - `iterations`: number of passes over the coordinates, including those on the
-  path of penalties when `warmStart` is false
-- `converged`: whether the stopping rule was met before `maxIter` passes
-- `maxChange`: largest change of a coordinate in the last pass, scaled as
-  described for `optTol` in [`CDOptions`](@ref)
-- `tolerance`: the threshold `maxChange` is compared with
+  path of penalties when `warm_start` is false
+- `converged`: whether the stopping rule was met before `max_iter` passes
+- `max_change`: largest change of a coordinate in the last pass, scaled as
+  described for `opt_tol` in [`CDOptions`](@ref)
+- `tolerance`: the threshold `max_change` is compared with
 """
 mutable struct CDInfo
   iterations::Int
   converged::Bool
-  maxChange::Float64
+  max_change::Float64
   tolerance::Float64
 end
 
@@ -174,70 +201,74 @@ CDInfo() = CDInfo(0, false, NaN, NaN)
 function _record!(info::CDInfo, r::CDResults)
   info.iterations = r.passes
   info.converged = r.converged
-  info.maxChange = r.maxchange
+  info.max_change = r.maxchange
   info.tolerance = r.tolerance
   info
 end
 
 
 """
-    IterLassoOptions(; maxIter=20, optTol=1e-2, initProcedure=:Screening,
-                       sinit=5, σinit=1.0, optionsCD=CDOptions())
+    IterLassoOptions(; max_iter=20, opt_tol=1e-2, init_procedure=:Screening,
+                       sinit=5, σinit=1.0, options_cd=CDOptions())
     IterLassoOptions(o::IterLassoOptions; changes...)
 
-Options for [`feasibleLasso!`](@ref), which alternates a lasso fit with an
-update of the penalty loadings, and for [`scaledLasso!`](@ref), which uses only
-`optionsCD` (since version 0.6.1 it solves the square-root lasso in one run of
+Options for [`feasible_lasso!`](@ref), which alternates a lasso fit with an
+update of the penalty loadings, and for [`scaled_lasso!`](@ref), which uses only
+`options_cd` (since version 0.6.1 it solves the square-root lasso in one run of
 coordinate descent instead of alternating a lasso fit with an update of the
 noise level). The second form copies `o` with the fields named in `changes`
 replaced. The two solvers also take these fields as keyword arguments, as in
-`feasibleLasso!(x, X, y, λ0; maxIter=50)`.
+`feasible_lasso!(x, X, y, λ0; max_iter=50)`.
 
-- `maxIter`: maximum number of outer iterations
-- `optTol`: tolerance on the relative change of the noise level or loadings
-- `initProcedure`: how the procedure is initialized
+- `max_iter`: maximum number of outer iterations
+- `opt_tol`: tolerance on the relative change of the noise level or loadings
+- `init_procedure`: how the procedure is initialized
   - `:Screening`: least squares on the `sinit` columns of `X` most correlated
     with `y`
   - `:InitStd`: noise level `σinit`
   - `:WarmStart`: the iterate passed in
 - `sinit`, `σinit`: used by `:Screening` and `:InitStd`
-- `optionsCD`: [`CDOptions`](@ref) for coordinate descent; in
-  `feasibleLasso!` each lasso fit is warm started from the previous one, so its
-  `warmStart` is not used there
+- `options_cd`: [`CDOptions`](@ref) for coordinate descent; in
+  `feasible_lasso!` each lasso fit is warm started from the previous one, so its
+  `warm_start` is not used there
 """
 struct IterLassoOptions
-  maxIter::Int
-  optTol::Float64
-  initProcedure::Symbol    # :Screening, :InitStd, :WarmStart
+  max_iter::Int
+  opt_tol::Float64
+  init_procedure::Symbol    # :Screening, :InitStd, :WarmStart
   sinit::Int               # how many columns of X to use to estimate initial variance or obtain initial residuals
   σinit::Float64
-  optionsCD::CDOptions
+  options_cd::CDOptions
 
-  function IterLassoOptions(maxIter, optTol, initProcedure, sinit, σinit, optionsCD)
-    o = new(maxIter, optTol, initProcedure, sinit, σinit, optionsCD)
-    o.maxIter >= 0 || throw(ArgumentError("maxIter must be nonnegative, but it is $(o.maxIter)."))
-    o.optTol >= 0 || throw(ArgumentError("optTol must be nonnegative, but it is $(o.optTol)."))
-    o.initProcedure in (:Screening, :InitStd, :WarmStart) ||
-      throw(ArgumentError("initProcedure must be :Screening, :InitStd or :WarmStart, but it is :$(o.initProcedure)."))
+  function IterLassoOptions(max_iter, opt_tol, init_procedure, sinit, σinit, options_cd)
+    o = new(max_iter, opt_tol, init_procedure, sinit, σinit, options_cd)
+    o.max_iter >= 0 || throw(ArgumentError("max_iter must be nonnegative, but it is $(o.max_iter)."))
+    o.opt_tol >= 0 || throw(ArgumentError("opt_tol must be nonnegative, but it is $(o.opt_tol)."))
+    o.init_procedure in (:Screening, :InitStd, :WarmStart) ||
+      throw(ArgumentError("init_procedure must be :Screening, :InitStd or :WarmStart, but it is :$(o.init_procedure)."))
     o.sinit >= 1 || throw(ArgumentError("sinit must be positive, but it is $(o.sinit)."))
     o.σinit > 0 || throw(ArgumentError("σinit must be positive, but it is $(o.σinit)."))
     o
   end
 end
 
-IterLassoOptions(;
-  maxIter::Real=20,
-  optTol::Real=1e-2,
-  initProcedure::Symbol=:Screening,
-  sinit::Real=5,
-  σinit::Real=1.,
-  optionsCD::CDOptions=CDOptions()) =
-  IterLassoOptions(Int(maxIter), Float64(optTol), initProcedure, Int(sinit), Float64(σinit), optionsCD)
+function IterLassoOptions(; kwargs...)
+  kw = _option_keywords(kwargs)
+  _check_keywords(IterLassoOptions, fieldnames(IterLassoOptions), kw)
+  _iterlassooptions(; kw...)
+end
+
+function _iterlassooptions(;
+  max_iter::Real=20, opt_tol::Real=1e-2, init_procedure::Symbol=:Screening,
+  sinit::Real=5, σinit::Real=1., options_cd::CDOptions=CDOptions())
+  IterLassoOptions(Int(max_iter), Float64(opt_tol), init_procedure, Int(sinit), Float64(σinit), options_cd)
+end
 
 function IterLassoOptions(o::IterLassoOptions; changes...)
+  changes = _option_keywords(changes)
   _check_keywords(IterLassoOptions, fieldnames(IterLassoOptions), changes)
-  IterLassoOptions(; maxIter = o.maxIter, optTol = o.optTol, initProcedure = o.initProcedure, sinit = o.sinit,
-                   σinit = o.σinit, optionsCD = o.optionsCD, changes...)
+  IterLassoOptions(; max_iter = o.max_iter, opt_tol = o.opt_tol, init_procedure = o.init_procedure, sinit = o.sinit,
+                   σinit = o.σinit, options_cd = o.options_cd, changes...)
 end
 
 
@@ -359,7 +390,7 @@ end
 # residuals of the least squares fit of y on the s columns of X most correlated
 # with y (both centered with an intercept), and on a constant with an
 # intercept; storage is overwritten and returned
-function _findInitResiduals!(
+function _find_init_residuals!(
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   s::Int,
@@ -367,11 +398,11 @@ function _findInitResiduals!(
   intercept::Bool=false) where {T <: AbstractFloat}
 
   if intercept
-    S = _findLargestCorrelations(X, y .- mean(y), s)
+    S = _find_largest_correlations(X, y .- mean(y), s)
     Z = [ones(T, length(y)) Matrix(X[:, S])]
     mul!(storage, Z, Z \ y)
   else
-    S = _findLargestCorrelations(X, y, s)
+    S = _find_largest_correlations(X, y, s)
     Xs = issparse(X) ? Matrix(X[:, S]) : view(X, :, S)
     mul!(storage, Xs, Xs \ y)
   end
@@ -381,7 +412,7 @@ end
 
 # BitVector marking the s columns of X with the largest |X[:,j]'y|
 # (more than s when there are ties)
-function _findLargestCorrelations(
+function _find_largest_correlations(
   X::AbstractMatrix{T},
   y::AbstractVector{T},
   s::Int) where {T <: AbstractFloat}
@@ -399,7 +430,7 @@ _sthlargest(v::AbstractVector, s::Int) = partialsort(v, min(s, length(v)); rev =
 
 # heteroscedasticity-robust penalty loadings out[j] = sqrt(∑ᵢ ((X[i,j] - x̄[j]) e[i])² / n),
 # for the column means x̄ (zeros without an intercept)
-function _getLoadings!(out::Vector{T}, X::AbstractMatrix{T}, e::AbstractVector{T},
+function _get_loadings!(out::Vector{T}, X::AbstractMatrix{T}, e::AbstractVector{T},
                        xbar::AbstractVector{T}=zeros(T, size(X, 2))) where {T <: AbstractFloat}
   n, p = size(X)
 
@@ -416,7 +447,7 @@ end
 
 # the same over the stored entries: the entries that are not stored contribute
 # (x̄[j] e[i])², which is x̄[j]² ∑ᵢ e[i]² less what the stored rows took
-function _getLoadings!(out::Vector{T}, X::SparseMatrixCSC{T}, e::AbstractVector{T},
+function _get_loadings!(out::Vector{T}, X::SparseMatrixCSC{T}, e::AbstractVector{T},
                        xbar::AbstractVector{T}=zeros(T, size(X, 2))) where {T <: AbstractFloat}
   n, p = size(X)
   rows, vals = rowvals(X), nonzeros(X)
@@ -435,7 +466,7 @@ end
 
 
 # weighted noise level sqrt(∑ᵢ w[i] r[i]² / ∑ᵢ w[i])
-function _getSigma(w::AbstractVector{T}, r::AbstractVector{T}) where {T <: AbstractFloat}
+function _get_sigma(w::AbstractVector{T}, r::AbstractVector{T}) where {T <: AbstractFloat}
     n = length(w)
     σ = zero(T)
     for ii = 1:n

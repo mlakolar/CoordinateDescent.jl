@@ -42,7 +42,7 @@ end
 
 """
     CVLassoPath(X, y, options = CDOptions(); nfolds = 10, folds = nothing, rng = Random.default_rng(),
-                threads = true, nλ = 100, λminratio, intercept = false, standardizeX = true, kwargs...)
+                threads = true, nλ = 100, λminratio, intercept = false, standardize_x = true, kwargs...)
 
 K-fold cross-validation of the lasso path of [`LassoPath`](@ref) (with the
 same options and keywords): the path on all the data gives the levels, each
@@ -279,7 +279,7 @@ end
                    λminratio, weights = nothing, offset = nothing, kwargs...)
 
 K-fold cross-validation of the path of [`GLMLassoPath`](@ref) (with the same
-loss, options and keywords, such as `intercept`, `standardizeX`, `alpha` or
+loss, options and keywords, such as `intercept`, `standardize_x`, `alpha` or
 `penalty`), as [`CVLassoPath`](@ref) does for least squares, with glmnet's
 measures of the held-out error (`type.measure` of `cv.glmnet`):
 
@@ -373,7 +373,7 @@ end
 
 The coefficients (`[β₀; β]` with an intercept), and the predictions at the rows
 of `X` on the scale of the response or of the linear predictor (see
-[`glmLasso`](@ref)), of the path on all the data at `cv.λ1se`, at `cv.λmin` with
+[`glm_lasso`](@ref)), of the path on all the data at `cv.λ1se`, at `cv.λmin` with
 `λ = :λmin`, or at a level `λ` within the path.
 """
 StatsAPI.coef(cv::CVGLMLassoPath; λ::Union{Symbol, Real} = :λ1se) = coef(cv.path, _cvlevel(cv, λ))

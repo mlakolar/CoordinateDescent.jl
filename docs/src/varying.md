@@ -11,7 +11,7 @@ A column of ones in ``X`` gives a varying intercept.
 
 ## Local polynomial fits
 
-[`varyingCoefficient`](@ref)`(X, z, y, zgrid; kernel, bandwidth, degree)`
+[`varying_coefficient`](@ref)`(X, z, y, zgrid; kernel, bandwidth, degree)`
 estimates the coefficient functions at each point ``z_0`` of `zgrid` by local
 polynomial regression. Near ``z_0`` each ``\beta_j`` is a polynomial of degree
 ``q`` in ``z - z_0``, and the polynomials are fitted by weighted least squares,
@@ -41,7 +41,7 @@ estimate, not its bias, so an interval covers ``\beta_j(z_0)`` when the
 bandwidth is small enough for the bias to be negligible. `predict(fit, X, z)`
 interpolates the estimates linearly between the points of the grid.
 
-[`varyingCoefficientCV`](@ref) chooses the bandwidth by leave-one-out
+[`varying_coefficient_cv`](@ref) chooses the bandwidth by leave-one-out
 cross-validation. The local fit is linear in ``y``, so the prediction of ``y_i``
 without observation ``i`` comes from the fit with it,
 ``(\hat y_i - H_{ii} y_i)/(1 - H_{ii})``, at the cost of one local fit per
@@ -49,7 +49,7 @@ observation.
 
 ## Selecting the variables
 
-[`varyingCoefficientLasso`](@ref)`(X, z, y, zgrid, λ; kernel, bandwidth)` adds a
+[`varying_coefficient_lasso`](@ref)`(X, z, y, zgrid, λ; kernel, bandwidth)` adds a
 penalty that selects, at each point, the variables whose coefficient functions
 are not zero nearby:
 
@@ -62,11 +62,11 @@ The loss is the mean squared error on the local sample, so ``\lambda`` is on the
 scale of an ordinary lasso. With `penalty = :group`, the default, ``P`` is the
 group lasso over the ``q + 1`` coefficients of each variable, on the fitted
 values of its locally weighted columns (the orthonormalized groups of
-[`groupLasso`](@ref)), so that a variable enters with all its polynomial terms.
+[`group_lasso`](@ref)), so that a variable enters with all its polynomial terms.
 With `penalty = :lasso`, ``P`` is the ℓ1 norm with the loadings of the
 standardized local columns. With `refit`, the default, the selected variables are
 refitted at each point by the unpenalized local fit, which removes the
-shrinkage. [`varyingCoefficientLassoCV`](@ref) chooses the bandwidth by
+shrinkage. [`varying_coefficient_lasso_cv`](@ref) chooses the bandwidth by
 leave-one-out cross-validation, one local lasso per observation and bandwidth.
 
 The example on varying-coefficient models goes through these functions.

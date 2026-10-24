@@ -1,5 +1,5 @@
 """
-    coordinateDescent!(x, f, g, options=CDOptions(); rng=Random.default_rng(), kwargs...)
+    coordinate_descent!(x, f, g, options=CDOptions(); rng=Random.default_rng(), kwargs...)
     solve!(x, f, g, options::CDOptions; rng=Random.default_rng(), kwargs...)
 
 Minimize `f(x) + g(x)` by coordinate descent and store the solution in `x`. The
@@ -20,12 +20,12 @@ called through `ProximalSolvers.solve!`) with the options of [`CDOptions`](@ref)
 It alternates between full passes over all coordinates and passes over the
 nonzero coordinates only (the active set). It stops when a full pass is
 followed by a pass in which no coordinate changes by more than
-`options.optTol`, or after `options.maxIter` passes. In the second case `x` may
+`options.opt_tol`, or after `options.max_iter` passes. In the second case `x` may
 be far from the minimizer, and a warning is issued.
 
-If `options.warmStart` is true, the descent starts from the supplied `x`.
+If `options.warm_start` is true, the descent starts from the supplied `x`.
 Otherwise `x` is set to zero and, for `NormL1` and `GroupNormL2`, the problem
-is solved along a geometric sequence of `options.numSteps` penalty levels that
+is solved along a geometric sequence of `options.num_steps` penalty levels that
 decreases from the smallest `λ0` with zero solution to `g.λ0`, each one warm
 started from the previous solution. Coordinates with zero penalty weight are
 left out when finding that `λ0`. For a `SparseIterate` or an `AtomIterate`, each
@@ -33,19 +33,18 @@ penalty level is screened with the sequential strong rule, as in
 [`LassoPath`](@ref).
 
 The keyword arguments `kwargs` are fields of [`CDOptions`](@ref) that replace
-those of `options`, as in `coordinateDescent!(x, f, g; optTol=1e-8)`. With
+those of `options`, as in `coordinate_descent!(x, f, g; opt_tol=1e-8)`. With
 `order = :random`, the coordinates are visited in an order drawn from `rng`;
 pass a seeded generator, such as `Xoshiro(1)`, for reproducible passes without
 reseeding the global one.
 
-`coordinateDescent!` returns `x`. `solve!` (a method of `ProximalSolvers.solve!`)
-does the same and returns a `ProximalSolvers.CDResults`: the number of `passes`
-(including those on the path of penalties when `warmStart` is false), whether
+`coordinate_descent!` and `solve!` (a method of `ProximalSolvers.solve!`)
+return a `ProximalSolvers.CDResults`: the number of `passes`
+(including those on the path of penalties when `warm_start` is false), whether
 the stopping rule was met (`converged`), the largest scaled change of a
 coordinate in the last pass (`maxchange`) and the `tolerance` it was compared
-with, and the objective `minimum`. Passing a [`CDInfo`](@ref) as the fifth
-argument of `coordinateDescent!`, to be filled in with this information, is
-deprecated.
+with, the objective `minimum`, and the fitted iterate `minimizer`. Passing a [`CDInfo`](@ref) as the fifth
+argument of the deprecated `coordinateDescent!` is supported for compatibility.
 
 A dense `Vector` `x` is also accepted; it is converted to a `SparseIterate`, or
 to an `AtomIterate` for `GroupNormL2`, and overwritten with the solution.
@@ -76,9 +75,9 @@ A separable penalty `g(x) = Σₖ gₖ(xₖ)` of another type, a subtype of
 needs the proximal operator of one entry, `ProximalBase.prox_entry(g, v, k, γ)`,
 which returns `argmin_z gₖ(z) + (z - v)² / (2γ)`. The built-in losses take this
 proximal step on the quadratic in `x[k]`, so they accept such a penalty, and so
-does a user-defined loss whose `descendCoordinate!` calls
+does a user-defined loss whose `descend_coordinate!` calls
 `ProximalBase.prox_coordinate!` (see [`CoordinateDifferentiableFunction`](@ref)).
-Such a penalty has no path of penalty levels: with `warmStart = false`, the
+Such a penalty has no path of penalty levels: with `warm_start = false`, the
 descent starts from zero and solves at `g` directly.
 
 # Anderson acceleration
@@ -113,7 +112,7 @@ otherwise. `momentum = true` asks for it with a user-defined loss as well,
 which can pay off when initializing the loss costs less than a pass;
 `momentum = false` turns it off.
 """
-function coordinateDescent!(
+function coordinate_descent!(
   x::Union{SparseIterate, SymmetricSparseIterate, AtomIterate, Vector{<:AbstractFloat}},
   f::Union{CDModel, AbstractFunction, CoordinateDifferentiableFunction},
   g::AbstractFunction,
@@ -121,29 +120,13 @@ function coordinateDescent!(
   kwargs...)
 
   solve!(x, f, g, options; kwargs...)
-  x
-end
-
-function coordinateDescent!(
-  x::Union{SparseIterate, SymmetricSparseIterate, AtomIterate, Vector{<:AbstractFloat}},
-  f::Union{CDModel, AbstractFunction, CoordinateDifferentiableFunction},
-  g::AbstractFunction,
-  options::CDOptions,
-  info::CDInfo;
-  kwargs...)
-
-  Base.depwarn("coordinateDescent!(x, f, g, options, info) is deprecated: use `r = solve!(x, f, g, options)`, " *
-               "which returns the convergence information in a ProximalSolvers.CDResults " *
-               "(r.passes, r.converged, r.maxchange, r.tolerance).", :coordinateDescent!)
-  _record!(info, solve!(x, f, g, options; kwargs...))
-  x
 end
 
 """
     solve!(x, f, g, options::CDOptions; rng=Random.default_rng(), kwargs...)
 
-The method of `ProximalSolvers.solve!` for the options of this package: the same
-as [`coordinateDescent!`](@ref), but it returns a `ProximalSolvers.CDResults`,
+The method of `ProximalSolvers.solve!` for the options of this package,
+identical to [`coordinate_descent!`](@ref). It returns a `ProximalSolvers.CDResults`,
 with the number of `passes`, whether the stopping rule was met (`converged`),
 the largest scaled change of a coordinate in the last pass (`maxchange`) and
 the `tolerance` it was compared with.

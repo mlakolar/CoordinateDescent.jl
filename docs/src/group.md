@@ -29,19 +29,19 @@ y = X[:, 1:5] * ones(5) + randn(rng, n)
 groups = [1:5, 6:10, 11:20, 21:50]
 g = GroupNormL2(0.1, groups)         # weights √|Gₖ|
 x = AtomIterate(p, groups)
-coordinateDescent!(x, CDLeastSquaresLoss(y, X), g)
+coordinate_descent!(x, CDLeastSquaresLoss(y, X), g)
 [norm(x[G]) for G in groups]         # the first group is selected
 ```
 
 All groups are zero for ``\lambda \ge \max_k \|X_{G_k}^\top y\| / (n w_k)``. With
-`warmStart = false`, [`coordinateDescent!`](@ref) solves along a path of
+`warm_start = false`, [`coordinate_descent!`](@ref) solves along a path of
 penalty levels from there, and screens the groups with the strong rule. The
 example on the group lasso chooses ``\lambda`` on a validation set and checks the
 optimality conditions.
 
 ## The estimators
 
-[`groupLasso`](@ref)`(X, y, λ, groups)` and [`GroupLassoPath`](@ref)`(X, y, groups)`
+[`group_lasso`](@ref)`(X, y, λ, groups)` and [`GroupLassoPath`](@ref)`(X, y, groups)`
 are the group lasso with an unpenalized intercept and, by default
 (`standardize = :orthonormal`), the penalty on the fitted values of each group,
 
@@ -62,7 +62,7 @@ the columns as given. The groups must be disjoint and cover the columns; a
 column alone is a group of its own, and a zero weight leaves a group
 unpenalized. The solutions report the active groups.
 
-[`sparseGroupLasso`](@ref)`(X, y, λ, groups)` and
+[`sparse_group_lasso`](@ref)`(X, y, λ, groups)` and
 [`SparseGroupLassoPath`](@ref)`(X, y, groups)` are the sparse group lasso of
 Simon, Friedman, Hastie and Tibshirani (2013),
 
@@ -70,7 +70,7 @@ Simon, Friedman, Hastie and Tibshirani (2013),
 \frac{1}{2n}\|y - \beta_0 - X\beta\|^2 + \lambda\Big(\alpha\sum_j |\tilde\beta_j| + (1 - \alpha)\sum_k w_k\|\tilde\beta_{G_k}\|_2\Big),
 ```
 
-which selects groups and, within them, variables. With `standardizeX` (the
+which selects groups and, within them, variables. With `standardize_x` (the
 default), ``\tilde\beta = s\beta`` are the coefficients of the standardized
 columns, as in R's SGL, whose default `alpha = 0.95` it shares; `alpha = 1` is
 the lasso and `alpha = 0` the group lasso on the columns as given. The groups
@@ -81,7 +81,7 @@ a group at zero is optimal while
 
 ## The multi-response lasso
 
-With several responses that share the predictors, [`multiLasso`](@ref)`(X, Y, λ)`
+With several responses that share the predictors, [`multi_lasso`](@ref)`(X, Y, λ)`
 and [`MultiLassoPath`](@ref)`(X, Y)` fit
 
 ```math

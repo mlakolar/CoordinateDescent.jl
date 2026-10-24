@@ -12,6 +12,6 @@ ProximalBase = {url = "https://github.com/mlakolar/ProximalBase.jl", rev = "mast
 ProximalSolvers = {url = "https://github.com/mlakolar/ProximalSolvers.jl", rev = "master"}
 
 [compat]
-CoordinateDescent = "0.7"
+CoordinateDescent = "0.8"
 ProximalBase = "0.5"
 julia = "1.11"
