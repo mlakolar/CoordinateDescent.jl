@@ -71,6 +71,21 @@ coefficients:
 `CD_BENCH_N` and `CD_BENCH_P` set a smaller problem, as a quick check that the
 script runs.
 
+On Discovery (an EPYC 7513 core, Julia 1.13.2, one BLAS thread; run
+20261023T2353Z-cd-gram-bench), the script takes about 15 seconds:
+
+| solve | time (s) | passes | nonzeros |
+|---|---:|---:|---:|
+| `scaledLasso!`, noise level started by screening (with compilation) | 1.95 | | |
+| `scaledLasso!`, noise level started at a given value | 0.03 | | |
+| 0.05 λmax, unit loadings, from zero / along 50 levels | 0.05 / 0.25 | 41 / 506 | 454 |
+| 0.05 λmax, standardized loadings, from zero / along 50 levels | 0.04 / 0.25 | 38 / 490 | 455 |
+| 0.01 λmax, unit loadings, from zero / along 50 levels | 0.80 / 2.21 | 285 / 1232 | 2058 |
+| 0.01 λmax, standardized loadings, from zero / along 50 levels | 0.74 / 2.20 | 264 / 1231 | 2058 |
+
+The path costs more than the direct start here because every intermediate
+level is solved to the full tolerance (ProximalSolvers issue #19).
+
 Until version 0.7, the script solved at λ = 0.001, about 3e-4 λmax. There the
 solutions have about 2,980 nonzero coefficients, close to interpolating the
 3,000 observations. Each of the first three solves took 44,000 to 53,000
