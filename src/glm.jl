@@ -127,12 +127,17 @@ the data; otherwise `ωⱼ = 1`. These are glmnet's conventions and defaults.
 `λ (α ∑ⱼ |βⱼ| + (1 - α) ‖β‖² / 2)`, and `penalty` a penalty of ProximalBase
 whose level `λ` replaces (`ElasticNet(1, λ2)`, `MCP(1, a)`, `SCAD(1, a)`,
 `NormL1Nonneg(1)`, or `NormL1(1, w)` for weights). With `standardizeX`, such a
-penalty applies to the coefficients of the standardized columns, as in glmnet
-and ncvreg (whose `binomial` and `poisson` families these are); the
-coefficients returned are those of the columns of `X`, and the scales are
-stored in the solution's `scales`. A nonconvex penalty (MCP, SCAD) is computed
-along `options.numSteps` levels from λmax whatever `options.warmStart`, as
-ncvreg does; `numSteps = 0` solves at `λ` from zero.
+penalty applies to the coefficients of the standardized columns, as in glmnet;
+the coefficients returned are those of the columns of `X`, and the scales are
+stored in the solution's `scales`. The elastic net equals glmnet's `binomial`
+and `poisson` fits. A nonconvex penalty (MCP, SCAD) is computed along
+`options.numSteps` levels from λmax whatever `options.warmStart`, as ncvreg
+does; `numSteps = 0` solves at `λ` from zero. The solutions are stationary
+points of the objective above. ncvreg's `binomial` and `poisson` families do
+not solve it: their coordinate steps scale the concavity of the penalty by the
+weighted curvature of each column at the current fit (they divide by
+`v (1 - 1/a)` where the exact step divides by `v - 1/a`), so their solutions
+differ (in its gaussian family `v = 1` and the two agree).
 
 The problem is solved by proximal Newton (ProximalSolvers' `ProxNewton`, the
 method of glmnet): each step minimizes the weighted least-squares model of the

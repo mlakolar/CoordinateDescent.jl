@@ -84,13 +84,15 @@ dscad(λ, a) = t -> sign(t) * (abs(t) <= λ ? λ : max(a * λ - abs(t), 0.0) / (
       @test kkt(G, s .* b, fill(l * 0.5, p), denet(l, 0.5)) < 1e-6
     end
     @test predict(path, X; type = :link)[:, 7] ≈ path.β0path[7] .+ X * Vector(path.βpath[7])
-    mpath = GLMLassoPath(X, y, ProximalBase.Logistic(), tight; penalty = MCP(1, 3), nλ = 15, newtonTol = 1e-12)
-    @test nnz(mpath.βpath[1]) == 0
-    for k in eachindex(mpath.λpath)
-      l = mpath.λpath[k]
-      b = Vector(mpath.βpath[k])
-      G = Xs' * (logistic.(mpath.β0path[k] .+ X * b) .- y) / n
-      @test kkt(G, s .* b, fill(l, p), dmcp(l, 3)) < 1e-6
+    for (pen, d) in ((MCP(1, 3), dmcp), (SCAD(1, 3.7), dscad))
+      mpath = GLMLassoPath(X, y, ProximalBase.Logistic(), tight; penalty = pen, nλ = 15, newtonTol = 1e-12)
+      @test nnz(mpath.βpath[1]) == 0 && all(mpath.converged)
+      for k in eachindex(mpath.λpath)
+        l = mpath.λpath[k]
+        b = Vector(mpath.βpath[k])
+        G = Xs' * (logistic.(mpath.β0path[k] .+ X * b) .- y) / n
+        @test kkt(G, s .* b, fill(l, p), d(l, pen.a)) < 1e-6
+      end
     end
   end
 
