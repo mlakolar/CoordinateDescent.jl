@@ -38,16 +38,16 @@ y = X * β + 2 * randn(n)</code></pre><pre class="documenter-example-output"><co
  -14.160528307294292
    3.968733647031624
  -12.585768151930022
- -14.748037239245463
-  -1.4765263381194438
+ -14.748037239245466
+  -1.4765263381194442
    ⋮
   -3.2543753564233326
-  11.092153537422076
+  11.092153537422075
   -4.547999208188118
   -9.87983066532814
   -5.017820218131696
-   0.8298955170935809
-  -6.169774500934637
+   0.8298955170935807
+  -6.169774500934636
   12.364937610897272
    1.542509368576864</code></pre><h2 id="The-elastic-net"><a class="docs-heading-anchor" href="#The-elastic-net">The elastic net</a><a id="The-elastic-net-1"></a><a class="docs-heading-anchor-permalink" href="#The-elastic-net" title="Permalink"></a></h2><p>The lasso tends to pick a few predictors of a correlated group and drop the others; the ridge part of the elastic net spreads the coefficients more evenly over the group (Zou and Hastie, 2005). α = 1 is the lasso. At the same λ, a smaller α also selects more of the predictors that do not matter: in practice λ and α are chosen together, for example by cross-validation.</p><pre><code class="language-julia hljs">f = CDLeastSquaresLoss(y, X)
 println(&quot;  α   nonzeros  of the 15  β̂[1:5]                          sd of β̂[1:15]&quot;)
@@ -109,4 +109,4 @@ end
   coordinateDescent!(SparseIterate(p), CDLeastSquaresLoss(y, X / 2), MyMCP(0.1, 3.0))
 catch err
   println(&quot;with ‖X[:, k]‖² = n / 4: &quot;, sprint(showerror, err))
-end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">with ‖X[:, k]‖² = n / 4: ArgumentError: the MCP needs γ &gt; 4.0, the step of coordinate descent</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../08_custom_loss/">« A loss of your own: ℓ1-penalized logistic regression</a><a class="docs-footer-nextpage" href="../../api/estimators/">Estimators »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Saturday 24 October 2026 11:13">Saturday 24 October 2026</span>. Using Julia version 1.13.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">with ‖X[:, k]‖² = n / 4: ArgumentError: the MCP needs γ &gt; 4.0, the step of coordinate descent</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../08_custom_loss/">« A loss of your own: ℓ1-penalized logistic regression</a><a class="docs-footer-nextpage" href="../../api/estimators/">Estimators »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Saturday 24 October 2026 11:19">Saturday 24 October 2026</span>. Using Julia version 1.13.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
