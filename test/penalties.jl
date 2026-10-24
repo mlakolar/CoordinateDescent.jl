@@ -45,9 +45,17 @@ atlevel(pen, λ) = pen isa MCP ? MCP(λ, pen.a) : SCAD(λ, pen.a)
     b = lasso(X, y, 0.1; intercept = true, standardizeX = true, penalty = NormL1(1, v), optTol = 1e-12)
     @test b.penalty.w ≈ v .* s
     @test Vector(b.x) ≈ Vector(a.x) atol = 1e-8
-    # the nonnegative lasso
+    # without standardization, the weights of the template are the loadings
+    a = lasso(X, y, 0.1, v; rng = Xoshiro(1))
+    b = lasso(X, y, 0.1; penalty = NormL1(1, v), rng = Xoshiro(1))
+    @test Vector(a.x) == Vector(b.x) && b.penalty.w == v
+    # the nonnegative lasso, also along cold-started paths
     c = lasso(X, y, 0.02; penalty = NormL1Nonneg(1), intercept = true)
     @test all(>=(0), Vector(c.x)) && count(!iszero, Vector(c.x)) > 0
+    pn = LassoPath(X, y; penalty = NormL1Nonneg(1), nλ = 8, intercept = true, optTol = 1e-12)
+    pc = LassoPath(X, y, pn.λpath; penalty = NormL1Nonneg(1), intercept = true, optTol = 1e-12, warmStart = false)
+    @test all(b -> all(>=(0), b), pn.βpath) && pn.penalty isa NormL1Nonneg
+    @test all(isapprox(Vector(pc.βpath[k]), Vector(pn.βpath[k]); atol = 1e-8) for k in 1:8)
   end
 
   @testset "the elastic net of glmnet" begin
@@ -90,6 +98,11 @@ atlevel(pen, λ) = pen isa MCP ? MCP(λ, pen.a) : SCAD(λ, pen.a)
     sol = lasso(X, y, 0.05; alpha = 0.5, intercept = true, optTol = 1e-12)
     @test sol.scales === nothing
     @test kkt(X .- transpose(xbar), yc, Vector(sol.x), 0.025, denet(0.05, 0.5)) < 1e-8
+    # the scaled elastic net as a template is alpha
+    st = lasso(X, y, 0.05; penalty = Scaled(ElasticNet(0.5, 0.5), 3.0), intercept = true, standardizeX = true, optTol = 1e-12)
+    sa = lasso(X, y, 0.05; alpha = 0.5, intercept = true, standardizeX = true, optTol = 1e-12)
+    @test st.penalty.α == 0.05
+    @test Vector(st.x) ≈ Vector(sa.x) atol = 1e-10
     # ElasticNet(1, λ2) keeps λ2 fixed along the path
     pe = LassoPath(X, y; penalty = ElasticNet(1, 0.3), nλ = 10, intercept = true, optTol = 1e-12)
     for k in eachindex(pe.λpath)
