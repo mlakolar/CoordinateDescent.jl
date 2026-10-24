@@ -61,3 +61,18 @@ combinations of its other columns get zero coefficients. With
 the columns as given. The groups must be disjoint and cover the columns; a
 column alone is a group of its own, and a zero weight leaves a group
 unpenalized. The solutions report the active groups.
+
+## The multi-response lasso
+
+With several responses that share the predictors, [`multiLasso`](@ref)`(X, Y, λ)`
+and [`MultiLassoPath`](@ref)`(X, Y)` fit
+
+```math
+\frac{1}{2n}\|Y - 1\beta_0^\top - XB\|_F^2 + \lambda\sum_k \omega_k\|B_{k\cdot}\|_2,
+```
+
+the group lasso on the rows of the ``p \times q`` coefficient matrix ``B``,
+which selects the same predictors for every response (glmnet's `mgaussian`).
+The curvature of the loss over a row is a multiple of the identity, so each
+block step on a row is exact. The solutions report ``B`` as a sparse matrix,
+the intercepts of the responses and the active rows.

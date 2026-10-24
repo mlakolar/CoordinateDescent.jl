@@ -18,7 +18,7 @@ Estimators:
 * Lasso, with an intercept, standardization and penalty loadings
 * Elastic net, MCP and SCAD, and the adaptive lasso
 * Penalized logistic and Poisson regression, by proximal Newton
-* Group lasso
+* Group lasso, and the multi-response lasso
 * Square-root lasso
 * Scaled lasso, from the data or from sufficient statistics (`X'X/n`, `X'y/n`,
   `y'y/n`, or a covariance matrix, one variable on the others)
@@ -71,6 +71,7 @@ sol = adaptiveLasso(X, y, 0.1)                   # loadings 1/|β̃ⱼ| from a f
 yb = Float64.(rand(n) .< 1 ./ (1 .+ exp.(-X[:, 1])))
 sol = glmLasso(X, yb, 0.02)                      # logistic regression; also Poisson
 sol = groupLasso(X, y, 0.1, [1:5, 6:10, 11:50])  # the group lasso, with orthonormalized groups
+sol = multiLasso(X, [y y.^2], 0.1)               # the same predictors for every response
 ```
 
 The [documentation](https://mlakolar.github.io/CoordinateDescent.jl/dev/) has

@@ -9,6 +9,7 @@ tests = [
   "penalties",
   "glm",
   "group",
+  "multiresponse",
   "varying_coefficient_lasso"
 ]
 
