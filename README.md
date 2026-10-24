@@ -77,6 +77,15 @@ sol = groupLasso(X, y, 0.1, [1:5, 6:10, 11:50])  # the group lasso, with orthono
 sol = multiLasso(X, [y y.^2], 0.1)               # the same predictors for every response
 ```
 
+With StatsModels.jl loaded, the estimators also take a formula and a table,
+and categorical variables become dummy columns (groups, for the group lasso):
+
+```julia
+using StatsModels
+m = fit(LassoPath, @formula(y ~ x1 + log(x2) + region), df)
+coef(m, 0.1), coefnames(m), predict(m, newdf)
+```
+
 The [documentation](https://mlakolar.github.io/CoordinateDescent.jl/dev/) has
 the mathematics of each estimator and its conventions, the options of
 coordinate descent and when each pays off, the group lasso, varying-coefficient
