@@ -65,7 +65,10 @@ Base.getproperty(o::IterLassoOptions, s::Symbol) = getfield(o, _legacy_property(
 Base.propertynames(::IterLassoOptions, private::Bool=false) =
   (fieldnames(IterLassoOptions)..., first.(_ITER_OPTION_PROPERTIES)...)
 Base.getproperty(o::CDInfo, s::Symbol) = getfield(o, _legacy_property(s, (:maxChange => :max_change,)))
-Base.setproperty!(o::CDInfo, s::Symbol, v) = setfield!(o, _legacy_property(s, (:maxChange => :max_change,)), v)
+function Base.setproperty!(o::CDInfo, s::Symbol, v)
+  field = _legacy_property(s, (:maxChange => :max_change,))
+  setfield!(o, field, convert(fieldtype(CDInfo, field), v))
+end
 Base.propertynames(::CDInfo, private::Bool=false) = (fieldnames(CDInfo)..., :maxChange)
 
 for P in (LassoPath, GLMLassoPath, GroupLassoPath, SparseGroupLassoPath, MultiLassoPath)
