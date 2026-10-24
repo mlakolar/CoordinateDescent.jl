@@ -19,7 +19,6 @@ module CoordinateDescent
 using ProximalBase
 using ProximalSolvers
 using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel, residuals
-using DataStructures: nlargest
 using SparseArrays
 using Statistics
 using LinearAlgebra
@@ -44,5 +43,7 @@ include("losses.jl")
 include("coordinate_descent.jl")
 include("lasso.jl")
 include("varying_coefficient_lasso.jl")
+
+include("precompile.jl")
 
 end
