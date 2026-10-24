@@ -66,6 +66,7 @@ qnorm(t) = -sqrt(2) * erfcinv(2t)
     pl0 = postLasso(X, y, [1, 2, 3]; intercept = false)
     @test pl0.intercept == 0 && Vector(pl0.x)[1:3] ≈ X[:, 1:3] \ y
     @test_throws ArgumentError postLasso(X[1:3, :], y[1:3], [1, 2, 3])
+    @test postLasso(round.(Int, 10X), round.(Int, 10y), [1, 2]).selected == [1, 2]
   end
 
   @testset "doubleSelection" begin
@@ -97,6 +98,7 @@ qnorm(t) = -sqrt(2) * erfcinv(2t)
     r99 = doubleSelection(yd, d, W; level = 0.99)
     @test r99.ci[2] - r99.ci[1] > r.ci[2] - r.ci[1]
     @test_throws ArgumentError doubleSelection(yd, d, W; method = :bogus)
+    @test doubleSelection(round.(Int, 10yd), round.(Int, 10d), round.(Int, 10W)).n == m
     @test occursin("TreatmentEffect", sprint(show, r))
   end
 
