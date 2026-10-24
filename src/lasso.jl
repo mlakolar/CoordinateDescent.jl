@@ -104,12 +104,9 @@ function _loadings(X::AbstractMatrix{T}, intercept::Bool, w::AbstractVector{T}) 
       ω[k] = sqrt(max(a + (W - wnz) * c * c, zero(T)) / W)
     end
   else
-    @inbounds for k in 1:p
-      c, a = xbar[k], zero(T)
-      @simd for i in 1:n
-        a += w[i] * (X[i, k] - c) * (X[i, k] - c)
-      end
-      ω[k] = sqrt(a / W)
+    for k in 1:p
+      c = xbar[k]
+      ω[k] = sqrt(sum(i -> @inbounds(w[i] * (X[i, k] - c) * (X[i, k] - c)), 1:n) / W)
     end
   end
   ω
