@@ -6,7 +6,9 @@ Lasso estimators computed by coordinate descent: [`lasso`](@ref),
 [`LassoPath`](@ref), the penalized generalized linear models [`glmLasso`](@ref) and
 [`GLMLassoPath`](@ref), the group lasso [`groupLasso`](@ref) and
 [`GroupLassoPath`](@ref), the multi-response lasso [`multiLasso`](@ref) and
-[`MultiLassoPath`](@ref), and the varying-coefficient estimators [`locpoly`](@ref)
+[`MultiLassoPath`](@ref), the inference after selection of R's hdm
+([`rlasso`](@ref), [`postLasso`](@ref), [`doubleSelection`](@ref)), and the
+varying-coefficient estimators [`locpoly`](@ref)
 and [`locpolyl1`](@ref). They run the coordinate descent, the penalty paths and
 the reweighting of ProximalSolvers.jl on the losses and penalties of
 ProximalBase.jl, as does [`coordinateDescent!`](@ref), which minimizes
@@ -25,6 +27,7 @@ using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel
 using StatsAPI: StatsAPI, aic, bic, coef, deviance, dof, fit, nobs, predict, residuals
 using Random: AbstractRNG, Xoshiro, default_rng, randperm
 using SparseArrays
+using SpecialFunctions: erfc, erfcinv
 using Statistics
 using LinearAlgebra
 
@@ -59,6 +62,12 @@ export
   multiLasso,
   MultiLassoPath,
 
+  # inference after selection, as in R's hdm
+  theoryLambda,
+  rlasso,
+  postLasso,
+  doubleSelection,
+
   # var coef
   GaussianKernel, SmoothingKernel, EpanechnikovKernel, evaluate, createKernel,
   locpoly, locpolyl1
@@ -73,6 +82,7 @@ include("group.jl")
 include("multiresponse.jl")
 include("statsapi.jl")
 include("cv.jl")
+include("hdm.jl")
 include("varying_coefficient_lasso.jl")
 
 include("precompile.jl")

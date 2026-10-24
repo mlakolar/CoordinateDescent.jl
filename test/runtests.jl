@@ -10,6 +10,7 @@ tests = [
   "glm",
   "group",
   "multiresponse",
+  "hdm",
   "varying_coefficient_lasso"
 ]
 

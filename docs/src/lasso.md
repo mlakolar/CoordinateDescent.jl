@@ -155,6 +155,24 @@ chooses the initial residuals. The examples use
 ``\lambda_0 = 1.1\, \Phi^{-1}(1 - \gamma / (2p)) / \sqrt n`` with
 ``\gamma = 0.1 / \log n``.
 
+## Inference after selection
+
+[`rlasso`](@ref)`(X, y)` is the lasso with data-driven penalty loadings as R's
+hdm computes it (Belloni, Chen, Chernozhukov and Hansen, 2012): the level
+[`theoryLambda`](@ref)`(n, p)` ``= c\,\Phi^{-1}(1 - \gamma/(2p))/\sqrt{n}``
+with hdm's defaults for ``c`` and ``\gamma``, loadings from the residuals of a
+first fit, and with `post` least squares on the selected columns after each
+lasso, until the residuals settle. [`postLasso`](@ref)`(X, y, sol)` refits
+least squares on the columns a lasso selected and gives
+heteroskedasticity-robust (HC1) standard errors. [`doubleSelection`](@ref)`(y, d, X)`
+estimates the effect ``\alpha`` of a treatment ``d`` in
+``y = \alpha d + X\beta + \varepsilon`` with many controls, as hdm's
+`rlassoEffect` does: by double selection (Belloni, Chernozhukov and Hansen,
+2014), the regression of ``y`` on ``d`` and the union of the controls that
+predict ``y`` and those that predict ``d``, or by partialling out. It returns
+the estimate, its standard error, the ``t`` statistic, the ``p``-value and a
+confidence interval.
+
 ## Observation weights and offsets
 
 [`lasso`](@ref), [`sqrtLasso`](@ref), [`scaledLasso`](@ref) and

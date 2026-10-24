@@ -23,6 +23,8 @@ Estimators:
 * Scaled lasso, from the data or from sufficient statistics (`X'X/n`, `X'y/n`,
   `y'y/n`, or a covariance matrix, one variable on the others)
 * Feasible (heteroscedastic) lasso
+* Inference after selection as in R's hdm: `rlasso`, `postLasso` and
+  `doubleSelection`
 * Lasso paths, with λ chosen by cross-validation or an information criterion,
   and refitting
 * Varying-coefficient models by local polynomial regression with an ℓ1 penalty
