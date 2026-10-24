@@ -51,8 +51,9 @@ The sparse group lasso of Simon, Friedman, Hastie and Tibshirani (2013),
 which selects groups, as the group lasso does, and also variables within the
 selected groups, for disjoint groups `Gₖ` that cover the columns of `X`. With
 `standardizeX`, `β̃ = s .* β` are the coefficients of the columns divided by their
-standard deviations `s` (centered with an intercept), as in R's SGL; otherwise
-`β̃ = β`. The coefficients returned are those of the columns of `X`. `alpha`
+standard deviations `s` (centered with an intercept); otherwise `β̃ = β`. R's
+sparsegl and SGL scale the columns to unit Euclidean norm instead, `√n` times
+the standard deviation, so their level `λ` is `√n λ` here. The coefficients returned are those of the columns of `X`. `alpha`
 mixes the two terms: `alpha = 1` is the lasso and `alpha = 0` the group lasso on
 the columns as given (`groupLasso(...; standardize = :none)`); the default 0.95
 is SGL's. The weights default to `wₖ = √|Gₖ|`, and a zero weight with

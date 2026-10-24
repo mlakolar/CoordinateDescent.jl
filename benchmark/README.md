@@ -447,3 +447,33 @@ Results on Discovery (runs `20261024T1234Z-cd-glm-penalties` and
   the gaussian family `v = 1` and the two agree (`penalties/`). ncvreg also
   stops paths early when the model is saturated (p > n); the levels it
   returned are compared.
+
+## sparsegroup/
+
+`sparsegroup/compare_sparsegroup.jl` compares `SparseGroupLassoPath` with R's
+sparsegl 1.1.1 (and SGL 1.3 with a second argument `sgl` to the R script), for
+α ∈ {0.05, 0.5, 0.95} on three designs (n = 200, p = 60, groups of 5, AR(0.5);
+n = 400, p = 120, groups of 10; n = 100, p = 200, groups of 8), at 25 levels
+from λmax down to 5% of it:
+
+```sh
+julia --project=benchmark/sparsegroup benchmark/sparsegroup/compare_sparsegroup.jl gen DIR
+Rscript benchmark/sparsegroup/compare_sparsegroup.R DIR      # needs sparsegl; add `sgl` for SGL
+julia --project=benchmark/sparsegroup benchmark/sparsegroup/compare_sparsegroup.jl compare DIR
+```
+
+Results on Discovery (runs `20261024T1354Z-cd-sparsegroup` and
+`20261024T1405Z-cd-sparsegroup2`):
+
+- **The convention.** sparsegl and SGL scale the columns to unit Euclidean norm
+  (√n times their standard deviation), so their level is ours divided by √n;
+  SGL returns the coefficients of its standardized columns and no intercept.
+  With that, the solutions of both satisfy the optimality conditions of
+  `sparseGroupLasso`'s objective up to their tolerances (sparsegl 3e-3 to 2e-2,
+  SGL 7e-7 to 3e-3), against 1e-12 for ours.
+- **Against sparsegl on the full paths**, the coefficients agree to 2e-3 through
+  1.2e-2, and our objective is lower than or equal to sparsegl's at every level of
+  all nine paths, sparsegl's being higher by at most 6e-5 relative: the same
+  problem, solved more accurately here.
+- **SGL is slow:** its path on the first design at `thresh = 1e-10` did not finish
+  in 20 minutes, so the R script runs it only on request.
