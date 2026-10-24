@@ -5,6 +5,7 @@ using Aqua
 tests = [
   "coordinate_descent",
   "lasso",
+  "glm",
   "varying_coefficient_lasso"
 ]
 

@@ -81,6 +81,22 @@ coordinateDescent!(x, CDLeastSquaresLoss(y, X), g)
 [norm(x[G]) for G in groups]         # the first group is selected
 ```
 
+Penalized logistic and Poisson regression, `glmLasso` and `GLMLassoPath`,
+minimize `∑ᵢ wᵢ ℓ(β₀ + xᵢ'β + oᵢ, yᵢ) / ∑ᵢ wᵢ + λ ∑ⱼ ωⱼ |βⱼ|` with glmnet's
+conventions and defaults (an intercept, standardized columns, optional weights
+`w` and offset `o`), by proximal Newton: each step solves the weighted
+least-squares model of the loss by coordinate descent. Any scalar loss of
+ProximalBase works, including your own:
+
+```julia
+yb = Float64.(rand(n) .< 1 ./ (1 .+ exp.(-X[:, 1])))
+sol = glmLasso(X, yb, 0.02)                              # logistic regression
+sol.x, sol.intercept, 1 - sol.deviance / sol.nulldeviance
+path = GLMLassoPath(X, yb; nλ = 50)                       # stops once 99.9% of the deviance is explained
+counts = Float64.(rand.(1:3, n))
+sol = glmLasso(X, counts, 0.02, ProximalBase.Poisson(); offset = zeros(n))
+```
+
 Coordinate descent stops when no coordinate changes by more than `optTol` in a
 pass, the change of coefficient `k` measured in units of `‖y‖ / ‖X[:, k]‖`, so
 the result does not depend on the units of the data (`CDOptions(; relativeTol =
@@ -128,6 +144,7 @@ each one prints its results:
 | [07_varying_coefficient.jl](examples/07_varying_coefficient.jl) | `locpoly` and `locpolyl1`: kernels, bandwidths, degrees, cross-validation, standard errors |
 | [08_custom_loss.jl](examples/08_custom_loss.jl) | a loss of your own: ℓ1-penalized logistic regression, checked against ProximalBase's `LogisticLoss` |
 | [09_custom_penalty.jl](examples/09_custom_penalty.jl) | penalties of your own: the elastic net and the minimax concave penalty, checked against ProximalBase's |
+| [10_glm.jl](examples/10_glm.jl) | `glmLasso` and `GLMLassoPath`: logistic and Poisson regression, weights and offsets, the explained deviance, choosing λ on a validation set |
 
 Run them from the root of the repository:
 
