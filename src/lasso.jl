@@ -229,13 +229,13 @@ _intercept(m, x, gd) = _gramintercept(gd, x)
 # weights their weighted root mean square. With the column scales s, X holds the
 # columns divided by s and x their coefficients, which are mapped back to those
 # of the columns of the data
-function _lassoSolution(x::SparseIterate{T}, m, g, r::CDResults, intercept::Bool, X, y, gd;
+function _lassoSolution(x::SparseIterate{T}, m, g, r::Union{CDResults, ReweightResults}, intercept::Bool, X, y, gd;
                         w = nothing, o = nothing, scales = nothing) where {T}
   β0 = _intercept(m, x, gd)
   res = gd === nothing ? ProximalSolvers.residuals(m) : _minus(y, o) .- β0 .- Vector(X * _sparsevec(x))
   σ = w === nothing ? std(res) : _getSigma(w, res)
   scales === nothing || _unscale!(x, scales)
-  LassoSolution{T, typeof(g)}(x, res, g, σ, r.passes, r.converged, β0, intercept, w, scales)
+  LassoSolution{T, typeof(g)}(x, res, g, σ, r.passes, _cdconverged(r), β0, intercept, w, scales)
 end
 
 
@@ -247,7 +247,8 @@ end
 
 """
     lasso(X, y, λ, options=CDOptions(); intercept=false, standardizeX=false, gram=:auto, weights=nothing,
-          offset=nothing, alpha=1, penalty=nothing, lower=-Inf, upper=Inf, rng=Random.default_rng(), kwargs...)
+          offset=nothing, alpha=1, penalty=nothing, lla=nothing, lower=-Inf, upper=Inf, rng=Random.default_rng(),
+          kwargs...)
     lasso(X, y, λ, ω, options=CDOptions(); intercept=false, gram=:auto, weights=nothing, offset=nothing,
           lower=-Inf, upper=Inf, rng=Random.default_rng(), kwargs...)
 
@@ -302,9 +303,11 @@ for `0 < α ≤ 1`. `penalty` gives another penalty of ProximalBase whose level
 `λ` replaces: `NormL1(1, w)` and `NormL1Nonneg(1, w)` (the lasso and the
 nonnegative lasso with weights `w`), `ElasticNet(1, λ2, w)` (`λ ∑ⱼ wⱼ|βⱼ| +
 λ2 ‖β‖²/2`, with `λ2` fixed), `Scaled(ElasticNet(α, 1 - α, w), 1)` (the elastic
-net with weights on its ℓ1 part), and the nonconvex `MCP(1, a)` and
-`SCAD(1, a)`, whose concavity `a` is kept. The level of the penalty given is
-not used: `MCP(1, 3)` means "MCP with `a = 3`".
+net with weights on its ℓ1 part), and the nonconvex `MCP(1, a)`, `SCAD(1, a)`,
+`CappedL1(1, a)` (`λ min(|βⱼ|, a)`, the capped ℓ1 penalty of T. Zhang, 2010,
+and the truncated ℓ1 penalty of Shen, Pan and Zhu, 2012) and `LogPenalty(1, ε)`
+(`λ log(1 + |βⱼ|/ε)`), whose parameters are kept. The level of the penalty given is not used: `MCP(1, 3)` means "MCP with
+`a = 3`".
 
 `alpha` solves the objective of glmnet's documentation. glmnet's gaussian
 family scales `y` to unit standard deviation internally, which divides the
@@ -321,13 +324,44 @@ other penalties `X` is divided by `s` once (a copy), and `s` is stored as the
 solution's `scales`.
 
 A nonconvex penalty has local solutions, and the one found depends on the
-starting point. As in ncvreg, it is computed along `options.numSteps` levels
-from `λmax`, the smallest level with a zero solution, down to `λ`, each solved
-to the tolerance and warm started from the previous one; `numSteps = 0` solves
-at `λ` from zero. Use [`LassoPath`](@ref) for the solutions at many levels. For
-the steps of coordinate descent to be exact, MCP needs `a > 1` and SCAD
-`a > 2` on standardized columns. With `options.warmStart` false, a convex
-penalty other than the ℓ1 norm is also solved along such a path.
+algorithm and the starting point. As in ncvreg, MCP and SCAD are computed by
+exact coordinate steps along `options.numSteps` levels from `λmax`, the
+smallest level with a zero solution, down to `λ`, each solved to the tolerance
+and warm started from the previous one; `numSteps = 0` solves at `λ` from zero.
+Use [`LassoPath`](@ref) for the solutions at many levels. With `options.warmStart`
+false, a convex penalty other than the ℓ1 norm is also solved along such a path.
+
+The exact steps need each coordinate problem to be convex: `a vⱼ > 1` for MCP
+and `(a - 1) vⱼ > 1` for SCAD, where `vⱼ` is the curvature of the loss along
+column `j`, its mean square `∑ᵢ (Xᵢⱼ - x̄ⱼ)² / n` (centered with an intercept,
+weighted with weights, and of the standardized column with `standardizeX`). The
+path throws an `ArgumentError` when a column fails it, since the step could
+then leave zero where the test of `λmax` and screening says that zero is
+optimal. With `standardizeX`, `vⱼ = 1`, so ncvreg's conditions `a > 1` and
+`a > 2` suffice; without it, a column of variance at most `1/a` fails. Take
+`standardizeX = true`, a larger `a`, or `lla`.
+
+`lla` computes a nonconvex penalty by local linear approximation (LLA, or
+reweighted ℓ1) instead: `lla = LLA(; stages = 2, tol = 1e-12, start = :lasso)`
+(ProximalSolvers' `LLA`, exported) solves a sequence of weighted lassos with the
+weights `pⱼ′(|βⱼ|)/λ` at the previous solution, each a convex problem, by the
+coordinate descent of `options`; the `inner` solver of the `LLA` given is not
+used. From zero the first stage is the lasso. The stages stop after `stages`, or
+once the weights change by at most `tol`, relative to the largest one.
+- `LLA()`, two stages, is the two-step estimator of Fan, Xue and Zou (2014);
+  with MCP and SCAD it has no condition on `a`.
+- `LLA(; stages = 100)` iterates until the weights stop changing, as the
+  multi-stage convex relaxation of T. Zhang (2010), the difference of convex
+  functions of Shen, Pan and Zhu (2012, glmtlp's `"tlp"`) and the reweighted ℓ1
+  of Candès, Wakin and Boyd (2008). `CappedL1` and `LogPenalty` have no exact
+  path and use it when `lla` is `nothing`.
+- With `start = :lasso` the stages at `λ` start from the lasso at `λ`, as in the
+  papers; with `start = :previous` they start from the solution at the previous
+  level of a path of `options.numSteps` levels from `λmax`, as ncpen does.
+
+`lla` does not take bounds (`lower`, `upper`), and it applies to these four
+penalties only. With `lla`, `converged` says whether coordinate descent
+converged in every stage.
 
 # Bounds
 
@@ -356,6 +390,7 @@ function lasso(
   offset::Union{Nothing, AbstractVector{<:Real}}=nothing,
   alpha::Real=1,
   penalty::Union{Nothing, AbstractFunction}=nothing,
+  lla::Union{Nothing, LLA}=nothing,
   lower::Union{Real, AbstractVector{<:Real}}=-Inf,
   upper::Union{Real, AbstractVector{<:Real}}=Inf,
   rng::AbstractRNG=default_rng(),
@@ -367,6 +402,7 @@ function lasso(
   template = _template(T, penalty, alpha)
   x = SparseIterate(T, size(X, 2))
   if _isl1(template)
+    lla === nothing || _llamethod(template, lla, nothing, options)     # throws: lla is for nonconvex penalties
     m, _, gd = _lsmodel(X, y, intercept, _usegram(gram, X, false); w, o)
     g = _l1penalty(template, λ, standardizeX ? _loadings(X, intercept, w) : nothing)
     g = _constrain(g, _box(T, lower, upper, size(X, 2)))
@@ -375,8 +411,10 @@ function lasso(
   s = standardizeX ? _scales(X, intercept, w) : nothing
   Xs = _scaleColumns(X, s)
   m, _, gd = _lsmodel(Xs, y, intercept, _usegram(gram, X, false); w, o)
-  g = _constrain(_atlevel(template, λ), _box(T, lower, upper, size(X, 2), s))
-  _lassoSolution(x, m, g, _solveLevels!(x, m, g, options; rng), intercept, Xs, y, gd; w, o, scales = s)
+  box = _box(T, lower, upper, size(X, 2), s)
+  method = _llamethod(template, lla, box, options; rng)
+  g = _constrain(_atlevel(template, λ), box)
+  _lassoSolution(x, m, g, _solveLevels!(x, m, g, options; rng, lla = method), intercept, Xs, y, gd; w, o, scales = s)
 end
 
 function lasso(
@@ -742,8 +780,8 @@ feasibleLasso!(
 
 """
     LassoPath(X, y, λpath, options=CDOptions(); max_hat_s=Inf, standardizeX=true, intercept=false, screening=true,
-              gram=:auto, weights=nothing, offset=nothing, alpha=1, penalty=nothing, lower=-Inf, upper=Inf,
-              rng=Random.default_rng(), kwargs...)
+              gram=:auto, weights=nothing, offset=nothing, alpha=1, penalty=nothing, lla=nothing, lower=-Inf,
+              upper=Inf, rng=Random.default_rng(), kwargs...)
     LassoPath(X, y, options=CDOptions(); nλ=100, λminratio, kwargs...)
 
 Lasso solutions `β0path[k]` and `βpath[k]` of
@@ -793,7 +831,13 @@ a fixed `α`, whose `λmax` is that of the lasso divided by `α`, and
 `LassoPath(X, y; penalty=MCP(1, 3))` the path of ncvreg, on standardized
 columns with `standardizeX`. Along a path of a nonconvex penalty, each solution
 is the local one reached from the previous solution, starting from zero at
-`λmax`. `penalty` holds the penalty at level one, `NormL1(1, ω)` for the lasso
+`λmax`. Without `standardizeX`, the exact steps of MCP and SCAD need the
+condition on `a` described for [`lasso`](@ref). `lla` computes the path by
+local linear approximation, as described there: with `penalty =
+CappedL1(1, a)` (and `lla = nothing`, which then means `LLA(; stages = 100)`)
+it is the path of glmtlp's `"tlp"`, and with `lla = LLA(; stages = 100, start
+= :previous)` that of ncpen. Its `λmax` is that of the first stage, the lasso
+with the weights `pⱼ′(0)/λ`. `penalty` holds the penalty at level one, `NormL1(1, ω)` for the lasso
 with loadings `ω`; the solution at `λpath[k]` minimizes the loss plus that
 penalty at level `λpath[k]`, applied to `scales .* β` when `scales` is not
 `nothing` (`standardizeX` with a penalty other than the ℓ1 norm). `lower` and
@@ -874,7 +918,7 @@ function LassoPath(
   max_hat_s=Inf, standardizeX::Bool=true, intercept::Bool=false,
   screening::Bool=true, gram::Union{Bool, Symbol}=:auto,
   weights::Union{Nothing, AbstractVector{<:Real}}=nothing, offset::Union{Nothing, AbstractVector{<:Real}}=nothing,
-  alpha::Real=1, penalty::Union{Nothing, AbstractFunction}=nothing,
+  alpha::Real=1, penalty::Union{Nothing, AbstractFunction}=nothing, lla::Union{Nothing, LLA}=nothing,
   lower::Union{Real, AbstractVector{<:Real}}=-Inf, upper::Union{Real, AbstractVector{<:Real}}=Inf,
   rng::AbstractRNG=default_rng(), kwargs...) where {T<:AbstractFloat}
 
@@ -882,36 +926,40 @@ function LassoPath(
   all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
   X, Y = _design(X), _response(Y)
   w, o = _weights(T, weights, size(X, 1)), _offset(T, offset, size(X, 1))
-  m, gd, g, s = _pathProblem(X, Y, intercept, standardizeX, gram, w, o, _template(T, penalty, alpha), lower, upper)
-  _lassopath(m, gd, g, s, size(X, 2), λpath, options, size(X, 1), max_hat_s, intercept, screening, rng)
+  m, gd, g, s, method = _pathProblem(X, Y, intercept, standardizeX, gram, w, o, _template(T, penalty, alpha),
+                                     lower, upper, lla, options, rng)
+  _lassopath(m, gd, g, s, size(X, 2), λpath, options, size(X, 1), max_hat_s, intercept, screening, rng, method)
 end
 
-# the model (gd for the Gram form, see _lsmodel), the penalty at level one and
-# the column scales of a path: the ℓ1 norm with the loadings of standardizeX as
-# weights, or another penalty on the columns divided by their scales; either on
-# the box of the bounds lower and upper
+# the model (gd for the Gram form, see _lsmodel), the penalty at level one, the
+# column scales and the method of local linear approximation (nothing for the
+# exact steps, see _llamethod) of a path: the ℓ1 norm with the loadings of
+# standardizeX as weights, or another penalty on the columns divided by their
+# scales; either on the box of the bounds lower and upper
 function _pathProblem(X::AbstractMatrix{T}, Y, intercept::Bool, standardizeX::Bool, gram, w, o, template,
-                      lower, upper) where {T}
+                      lower, upper, lla, options::CDOptions, rng::AbstractRNG) where {T}
   p = size(X, 2)
   if _isl1(template)
+    lla === nothing || _llamethod(template, lla, nothing, options)     # throws: lla is for nonconvex penalties
     m, _, gd = _lsmodel(X, Y, intercept, _usegram(gram, X, true); w, o)
     ω = standardizeX ? _loadings(X, intercept, w) : ones(T, p)
-    return m, gd, _constrain(_l1penalty(template, one(T), ω), _box(T, lower, upper, p)), nothing
+    return m, gd, _constrain(_l1penalty(template, one(T), ω), _box(T, lower, upper, p)), nothing, nothing
   end
   s = standardizeX ? _scales(X, intercept, w) : nothing
   m, _, gd = _lsmodel(_scaleColumns(X, s), Y, intercept, _usegram(gram, X, true); w, o)
-  m, gd, _constrain(template, _box(T, lower, upper, p, s)), s
+  box = _box(T, lower, upper, p, s)
+  m, gd, _constrain(template, box), s, _llamethod(template, lla, box, options; rng)
 end
 
 # the path along λpath for the model m (gd for the Gram form, see _lsmodel), the
 # penalty g at level one and the column scales s, of n observations and p
 # coefficients
 function _lassopath(m, gd, g, s, p::Int, λpath::Vector{T}, options::CDOptions, n::Int, max_hat_s,
-                    intercept::Bool, screening::Bool, rng::AbstractRNG) where {T}
+                    intercept::Bool, screening::Bool, rng::AbstractRNG, lla::Union{Nothing, LLA} = nothing) where {T}
   x = SparseIterate(T, p)
-  options.warmStart || return _coldLassoPath(x, m, gd, g, s, λpath, options, max_hat_s, intercept, n; rng)
+  options.warmStart || return _coldLassoPath(x, m, gd, g, s, λpath, options, max_hat_s, intercept, n; rng, lla)
   β0path = T[]
-  path = solve_path(m, g, λpath, _solver(options; rng); x, screening, maxnnz = max_hat_s,
+  path = solve_path(m, g, λpath, lla === nothing ? _solver(options; rng) : lla; x, screening, maxnnz = max_hat_s,
                     callback = (k, λ, x, m) -> (push!(β0path, _intercept(m, x, gd)); false))
   βpath = s === nothing ? path.solutions : [_unscale(β, s) for β in path.solutions]
   LassoPath{T}(path.λ, βpath, β0path, path.passes, path.converged, path.kkt_checks, intercept, n, g, s)
@@ -920,15 +968,16 @@ end
 # the path with warmStart = false: each level solved from zero along its own
 # path of options.numSteps levels, without screening
 function _coldLassoPath(x::SparseIterate{T}, m, gd, g, s, λpath::Vector{T}, options::CDOptions, max_hat_s,
-                        intercept::Bool, n::Int; rng::AbstractRNG = default_rng()) where {T}
+                        intercept::Bool, n::Int; rng::AbstractRNG = default_rng(),
+                        lla::Union{Nothing, LLA} = nothing) where {T}
   βpath = SparseVector{T, Int}[]
   β0path, iterations, converged = T[], Int[], Bool[]
   for λ in λpath
-    r = _solveLevels!(x, m, _atlevel(g, λ), options; rng)
+    r = _solveLevels!(x, m, _atlevel(g, λ), options; rng, lla)
     push!(βpath, s === nothing ? _sparsevec(x) : _unscale(_sparsevec(x), s))
     push!(β0path, _intercept(m, x, gd))
     push!(iterations, r.passes)
-    push!(converged, r.converged)
+    push!(converged, _cdconverged(r))
     nnz(x) > max_hat_s && break
   end
   k = length(βpath)
@@ -950,6 +999,7 @@ function LassoPath(
   offset::Union{Nothing, AbstractVector{<:Real}}=nothing,
   alpha::Real=1,
   penalty::Union{Nothing, AbstractFunction}=nothing,
+  lla::Union{Nothing, LLA}=nothing,
   lower::Union{Real, AbstractVector{<:Real}}=-Inf,
   upper::Union{Real, AbstractVector{<:Real}}=Inf,
   rng::AbstractRNG=default_rng(),
@@ -961,10 +1011,11 @@ function LassoPath(
   X, Y = _design(X), _response(Y)
   p = size(X, 2)
   w, o = _weights(T, weights, size(X, 1)), _offset(T, offset, size(X, 1))
-  m, gd, g, s = _pathProblem(X, Y, intercept, standardizeX, gram, w, o, _template(T, penalty, alpha), lower, upper)
+  m, gd, g, s, method = _pathProblem(X, Y, intercept, standardizeX, gram, w, o, _template(T, penalty, alpha),
+                                     lower, upper, lla, options, rng)
   λmax = lambda_max(m, g, SparseIterate(T, p)) * (1 + sqrt(eps(T)))
   λpath = nλ == 1 ? [λmax] : [λmax * T(λminratio)^(T(k) / (nλ - 1)) for k in 0:nλ-1]
-  _lassopath(m, gd, g, s, p, λpath, options, size(X, 1), max_hat_s, intercept, screening, rng)
+  _lassopath(m, gd, g, s, p, λpath, options, size(X, 1), max_hat_s, intercept, screening, rng, method)
 end
 
 function LassoPath(
