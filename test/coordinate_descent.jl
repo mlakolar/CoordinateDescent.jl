@@ -307,11 +307,14 @@ end
   # a dimension that does not match the iterate
   @test_throws DimensionMismatch coordinateDescent!(SparseIterate(5), SeparableLoss(c[1:4]), NormL1(1.))
 
+  # a missing function of the interface is a MethodError, which lists the
+  # methods that exist
   struct IncompleteLoss <: CoordinateDifferentiableFunction end
-  @test_throws ErrorException CoordinateDescent.initialize!(IncompleteLoss(), SparseIterate(2))
-  @test_throws ErrorException CoordinateDescent.gradient(IncompleteLoss(), SparseIterate(2), 1)
-  @test_throws ErrorException CoordinateDescent.numCoordinates(IncompleteLoss())
-  @test_throws ErrorException CoordinateDescent.descendCoordinate!(IncompleteLoss(), ZeroFunction(), SparseIterate(2), 1)
+  @test_throws MethodError CoordinateDescent.initialize!(IncompleteLoss(), SparseIterate(2))
+  @test_throws MethodError CoordinateDescent.gradient(IncompleteLoss(), SparseIterate(2), 1)
+  @test_throws MethodError CoordinateDescent.numCoordinates(IncompleteLoss())
+  @test_throws MethodError CoordinateDescent.descendCoordinate!(IncompleteLoss(), ZeroFunction(), SparseIterate(2), 1)
+  @test_throws MethodError coordinateDescent!(SparseIterate(2), IncompleteLoss(), NormL1(1.))
 end
 
 # a user-defined penalty, the elastic net λ (α ‖x‖₁ + (1 - α) ‖x‖² / 2), through
@@ -344,9 +347,8 @@ ProximalBase.prox_entry(g::ElasticNetPenalty, v, i, γ) = shrink(v, γ * g.λ * 
   for f in (CDLeastSquaresLoss(Y, X), CDWeightedLSLoss(Y, X, ones(n)), CDQuadraticLoss(X'X / n, -X'Y / n)),
       warmStart in (true, false), randomize in (true, false)
     x = SparseIterate(sprand(p, 0.5))
-    info = CDInfo()
-    coordinateDescent!(x, f, g, CDOptions(;optTol=1e-12, warmStart=warmStart, randomize=randomize), info)
-    @test info.converged
+    r = solve!(x, f, g, CDOptions(;optTol=1e-12, warmStart=warmStart, randomize=randomize))
+    @test r.converged
     @test Vector(x) ≈ Vector(xa) atol=1e-8
     @test nnz(x) == nnz(xa)                  # no stored zeros
   end
@@ -370,8 +372,7 @@ end
 
   # a single pass is one sweep of coordinate updates
   x1 = SparseIterate(p)
-  info = CDInfo()
-  @test_logs (:warn, r"did not converge in maxpasses = 1 passes") coordinateDescent!(x1, f, g, CDOptions(;maxIter=1, randomize=false), info)
+  info = @test_logs (:warn, r"did not converge in maxpasses = 1 passes") solve!(x1, f, g, CDOptions(;maxIter=1, randomize=false))
   x2, r = zeros(p), copy(Y)
   for k=1:p
     a, b = sum(abs2, X[:, k]), dot(X[:, k], r)
@@ -380,7 +381,7 @@ end
     x2[k] = new
   end
   @test Vector(x1) ≈ x2
-  @test info.iterations == 1
+  @test info.passes == 1
   @test !info.converged
 end
 
@@ -397,12 +398,11 @@ end
       warmStart in (true, false)
     opt = CDOptions(;optTol=1e-10, warmStart=warmStart)
 
-    info = CDInfo()
     x = SparseIterate(p)
-    @test_logs coordinateDescent!(x, f, g, opt, info)
+    info = @test_logs solve!(x, f, g, opt)
     @test info.converged
-    @test info.iterations >= 2          # a pass that moves x and one that confirms it
-    @test info.maxChange < info.tolerance
+    @test info.passes >= 2          # a pass that moves x and one that confirms it
+    @test info.maxchange < info.tolerance
     @test info.tolerance ≈ 1e-10 * scale
     @test maximum(abs.(X'*(Y - X*x) / n)) ≈ 0.05 atol=1e-8
 
@@ -411,22 +411,33 @@ end
     # λmax, stops after one pass)
     opt = CDOptions(;maxIter=2, optTol=1e-10, warmStart=warmStart)
     x = SparseIterate(p)
-    @test_logs (:warn, r"did not converge") coordinateDescent!(x, f, g, opt, info)
+    info = @test_logs (:warn, r"did not converge") solve!(x, f, g, opt)
     @test !info.converged
     if warmStart
-      @test info.iterations == 2
+      @test info.passes == 2
     else
-      @test opt.numSteps < info.iterations <= 2 * (opt.numSteps + 1)
+      @test opt.numSteps < info.passes <= 2 * (opt.numSteps + 1)
     end
-    @test info.maxChange > info.tolerance
+    @test info.maxchange > info.tolerance
   end
 
-  # ZeroFunction, and an info object can be reused
-  info = CDInfo()
+  # ZeroFunction
   x = SparseIterate(p)
-  @test_logs coordinateDescent!(x, CDLeastSquaresLoss(Y, X), ZeroFunction(), CDOptions(;optTol=1e-10), info)
+  info = @test_logs solve!(x, CDLeastSquaresLoss(Y, X), ZeroFunction(), CDOptions(;optTol=1e-10))
   @test info.converged
   @test Vector(x) ≈ X \ Y atol=1e-6
+
+  # the deprecated CDInfo, which can be reused, receives the same information
+  f, opt = CDLeastSquaresLoss(Y, X), CDOptions(;optTol=1e-10, randomize=false)
+  x, info = SparseIterate(p), CDInfo()
+  @test_deprecated r"solve!" coordinateDescent!(x, f, g, opt, info)
+  r = solve!(SparseIterate(p), f, g, opt)
+  @test (info.iterations, info.converged, info.maxChange, info.tolerance) ==
+        (r.passes, r.converged, r.maxchange, r.tolerance)
+  x2 = SparseIterate(p)
+  @test_deprecated r"solve!" coordinateDescent!(x2, f, NormL1(10.0), opt, info)
+  @test info.converged && info.iterations == 1 && nnz(x2) == 0     # zero is found at once
+  @test Vector(x) == Vector(solve!(SparseIterate(p), f, g, opt).minimizer)
 end
 
 @testset "default options" begin
@@ -459,11 +470,10 @@ end
   @test lasso(X, 2.0^-10 .* Y, 2.0^-10 * λ, opt).iterations < lasso(X, 2.0^10 .* Y, 2.0^10 * λ, opt).iterations
 
   # a zero response falls back to the absolute rule, and zero is found at once
-  info = CDInfo()
   x = SparseIterate(p)
-  coordinateDescent!(x, CDLeastSquaresLoss(zeros(n), X), NormL1(0.1), CDOptions(), info)
+  info = solve!(x, CDLeastSquaresLoss(zeros(n), X), NormL1(0.1), CDOptions())
   @test info.converged
-  @test info.iterations == 1
+  @test info.passes == 1
   @test info.tolerance == CDOptions().optTol
   @test nnz(x) == 0
 end
@@ -496,8 +506,7 @@ end
 
   for warmStart in (true, false)
     x = SparseIterate(p)
-    info = CDInfo()
-    coordinateDescent!(x, f, NormL1(0.1, w), CDOptions(;optTol=1e-12, warmStart=warmStart), info)
+    info = solve!(x, f, NormL1(0.1, w), CDOptions(;optTol=1e-12, warmStart=warmStart))
     @test info.converged
     grad = X'*(Y - X*x) / n
     @test abs(grad[1]) < 1e-8                     # unpenalized
@@ -610,17 +619,17 @@ end
 
     # with and without the path from λmax, in both orders
     for warmStart in (true, false), randomize in (true, false)
-      x, info = AtomIterate(p, groups), CDInfo()
-      coordinateDescent!(x, CDLeastSquaresLoss(y, X), g, CDOptions(; optTol = 1e-10, warmStart, randomize), info)
+      x = AtomIterate(p, groups)
+      info = solve!(x, CDLeastSquaresLoss(y, X), g, CDOptions(; optTol = 1e-10, warmStart, randomize))
       @test info.converged
       @test active_groups(x) == nonzero_groups(Vector(x))     # no zero group stays active
       @test Vector(x) ≈ x_ref atol = 1e-7
     end
 
     # warm started from a solution, one full pass confirms it
-    x, info = AtomIterate(x_ref, groups), CDInfo()
-    coordinateDescent!(x, CDLeastSquaresLoss(y, X), g, opt, info)
-    @test info.iterations == 1
+    x = AtomIterate(x_ref, groups)
+    info = solve!(x, CDLeastSquaresLoss(y, X), g, opt)
+    @test info.passes == 1
     @test Vector(x) ≈ x_ref atol = 1e-8
   end
 
@@ -646,11 +655,11 @@ end
     singletons = [[i] for i in 1:p]
     for warmStart in (true, false)
       o = CDOptions(; optTol = 1e-10, warmStart, randomize = false)
-      xa, xs, ia, is = AtomIterate(p, singletons), SparseIterate(p), CDInfo(), CDInfo()
-      coordinateDescent!(xa, CDLeastSquaresLoss(y, X), GroupNormL2(λ, singletons, ones(p)), o, ia)
-      coordinateDescent!(xs, CDLeastSquaresLoss(y, X), NormL1(λ), o, is)
+      xa, xs = AtomIterate(p, singletons), SparseIterate(p)
+      ia = solve!(xa, CDLeastSquaresLoss(y, X), GroupNormL2(λ, singletons, ones(p)), o)
+      is = solve!(xs, CDLeastSquaresLoss(y, X), NormL1(λ), o)
       @test Vector(xa) ≈ Vector(xs) atol = 1e-12
-      @test ia.iterations == is.iterations
+      @test ia.passes == is.passes
     end
   end
 
@@ -747,8 +756,7 @@ end
   coordinateDescent!(xref, f, g, CDOptions(;order=:cyclic, optTol=1e-12))
   for order in (:random, :cyclic), warmStart in (true, false)
     x = SparseIterate(p)
-    info = CDInfo()
-    coordinateDescent!(x, f, g, CDOptions(;order, optTol=1e-12, warmStart), info)
+    info = solve!(x, f, g, CDOptions(;order, optTol=1e-12, warmStart))
     @test info.converged
     @test Vector(x) ≈ Vector(xref) atol=1e-8
   end
@@ -806,12 +814,11 @@ end
                     (CDQuadraticLoss(X'X/n, -X'Y/n), NormL1(λ), x -> sum(abs2, Y - X*x) / 2n + λ * norm(x, 1)),
                     (CDSqrtLassoLoss(Y, X), NormL1(λs), x -> norm(Y - X*x) + λs * norm(x, 1)),
                     (CDLeastSquaresLoss(Y, X), NormL1(λ, rand(p)), nothing))
-    x0, info0 = SparseIterate(p), CDInfo()
-    coordinateDescent!(x0, f, g, plain, info0)
-    x1, info1 = SparseIterate(p), CDInfo()
-    coordinateDescent!(x1, f, g, accelerated, info1)
+    x0, x1 = SparseIterate(p), SparseIterate(p)
+    info0 = solve!(x0, f, g, plain)
+    info1 = solve!(x1, f, g, accelerated)
     @test info1.converged
-    @test info1.iterations < info0.iterations / 1.5
+    @test info1.passes < info0.passes / 1.5
     @test Vector(x1) ≈ Vector(x0) atol=1e-6
     F === nothing || @test F(Vector(x1)) ≈ F(Vector(x0)) rtol=1e-10
   end
@@ -837,12 +844,11 @@ end
   end
 
   # a user-defined loss and penalty that define value
-  x0, info0 = SparseIterate(p), CDInfo()
-  coordinateDescent!(x0, f, ElasticNetPenalty(λ, 0.5), plain, info0)
-  x1, info1 = SparseIterate(p), CDInfo()
-  coordinateDescent!(x1, UserLS(Y, X), ElasticNetPenalty(λ, 0.5), accelerated, info1)
+  x0, x1 = SparseIterate(p), SparseIterate(p)
+  info0 = solve!(x0, f, ElasticNetPenalty(λ, 0.5), plain)
+  info1 = solve!(x1, UserLS(Y, X), ElasticNetPenalty(λ, 0.5), accelerated)
   @test info1.converged
-  @test info1.iterations < info0.iterations
+  @test info1.passes < info0.passes
   @test Vector(x1) ≈ Vector(x0) atol=1e-6
 
   # the groups of an AtomIterate, and a loss without a value, run without it
@@ -890,14 +896,13 @@ end
                  (CDSqrtLassoLoss(Y, X), NormL1(λs)),
                  (CDLeastSquaresLoss(Y, X), NormL1(λ, rand(p))),
                  (UserLS(Y, X), NormL1(λ)))
-    x0, info0 = SparseIterate(p), CDInfo()
-    coordinateDescent!(x0, f, g, plain, info0)
-    x1, info1 = SparseIterate(p), CDInfo()
-    coordinateDescent!(x1, f, g, mom, info1)
+    x0, x1 = SparseIterate(p), SparseIterate(p)
+    info0 = solve!(x0, f, g, plain)
+    info1 = solve!(x1, f, g, mom)
     @test info1.converged
     @test Vector(x1) ≈ Vector(x0) atol=1e-6
-    passes0 += info0.iterations
-    passes1 += info1.iterations
+    passes0 += info0.passes
+    passes1 += info1.passes
   end
   @test passes1 < passes0 / 1.3
 
@@ -927,7 +932,7 @@ end
 
   # by default it is used with a random order, a SparseIterate and a built-in
   # loss, and not otherwise: the same runs as momentum = true or false
-  passes(f, g, x, o; seed = 7) = (Random.seed!(seed); info = CDInfo(); coordinateDescent!(x, f, g, o, info); info.iterations)
+  passes(f, g, x, o; seed = 7) = (Random.seed!(seed); solve!(x, f, g, o).passes)
   auto = CDOptions(;optTol=1e-10)
   @test passes(f, NormL1(λ), SparseIterate(p), auto) == passes(f, NormL1(λ), SparseIterate(p), mom)
   @test passes(f, NormL1(λ), SparseIterate(p), auto) != passes(f, NormL1(λ), SparseIterate(p), plain)
