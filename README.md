@@ -81,6 +81,16 @@ coordinateDescent!(x, CDLeastSquaresLoss(y, X), g)
 [norm(x[G]) for G in groups]         # the first group is selected
 ```
 
+`groupLasso` and `GroupLassoPath` are the estimators, with an intercept and,
+by default, orthonormalized groups: the penalty `λ ∑ₖ wₖ ‖X̃_Gₖ βGₖ‖₂ / √n` on
+the fitted values of each group makes the estimate invariant to a change of
+basis within a group, as in R's grpreg, and the block steps exact:
+
+```julia
+sol = groupLasso(X, y, 0.1, groups)          # sol.x, sol.intercept, sol.activegroups
+path = GroupLassoPath(X, y, groups; nλ = 50) # λpath, βpath, β0path, activegroups
+```
+
 Coordinate descent stops when no coordinate changes by more than `optTol` in a
 pass, the change of coefficient `k` measured in units of `‖y‖ / ‖X[:, k]‖`, so
 the result does not depend on the units of the data (`CDOptions(; relativeTol =
@@ -123,7 +133,7 @@ each one prints its results:
 | [02_solver_options.jl](examples/02_solver_options.jl) | `CDOptions` and `CDInfo`: the tolerance and its units, the order of the coordinates, warm starts and the path from λmax, `maxIter`, Float32 |
 | [03_lasso_path.jl](examples/03_lasso_path.jl) | `LassoPath` and `refitLassoPath`: grids, early stopping, standardization, screening, cross-validation |
 | [04_sqrt_scaled_feasible.jl](examples/04_sqrt_scaled_feasible.jl) | penalties that do not need the noise level: `sqrtLasso`, `scaledLasso`, `feasibleLasso!` and `IterLassoOptions` |
-| [05_group_lasso.jl](examples/05_group_lasso.jl) | the group lasso: weights, unpenalized groups, the optimality conditions, choosing λ on a validation set |
+| [05_group_lasso.jl](examples/05_group_lasso.jl) | the group lasso: weights, unpenalized groups, the optimality conditions, choosing λ on a validation set, and the estimators `groupLasso` and `GroupLassoPath` with orthonormalized groups |
 | [06_losses.jl](examples/06_losses.jl) | `coordinateDescent!` with each loss: weighted least squares, a weighted bootstrap, a quadratic loss from `X'X` or from a covariance matrix |
 | [07_varying_coefficient.jl](examples/07_varying_coefficient.jl) | `locpoly` and `locpolyl1`: kernels, bandwidths, degrees, cross-validation, standard errors |
 | [08_custom_loss.jl](examples/08_custom_loss.jl) | a loss of your own: ℓ1-penalized logistic regression, checked against ProximalBase's `LogisticLoss` |
