@@ -277,15 +277,26 @@ function GLMLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, λpath::Vector
                       rng::AbstractRNG = default_rng(), kwargs...) where {T<:AbstractFloat}
   standardize_x, kwargs = _legacy_keyword(standardize_x, kwargs, Val(:standardizeX), Val(:standardize_x), true)
   standardize_x::Bool
+  all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
+  p = size(X, 2)
+  m, g, s = _glm_problem(X, y, loss, weights, offset, intercept, standardize_x, _template(T, penalty, alpha),
+                        lower, upper)
+  _glmlassopath(m, g, s, p, λpath, loss, options, size(X, 1), intercept;
+                screening, max_hat_s, devmax, newton_tol, newton_max_iter, rng, kwargs...)
+end
+
+# Both constructors solve the problem they prepared; the automatic grid also
+# uses this model to find λmax, without constructing and scaling it again.
+function _glmlassopath(m, g, s, p::Int, λpath::Vector{T}, loss, options::CDOptions, n::Int, intercept::Bool;
+                       screening::Bool = true, max_hat_s = Inf, devmax::Real = 0.999,
+                       newton_tol::Union{Nothing, Real} = nothing,
+                       newton_max_iter::Union{Nothing, Integer} = nothing,
+                       rng::AbstractRNG = default_rng(), kwargs...) where {T}
   newton_tol, kwargs = _legacy_keyword(newton_tol, kwargs, Val(:newtonTol), Val(:newton_tol), 1e-8)
   newton_tol::Real
   newton_max_iter, kwargs = _legacy_keyword(newton_max_iter, kwargs, Val(:newtonMaxIter), Val(:newton_max_iter), 100)
   newton_max_iter::Integer
   _check_keywords(CDOptions, (), kwargs)
-  all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
-  p = size(X, 2)
-  m, g, s = _glm_problem(X, y, loss, weights, offset, intercept, standardize_x, _template(T, penalty, alpha),
-                        lower, upper)
   D0 = ProximalSolvers.nulldeviance(m)
   β0path, devratio = T[], T[]
   record(k, λ, x, m) = (push!(β0path, ProximalSolvers.intercept(m, x));
@@ -294,7 +305,7 @@ function GLMLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, λpath::Vector
                     x = SparseIterate(T, p), screening, maxnnz = max_hat_s, devmax, callback = record)
   βpath = s === nothing ? path.solutions : [_unscale(β, s) for β in path.solutions]
   GLMLassoPath{T, typeof(loss)}(path.λ, βpath, β0path, devratio, path.passes, path.converged,
-                                path.kkt_checks, intercept, loss, D0, size(X, 1), g, s)
+                                path.kkt_checks, intercept, loss, D0, n, g, s)
 end
 
 function GLMLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T},
@@ -311,12 +322,11 @@ function GLMLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T},
   nλ >= 1 || throw(ArgumentError("nλ must be positive"))
   0 < λminratio <= 1 || throw(ArgumentError("λminratio must be in (0, 1]"))
   p = size(X, 2)
-  m, g, _ = _glm_problem(X, y, loss, weights, offset, intercept, standardize_x, _template(T, penalty, alpha),
+  m, g, s = _glm_problem(X, y, loss, weights, offset, intercept, standardize_x, _template(T, penalty, alpha),
                         lower, upper)
   λmax = lambda_max(m, g, SparseIterate(T, p)) * (1 + sqrt(eps(T)))
   λpath = nλ == 1 ? [λmax] : [λmax * T(λminratio)^(T(k) / (nλ - 1)) for k in 0:nλ-1]
-  GLMLassoPath(X, y, λpath, loss, options; intercept, standardize_x, weights, offset, alpha, penalty, lower, upper,
-               kwargs...)
+  _glmlassopath(m, g, s, p, λpath, loss, options, size(X, 1), intercept; kwargs...)
 end
 
 function GLMLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λpath::AbstractVector{<:Real},

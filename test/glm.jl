@@ -5,6 +5,15 @@ using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 logistic(z) = 1 / (1 + exp(-z))
 
+# A custom scalar loss whose curvature query counts model constructions.
+struct CountedLogistic <: ProximalBase.ScalarLoss
+  models::Base.RefValue{Int}
+end
+(::CountedLogistic)(η, y) = ProximalBase.Logistic()(η, y)
+ProximalBase.deriv(::CountedLogistic, η, y) = ProximalBase.deriv(ProximalBase.Logistic(), η, y)
+ProximalBase.deriv2(::CountedLogistic, η, y) = ProximalBase.deriv2(ProximalBase.Logistic(), η, y)
+ProximalBase.curvature(loss::CountedLogistic) = (loss.models[] += 1; 0.25)
+
 # max over j of the violation of the optimality conditions of the weighted ℓ1
 # penalty λ ∑ⱼ ωⱼ |βⱼ| for the gradient G of the smooth part
 function kkt(G, β, λ, ω)
@@ -128,6 +137,30 @@ end
     yp = Float64.(rand.(rng, [0:k for k in rand(rng, 0:4, n)]))
     pathp = GLMLassoPath(X, yp, range(0.2, 0.02; length = 5), ProximalBase.Poisson())
     @test length(pathp.λpath) == 5 && pathp.loss == ProximalBase.Poisson()
+  end
+
+  @testset "automatic grid reuses the GLM problem" begin
+    loss = CountedLogistic(Ref(0))
+    GLMLassoPath(X, y, loss; nλ = 3, devmax = 1)
+    @test loss.models[] == 1
+    # Reusing the model initialized by lambda_max must preserve the fit,
+    # including scales, weights, offsets, constraints and Newton options.
+    w, o = rand(rng, n) .+ 0.5, 0.1 .* randn(rng, n)
+    for loss in (ProximalBase.Logistic(), ProximalBase.Poisson()),
+        data in (X, sparse(X)), alpha in (1.0, 0.7), intercept in (true, false)
+      kw = (; weights = w, offset = o, alpha, intercept, lower = -2.0, upper = 2.0,
+              screening = false, devmax = 1, newton_tol = 1e-10, newton_max_iter = 80)
+      a = GLMLassoPath(data, y, loss; nλ = 5, λminratio = 0.1, rng = Xoshiro(17), kw...)
+      b = GLMLassoPath(data, y, a.λpath, loss; rng = Xoshiro(17), kw...)
+      @test all(a.converged) && all(b.converged)
+      @test coef(a) ≈ coef(b) atol = 1e-8
+      @test a.devratio ≈ b.devratio atol = 1e-10
+      @test a.nulldeviance ≈ b.nulldeviance
+      @test a.scales == b.scales
+    end
+    @test_throws ArgumentError GLMLassoPath(X, y; bogus = true)
+    @test_throws ArgumentError GLMLassoPath(X, y; nλ = 0)
+    @test_throws ArgumentError GLMLassoPath(X, y; λminratio = 0)
   end
 
   @testset "Huber, the squared loss, a constant column, integer data" begin

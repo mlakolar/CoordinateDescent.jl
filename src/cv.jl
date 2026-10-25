@@ -66,6 +66,10 @@ from `rng`, so that the result does not depend on the number of threads.
 Observation `weights` and an `offset` (see [`lasso`](@ref)) follow the
 observations into the folds. The fold errors are then the weighted mean squared
 errors of `y - offset`, and the folds are weighted by their sums of weights.
+With `gram = :auto`, the choice for the full data is used for every training
+fold, so that holding out observations does not switch a nearly square design
+from the Gram form to the residual form. `gram = true` or `false` selects the
+form explicitly for all fits.
 
 Returns a [`CVLassoPath`](@ref); `coef(cv)` and `predict(cv, X)` use the
 solution at `λ1se`, or at `λmin` with `λ = :λmin`.
@@ -76,19 +80,21 @@ function CVLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, options::CDOpti
                      λminratio::Real = (size(X, 1) < size(X, 2) ? 0.01 : 1e-4),
                      weights::Union{Nothing, AbstractVector{<:Real}} = nothing,
                      offset::Union{Nothing, AbstractVector{<:Real}} = nothing,
+                     gram::Union{Bool, Symbol} = :auto,
                      kwargs...) where {T<:AbstractFloat}
   n = size(X, 1)
   length(y) == n || throw(DimensionMismatch("X has $n rows and y has length $(length(y))"))
   fl, K = _foldlabels(rng, n, nfolds, folds)
   w, o = _weights(T, weights, n), _offset(T, offset, n)
+  usegram = _usegram(gram, X, true)
 
   seeds = rand(rng, UInt64, K + 1)
-  path = LassoPath(X, y, options; nλ, λminratio, rng = Xoshiro(seeds[end]), _wo(w, o)..., kwargs...)
+  path = LassoPath(X, y, options; nλ, λminratio, gram = usegram, rng = Xoshiro(seeds[end]), _wo(w, o)..., kwargs...)
   λs = path.λpath
   errs = fill(T(NaN), K, length(λs))
   function fold!(k)
     train, test = findall(!=(k), fl), findall(==(k), fl)
-    fp = LassoPath(X[train, :], y[train], λs, options; rng = Xoshiro(seeds[k]),
+    fp = LassoPath(X[train, :], y[train], λs, options; gram = usegram, rng = Xoshiro(seeds[k]),
                    _wo(_rows(w, train), _rows(o, train))..., kwargs...)
     Ŷ = predict(fp, X[test, :])
     for j in axes(Ŷ, 2)

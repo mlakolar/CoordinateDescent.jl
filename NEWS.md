@@ -1,5 +1,14 @@
 # Version 0.8.0
 
+## Performance
+
+`CVLassoPath` chooses the Gram form once on the full data and keeps that choice
+for the training folds, avoiding a switch to residual updates when holding out
+observations makes a square design wide. The folds still use the full-data
+penalty grid. `GLMLassoPath` reuses its prepared model when it generates that
+grid, instead of constructing the problem twice. GLM fits continue to use
+proximal Newton.
+
 ## Breaking changes
 
 The public API follows Julia's naming convention: types use `UpperCamelCase`;
