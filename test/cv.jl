@@ -51,6 +51,25 @@ using LinearAlgebra, Random, SparseArrays, Statistics, Test
     @test CVLassoPath(round.(Int, 10X), round.(Int, 10y); nfolds = 3, nλ = 5, rng = Xoshiro(5)).λpath isa Vector{Float64}
   end
 
+  @testset "Gram form across the n = p boundary" begin
+    # The training folds have n < p. Automatic CV must still use the full
+    # data's Gram choice: with the same seeds it agrees exactly with true.
+    Xq = X[1:40, :]
+    yq = y[1:40]
+    folds = repeat(1:5, outer = 8)
+    for data in (Xq, sparse(Xq)), gram in (:auto, true, false)
+      expected = gram === :auto ? !issparse(data) : gram
+      cv = CVLassoPath(data, yq; folds, nλ = 12, λminratio = 0.01,
+                       intercept = true, gram, rng = Xoshiro(7), threads = false)
+      ref = CVLassoPath(data, yq; folds, nλ = 12, λminratio = 0.01,
+                        intercept = true, gram = expected, rng = Xoshiro(7))
+      @test cv.λpath == ref.λpath
+      @test cv.cvm == ref.cvm && cv.cvse == ref.cvse
+      @test cv.λmin == ref.λmin && cv.λ1se == ref.λ1se
+    end
+    @test_throws ArgumentError CVLassoPath(Xq, yq; gram = :invalid)
+  end
+
   @testset "information criteria" begin
     path = LassoPath(X, y; nλ = 25, intercept = true)
     Ŷ = predict(path, X)

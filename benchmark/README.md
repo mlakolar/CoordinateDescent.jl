@@ -9,6 +9,7 @@ julia --project=benchmark benchmark/cd_bench.jl         # a few minutes
 julia --project=benchmark benchmark/order_anderson_bench.jl    # about 4 minutes
 julia --project=benchmark benchmark/scaledlasso_bench.jl       # about 10 minutes
 julia --project=benchmark benchmark/gram_bench.jl              # gram = true against false
+julia --project=benchmark benchmark/path_setup_bench.jl        # CV and GLM setup (#73)
 ```
 
 The checkout is found through `[sources]` in `Project.toml`, which Julia 1.11
