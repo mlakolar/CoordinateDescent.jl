@@ -972,6 +972,7 @@ function _lassopath(m, gd, g, s, p::Int, λpath::Vector{T}, options::CDOptions, 
   options.warm_start || return _cold_lasso_path(x, m, gd, g, s, λpath, options, max_hat_s, intercept, n; rng, lla)
   β0path = T[]
   path = solve_path(m, g, λpath, lla === nothing ? _solver(options; rng) : lla; x, screening, maxnnz = max_hat_s,
+                    (lla === nothing ? _gapkw(options) : (;))...,
                     callback = (k, λ, x, m) -> (push!(β0path, _intercept(m, x, gd)); false))
   βpath = s === nothing ? path.solutions : [_unscale(β, s) for β in path.solutions]
   LassoPath{T}(path.λ, βpath, β0path, path.passes, path.converged, path.kkt_checks, intercept, n, g, s)

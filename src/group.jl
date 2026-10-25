@@ -219,7 +219,7 @@ function GroupLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, λpath::Vect
   _check_finite(X, "X"); _check_finite(y, "y")
   p = size(X, 2)
   m, g1, x, d, gs, w = _group_problem(X, y, groups, intercept, standardize, groupweights)
-  path = solve_path(m, g1, λpath, _solver(options); x, screening, maxnnz = max_groups)
+  path = solve_path(m, g1, λpath, _solver(options); x, screening, maxnnz = max_groups, _gapkw(options)...)
   βpath = [_coefficients(d, θ, p) for θ in path.solutions]
   GroupLassoPath{T}(path.λ, βpath, [_group_intercept(X, y, β, intercept) for β in βpath],
                     [_activegroups(gs, β) for β in βpath], path.passes, path.converged, path.kkt_checks,
