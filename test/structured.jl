@@ -375,4 +375,59 @@ end
   @test fused_cv.cvse ≈ explicit_fused.cvse
 end
 
+@testset "component degrees of freedom against dense null spaces" begin
+  HDM = HighDimensionalModels
+  dense_df(A, D, b, tol) = begin
+    inactive = findall(v -> abs(v) <= tol, D*b)
+    N = isempty(inactive) ? Matrix{eltype(b)}(I,length(b),length(b)) : nullspace(Matrix(D[inactive,:]))
+    size(N,2) == 0 ? 0 : rank(A*N)
+  end
+  rng = Xoshiro(99026)
+  for T in (Float32,Float64), rep in 1:40
+    p = rand(rng,3:22)
+    edges = [(rand(rng,1:p),rand(rng,1:p)) for _ in 1:2p]
+    filter!(e -> e[1] != e[2], edges)
+    D = T.(graph_difference(p,edges;weights=.25 .+ rand(rng,length(edges))))
+    pins = spdiagm(0 => T.(rand(rng,p) .> .6))
+    rep % 2 == 0 && (D = [D;pins])
+    b = T.(rand(rng,(-1.,0.,1.),p))
+    A = T.(randn(rng,p+5,p))
+    rep % 3 == 0 && (A[:,end] .= A[:,1])
+    rep % 4 == 0 && (A = A[1:div(p,2),:])
+    rep % 5 == 0 && (A = sparse(A))
+    workspace = HDM._StructuredDFWorkspace(A,D)
+    for tol in (T(0),T(.01),T(10))
+      @test HDM._structured_df(A,D,b,tol) == dense_df(A,D,b,tol)
+      @test HDM._structured_df(A,D,b,tol;workspace) == dense_df(A,D,b,tol)
+      @test HDM._structured_df(A,D,copy(b),tol;workspace) == dense_df(A,D,b,tol)
+    end
+  end
+  # Independent pin/cycle/repeated-edge fixture, cancellation, and rank guards.
+  D = [graph_difference(5,[(1,2),(2,3),(3,1),(1,2),(4,5)];weights=[1.,2,3,1,4]); sparse([1],[4],[2.],1,5)]
+  for A in (randn(rng,9,5),randn(rng,2,5),zeros(3,5)), b in (zeros(5),ones(5),collect(1.:5))
+    @test HDM._structured_df(A,D,b,1e-4) == dense_df(A,D,b,1e-4)
+  end
+  A = [1. -1.;2. -2.]
+  D = difference_matrix(2)
+  @test HDM._structured_df(A,D,ones(2),0.) == dense_df(A,D,ones(2),0.)
+  D = graph_difference(3,[(1,2),(2,3)];weights=[1.,1e-20])
+  @test HDM._incidence_components(sparse(D'),[1,2];check_rank=true) === nothing
+  @test HDM._structured_df(Matrix{Float64}(I,3,3),D,zeros(3),0.) == dense_df(Matrix{Float64}(I,3,3),D,zeros(3),0.)
+  # Generic weighted contrasts and trend constraints keep the SVD fallback.
+  for D in (sparse([1. 2. 0.;0. 1. -1.]),difference_matrix(8,2))
+    A,b = randn(rng,12,size(D,2)),zeros(size(D,2))
+    @test HDM._structured_df(A,D,b,0.) == dense_df(A,D,b,0.)
+  end
+  X,y = randn(rng,60,10),randn(rng,60)
+  for ratio in (0.,.5,1.), intercept in (false,true)
+    path = fused_lasso_path(X,y,[.5,.1,.01,0.];l1_ratio=ratio,intercept)
+    Ac = intercept ? X .- mean(X;dims=1) : X
+    for (lambda,fit) in zip(path.λpath,path.solutions)
+      D = ratio < 1 && lambda > 0 ? difference_matrix(10) : spzeros(0,10)
+      ratio > 0 && lambda > 0 && (D = [D;spdiagm(0=>ones(10))])
+      @test dof(fit) == dense_df(Ac,D,fit.x,1e-4) + intercept
+    end
+  end
+end
+
 end

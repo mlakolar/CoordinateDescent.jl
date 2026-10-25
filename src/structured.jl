@@ -166,8 +166,8 @@ end
 # For a graph, nullity of inactive rows is the number of connected components.
 # Single-coordinate constraints (the l1 part of sparse fusion) pin components
 # to zero. This also handles redundant edges without dense rank computations.
-function _incidence_df(D, inactive)
-  p = size(D, 2)
+function _incidence_components(R::SparseMatrixCSC, inactive; check_rank = false)
+  p = size(R, 1)
   parents = collect(1:p)
   function root(i)
     while parents[i] != i
@@ -177,14 +177,17 @@ function _incidence_df(D, inactive)
     i
   end
   pins = Int[]
-  R = sparse(transpose(D))
+  T = typeof(float(real(zero(eltype(R)))))
+  smallest, frobenius = T(Inf), zero(T)
   for j in inactive
     nz = nzrange(R, j)
     countnz, i1, i2 = 0, 0, 0
-    v1, v2 = zero(eltype(D)), zero(eltype(D))
+    v1, v2 = zero(eltype(R)), zero(eltype(R))
     for i in nz
       v = nonzeros(R)[i]
       iszero(v) && continue
+      smallest = min(smallest, abs(v))
+      frobenius = hypot(frobenius, v)
       countnz += 1
       if countnz == 1
         i1, v1 = rowvals(R)[i], v
@@ -206,10 +209,58 @@ function _incidence_df(D, inactive)
   for i in pins
     pinned[root(i)] = true
   end
-  count(i -> parents[i] == i && !pinned[i], 1:p)
+  # A weighted incidence matrix (including pinned vertices) has nonzero
+  # singular values bounded below by min_weight/(p+1). Use this conservative
+  # bound to retain the dense SVD convention when numerical rank is ambiguous.
+  if check_rank && smallest / (p + 1) <=
+      16max(length(inactive), p) * eps(real(float(one(eltype(R))))) * frobenius
+    return nothing
+  end
+  labels, counts = zeros(Int, p), Int[]
+  for i in 1:p
+    r = root(i)
+    pinned[r] && continue
+    if labels[r] == 0
+      push!(counts, 0)
+      labels[r] = length(counts)
+    end
+    labels[i] = labels[r]
+    counts[labels[i]] += 1
+  end
+  labels, counts
 end
 
-function _structured_df(A, D, β, tol; trend_order = nothing)
+function _incidence_df(D, inactive)
+  components = _incidence_components(sparse(transpose(D)), inactive)
+  components === nothing ? nothing : length(components[2])
+end
+
+# The cache belongs to one path with a fixed centered design, penalty and
+# df_tol. Keep only the last pattern: storage is O(rows(D)+nnz(D)), independent
+# of path length. There is no shared/global state or caller-owned buffer.
+mutable struct _StructuredDFWorkspace{R}
+  rows::R
+  inactive::Vector{Int}
+  value::Int
+  valid::Bool
+  design_rank::Int
+  full_column_rank::Bool
+end
+
+function _StructuredDFWorkspace(A, D)
+  p = size(A, 2)
+  if A isa _SignalDesign
+    design_rank, full_column_rank = p, true
+  else
+    s = svdvals(Matrix(A))
+    threshold = isempty(s) ? zero(eltype(A)) : max(size(A)...) * eps(eltype(s)) * first(s)
+    design_rank = count(>(threshold), s)
+    full_column_rank = length(s) == p && last(s) > 16threshold
+  end
+  _StructuredDFWorkspace(sparse(transpose(D)), Int[], 0, false, design_rank, full_column_rank)
+end
+
+function _structured_df(A, D, β, tol; trend_order = nothing, workspace = nothing)
   δ = D * β
   inactive = findall(v -> abs(v) <= tol, δ)
   if A isa _SignalDesign && trend_order !== nothing
@@ -219,10 +270,46 @@ function _structured_df(A, D, β, tol; trend_order = nothing)
     d = _incidence_df(D, inactive)
     d === nothing || return d
   end
+  if workspace !== nothing && workspace.valid && inactive == workspace.inactive
+    return workspace.value
+  end
+  df = _structured_df_rank(A, D, β, inactive, workspace)
+  if workspace !== nothing
+    resize!(workspace.inactive, length(inactive))
+    copyto!(workspace.inactive, inactive)
+    workspace.value, workspace.valid = df, true
+  end
+  df
+end
+
+function _structured_df_rank(A, D, β, inactive, workspace)
+  isempty(inactive) && return workspace === nothing ? rank(Matrix(A)) : workspace.design_rank
+  R = workspace === nothing ? sparse(transpose(D)) : workspace.rows
+  components = _incidence_components(R, inactive; check_rank = true)
+  if components !== nothing
+    labels, counts = components
+    k = length(counts)
+    k == 0 && return 0
+    workspace !== nothing && workspace.full_column_rank && return k
+    # Unit-length component columns are orthonormal, just as the SVD basis
+    # below. Normalization preserves rank's relative singular-value tolerance.
+    rows = findall(!iszero, labels)
+    values = [inv(sqrt(eltype(β)(counts[labels[i]]))) for i in rows]
+    C = sparse(rows, labels[rows], values, length(β), k)
+    AC = Matrix(A * C)
+    s = svdvals(AC)
+    threshold = max(size(AC)...) * eps(eltype(s)) * first(s)
+    # Cancellation or a singular value close to the rank threshold can make
+    # the two orthonormal bases disagree numerically. Preserve the old dense
+    # calculation in those cases, including a design annihilating a component.
+    ambiguous = first(s) <= 16max(size(A)...) * eps(eltype(s)) * norm(A) ||
+      any(v -> threshold / 16 <= v <= 16threshold, s)
+    ambiguous || return count(>(threshold), s)
+  end
   # rank(X N), N spanning null(D_inactive), remains valid for a rank-deficient
   # design. No ridge is silently added to change the estimator.
-  N = isempty(inactive) ? Matrix{eltype(β)}(I, length(β), length(β)) :
-    nullspace(Matrix(D[inactive, :]))
+  N = nullspace(Matrix(D[inactive, :]))
+  workspace !== nothing && workspace.full_column_rank && return size(N, 2)
   size(N, 2) == 0 ? 0 : rank(_structured_product(A, N))
 end
 
@@ -458,7 +545,8 @@ function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::
                      abstol::Real = _structured_tolerances(X, y, :fused).abstol,
                      reltol::Real = _structured_tolerances(X, y, :fused).reltol,
                      df_tol::Real = 1e-4,
-                     _start = nothing, _data = nothing, _gram = nothing, _xy = nothing)
+                     _start = nothing, _data = nothing, _gram = nothing, _xy = nothing,
+                     _df_workspace = nothing, _df_constraints = nothing)
   _structured_lambda(λ1); _structured_lambda(λ2)
   _structured_options(max_iter, abstol, reltol, df_tol)
   A, b, xm, ym = _data === nothing ? _structured_data(X, y, intercept) : _data
@@ -561,9 +649,16 @@ function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::
       end
     end
   else
-    constraints = λ2 > 0 && p > 1 ? difference_matrix(p) : spzeros(T, 0, p)
-    λ1 > 0 && (constraints = [constraints; spdiagm(0 => ones(T, p))])
-    df = _structured_df(A, constraints, β, df_tol)
+    if iszero(λ1) && iszero(λ2)
+      df = _df_workspace === nothing ? rank(A) : _df_workspace.design_rank
+    else
+      constraints = _df_constraints
+      if constraints === nothing
+        constraints = λ2 > 0 && p > 1 ? difference_matrix(p) : spzeros(T, 0, p)
+        λ1 > 0 && (constraints = [constraints; spdiagm(0 => ones(T, p))])
+      end
+      df = _structured_df(A, constraints, β, df_tol; workspace = _df_workspace)
+    end
   end
   _structured_finish(A, b, xm, ym, β, intercept, g(β), it, ok, 0, dr, df)
 end
@@ -691,6 +786,7 @@ function _admm_path(X, y, D, K, levels; family = :generalized, trend_order = not
   gram, xy = _structured_gram(A), _structured_tproduct(A, b)
   curvature = sum(diag(gram)) / size(A, 2)
   solutions = StructuredLassoSolution{T}[]
+  df_workspace = A isa _SignalDesign ? nothing : _StructuredDFWorkspace(A, M)
   state, fixed_factor, last_rho = nothing, nothing, nothing
   bandwidth = A isa _SignalDesign ? trend_order : nothing
   gap_tol = A isa _SignalDesign{Float64} && trend_order == 1 && reltol > 0 ? T(3reltol / 10) : nothing
@@ -715,7 +811,7 @@ function _admm_path(X, y, D, K, levels; family = :generalized, trend_order = not
     g = trend_order === nothing ? NormL1(T(n*λ)) : TotalVariation1D(T(n*λ))
     β, it, ok, pr, dr, state = _split_fit(A, b, K, g, ρ;
       max_iter, abstol, reltol, start = state, gram, xy, factor = fixed_factor, relative_gap = gap_tol)
-    df = _structured_df(A, M, β, df_tol; trend_order)
+    df = _structured_df(A, M, β, df_tol; trend_order, workspace = df_workspace)
     push!(solutions, _structured_finish(A, b, xm, ym, β, intercept,
       λ * sum(abs, M * β), it, ok, pr, dr, df))
   end
@@ -754,10 +850,17 @@ function fused_lasso_path(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, 
     end
   end
   fits = StructuredLassoSolution{T}[]
+  df_constraints, df_workspace = nothing, nothing
+  if !(A isa _SignalDesign)
+    df_constraints = l1_ratio < 1 && p > 1 ? difference_matrix(p) : spzeros(T, 0, p)
+    l1_ratio > 0 && (df_constraints = [df_constraints; spdiagm(0 => ones(T, p))])
+    df_workspace = _StructuredDFWorkspace(A, df_constraints)
+  end
   start = nothing
   for λ in λs
     s = fused_lasso(X, y, l1_ratio * λ, (1-l1_ratio) * λ;
-      _start = start, _data = data, _gram = gram, _xy = xy, kwargs...)
+      _start = start, _data = data, _gram = gram, _xy = xy,
+      _df_workspace = df_workspace, _df_constraints = df_constraints, kwargs...)
     push!(fits, s)
     start = s.x
   end
