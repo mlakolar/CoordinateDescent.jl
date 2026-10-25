@@ -41,6 +41,24 @@ end
   @test_throws ArgumentError graph_difference(3, [(1,2)]; weights=[-1])
 end
 
+@testset "banded signal normal equations" begin
+  rng = Xoshiro(830)
+  for T in (Float32, Float64), order in 1:3, irregular in (false, true), rho in (T(.1), T(10))
+    p = 31
+    x = irregular ? cumsum(T.(.5 .+ rand(rng, p))) : nothing
+    K = difference_matrix(p, order; x)
+    gram = Diagonal(ones(T, p))
+    F = CoordinateDescent._split_factor(gram, K, rho; bandwidth=order)
+    H = Matrix(gram) + rho * Matrix(K)' * Matrix(K)
+    b, answer = T.(randn(rng, p)), zeros(T, p)
+    original = copy(b)
+    CoordinateDescent._structured_solve!(answer, F, b)
+    @test H * answer ≈ b rtol=200eps(T)
+    @test answer ≈ H \ b rtol=200eps(T)
+    @test b == original
+  end
+end
+
 @testset "fused regression and signal fits" begin
   rng = Xoshiro(80)
   X, y = randn(rng, 35, 4), randn(rng, 35)
@@ -75,6 +93,13 @@ end
   @test shifted.x ≈ centered.x atol=1e-7
   @test mean(residuals(shifted)) ≈ 0 atol=1e-12
   @test length(coef(shifted)) == 5
+  # Acceleration must retain the same optimum on a poorly conditioned design.
+  correlated = copy(X)
+  correlated[:,2] .= X[:,1] .+ .02 .* X[:,2]
+  exact = dual_reference(correlated, y, [.5Matrix{Float64}(I,4,4); Matrix(difference_matrix(4))], .06)
+  fast = fused_lasso(correlated, y, .03, .06; abstol=1e-10, reltol=1e-9)
+  @test fast.converged
+  @test fast.x ≈ exact atol=1e-7
 end
 
 @testset "generalized lasso, graphs, paths and df" begin

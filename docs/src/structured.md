@@ -19,8 +19,8 @@ sol = generalized_lasso(X, y, D, 0.1)
 ```
 
 `fused_lasso` adds both `λ1*sum(abs, beta)` and
-`λ2*sum(abs, diff(beta))`. Regression uses proximal gradient with
-backtracking and the exact fused-lasso proximal operator of ProximalBase.
+`λ2*sum(abs, diff(beta))`. Regression uses accelerated proximal gradient with
+backtracking, gradient restart and the exact fused-lasso proximal operator of ProximalBase.
 A signal fit, `fused_lasso(y, λ1, λ2)`, is one proximal step at step size `n`.
 
 `generalized_lasso` uses the ADMM split `z = D*beta`. It factors
@@ -52,7 +52,9 @@ For positive order, the specialized ADMM of
 divided differences, then applies exact TV denoising at each iteration.
 The signal solver stores sparse banded matrices and vectors, with linear
 storage in signal length at fixed order. Signal fits do not allocate a dense
-identity. The default augmented parameter follows the input-spacing rule;
+identity. Orders one through three use a compact banded Cholesky factor and
+in-place triangular solves; other systems use the general factorization.
+The default augmented parameter follows the input-spacing rule;
 `rho` overrides it on the unnormalized-loss scale. Both ADMM residual tests
 must pass before `converged` becomes true. Always inspect this field when
 changing tolerances or iteration limits.
@@ -74,8 +76,9 @@ coef(cv; λ=:λmin), cv.λ1se
 
 Levels must be strictly decreasing, finite and nonnegative. These are fits on
 a supplied grid. They do not calculate all homotopy knots, and `coef(path, λ)`
-requires a fitted grid level. ADMM warm starts primal and dual variables;
-setting a common `rho` also reuses the factorization. Fused paths use
+requires a fitted grid level. ADMM warm starts primal and dual variables and
+reuses the factorization whenever consecutive levels have the same `rho`,
+including the automatically selected value. Fused paths use
 `λ1 = l1_ratio*λ` and `λ2 = (1-l1_ratio)*λ`.
 
 Degrees of freedom use the generalized-lasso formula

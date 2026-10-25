@@ -215,17 +215,82 @@ end
 
 # The standard D beta = z split, or the specialized trend-filtering split
 # K beta = z with TV(z). Factors are reused by a path at a fixed rho.
-function _split_factor(gram, K, ρ)
+# Signal trend systems have at most three subdiagonals for the usual orders.
+# Store their Cholesky factor by subdiagonal so repeated solves need no sparse
+# solver workspace or conversion of a CHOLMOD-owned solution vector.
+struct _StructuredBandFactor{T}
+  lower::Matrix{T}
+end
+
+function _structured_band_factor(H, width)
+  T, n = eltype(H), size(H, 1)
+  L = zeros(T, width + 1, n)
+  for j in 1:n, idx in nzrange(H, j)
+    i = rowvals(H)[idx]
+    j <= i <= min(n, j + width) && (L[i-j+1, j] = nonzeros(H)[idx])
+  end
+  for j in 1:n
+    d = L[1, j]
+    for k in max(1, j-width):j-1
+      d -= abs2(L[j-k+1, k])
+    end
+    isfinite(d) && d > 0 || throw(ArgumentError("trend-filtering normal equations must be positive definite."))
+    L[1, j] = sqrt(d)
+    for i in j+1:min(n, j+width)
+      v = L[i-j+1, j]
+      for k in max(1, i-width):j-1
+        v -= L[i-k+1, k] * L[j-k+1, k]
+      end
+      L[i-j+1, j] = v / L[1, j]
+    end
+  end
+  _StructuredBandFactor(L)
+end
+
+function _structured_solve!(x, F::_StructuredBandFactor, b)
+  L = F.lower
+  width, n = size(L, 1) - 1, length(x)
+  copyto!(x, b)
+  @inbounds for j in 1:n
+    x[j] /= L[1, j]
+    for i in j+1:min(n, j+width)
+      x[i] -= L[i-j+1, j] * x[j]
+    end
+  end
+  @inbounds for j in n:-1:1
+    for i in j+1:min(n, j+width)
+      x[j] -= L[i-j+1, j] * x[i]
+    end
+    x[j] /= L[1, j]
+  end
+  x
+end
+
+function _structured_solve!(x, F, b)
+  ldiv!(x, F, b)
+  x
+end
+
+# The generic three-argument ldiv! is applicable on Julia 1.10 even though its
+# two-argument CHOLMOD implementation is missing. Use the compatible solve for
+# general sparse systems; signal trend systems use the banded method above.
+_structured_solve!(x, F::SparseArrays.CHOLMOD.Factor, b) = copyto!(x, F \ b)
+
+function _split_factor(gram, K, ρ; bandwidth = nothing)
   H = gram + ρ * (transpose(K) * K)
+  if bandwidth !== nothing && 1 <= bandwidth <= 3 && gram isa Diagonal
+    return _structured_band_factor(sparse(H), bandwidth)
+  end
   F = cholesky(Symmetric(H); check = false)
   issuccess(F) || throw(ArgumentError("the stacked design [X; D] must have full column rank for ADMM."))
   F
 end
 
 function _split_fit(A, b, K, g, ρ; max_iter, abstol, reltol, start = nothing,
-                    gram = _structured_gram(A), xy = _structured_tproduct(A, b), factor = nothing)
+                    gram = _structured_gram(A), xy = _structured_tproduct(A, b), factor = nothing,
+                    bandwidth = nothing)
   T, p, m = eltype(b), size(A, 2), size(K, 1)
-  F = factor === nothing ? _split_factor(gram, K, ρ) : factor
+  F = factor === nothing ? _split_factor(gram, K, ρ; bandwidth) : factor
   β = start === nothing ? zeros(T, p) : copy(start.β)
   z = start === nothing ? K * β : copy(start.z)
   u = start === nothing ? zeros(T, m) : (start.ρ / ρ) .* start.u
@@ -236,7 +301,7 @@ function _split_fit(A, b, K, g, ρ; max_iter, abstol, reltol, start = nothing,
     @. v = z - u
     mul!(rhs, transpose(K), v)
     @. rhs = xy + ρ * rhs
-    copyto!(β, F \ rhs)
+    _structured_solve!(β, F, rhs)
     mul!(kb, K, β)
     copyto!(zold, z)
     @. v = kb + u
@@ -310,11 +375,11 @@ generalized_lasso(y::AbstractVector{<:Real}, D::AbstractMatrix{<:Real}, λ::Real
     fused_lasso(y, λ1, λ2; kwargs...)
 
 Minimize `norm(y - intercept - X*beta)^2/(2n) + λ1*norm(beta,1) +
-λ2*sum(abs, diff(beta))`. Regression uses proximal gradient with backtracking
+λ2*sum(abs, diff(beta))`. Regression uses accelerated proximal gradient with backtracking
 and ProximalBase's exact sparse fused-lasso proximal operator. The signal form
 is a single proximal step. Columns retain their original scales and order.
 The stopping test is the proximal-gradient residual in coefficient units,
-`norm(beta - prox(beta - step*gradient))/step`, against
+`norm(v - prox(v - step*gradient))/step` at the extrapolated iterate `v`, against
 `sqrt(p)*abstol + reltol*max(norm(X'y/n), 1)`. `dual_residual` reports it.
 """
 function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::Real, λ2::Real;
@@ -332,31 +397,50 @@ function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::
     prox!(β, g, b, T(n))
     it, ok, dr = 1, true, zero(T)
   else
-    # The Frobenius bound is safe for sparse and wide designs. Backtracking
-    # doubles the trial step on every pass so this bound is not a speed limit.
+    # Estimate the smooth curvature with a few power iterations; backtracking
+    # checks every accepted step, including designs with a missed eigenspace.
     L = sum(abs2, A) / n
-    step = L == 0 ? one(T) : inv(T(L))
-    grad, candidate, v = zeros(T, p), zeros(T, p), zeros(T, p)
+    grad, candidate, v = zeros(T, p), zeros(T, p), fill(inv(sqrt(T(p))), p)
     r, rn = zeros(T, n), zeros(T, n)
+    if L > 0
+      for _ in 1:8
+        mul!(r, A, v)
+        mul!(grad, transpose(A), r)
+        magnitude = norm(grad)
+        magnitude == 0 && break
+        L = dot(v, grad) / n
+        @. v = grad / magnitude
+      end
+    end
+    step = L <= 0 ? one(T) : inv(T(L))
+    extrapolated, delta = copy(β), zeros(T, p)
+    momentum = one(T)
     threshold = sqrt(p) * abstol + reltol * max(norm(transpose(A) * b) / n, 1)
     for iter in 1:max_iter
-      mul!(r, A, β); r .-= b
+      mul!(r, A, extrapolated); r .-= b
       mul!(grad, transpose(A), r); grad ./= n
-      step *= 2
       for backtrack in 1:100
-        @. v = β - step * grad
+        @. v = extrapolated - step * grad
         prox!(candidate, g, v, step)
-        delta = candidate - β
+        @. v = candidate - extrapolated
         # For a quadratic loss this is the majorization test exactly, without
         # subtracting two almost equal objective values near convergence.
-        mul!(rn, A, delta)
-        if sum(abs2, rn) / n <= sum(abs2, delta) / step
+        mul!(rn, A, v)
+        if sum(abs2, rn) / n <= sum(abs2, v) / step
           break
         end
         backtrack == 100 && error("proximal-gradient backtracking failed.")
         step /= 2
       end
-      dr = norm(candidate - β) / step
+      dr = norm(v) / step
+      @. delta = candidate - β
+      # Gradient restart removes momentum when extrapolation turns uphill.
+      next_momentum = dot(v, delta) < 0 ? one(T) : (one(T) + sqrt(one(T) + 4momentum^2)) / 2
+      @. extrapolated = candidate + ((momentum - 1) / next_momentum) * delta
+      if next_momentum == 1
+        copyto!(extrapolated, candidate)
+      end
+      momentum = next_momentum
       copyto!(β, candidate)
       it = iter
       if dr <= threshold
@@ -429,7 +513,7 @@ function trend_filter(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::
   isfinite(ρ) && ρ > 0 || throw(ArgumentError("rho must be positive and finite."))
   K = convert(SparseMatrixCSC{T, Int}, K)
   β, it, ok, pr, dr, _ = _split_fit(A, b, K, TotalVariation1D(T(length(b) * λ)), ρ;
-                                    max_iter, abstol, reltol)
+                                    max_iter, abstol, reltol, bandwidth = A isa _SignalDesign ? order : nothing)
   df = _structured_df(A, D, β, df_tol; trend_order = order)
   _structured_finish(A, b, xm, ym, β, intercept, λ * sum(abs, D * β), it, ok, pr, dr, df)
 end
@@ -454,7 +538,8 @@ StatsAPI.deviance(s::StructuredLassoSolution) = sum(abs2, s.residuals)
 
 Generalized-lasso fits at the supplied decreasing nonnegative penalty levels.
 ADMM warm starts its primal and scaled dual variables and reuses the normal
-equations. With a fixed `rho`, it also reuses the factorization. The keywords
+equations. Consecutive fits with the same `rho` also reuse the factorization,
+including an automatically chosen value. The keywords
 are those of [`generalized_lasso`](@ref). The field `solutions` holds each fit;
 `λpath` holds its penalty level. `coef`, `predict`, `dof`, `deviance`, `aic` and
 `bic` return one column or value per level. `coef(path, λ)` requires an exact
@@ -488,10 +573,14 @@ function _admm_path(X, y, D, K, levels; family = :generalized, trend_order = not
   gram, xy = _structured_gram(A), _structured_tproduct(A, b)
   curvature = sum(diag(gram)) / size(A, 2)
   solutions = StructuredLassoSolution{T}[]
-  state, fixed_factor = nothing, nothing
+  state, fixed_factor, last_rho = nothing, nothing, nothing
+  bandwidth = A isa _SignalDesign ? trend_order : nothing
   if rho !== nothing
     isfinite(rho) && rho > 0 || throw(ArgumentError("rho must be positive and finite."))
-    any(>(0), λs) && size(K, 1) > 0 && (fixed_factor = _split_factor(gram, K, T(rho)))
+    if any(>(0), λs) && size(K, 1) > 0
+      fixed_factor = _split_factor(gram, K, T(rho); bandwidth)
+      last_rho = T(rho)
+    end
   end
   for λ in λs
     if λ == 0 || size(M, 1) == 0
@@ -500,6 +589,10 @@ function _admm_path(X, y, D, K, levels; family = :generalized, trend_order = not
     end
     ρ = rho === nothing ? (trend_order === nothing ? _generalized_rho(curvature, n, λ, T) :
         _trend_rho(A, curvature, n, λ, spacing, trend_order, T)) : T(rho)
+    if last_rho != ρ
+      fixed_factor = _split_factor(gram, K, ρ; bandwidth)
+      last_rho = ρ
+    end
     g = trend_order === nothing ? NormL1(T(n*λ)) : TotalVariation1D(T(n*λ))
     β, it, ok, pr, dr, state = _split_fit(A, b, K, g, ρ;
       max_iter, abstol, reltol, start = state, gram, xy, factor = fixed_factor)
