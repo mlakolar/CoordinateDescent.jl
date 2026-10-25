@@ -66,7 +66,7 @@ the path timer. A stopped path retains available
 primal–dual results and the termination status; it never fills missing levels.
 
 `method=:smooth` uses the existing proximal Newton path with the Epanechnikov
-convolution loss at explicit `bandwidth` (default0.2). Its raw dual scores are
+convolution loss at explicit `bandwidth` (default 0.2). Its raw dual scores are
 the smoothed loss scores, not exact check-loss duals. `time_limit` is currently
 supported only by the exact backend. `options`, `newton_tol`,
 `newton_max_iter`, `screening` and `rng` control proximal Newton.
@@ -120,7 +120,9 @@ end
     dual_scores(sol::QuantileLassoSolution)
     dual_scores(path::QuantileLassoPath[, k])
 
-Raw observation scores `u`, with `tau-1 ≤ uᵢ ≤ tau`. At an exact solution,
+Raw observation scores `u`. At a valid solution, `tau-1 ≤ uᵢ ≤ tau`.
+A stopped fit can retain an infeasible iterate; check `converged` and its
+numerical diagnostics before using it. At an exact solution,
 `uᵢ=tau` for a positive residual and `tau-1` for a negative residual; scores
 at zero residuals come from the optimizer, not from a residual-sign rule.
 With an intercept, `sum(u)=0`; slope stationarity is

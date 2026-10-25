@@ -14,7 +14,9 @@ xi = qr_dual(path)              # QR.jl's row-dual sign and normalization
 s = path[2]
 ```
 
-`dual_scores(s)` returns the raw scores in `[tau-1,tau]`. With an intercept they
+At a valid solution, `dual_scores(s)` lies in `[tau-1,tau]`. A stopped exact
+fit can retain an infeasible iterate with `converged=false`; its raw scores are
+kept for diagnostics. With an intercept, valid scores
 sum to zero, and `X'u/n` satisfies the weighted lasso stationarity conditions.
 At nonzero residuals the score is determined by the sign; at zero residuals
 preserve the optimizer's value. Different optimal bases can return different

@@ -1,0 +1,5 @@
+Loading required package: SparseM
+          used  (Mb) gc trigger  (Mb) max used  (Mb)
+Ncells 1940544 103.7    2990550 159.8  2990550 159.8
+Vcells 4349229  33.2   10146329  77.5  6907121  52.7
+DONE quantreg-native-dual 13.71013 seconds
