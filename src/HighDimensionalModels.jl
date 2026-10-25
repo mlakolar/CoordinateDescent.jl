@@ -57,6 +57,7 @@ export
 
   # primal–dual quantile regression
   quantile_lasso, QuantileLassoSolution, QuantileLassoPath, dual_scores,
+  quantile_lambda, CVQuantileLassoPath,
 
   # generalized linear models
   glm_lasso,
@@ -93,6 +94,7 @@ include("group.jl")
 include("sparsegroup.jl")
 include("multiresponse.jl")
 include("cv.jl")
+include("quantile_tuning.jl")
 include("hdm.jl")
 include("statsapi.jl")
 include("formula.jl")

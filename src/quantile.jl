@@ -82,7 +82,8 @@ Inputs are converted to Float64; sparse designs remain sparse.
 
 The automatic grid starts at the intercept-only score maximum, inflated for
 roundoff, and ends at `λminratio` times that maximum. This is a numerical path,
-not pivotal calibration or cross-validation. `tol=2e-5` is the external KKT and
+not pivotal calibration or cross-validation; use [`quantile_lambda`](@ref) or
+[`CVQuantileLassoPath`](@ref) for those choices. `tol=2e-5` is the external KKT and
 relative raw-gap tolerance. Backends supporting convolution certificates also
 use it during smoothed fitting, honoring a smaller positive `options.gaptol`.
 An explicit `options.gaptol=0` keeps the legacy objective-change rule; older
