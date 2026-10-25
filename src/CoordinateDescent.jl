@@ -76,6 +76,10 @@ export
   post_lasso,
   double_selection,
 
+  # inference by debiasing and orthogonal scores
+  nodewise_lasso, debiasing_matrix, debiased_lasso, decorrelated_score,
+  multiplier_bootstrap, bootstrap_lasso,
+
   # varying-coefficient models (kernels from KernelSmoothing.jl)
   varying_coefficient, varying_coefficient_lasso, varying_coefficient_cv, varying_coefficient_lasso_cv
 
@@ -91,6 +95,7 @@ include("multiresponse.jl")
 include("cv.jl")
 include("hdm.jl")
 include("statsapi.jl")
+include("inference.jl")
 include("formula.jl")
 include("varying.jl")
 

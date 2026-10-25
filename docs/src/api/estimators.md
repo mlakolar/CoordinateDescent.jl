@@ -6,6 +6,6 @@ CoordinateDescent
 
 ```@autodocs
 Modules = [CoordinateDescent]
-Pages = ["src/lasso.jl", "src/penalties.jl", "src/glm.jl", "src/group.jl", "src/sparsegroup.jl", "src/multiresponse.jl", "src/cv.jl", "src/hdm.jl"]
+Pages = ["src/lasso.jl", "src/penalties.jl", "src/glm.jl", "src/group.jl", "src/sparsegroup.jl", "src/multiresponse.jl", "src/cv.jl", "src/hdm.jl", "src/inference.jl"]
 Private = true
 ```

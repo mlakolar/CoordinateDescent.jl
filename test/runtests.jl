@@ -16,6 +16,8 @@ tests = [
   "sparsegroup",
   "multiresponse",
   "hdm",
+  "inference",
+  "inference_golden",
   "varying",
   "statsapi",
   "formula",

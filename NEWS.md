@@ -1,3 +1,11 @@
+# Unreleased
+
+Debiased Gaussian, logistic and Poisson lasso inference, with parallel nodewise
+regressions on a shared Gram matrix or Javanmard--Montanari QP projections.
+Adds multiplier max-T inference, a residual/wild bootstrap with lasso refitting,
+and single-coefficient decorrelated score tests. See the inference guide for
+normalizations, tuning, assumptions and Discovery validation.
+
 # Version 0.8.0
 
 ## Performance
