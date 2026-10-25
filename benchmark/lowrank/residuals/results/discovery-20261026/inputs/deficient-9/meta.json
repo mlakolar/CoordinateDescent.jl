@@ -1,0 +1,27 @@
+{
+  "case": "deficient",
+  "rep": 9,
+  "n": 300,
+  "p": 80,
+  "q": 100,
+  "rank": 3,
+  "seed": 10131009,
+  "reference_objectives": [
+    585.5507034079094,
+    244.48391207407806,
+    100.25749219472108,
+    49.88339480873076
+  ],
+  "exact_df": [
+    100,
+    240.84812651641585,
+    377.5417105608786,
+    511.36725004208705
+  ],
+  "xrank": 40,
+  "diagnostic_xrank": 40,
+  "X_sha256": "2fb48dd0a2f4678d430f2cc83c5b385202bff9a40ff2913b69b8e4d6b6110e2e",
+  "X_md5": "ad2c1c16a7cbcd2d6b980aec1f8f9087",
+  "Y_sha256": "cbe50d39f31e2d1aa5de02205f07a2f2a58143b5b013a6dc4eea5e65df89fab7",
+  "Y_md5": "783daab95a6567dc225acf406b294c9b"
+}

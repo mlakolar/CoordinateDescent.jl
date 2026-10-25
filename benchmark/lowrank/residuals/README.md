@@ -56,3 +56,16 @@ timing rounds are not three independent inputs. Retain final reporting inputs,
 relevant profiles, failures, source/environment references and a recreation
 recipe. Raw coefficient/residual arrays stay with the run for independent
 validation; a routine whole-repository archive is unnecessary. Do not merge.
+
+Completed evidence and the conservative default recommendation are in
+[the Discovery report](results/discovery-20261026/RESULTS.md). Run
+`poststudy.py` under Slurm after `main.sbatch` to reproduce the saved-profile
+counts, source/CPU/thread checks and final interpretation without refitting.
+The benchmark policy was frozen at `cc02719` before evaluation; the reporting
+script reads the saved results and changes no fitting settings.
+
+The R path adapter follows rrpack's documented stored path fields in its
+[primary source](https://github.com/cran/rrpack/blob/master/R/rrr.R).
+The installed `rrr` body is preserved with the pilot, alongside the original
+failed extraction and corrected recovery. See the evidence index for retained
+records, failures, exact manifests and raw-array locations.
