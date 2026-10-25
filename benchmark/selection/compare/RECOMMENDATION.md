@@ -1,6 +1,8 @@
 # Selection implementation: keep, optimize, or replace
 
-**Keep the native least-squares solvers, fixed-X construction, Gaussian sampler and CPSS wrapper. Prioritize statistical calibration and knockoff construction choices, then sparse support and covariance-factor caching.** The direct measurements support retaining the core implementation. They do not support advertising the current defaults as a broadly competitive FDR procedure for arbitrary high-dimensional designs.
+**Keep the native least-squares solvers, fixed-X construction, Gaussian sampler and CPSS wrapper. Prioritize statistical calibration and knockoff construction choices, then covariance-factor caching.** The direct measurements support retaining the core implementation. They do not support advertising the current defaults as a broadly competitive FDR procedure for arbitrary high-dimensional designs.
+
+**Sparse follow-up:** this document preserves the original baseline study. Native sparse handling is now implemented and passes the accuracy, storage and performance targets in a separate seven-replication Discovery campaign. See the [follow-up report](../sparse/REPORT.md) for the current sparse recommendation. The statistical findings below remain relevant; the historical sparse runtime limitation is superseded.
 
 All numerical work ran on Discovery. The primary study used seven independent process replications, three timing batches per case, 147 separately collected profiles, and 840 shared datasets (140 per scenario). Julia 1.10.12, SLOPE.jl 1.3.1, Knockoffs.jl 3.1.4 and GLMNet.jl 0.7.4 were compared with R 4.5.3, SLOPE 2.1.1, knockoff 0.3.6, glmnet 5.1 and stabs 0.7-1. The runtime source is commit `ab544aec2a4f24b41ec5befd4467024ce2e29f16`.
 
@@ -17,7 +19,7 @@ These are medians of within-process medians, in milliseconds. Fits use one BLAS/
 | Correlated: n=p=400, rho=.8 | 4.982 | 10.281 | 17.000 |
 | Sparse: n=600, p=1000, density=.02 | 13.627 | 8.383 | 19.500 |
 
-Paired comparisons show the native solver is **1.77–2.13 times faster than SLOPE.jl on the three dense cases**, and 1.47–3.51 times faster than R auto across all four. On sparse input it is **1.59 times slower than SLOPE.jl**, with a replication range of 1.41–1.83. The native path currently densifies sparse matrices. A full replacement of the dense solver is not supported by these results; proper sparse handling is a clear improvement target. The existing packages still provide broader GLM, tuning and sparse functionality ([SLOPE features](https://jolars.github.io/SLOPE/)).
+Paired comparisons in this baseline study show the native solver is **1.77–2.13 times faster than SLOPE.jl on the three dense cases**, and 1.47–3.51 times faster than R auto across all four. On sparse input it is **1.59 times slower than SLOPE.jl**, with a replication range of 1.41–1.83. That baseline revision densified sparse matrices. The [native sparse follow-up](../sparse/REPORT.md) resolves this bottleneck on the tested workloads. A full replacement of the dense solver is not supported by these results. The existing packages still provide broader GLM and tuning functionality ([SLOPE features](https://jolars.github.io/SLOPE/)).
 
 | Component workload | Native CD | Julia alternative | R alternative |
 |---|---:|---:|---:|
@@ -104,7 +106,7 @@ At p=100 and cutoff=.8, the basic bounds are 1.667 for cap 10 and 6.667 for cap 
 
 1. Add MVR/max-entropy diagonal choices and clarify SLOPE calibration before promoting broad FDR functionality. These changes address much larger practical gaps than changing optimizer backends.
 2. Cache covariance-dependent Gaussian sampling factors and try Cholesky before a full conditional-covariance eigendecomposition, retaining the eigen fallback for PSD roundoff. LAPACK's eigensolver appears among the top sampled active leaves in all seven p=1000 constructor profiles; solves/factorizations also recur. The cache optimization has not yet been implemented or benchmarked.
-3. Preserve sparse SLOPE inputs or offer SLOPE.jl as an optional sparse backend. Dense matrix-vector products and array copies appear among the leading active leaf samples in all seven wide/sparse native profiles.
+3. Native sparse SLOPE handling is completed in the [follow-up](../sparse/REPORT.md). The old profiles' dense matrix-vector products and array copies motivated that change; use the new replicated profiles before further optimization.
 4. Improve statistical tuning and extend the tested scope before claiming strong wide-design selection performance. Include valid model-X tuning/statistics, covariance estimation/misspecification and additional signal patterns in that next study. Keep fixed-X and CPSS guarantees separate.
 
 Keep PR #84 draft while deciding the calibration and construction interface. The benchmark results support keeping its computational core; they also identify the statistical limitations that the next implementation changes should address. This assessment does not implement those proposed changes.

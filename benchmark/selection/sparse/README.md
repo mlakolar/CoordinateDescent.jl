@@ -3,12 +3,16 @@
 This follow-up preserves CSC storage for `slope` and `SLOPEPath`, including
 implicit centering and standardization. The estimator calls the screened SLOPE
 APG engine from ProximalSolvers commit
-`335ea905da207a6cc1cd3bd945bb7bbbf9f4eba4`. Statistical penalties and defaults
+`36f623a1747dfec6cac964fba8341819685c5146`. The completed broad benchmark uses
+the numerically identical SLOPE engine at `335ea905da207a6cc1cd3bd945bb7bbbf9f4eba4`;
+the [report](REPORT.md) records the source comparison and current-dependency
+integration tests. Statistical penalties and defaults
 are unchanged. The old comparator is the exact `src/slope.jl` at HDM commit
 `95993030f5fa34b01364dcdf9eebf42a4eab15ba`, retained as `baseline_slope.jl`.
 
-All tests, generation, fits, profiling and numerical summaries run under Slurm
-on Discovery. No Julia computation runs on the workstation. Existing pinned
+All generation, fits, profiling and numerical summaries run under Slurm
+on Discovery, along with the recorded tests. GitHub-hosted CI also runs package
+tests as explicitly authorized. No Julia computation runs on the workstation. Existing pinned
 Julia/R environments are reused; the final manifests and source receipts are
 retained with results. Original and failed pilot results remain available.
 
@@ -91,5 +95,7 @@ replications, seventy-seven fresh memory processes and seven independent audits
 using GNU Parallel with exclusive `srun` steps. `summarize.py` consumes retained
 records without refitting. `fulltests.jl` tests a copy whose [sources] entries
 point to those exact runtime dependencies, avoiding mutable-master drift in
-Pkg.test's sandbox. The registry preserves actual job IDs, failures, source
+Pkg.test's sandbox. `compatibility_validation.sbatch` separately tests the
+final PS36/PB0e98 integration, using any debug CPU because this stage does not
+produce comparative performance measurements. The registry preserves actual job IDs, failures, source
 overlays and aggregate resource accounting.

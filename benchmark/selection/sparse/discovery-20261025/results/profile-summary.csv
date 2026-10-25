@@ -1,0 +1,143 @@
+case,replications_present,median_exclusive_samples,file,line,function
+4,7,60,@Base/essentials.jl,13,getindex
+4,7,26,@Base/array.jl,1021,setindex!
+4,7,13,@Base/boot.jl,477,Array
+4,7,7,@Base/int.jl,87,+
+4,7,6,@Base/int.jl,519,<
+4,7,6,@Base/float.jl,409,+
+4,7,5,@Base/promotion.jl,521,==
+4,7,5,@Base/int.jl,520,<=
+4,7,5,@Base/int.jl,83,<
+4,7,5,@Base/essentials.jl,647,ifelse
+4,7,4,@Base/sort.jl,?,"partition!(v::Vector{Int64}, lo::Int64, hi::Int64, o::Base.Order.Lt{Base.Order.var""#1#3""{ProximalBase.var""#103#104""{Vector{Float64}}, typeof(identity)}})"
+4,6,3,@Base/array.jl,411,copy
+4,7,3,@Base/array.jl,1024,setindex!
+4,6,3,@Base/float.jl,411,*
+4,7,3,@SparseArrays/src/linalg.jl,90,"_At_or_Ac_mul_B!(tfun::typeof(transpose), C::Vector{Float64}, A::SparseMatrixCSC{Float64, Int64}, B::Vector{Float64}, α::Bool, β::Bool)"
+4,6,3,@Base/sort.jl,2099,"partition!(v::Vector{Int64}, lo::Int64, hi::Int64, o::Base.Order.Lt{Base.Order.var""#1#3""{ProximalBase.var""#103#104""{Vector{Float64}}, typeof(identity)}})"
+4,7,3,@Base/sort.jl,2100,"partition!(v::Vector{Int64}, lo::Int64, hi::Int64, o::Base.Order.Lt{Base.Order.var""#1#3""{ProximalBase.var""#103#104""{Vector{Float64}}, typeof(identity)}})"
+4,6,3,@Base/float.jl,410,-
+4,6,2,@Base/float.jl,536,<
+4,6,2,@SparseArrays/src/linalg.jl,69,"_spmatmul!(C::Vector{Float64}, A::SparseMatrixCSC{Float64, Int64}, B::Vector{Float64}, α::Bool, β::Bool)"
+4,7,2,@Base/range.jl,901,iterate
+4,4,2,@Base/essentials.jl,?,getindex
+4,4,2,@Base/sort.jl,?,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Base.ReinterpretArray{UInt64, 1, F…"
+4,4,2,@ProximalBase/src/functions/ordered.jl,?,"value_and_prox!(y::Vector{Float64}, f::ProximalBase.SLOPE{Vector{Float64}}, x::Vector{Float64}, γ::Float64)"
+4,4,2,@ProximalSolvers/src/solvers/slope.jl,112,"_slope_strong(grad::Vector{Float64}, previous::Vector{Float64}, current::Vector{Float64})"
+4,6,1,@ProximalBase/src/functions/ordered.jl,337,"value_and_prox!(y::Vector{Float64}, f::ProximalBase.SLOPE{Vector{Float64}}, x::Vector{Float64}, γ::Float64)"
+4,4,1,@Base/sort.jl,57,"issorted(itr::Vector{Float64}, order::Base.Order.ReverseOrdering{Base.Order.ForwardOrdering})"
+4,1,0,@LinearAlgebra/src/blas.jl,434,nrm2
+4,2,0,@Base/array.jl,945,iterate
+4,3,0,@Base/bool.jl,38,&
+4,3,0,@ProximalBase/src/functions/ordered.jl,203,"_pava!(y::Vector{Float64}, v::Vector{Float64}, s::Vector{Float64}, c::Vector{Int64}, σ::Int64)"
+4,3,0,@Base/simdloop.jl,75,macro expansion
+4,1,0,@LinearAlgebra/src/generic.jl,?,generic_norm2(x::Vector{Float64})
+4,1,0,@Base/sort.jl,792,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Lt{Base.Order.var""#1#3""{ProximalBase.var""#103#104""{Vector{Float64}}, typeof(identity)}}, kw::@Na…"
+4,3,0,@Base/float.jl,159,Float64
+4,1,0,@Base/sort.jl,?,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Base.ReinterpretArray{UInt64, 1, Fl…"
+4,2,0,@Base/array.jl,1072,_growend!
+4,2,0,@Base/sort.jl,89,"issorted(itr::Vector{Float64}; lt::Function, by::Function, rev::Bool, order::Base.Order.ForwardOrdering)"
+4,3,0,@Base/array.jl,2027,"hcat(::Vector{Float64}, ::Vector{Float64}, ::Vector{Float64}, ::Vararg{Vector{Float64}})"
+4,2,0,@CoordinateDescent/benchmark/selection/sparse/run.jl,26,"fit(c::@NamedTuple{X::SparseMatrixCSC{Float64, Int64}, y::Vector{Float64}, lambda::Vector{Float64}, factors::Vector{Float64}, intercept::Bool, standardize_x::Bool})"
+4,1,0,@Base/sort.jl,785,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Lt{Base.Order.var""#1#3""{ProximalBase.var""#103#104""{Vector{Float64}}, typeof(identity)}}, kw::@Na…"
+4,1,0,@Base/sort.jl,1063,"kwcall(::@NamedTuple{t::Vector{Int64}, offset::Int64, swap::Bool, rev::Bool}, ::typeof(Base.Sort._sort!), v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Mi…"
+4,1,0,@Base/sort.jl,1104,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
+4,2,0,@Base/floatfuncs.jl,15,signbit
+4,3,0,@Base/cmem.jl,26,memmove
+4,2,0,@SparseArrays/src/linalg.jl,88,"_At_or_Ac_mul_B!(tfun::typeof(transpose), C::Vector{Float64}, A::SparseMatrixCSC{Float64, Int64}, B::Vector{Float64}, α::Bool, β::Bool)"
+4,3,0,@Base/Base.jl,37,getproperty
+4,1,0,@Base/sort.jl,2076,selectpivot!
+4,2,0,@ProximalBase/src/functions/ordered.jl,191,"_pava!(y::Vector{Float64}, v::Vector{Float64}, s::Vector{Float64}, c::Vector{Int64}, σ::Int64)"
+4,1,0,@SparseArrays/src/linalg.jl,?,"_spmatmul!(C::Vector{Float64}, A::SparseMatrixCSC{Float64, Int64}, B::Vector{Float64}, α::Bool, β::Bool)"
+4,1,0,@Base/sort.jl,?,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Lt{Base.Order.var""#1#3""{ProximalBase.var""#103#104""{Vector{Float64}}, typeof(identity)}}, kw::@N…"
+4,1,0,@Base/sort.jl,1044,"partition!(t::Vector{Int64}, lo::Int64, hi::Int64, offset::Int64, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Base.ReinterpretArray{U…"
+4,2,0,@Base/sort.jl,785,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Lt{Base.Order.var""#1#3""{ProximalBase.var""#103#104""{Vector{Float64}}, typeof(identity)}}, kw::@N…"
+4,2,0,@Base/sort.jl,2205,sort!
+4,2,0,@Base/sort.jl,1646,"sortperm(A::Vector{Float64}; alg::Base.Sort.MissingOptimization{Base.Sort.BoolOptimization{Base.Sort.Small{10, Base.Sort.InsertionSortAlg, Base.Sort.IEEEFloatOptimi…"
+4,1,0,@Base/sort.jl,1103,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
+4,1,0,@Base/boot.jl,479,Array
+4,3,0,@Base/ordering.jl,161,"ord(lt::Function, by::Function, rev::Bool, order::Base.Order.ForwardOrdering)"
+4,2,0,@Base/sort.jl,792,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Lt{Base.Order.var""#1#3""{ProximalBase.var""#103#104""{Vector{Float64}}, typeof(identity)}}, kw::@N…"
+4,2,0,@ProximalSolvers/src/blocks.jl,40,"_sub!(y::Vector{Float64}, a::Vector{Float64}, b::Vector{Float64})"
+4,1,0,@Base/libc.jl,252,time
+4,1,0,@Base/range.jl,414,unitrange_last
+4,1,0,@Base/boot.jl,638,is_top_bit_set
+4,1,0,@Base/sort.jl,1075,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
+4,3,0,@Base/sort.jl,785,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Base.ReinterpretArray{UInt64, 1, F…"
+4,1,0,@ProximalBase/src/functions/ordered.jl,331,"value_and_prox!(y::Vector{Float64}, f::ProximalBase.SLOPE{Vector{Float64}}, x::Vector{Float64}, γ::Float64)"
+4,1,0,@Base/sort.jl,1063,"kwcall(::@NamedTuple{t::Vector{Int64}, offset::Int64, swap::Bool, rev::Bool}, ::typeof(Base.Sort._sort!), v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, M…"
+4,2,0,@Base/sort.jl,2115,"sort!(v::Vector{Int64}, lo::Int64, hi::Int64, a::Base.Sort.QuickSortAlg, o::Base.Order.Lt{Base.Order.var""#1#3""{ProximalBase.var""#103#104""{Vector{Float64}}, typeof(i…"
+4,1,0,@Base/sort.jl,?,"send_to_end!(f::ComposedFunction{typeof(!), Base.Sort.var""#20#23""{Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Vector{Float64}}}}, v::Vec…"
+4,1,0,@ProximalSolvers/src/solvers/accelerated_proximal_gradient_descent.jl,146,"update_state!(f::ProximalBase.Scaled{ProximalBase.LeastSquaresLoss{Float64, Vector{Float64}, CoordinateDescent._SLOPESparseDesign{Float64, Int64, Nothing}, 1, Vecto…"
+4,1,0,@Base/array.jl,368,copyto!
+4,1,0,@Base/sort.jl,1077,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
+4,1,0,@ProximalBase/src/functions/ordered.jl,341,prox!
+4,1,0,@Base/sort.jl,2072,selectpivot!
+4,1,0,@Base/float.jl,549,isless
+4,1,0,@ProximalSolvers/src/solvers/slope.jl,192,"_slope_fit!(x::Vector{Float64}, X::CoordinateDescent._SLOPESparseDesign{Float64, Int64, Nothing}, y::Vector{Float64}, lambda::Vector{Float64}, scale::Float64, candi…"
+4,1,0,@ProximalBase/src/functions/ordered.jl,298,#103
+10,7,41,@Base/essentials.jl,13,getindex
+10,7,32,@Base/array.jl,1021,setindex!
+10,7,21,@Base/float.jl,409,+
+10,7,20,@Base/int.jl,83,<
+10,7,13,@Base/int.jl,87,+
+10,7,12,@Base/int.jl,519,<
+10,7,8,@Base/sort.jl,?,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Base.ReinterpretArray{UInt64, 1, F…"
+10,7,7,@SparseArrays/src/linalg.jl,90,"_At_or_Ac_mul_B!(tfun::typeof(transpose), C::Vector{Float64}, A::SparseMatrixCSC{Float64, Int64}, B::Vector{Float64}, α::Bool, β::Bool)"
+10,7,7,@Base/float.jl,411,*
+10,6,7,@Base/bool.jl,38,&
+10,7,5,@Base/range.jl,901,iterate
+10,6,5,@Base/boot.jl,477,Array
+10,7,4,@Base/sort.jl,?,"partition!(t::Vector{Int64}, lo::Int64, hi::Int64, offset::Int64, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Base.ReinterpretArray{U…"
+10,7,4,@SparseArrays/src/linalg.jl,69,"_spmatmul!(C::Vector{Float64}, A::SparseMatrixCSC{Float64, Int64}, B::Vector{Float64}, α::Bool, β::Bool)"
+10,6,4,@Base/float.jl,410,-
+10,7,3,@Base/essentials.jl,647,ifelse
+10,5,3,@Base/boot.jl,711,toInt64
+10,4,3,@Base/promotion.jl,521,==
+10,5,2,@Base/sort.jl,?,"send_to_end!(f::ComposedFunction{typeof(!), Base.Sort.var""#20#23""{Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Vector{Float64}}}}, v::Vec…"
+10,4,2,@Base/float.jl,536,<
+10,5,2,@Base/range.jl,414,unitrange_last
+10,6,2,@Base/array.jl,411,copy
+10,4,2,@Base/float.jl,159,Float64
+10,4,1,@Base/sort.jl,57,"issorted(itr::Vector{Float64}, order::Base.Order.ReverseOrdering{Base.Order.ForwardOrdering})"
+10,4,1,@SparseArrays/src/linalg.jl,88,"_At_or_Ac_mul_B!(tfun::typeof(transpose), C::Vector{Float64}, A::SparseMatrixCSC{Float64, Int64}, B::Vector{Float64}, α::Bool, β::Bool)"
+10,5,1,@Base/sort.jl,1044,"partition!(t::Vector{Int64}, lo::Int64, hi::Int64, offset::Int64, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Base.ReinterpretArray{U…"
+10,4,1,@Base/sort.jl,1105,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
+10,4,1,@ProximalBase/src/functions/ordered.jl,337,"value_and_prox!(y::Vector{Float64}, f::ProximalBase.SLOPE{Vector{Float64}}, x::Vector{Float64}, γ::Float64)"
+10,2,0,@Base/bool.jl,39,|
+10,2,0,@Base/sort.jl,1063,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
+10,1,0,@SparseArrays/src/linalg.jl,67,"_spmatmul!(C::Vector{Float64}, A::SparseMatrixCSC{Float64, Int64}, B::Vector{Float64}, α::Bool, β::Bool)"
+10,3,0,@Base/cmem.jl,26,memmove
+10,3,0,@Base/array.jl,1024,setindex!
+10,2,0,@CoordinateDescent/src/slope.jl,42,mul!
+10,3,0,@Base/sort.jl,1077,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
+10,3,0,@LinearAlgebra/src/blas.jl,345,dot
+10,2,0,@ProximalSolvers/src/solvers/slope.jl,115,"_slope_strong(grad::Vector{Float64}, previous::Vector{Float64}, current::Vector{Float64})"
+10,2,0,@ProximalBase/src/functions/ordered.jl,203,"_pava!(y::Vector{Float64}, v::Vector{Float64}, s::Vector{Float64}, c::Vector{Int64}, σ::Int64)"
+10,2,0,@Base/array.jl,2010,"reverse!(v::Vector{Int64}, start::Int64, stop::Int64)"
+10,2,0,@ProximalBase/src/functions/ordered.jl,338,"value_and_prox!(y::Vector{Float64}, f::ProximalBase.SLOPE{Vector{Float64}}, x::Vector{Float64}, γ::Float64)"
+10,1,0,@Base/abstractarray.jl,702,checkbounds
+10,3,0,@ProximalSolvers/src/solvers/slope.jl,112,"_slope_strong(grad::Vector{Float64}, previous::Vector{Float64}, current::Vector{Float64})"
+10,3,0,@Base/float.jl,549,isless
+10,1,0,@ProximalBase/src/functions/ordered.jl,191,"_pava!(y::Vector{Float64}, v::Vector{Float64}, s::Vector{Float64}, c::Vector{Int64}, σ::Int64)"
+10,1,0,@Base/sort.jl,?,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
+10,2,0,@Base/sort.jl,1075,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
+10,2,0,@Base/sort.jl,1098,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
+10,2,0,@Base/sort.jl,574,"send_to_end!(f::Base.Sort.var""#21#24""{Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Vector{Float64}}}, v::Vector{Int64}; lo::Int64, hi::In…"
+10,1,0,@Base/floatfuncs.jl,15,signbit
+10,1,0,@Base/boot.jl,648,check_top_bit
+10,1,0,@Base/array.jl,945,iterate
+10,3,0,@Base/sort.jl,792,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Base.ReinterpretArray{UInt64, 1, F…"
+10,1,0,@Base/sort.jl,1104,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
+10,3,0,@ProximalBase/src/functions/ordered.jl,?,"value_and_prox!(y::Vector{Float64}, f::ProximalBase.SLOPE{Vector{Float64}}, x::Vector{Float64}, γ::Float64)"
+10,3,0,@Base/sort.jl,1063,"kwcall(::@NamedTuple{t::Vector{Int64}, offset::Int64, swap::Bool, rev::Bool}, ::typeof(Base.Sort._sort!), v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, M…"
+10,1,0,@Base/int.jl,327,~
+10,2,0,@Base/array.jl,2027,"hcat(::Vector{Float64}, ::Vector{Float64}, ::Vector{Float64}, ::Vararg{Vector{Float64}})"
+10,1,0,@Base/sort.jl,785,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Base.ReinterpretArray{UInt64, 1, F…"
+10,1,0,@Base/boot.jl,638,is_top_bit_set
+10,1,0,@LinearAlgebra/src/blas.jl,434,nrm2
+10,1,0,@Base/sort.jl,783,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Base.ReinterpretArray{UInt64, 1, F…"
+10,1,0,@Base/sort.jl,785,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Lt{Base.Order.var""#1#3""{ProximalBase.var""#103#104""{Vector{Float64}}, typeof(identity)}}, kw::@N…"
+10,1,0,@Base/reduce.jl,1292,_all
+10,1,0,@Base/sort.jl,777,"_sort!(v::Vector{Int64}, ::Base.Sort.InsertionSortAlg, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}, Base.ReinterpretArray{UInt64, 1, F…"
+10,1,0,@Base/sort.jl,1094,"_sort!(v::Vector{Int64}, a::Base.Sort.ScratchQuickSort{Missing, Missing, Base.Sort.InsertionSortAlg}, o::Base.Order.Perm{Base.Order.ReverseOrdering{Base.Order.Forwa…"
