@@ -41,6 +41,7 @@ makedocs(
         "The group lasso" => "group.md",
         "Variable selection with error control" => "selection.md",
         "Fused regression, trend filtering and graphs" => "structured.md",
+        "Low-rank multivariate regression" => "lowrank.md",
         "Writing a loss or a penalty" => "extending.md",
         "Varying-coefficient models" => "varying.md",
         "Examples" => example_pages,

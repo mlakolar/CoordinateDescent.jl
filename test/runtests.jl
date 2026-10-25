@@ -20,6 +20,7 @@ tests = [
   "group",
   "sparsegroup",
   "multiresponse",
+  "lowrank",
   "hdm",
   "varying",
   "statsapi",

@@ -109,6 +109,17 @@ the mathematics of each estimator and its conventions, the options of
 coordinate descent and when each pays off, the group lasso, varying-coefficient
 models, how to write a loss or a penalty of your own, and the API reference.
 
+## Low-rank multivariate regression
+
+For a response matrix `Y`, `reduced_rank(X, Y, r)` fits rank-constrained
+least squares and `select_rank(X, Y)` chooses its rank by the criterion of
+Bunea, She and Wegkamp. `nuclear_regression(X, Y, λ)` penalizes the nuclear
+norm of the coefficient matrix. `sparse_reduced_rank(X, Y, r, λ)` selects
+predictors as well as reducing rank, and `sparse_svd_regression(X, Y, r)`
+selects sparse predictor and response loadings. `LowRankPath` and
+`CVLowRankPath` provide paths and cross-validation; see the
+[low-rank regression guide](docs/src/lowrank.md) for objectives and conventions.
+
 ## Examples
 
 The scripts in [examples](examples) go through the package and its options;
