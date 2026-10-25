@@ -49,7 +49,7 @@ replications per backend/size (baseline omitted at case11). Python's Linux
 `resource.getrusage(RUSAGE_CHILDREN).ru_maxrss` includes the interpreter,
 imports/JIT and child backend, and is reported in MiB. It is not the transformed
 matrix's size, nor an exact incremental fitting-memory measure. Memory workers
-may run concurrently in separate 6 GB Slurm steps; their elapsed times are not
+may run concurrently in up to four separate 4 GB Slurm steps; their elapsed times are not
 used for performance rankings. Julia heap allocation totals exclude C++/Fortran
 allocation and are reported separately. Owned operator and solver-workspace
 storage is measured directly on the final implementation.

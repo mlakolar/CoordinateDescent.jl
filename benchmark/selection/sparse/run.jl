@@ -30,6 +30,11 @@ ids=mode=="memory" ? [parse(Int,ARGS[4])] : parse.(Int,split(get(ENV,"CASES","1,
 engine=="baseline" && filter!(!=(11),ids)
 path=joinpath(OUT,"$(mode)-$(engine)-$(rep)$(mode=="memory" ? "-$(only(ids))" : "").csv")
 mkpath(OUT)
+open(joinpath(OUT,"environment-$engine-$rep.txt"),"w") do io
+  println(io,"Julia=$VERSION node=$(gethostname()) threads=$(Threads.nthreads()) BLAS=$(BLAS.get_config())")
+  println(io,"CoordinateDescent=$(pathof(CD)) ProximalBase=$(pathof(PB)) ProximalSolvers=$(pathof(CD.ProximalSolvers))")
+  engine=="SLOPE.jl" && println(io,"SLOPE=$(pkgversion(SJ))")
+end
 open(path,"w") do io
   println(io,"rep,case,engine,inner,seconds,bytes,relative_residual,design_bytes,workspace_bytes")
   for id in ids

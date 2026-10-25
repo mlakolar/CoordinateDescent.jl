@@ -6,7 +6,7 @@
 #SBATCH --ntasks=4
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=16G
-#SBATCH --time=00:10:00
+#SBATCH --time=00:20:00
 set -euo pipefail
 export JULIA_DEPOT_PATH="$RUN/depot:/home1/mkolar/juliaPkg/runs/20261025-cd82-compare/depot:/home1/mkolar/juliaPkg/runs/20261025-cd82-selection/depot:/home1/mkolar/juliaPkg/depot:"
 export JULIA_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=2 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
@@ -15,6 +15,8 @@ source_dir="$RUN/source/benchmark/selection/sparse"
 mkdir -p "$RUN/results" "$RUN/memory" "$RUN/metadata"
 cp "$RUN/env/Project.toml" "$RUN/env/Manifest.toml" "$RUN/metadata/"
 export RESULTS_DIR=results CASES=1,2,3,4,5,6,7,8,9,10,11
+# Coordinated PS engine LTS tests, outside all benchmark timings.
+/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/env" /home1/mkolar/juliaPkg/runs/20261025T1210Z-ps-slope-extract/slope-tests-fixed.jl > "$RUN/engine-tests-110.log" 2>&1
 # Serialize timing processes; rotate backend order between replications.
 python3 - <<'PY' > "$RUN/tasks.tsv"
 engines=['native','baseline','SLOPE.jl','R']
@@ -39,6 +41,6 @@ parallel --colsep '\t' --jobs 4 --halt soon,fail=1 --joblog "$RUN/memory-joblog.
  "srun --exclusive --exact -N1 -n1 -c2 --mem=4G python3 '$source_dir/measure.py' '$RUN/memory/rss-{1}-{2}-{3}.json' bash '$source_dir/worker.sh' {1} {2} memory {3} > '$RUN/memory/worker-{1}-{2}-{3}.log' 2>&1" :::: "$RUN/memory-tasks.tsv"
 export RESULTS_DIR=results
 seq 1 7 | parallel --jobs 1 --halt soon,fail=1 --joblog "$RUN/audit-joblog.tsv" \
- "srun --exclusive --exact -N1 -n1 -c2 --mem=4G /home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project='$RUN/env' '$source_dir/audit.jl' {} > '$RUN/results/audit-{}.log' 2>&1"
+ "srun --exclusive --exact -N1 -n1 -c2 --mem=4G bash '$source_dir/audit_worker.sh' {} > '$RUN/results/audit-{}.log' 2>&1"
 python3 "$source_dir/summarize.py"
 echo CAMPAIGN_DONE

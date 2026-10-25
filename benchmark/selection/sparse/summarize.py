@@ -7,7 +7,7 @@ def read(p):
 def write(name,rows):
  with (out/name).open('w') as f:
   w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
-cases=read(root/'inputs/cases.csv');timings=[];accuracy=[];memory=[]
+cases=read(root/'inputs/cases.csv');timings=[];accuracy=[];memory=[];memory_accuracy=[]
 for rep in range(1,8):
  for engine in ('native','baseline','SLOPE.jl','R'):
   rows=read(out/f'timing-{engine}-{rep}.csv')
@@ -17,6 +17,7 @@ for rep in range(1,8):
    r=[x for x in rows if int(x['case'])==case];assert len(r)==3
    timings.append(dict(rep=rep,case=case,engine=engine,seconds=st.median(float(x['seconds']) for x in r),bytes=st.median(float(x['bytes']) for x in r) if engine!='R' else 'NA'))
  accuracy+=read(out/f'accuracy-{rep}.csv')
+ memory_accuracy+=read(root/'memory'/f'accuracy-{rep}.csv')
  for case in (4,10,11):
   for engine in ('native','baseline','SLOPE.jl','R'):
    if case==11 and engine=='baseline':continue
@@ -24,9 +25,12 @@ for rep in range(1,8):
    assert r['exit_code']==0
    memory.append(dict(rep=rep,case=case,engine=engine,peak_rss_mib=r['peak_rss_kib']/1024))
 assert len(accuracy)==301
+assert len(memory_accuracy)==77
+assert max(float(x['relative_residual']) for x in memory_accuracy)<=1e-7
+assert max(float(x['relative_objective_difference']) for x in memory_accuracy)<=1e-7
 assert max(float(x['relative_residual']) for x in accuracy)<=1e-7
 assert max(float(x['relative_objective_difference']) for x in accuracy)<=1e-7
-write('per-replication.csv',timings);write('accuracy-summary.csv',accuracy);write('memory-per-replication.csv',memory)
+write('memory-accuracy.csv',memory_accuracy);write('per-replication.csv',timings);write('accuracy-summary.csv',accuracy);write('memory-per-replication.csv',memory)
 summary=[];ratios=[];memsummary=[]
 for case in range(1,12):
  for engine in ('native','baseline','SLOPE.jl','R'):
@@ -46,7 +50,7 @@ for case in (4,10,11):
   if v:memsummary.append(dict(case=case,engine=engine,median_peak_rss_mib=st.median(v),min=min(v),max=max(v)))
 write('timing-summary.csv',summary);write('paired-ratios.csv',ratios);write('memory-summary.csv',memsummary)
 raw_native=read(out/'timing-native-1.csv')
-validation={'timing_processes':28,'replications':7,'timing_rows':903,'accuracy_rows':len(accuracy),'memory_processes':len(memory),'profiles':len(list(out.glob('profile-*.txt'))),'max_relative_residual':max(float(x['relative_residual']) for x in accuracy),'max_relative_objective_difference':max(float(x['relative_objective_difference']) for x in accuracy),'dense_controls_pass_5pct':all(next(r['median'] for r in ratios if r['case']==case and r['comparison']=='native/baseline')<=1.05 for case in (1,2,3)),'original_sparse_parity_with_SLOPE_jl':next(r['median'] for r in ratios if r['case']==4 and r['comparison']=='native/SLOPE.jl')<=1.0,'largest_design_bytes':next(int(float(r['design_bytes'])) for r in raw_native if int(r['case'])==11),'largest_workspace_bytes':next(int(float(r['workspace_bytes'])) for r in raw_native if int(r['case'])==11),'largest_dense_equivalent_bytes':10000*20000*8}
+validation={'timing_processes':28,'replications':7,'timing_rows':903,'accuracy_rows':len(accuracy),'memory_accuracy_rows':len(memory_accuracy),'memory_max_relative_residual':max(float(x['relative_residual']) for x in memory_accuracy),'memory_processes':len(memory),'profiles':len(list(out.glob('profile-*.txt'))),'max_relative_residual':max(float(x['relative_residual']) for x in accuracy),'max_relative_objective_difference':max(float(x['relative_objective_difference']) for x in accuracy),'dense_controls_pass_5pct':all(next(r['median'] for r in ratios if r['case']==case and r['comparison']=='native/baseline')<=1.05 for case in (1,2,3)),'original_sparse_parity_with_SLOPE_jl':next(r['median'] for r in ratios if r['case']==4 and r['comparison']=='native/SLOPE.jl')<=1.0,'largest_design_bytes':next(int(float(r['design_bytes'])) for r in raw_native if int(r['case'])==11),'largest_workspace_bytes':next(int(float(r['workspace_bytes'])) for r in raw_native if int(r['case'])==11),'largest_dense_equivalent_bytes':10000*20000*8}
 (out/'validation.json').write_text(json.dumps(validation,indent=2)+'\n')
 lines=['# Discovery sparse SLOPE results','', 'Medians across seven process replications; each process contributes three timed batch medians.','', '| Case | Native ms | Baseline ms | SLOPE.jl ms | R ms |','|---|---:|---:|---:|---:|']
 for case in range(1,12):
