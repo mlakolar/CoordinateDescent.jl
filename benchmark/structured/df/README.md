@@ -1,5 +1,7 @@
 # Structured degrees of freedom: paired Discovery study
 
+[Final seven-dataset results and limits](results/discovery-20261026/RESULTS.md).
+
 This harness compares the public path APIs and their degrees-of-freedom work
 against master `295fbf5420d6384a1ca261023367ee86d0a40b8c`. It does not change
 solver tolerances, the lambda grid, `df_tol`, initialization or preprocessing.
@@ -50,3 +52,5 @@ paired candidate/baseline ratios, ranges and percentile-bootstrap intervals
 over seven independent datasets. Repeated rounds are not independent inputs.
 Retain failed attempts and incomplete CSVs; do not summarize them as completed
 coverage or hide different numerical answers inside a speed ratio.
+
+The report directory contains all timing rounds, paired summaries, independent validation, worker metadata, resource accounting and all 224 CPU/allocation profiles. Serialized fitted coefficient records and full worker logs are retained in the task run registry delivery bundle and on Discovery; they are omitted from Git. `report.py` renders the saved numerical summaries under Slurm.
