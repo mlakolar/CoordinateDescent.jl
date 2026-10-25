@@ -21,14 +21,14 @@ function data(case,seed)
     e=randn(rng,n)
     if case in ("wide","correlated","large")
         e ./= sqrt.((randn(rng,n).^2 .+ randn(rng,n).^2 .+ randn(rng,n).^2)./3)
-        e .*= .5 .+ .5.*abs.(X[:,1])
+        e .*= .5 .+ 0.5 .* abs.(X[:,1])
     end
     X,.7 .+ X*beta .+ e
 end
 function runmethod(name,X,y,ls,tau,w;limit=30.)
     parts=split(name,'-')
-    if parts[1]=="lp"
-        lppath(X,y,ls,tau,w,Symbol(parts[2]),Symbol(parts[3]),parts[4]=="warm";limit)
+    if parts[1] in ("lp","gurobi")
+        lppath(X,y,ls,tau,w,Symbol(parts[2]),Symbol(parts[3]),parts[4]=="warm";limit,engine=parts[1]=="lp" ? :highs : :gurobi)
     elseif parts[1]=="admm"
         ladmmpath(X,y,ls,tau,w;limit)
     else
@@ -40,10 +40,12 @@ function main()
     case=ARGS[1]; seed=parse(Int,ARGS[2]); reps=parse(Int,ARGS[3]); phase=ARGS[4]
     out=ARGS[5]; mkpath(out)
     methods=["lp-$f-$s-$w" for f in ("primal","dual") for s in ("primal","dual","ipm") for w in ("cold","warm")]
+    HAS_GUROBI && append!(methods,["gurobi-primal-$s-$w" for s in ("primal","dual","ipm") for w in ("cold","warm")])
     append!(methods,["apg-0.2","apg-0.05","newton-0.2","newton-0.05","admm"])
     phase=="main" && (methods=["lp-primal-dual-cold","lp-primal-dual-warm","lp-primal-primal-warm",
-       "lp-dual-dual-cold","lp-dual-dual-warm","lp-primal-ipm-cold","newton-0.2","newton-0.05","apg-0.2","admm"])
-    phase=="scale" && (methods=["lp-primal-dual-warm","lp-dual-dual-warm","newton-0.2","apg-0.2","admm"])
+       "lp-dual-dual-cold","lp-dual-dual-warm","lp-primal-ipm-cold","lp-dual-ipm-cold","newton-0.2","newton-0.05","apg-0.2","admm"])
+    phase=="main" && HAS_GUROBI && append!(methods,["gurobi-primal-dual-cold","gurobi-primal-dual-warm","gurobi-primal-primal-warm","gurobi-primal-ipm-cold"])
+    phase=="scale" && (methods=["lp-primal-dual-warm","lp-primal-primal-warm","lp-dual-dual-warm","gurobi-primal-dual-warm","gurobi-primal-primal-warm","newton-0.2","apg-0.2","admm"])
     # Compile methods on the SAME data type before collecting measurements.
     tx,ty=data("small",100); tx=tx[1:50,1:12]; ty=ty[1:50]
     startswith(case,"sparse") && (tx=SparseArrays.sparse(tx))

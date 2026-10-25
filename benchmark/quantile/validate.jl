@@ -8,8 +8,8 @@ using Test, DelimitedFiles
         ref=lppath(X,y,lambdas,tau,w,:primal,:dual,false;limit=20.)
         @test ref.status=="complete"
         objs=[objective(X,y,s.b,s.a,s.lambda,tau,w) for s in ref.answers]
-        for form in (:primal,:dual), strategy in (:primal,:dual,:ipm), warm in (false,true)
-            path=lppath(X,y,lambdas,tau,w,form,strategy,warm;limit=20.)
+        for engine in (HAS_GUROBI ? (:highs,:gurobi) : (:highs,)), form in (:primal,:dual), strategy in (:primal,:dual,:ipm), warm in (false,true)
+            path=lppath(X,y,lambdas,tau,w,form,strategy,warm;limit=20.,engine)
             @test path.status=="complete"
             @test length(path.answers)==3
             for (k,s) in enumerate(path.answers)
@@ -35,7 +35,7 @@ using Test, DelimitedFiles
     end
 end
 # One deterministic fixture for independent R acceptance checks.
-rng=Xoshiro(707); X=randn(rng,150,20); y=.7 .+ X[:,1:4]*[1.,-.5,.7,-1.] .+ randn(rng,150)
+rng=Xoshiro(707); X=randn(rng,150,20); X .-= mean(X,dims=1); X ./= std(X,dims=1); y=.7 .+ X[:,1:4]*[1.,-.5,.7,-1.] .+ randn(rng,150)
 mkpath("golden"); writedlm("golden/X.csv",X,','); writedlm("golden/y.csv",y,',')
 open("golden/julia.csv","w") do io
  println(io,"method,tau,lambda,h,objective,kkt")

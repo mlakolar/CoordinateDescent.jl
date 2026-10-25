@@ -3,6 +3,13 @@ using JuMP, HiGHS, LinearAlgebra, SparseArrays, Statistics, Random
 import CoordinateDescent as CD
 import ProximalBase as PB
 const MOI = JuMP.MOI
+const HAS_GUROBI = get(ENV,"BENCH_GUROBI","0")=="1"
+const GRB_ENV = if HAS_GUROBI
+    @eval import Gurobi
+    Gurobi.Env(output_flag=0)
+else
+    nothing
+end
 BLAS.set_num_threads(1)
 checkloss(r, tau) = max(tau*r, (tau-1)*r)
 soft(x, t) = sign(x)*max(abs(x)-t, 0)
@@ -26,10 +33,17 @@ function certificate(X,y,b,a,lambda,tau,w,u)
     (; primal, dual, gap=primal-dual, sumdual=abs(sum(v))/length(y))
 end
 
-function lpmodel(X,y,lambda,tau,w,form,strategy; limit=30.0)
+function lpmodel(X,y,lambda,tau,w,form,strategy; limit=30.0,engine=:highs)
     n,p=size(X)
-    m=direct_model(HiGHS.Optimizer())
+    m=direct_model(engine==:highs ? HiGHS.Optimizer() : Gurobi.Optimizer(GRB_ENV))
     set_silent(m)
+    if engine==:gurobi
+        set_optimizer_attribute(m,"Threads",1)
+        set_optimizer_attribute(m,"Method",strategy==:primal ? 0 : strategy==:dual ? 1 : 2)
+        set_optimizer_attribute(m,"TimeLimit",limit)
+        set_optimizer_attribute(m,"FeasibilityTol",1e-7)
+        set_optimizer_attribute(m,"OptimalityTol",1e-7)
+    else
     set_optimizer_attribute(m,"threads",1)
     set_optimizer_attribute(m,"parallel","off")
     set_optimizer_attribute(m,"time_limit",limit)
@@ -40,6 +54,7 @@ function lpmodel(X,y,lambda,tau,w,form,strategy; limit=30.0)
     else
         set_optimizer_attribute(m,"solver","simplex")
         set_optimizer_attribute(m,"simplex_strategy",strategy==:primal ? 4 : 1)
+    end
     end
     if form==:primal
         @variable(m,b[1:p])
@@ -79,19 +94,19 @@ function lpget(s,n)
     return b,a,value.(s.u)
 end
 
-function lppath(X,y,lambdas,tau,w,form,strategy,warm; limit=30.0)
+function lppath(X,y,lambdas,tau,w,form,strategy,warm; limit=30.0,engine=:highs)
     n,p=size(X); start=time(); setup=0.0; optimize=0.0; extract=0.0; iters=0
     answers=Any[]; s=nothing; status="complete"
     for lambda in lambdas
         time()-start>=limit && (status="budget"; break)
         t=time()
         if s===nothing || !warm
-            s=lpmodel(X,y,lambda,tau,w,form,strategy; limit=max(.01,limit-(time()-start)))
+            s=lpmodel(X,y,lambda,tau,w,form,strategy; limit=max(.01,limit-(time()-start)),engine)
         else
             lpupdate!(s,lambda,w,n)
         end
         setup+=time()-t
-        set_optimizer_attribute(s.m,"time_limit",max(.01,limit-(time()-start)))
+        set_optimizer_attribute(s.m,engine==:highs ? "time_limit" : "TimeLimit",max(.01,limit-(time()-start)))
         t=time(); optimize!(s.m); optimize+=time()-t
         ts=termination_status(s.m)
         if ts != MOI.OPTIMAL
@@ -123,7 +138,7 @@ function apgsolve(X,y,lambda,tau,w,loss,b,a; limit=30.0,tol=1e-6,maxiter=20000)
         bn=similar(b); an=a
         for _ in 1:60
             bn .= soft.(z .- g./L,lambda.*w./L); an=z0-g0/L
-            fn,_,_,_=smoothfg(X,y,bn,an,loss)
+            fn=mean(loss.(X*bn .+ an,y))
             db=bn-z; da=an-z0
             fn <= f+dot(g,db)+g0*da+L*(sum(abs2,db)+da^2)/2+1e-13 && break
             L*=2
