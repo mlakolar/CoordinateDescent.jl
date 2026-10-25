@@ -13,10 +13,18 @@ y <- 1 + X%*%c(1.5,-1,0.8,rep(0,p-3)) + rnorm(n)
 lambda <- qnorm(1 - 0.1*(1:p)/(2*p))/sqrt(n)
 factors <- c(3,2,1,0.6)
 for(intercept in c(FALSE,TRUE)) for(std in c(FALSE,TRUE)) {
-  fit <- SLOPE::SLOPE(X,y,intercept=intercept,center=if(intercept) 'mean' else 'none',
-    scale=if(std) 'sd' else 'none',alpha=factors,lambda=lambda,gamma=0,
+  # Without an intercept, Julia's existing package convention uses RMS,
+  # whereas R's scale='sd' still uses centered SD. Match the design explicitly.
+  rms <- if(std && !intercept) sqrt(colMeans(X^2)) else rep(1,p)
+  Xfit <- sweep(X,2,rms,'/')
+  fit <- SLOPE::SLOPE(Xfit,y,intercept=intercept,center=if(intercept) 'mean' else 'none',
+    scale=if(std && intercept) 'sd' else 'none',alpha=factors,lambda=lambda,gamma=1,
     tol=1e-10,max_passes=100000,threads=1,tol_dev_ratio=1,max_variables=p+1)
-  write(coef(fit,intercept=intercept),paste0('slope-',as.integer(intercept),'-',as.integer(std)))
+  write(fit$lambda,paste0('r-lambda-',as.integer(intercept),'-',as.integer(std)))
+  write(fit$alpha,paste0('r-alpha-',as.integer(intercept),'-',as.integer(std)))
+  cf <- coef(fit,intercept=intercept)
+  if(std && !intercept) cf <- sweep(as.matrix(cf),1,rms,'/')
+  write(cf,paste0('slope-',as.integer(intercept),'-',as.integer(std)))
 }
 s <- knockoff::create.solve_equi(Sigma)
 set.seed(8204); Z <- matrix(rnorm(n*p),n,p)
@@ -43,7 +51,7 @@ fitfun <- function(x,y,q,...) {
   selected[head(order(b,decreasing=TRUE),min(q,sum(b>0)))] <- TRUE
   list(selected=selected)
 }
-st <- stabs::stabsel(X,y,fitfun=fitfun,cutoff=0.8,q=cap,folds=folds,B=B,
+st <- stabs::stabsel(X,y,fitfun=fitfun,cutoff=0.8,q=cap,folds=folds[,seq(1,2*B,2),drop=FALSE],B=B,
   assumption='none',sampling.type='SS',papply=lapply,verbose=FALSE)
 write(folds,'folds');write(st$max,'stability-frequency');write(st$selected,'stability-selected')
 write(st$PFER,'pfer')

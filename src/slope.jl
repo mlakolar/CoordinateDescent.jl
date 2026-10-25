@@ -78,7 +78,7 @@ function _slope_fit!(β, Z, y, λ, candidates; max_iter, tol)
   while true
     if !isempty(E) && total < max_iter
       b = β[E]
-      f = (1 / length(y)) * LeastSquaresLoss(y, Z[:, E])
+      f = (one(eltype(β)) / length(y)) * LeastSquaresLoss(y, Z[:, E])
       g = ProximalBase.SLOPE(λ[1:length(E)])
       opts = ProximalOptions(; maxiter=max(2, max_iter-total), ftol=eps(Float64),
         xtol=eps(Float64), gradtol=tol/10, allow_f_increases=true)
@@ -93,7 +93,7 @@ function _slope_fit!(β, Z, y, λ, candidates; max_iter, tol)
     # remaining columns as a conservative fallback when only E fails KKT.
     added = setdiff(findall(j -> abs(trial[j]) > target, 1:p), E)
     if isempty(added)
-      length(E) == p && return total, false, residual, length(E), repairs, grad
+      length(E) == p && continue
       added = setdiff(1:p, E)
     end
     append!(E, added)
@@ -200,7 +200,7 @@ function SLOPEPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, factors
     λ[1] > 0 || throw(ArgumentError("automatic paths need a nonzero base sequence"))
     amax = maximum(cumsum(sort(abs.(grad); rev=true)) ./ cumsum(λ))
     amax = iszero(amax) ? one(T) : amax
-    factors = exp.(range(log(amax), log(amax * λmin_ratio); length=nλ))
+    factors = nλ == 1 ? T[amax] : exp.(range(log(amax), log(amax * λmin_ratio); length=nλ))
   end
   a = T.(collect(factors))
   !isempty(a) && all(isfinite, a) && all(>(0), a) && issorted(a; rev=true) ||
