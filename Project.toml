@@ -1,7 +1,7 @@
 name = "CoordinateDescent"
 uuid = "c00ed354-b9be-54b8-8a23-c5ac771bc43a"
 authors = ["Mladen Kolar <mkolar@chicagobooth.edu>"]
-version = "0.8.0"
+version = "0.8.1"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -31,7 +31,7 @@ KernelSmoothing = "0.1"
 LinearAlgebra = "1"
 PrecompileTools = "1"
 ProximalBase = "0.5"
-ProximalSolvers = "0.1.1"
+ProximalSolvers = "0.1.2"
 Random = "1"
 SparseArrays = "1"
 SpecialFunctions = "2"
