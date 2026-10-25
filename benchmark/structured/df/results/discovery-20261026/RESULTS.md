@@ -61,6 +61,8 @@ Use the component calculation and bounded path cache automatically for the suppo
 
 No penalty-selection, coverage, prediction-risk or FDR improvement is claimed. Large signal cross-validation remains issue100. This change does not establish high-dimensional scaling beyond the measured path dimensions.
 
+After the timed study, the zero-penalty sparse fused-fit shortcut was made to use the original dense numerical-rank convention. Every timing grid is strictly positive, so that change does not execute in the measured paths. The final structured/golden suites passed 1,658 checks on each Julia version in job13447394. The full-suite totals above refer to the measured production source; final-head hosted CI checks the additional boundary fix. Post-study logs and the final source hash are included here.
+
 ## Source and recreation
 
 Baseline: master 295fbf5420d6384a1ca261023367ee86d0a40b8c. Measured candidate production: 49289d477850cd8eeb052b39cb4af79e1b08d2fe. Candidate structured.jl SHA256:8bd9c38fcb4f183815163b1acccafb858b68a5247c35d4ed3d789983ff7a19fb; baseline:05bd75aa15fe19aa5ef7def00c0a8bc229cdf58779b4320884e8e040d0d8ae9d. Source hashes are emitted by every worker. Dependencies are held fixed: PB b6c949f3dd26cad09252e1c2c9e49810eb69403e, PS 531ff55fcf8a5ce2c6997c144d4f57e85cf79f3e, KS 1feff286d0020764d2c1b03d733ab316cf948ead. Resolved manifests and snapshots remain with the run.

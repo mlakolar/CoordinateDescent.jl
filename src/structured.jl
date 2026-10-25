@@ -650,7 +650,7 @@ function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::
     end
   else
     if iszero(λ1) && iszero(λ2)
-      df = _df_workspace === nothing ? rank(A) : _df_workspace.design_rank
+      df = _df_workspace === nothing ? rank(Matrix(A)) : _df_workspace.design_rank
     else
       constraints = _df_constraints
       if constraints === nothing

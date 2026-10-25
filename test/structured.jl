@@ -417,6 +417,7 @@ end
   ws = HDM._StructuredDFWorkspace(A,D)
   @test ws.design_rank == rank(A) == 2
   @test HDM._structured_df(A,D,zeros(3),0.;workspace=ws) == dense_df(A,D,zeros(3),0.)
+  @test dof(fused_lasso(sparse(A),zeros(50),0.,0.)) == rank(Matrix(A))
   D = graph_difference(3,[(1,2),(2,3)];weights=[1.,1e-20])
   @test HDM._incidence_components(sparse(D'),[1,2];check_rank=true) === nothing
   @test HDM._structured_df(Matrix{Float64}(I,3,3),D,zeros(3),0.) == dense_df(Matrix{Float64}(I,3,3),D,zeros(3),0.)
