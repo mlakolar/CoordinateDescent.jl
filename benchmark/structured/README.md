@@ -33,3 +33,10 @@ for evaluation; setup requests 1 CPU and 4 GB. Scheduler completion and
 numerical validation are recorded separately in the project run registry.
 Retain final TSV files, golden fixtures, logs and the source/environment
 references. No intermediate fits or whole-depot archives are needed.
+
+The checked result tables, including the adverse initial regression attempt,
+are in `recorded/`. `RESULTS.md` reports the retained measurements and the
+default-parameter repair. Run `summarize.py` inside the Discovery allocation
+from a run root (or the `recorded` directory) to check coverage and regenerate
+`summary.json`; it retains the original fused measurements and uses the
+repaired graph/trend measurements.
