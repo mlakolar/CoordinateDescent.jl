@@ -1,0 +1,33 @@
+{
+  "policy": "frozen_gaussian_hc3_v1",
+  "frozen_utc": "2026-10-25T23:08:35.970744Z",
+  "fitting_commit": "f3c60f1012f940c59fba79985531bc80ddc45579",
+  "selection": "development only:100datasets in each9Gaussian designs;fullconvergence/rolechecks passed",
+  "initializer": "5fold40levelminimumCVlasso;no selectedmodelrefit",
+  "projection": {
+    "method": "nodewise LDPE",
+    "unpenalized": 4,
+    "kappa": 0.5,
+    "nlambda": 60,
+    "minratio": 0.001,
+    "bias_target": "sqrt(2log(p))",
+    "relax": 0.1
+  },
+  "variance": "centeredHC3 influences using initialselectedmodel leverages;normalmarginalintervals",
+  "options": {
+    "opt_tol": 1e-08,
+    "gaptol": 0
+  },
+  "new_stress": "gaussian-hetero-target n300p500rho.3s5firstsupport;noiseSDsqrt((1+X1^2)/2)",
+  "confirmation": "500freshdatasets in all9existingGaussian designs plusprespecifiedstrongheterotargetstress;namespace92200000plusoriginalcaseoffset;canary95000000",
+  "gate": ">=99%completevalid;pooledactivecoverage lower95MCbound>=.925,nullrejectionupper95MCbound<=.075;perrolereviewandpower/lengthreview",
+  "limitations": "HC3 finite-sample correction is not proof after selection. Development hasconservativecoverage andlowerpower. No defaultpromoteduntil independentvalidation. No tuningonconfirmation.",
+  "files_sha256": {
+    "confirm-gaussian.jl": "cb74c1db1a74e59bb48302a0545abe65c9ee3b814c2c827cabac9725f546c9d9",
+    "confirmation-data.jl": "c63726872e4f73a248eea1e20a59c942ba100c3aa4a5aac88249fe3e45ede6e5",
+    "confirmation-cases.csv": "4e2581bf7de03365a64352050e7c47bdc26e78338c087e1342f1ce660d6499df",
+    "check-hc3.R": "60b98ff68bcc6305fa5876f8a880179aacb71b4f255ce0109d94cda948f3baa3",
+    "analyze-confirmation.py": "2c4c721c963ed4b207832824aefc39a7bdec8a78f1fd5889c2c733e6f15e9984",
+    "summarize-slots.py": "dd1d9475b74a20c419ee5315fb7ca75636b84582232d07af23ef438f2432b372"
+  }
+}
