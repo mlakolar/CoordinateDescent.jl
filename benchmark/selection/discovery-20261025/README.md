@@ -14,6 +14,7 @@ Successful measurement jobs:
 | 13423193 | a01-04 | full Julia 1.13.2 suite: 2,584 checks, including Aqua |
 | 13423196 | a01-03 | Julia 1.10.12 compatibility: 80 unit checks plus 17 R goldens |
 | 13423250 | a01-04 | doctests, cross-references and HTML documentation rendering |
+| 13423279 | a01-02 | final iteration-budget guard: 98 targeted/golden checks on each Julia version |
 
 The measurement code is the runtime source at `6aa6c11`, staged as
 `source-v7.tar.gz` plus the corrected reference/launcher overlays recorded in
@@ -60,3 +61,10 @@ Remote results: `/home1/mkolar/juliaPkg/runs/20261025-cd82-selection`.
 The registry retains the early failed preparation/reference checks and their
 repairs. Completed numerical experiments were not repeated for transfer or
 report generation.
+
+[Final guard checks on Julia 1.13](guard-1.13.log) and [Julia 1.10](guard-1.10.log),
+[documentation receipt](docs.log), and [scheduler accounting](accounting.tsv)
+complete the retained validation. Including all failed attempts, the allocation
+running-time union was 34.78 minutes, with 1.57 allocated CPU-hours,
+a peak request of 6 CPUs and 16 GB. This stayed within the standing
+8-CPU/16-GB/two-hour allowance.
