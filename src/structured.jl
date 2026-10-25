@@ -128,6 +128,42 @@ function _split_tproduct!(y, K::_TrendProducts{T, W}, x) where {T, W}
   y
 end
 
+# Keep boundary handling outside the interior loop. Short dynamic ranges and
+# tuple indices otherwise account for much of the transpose-product work.
+function _split_tproduct!(y, K::_TrendProducts{T, 2}, x) where {T}
+  length(y) == K.n && length(x) == K.m || throw(DimensionMismatch("trend transpose dimensions"))
+  a, b = K.coefficients
+  @inbounds begin
+    y[1] = zero(T) + _trend_coefficient(a, 1) * x[1]
+    @simd for j in 2:K.m
+      y[j] = (zero(T) + _trend_coefficient(b, j-1) * x[j-1]) + _trend_coefficient(a, j) * x[j]
+    end
+    y[K.n] = zero(T) + _trend_coefficient(b, K.m) * x[K.m]
+  end
+  y
+end
+
+function _split_tproduct!(y, K::_TrendProducts{T, 3}, x) where {T}
+  length(y) == K.n && length(x) == K.m || throw(DimensionMismatch("trend transpose dimensions"))
+  a, b, c = K.coefficients
+  @inbounds begin
+    y[1] = zero(T) + _trend_coefficient(a, 1) * x[1]
+    if K.m == 1
+      y[2] = zero(T) + _trend_coefficient(b, 1) * x[1]
+    else
+      y[2] = (zero(T) + _trend_coefficient(b, 1) * x[1]) + _trend_coefficient(a, 2) * x[2]
+      @simd for j in 3:K.m
+        y[j] = ((zero(T) + _trend_coefficient(c, j-2) * x[j-2]) +
+          _trend_coefficient(b, j-1) * x[j-1]) + _trend_coefficient(a, j) * x[j]
+      end
+      y[K.m+1] = (zero(T) + _trend_coefficient(c, K.m-1) * x[K.m-1]) +
+        _trend_coefficient(b, K.m) * x[K.m]
+    end
+    y[K.n] = zero(T) + _trend_coefficient(c, K.m) * x[K.m]
+  end
+  y
+end
+
 """
     graph_difference(p, edges; weights = nothing)
 

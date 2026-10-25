@@ -17,8 +17,11 @@ fit() # Warm this wrapper and the actual problem size before all three rounds.
 rss()=parse(Int,match(r"VmRSS:\s+(\d+) kB",read("/proc/self/status",String)).captures[1])*1024
 meta=Dict("variant"=>variant,"case"=>m["case"],"rep"=>m["rep"],"julia"=>string(VERSION),
   "cpu"=>Sys.cpu_info()[1].model,"blas"=>string(BLAS.get_config()),"blas_threads"=>BLAS.get_num_threads(),
+  "julia_threads"=>Threads.nthreads(),
   "warmed_current_rss"=>rss(),"warmed_peak_rss"=>Sys.maxrss(),
-  "y_sha256"=>bytes2hex(sha256(read(joinpath(input,"y.bin")))))
+  "y_sha256"=>bytes2hex(sha256(read(joinpath(input,"y.bin")))),
+  "x_sha256"=>bytes2hex(sha256(read(joinpath(input,"x.bin")))),
+  "source_sha256"=>bytes2hex(sha256(read(joinpath(dirname(pathof(HighDimensionalModels)),"structured.jl")))))
 open(joinpath(out,"timings.csv"),"w") do io
   println(io,"variant,case,rep,round,seconds,bytes,iterations,converged,primal_residual,dual_residual")
   for round in 1:3
@@ -27,11 +30,16 @@ open(joinpath(out,"timings.csv"),"w") do io
       all(z.converged for z in s),maximum(z.primal_residual for z in s),maximum(z.dual_residual for z in s)),','));flush(io)
     if round==1
       open(sio->foreach(z->write(sio,z.x),s),joinpath(out,"coefficients.bin"),"w")
-      open(sio->TOML.print(sio,Dict("objectives"=>[z.objective for z in s],"df"=>[z.df for z in s])),joinpath(out,"fit.toml"),"w")
+      open(sio->TOML.print(sio,Dict("objectives"=>[z.objective for z in s],"df"=>[z.df for z in s],
+        "iterations"=>[z.iterations for z in s],"converged"=>[z.converged for z in s],
+        "primal_residual"=>[z.primal_residual for z in s],"dual_residual"=>[z.dual_residual for z in s])),joinpath(out,"fit.toml"),"w")
     end
   end
 end
 meta["peak_after_timing"]=Sys.maxrss();meta["current_after_timing"]=rss()
+profile_delay = n >= 1_000_000 || (m["path"] > 0 && m["order"] == 2) ? 0.005 : 0.001
+Profile.init(n=6_000_000,delay=profile_delay)
+meta["cpu_profile_delay"] = profile_delay
 Profile.clear();Profile.@profile fit()
 open(joinpath(out,"cpu.txt"),"w") do io
   println(io,"raw_stack_words=",length(Profile.fetch()))

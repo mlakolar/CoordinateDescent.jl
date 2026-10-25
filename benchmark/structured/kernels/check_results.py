@@ -3,7 +3,7 @@ import csv,hashlib,json,pathlib,statistics,sys,tomllib
 import numpy as np
 from scipy import sparse
 root=pathlib.Path(sys.argv[1]);phase=sys.argv[2];base=root/'results'/phase
-rows=[];errors=[]
+rows=[];errors=[];native_records=[];reference_records=[]
 for folder in sorted(base.glob('*-*')):
     if not folder.is_dir():continue
     m=tomllib.loads((root/'inputs'/folder.name/'meta.toml').read_text());n=m['n'];count=max(1,m['path'])
@@ -24,11 +24,17 @@ for folder in sorted(base.glob('*-*')):
             ts=list(csv.DictReader((dest/'timings.csv').open()));timings[variant]=statistics.median(float(r['seconds']) for r in ts)
             B=np.fromfile(dest/'coefficients.bin',dtype='<f8').reshape((n,count),order='F');variants[variant]=B
             actual=tomllib.loads((dest/'fit.toml').read_text());delta=D@B
+            md=tomllib.loads((dest/'metadata.toml').read_text())
+            assert md['y_sha256']==m['y_sha256'] and md['blas_threads']==1
+            if phase=='main':
+                assert md['julia_threads']==1 and md['x_sha256']==m['x_sha256']
+                assert json.loads((dest/'resource.json').read_text())['exit_code']==0
             objective=(np.sum((B-y[:,None])**2,axis=0)/2+levels*np.sum(abs(delta),axis=0))/n
             err=float(np.max(abs(objective-actual['objectives'])/np.maximum(abs(objective),np.finfo(float).eps)))
             expected_df=np.minimum(n,m['order']+1+np.sum(abs(delta)>1e-4,axis=0))
             good=len(ts)==3 and all(r['converged']=='true' for r in ts) and np.all(np.isfinite(B)) and err<=1e-6 and np.array_equal(expected_df,actual['df'])
             if not good:errors.append(dict(input=folder.name,variant=variant,error='fit/objective/DF/convergence check failed'))
+            native_records.append(dict(input=folder.name,variant=variant,columns=count,objective_error=err,passed=bool(good)))
         except Exception as e:errors.append(dict(input=folder.name,variant=variant,error=repr(e)))
     if len(variants)==2:
         B,C=variants['baseline'],variants['candidate']
@@ -39,6 +45,28 @@ for folder in sorted(base.glob('*-*')):
         if ce>1e-4 or oe>1e-6:errors.append(dict(input=folder.name,error='before/after accuracy failed'))
         rows.append(dict(input=folder.name,baseline_seconds=timings['baseline'],candidate_seconds=timings['candidate'],
             ratio=timings['candidate']/timings['baseline'],coefficient_error=ce,objective_error=oe,bitwise_equal=bool(np.array_equal(B,C))))
-result=dict(phase=phase,cases=len(rows),errors=errors,results=rows)
+    if phase=='main':
+        try:
+            ref=folder/'reference'
+            R=np.fromfile(ref/'coefficients.bin',dtype='<f8').reshape((n,count),order='F')
+            status=list(csv.DictReader((ref/'status.csv').open()))
+            assert len(status)==count and all(int(s['status'])==0 for s in status) and np.all(np.isfinite(R))
+            assert np.allclose([float(s['level']) for s in status],levels,rtol=1e-12,atol=0)
+            assert json.loads((ref/'resource.json').read_text())['exit_code']==0
+            md=next(csv.DictReader((ref/'metadata.csv').open()))
+            for key in ('y','x'):assert md[f'{key}_md5']==hashlib.md5((input/f'{key}.bin').read_bytes()).hexdigest()
+            assert md['OPENBLAS_NUM_THREADS']==md['OMP_NUM_THREADS']=='1'
+            ro=(np.sum((R-y[:,None])**2,axis=0)/2+levels*np.sum(abs(D@R),axis=0))/n
+            for variant,B in variants.items():
+                ce=float(np.max(np.linalg.norm(B-R,axis=0)/np.maximum(np.linalg.norm(R,axis=0),np.finfo(float).eps)))
+                bo=(np.sum((B-y[:,None])**2,axis=0)/2+levels*np.sum(abs(D@B),axis=0))/n
+                oe=float(np.max(abs(bo-ro)/np.maximum(abs(ro),np.finfo(float).eps)))
+                passed=ce<=1e-4 and oe<=1e-6
+                reference_records.append(dict(input=folder.name,variant=variant,columns=count,coefficient_error=ce,objective_error=oe,passed=bool(passed)))
+                if not passed:errors.append(dict(input=folder.name,variant=variant,error='tight glmgen agreement failed',coefficient_error=ce,objective_error=oe))
+        except Exception as e:errors.append(dict(input=folder.name,variant='reference',error=repr(e)))
+expected=27 if phase=='main' else 6
+if len(rows)!=expected:errors.append(dict(error='missing coverage',expected=expected,actual=len(rows)))
+result=dict(phase=phase,cases=len(rows),expected_cases=expected,errors=errors,results=rows,native_records=native_records,reference_records=reference_records)
 (base/'inspection.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))
 assert not errors
