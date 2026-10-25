@@ -218,7 +218,7 @@ end
 # Signal trend systems have at most three subdiagonals for the usual orders.
 # Store their Cholesky factor by subdiagonal so repeated solves need no sparse
 # solver workspace or conversion of a CHOLMOD-owned solution vector.
-struct _StructuredBandFactor{T}
+struct _StructuredBandFactor{T, W}
   lower::Matrix{T}
 end
 
@@ -244,24 +244,27 @@ function _structured_band_factor(H, width)
       L[i-j+1, j] = v / L[1, j]
     end
   end
-  _StructuredBandFactor(L)
+  _StructuredBandFactor{T, width}(L)
 end
 
-function _structured_solve!(x, F::_StructuredBandFactor, b)
+function _structured_solve!(x, F::_StructuredBandFactor{T, W}, b) where {T, W}
   L = F.lower
-  width, n = size(L, 1) - 1, length(x)
-  copyto!(x, b)
+  n = length(x)
+  # The supported widths are 1:3. Constant-width substitution avoids short
+  # dynamic inner loops in each of the millions of ADMM triangular solves.
   @inbounds for j in 1:n
-    x[j] /= L[1, j]
-    for i in j+1:min(n, j+width)
-      x[i] -= L[i-j+1, j] * x[j]
-    end
+    v = b[j]
+    W >= 1 && j > 1 && (v -= L[2, j-1] * x[j-1])
+    W >= 2 && j > 2 && (v -= L[3, j-2] * x[j-2])
+    W >= 3 && j > 3 && (v -= L[4, j-3] * x[j-3])
+    x[j] = v / L[1, j]
   end
   @inbounds for j in n:-1:1
-    for i in j+1:min(n, j+width)
-      x[j] -= L[i-j+1, j] * x[i]
-    end
-    x[j] /= L[1, j]
+    v = x[j]
+    W >= 1 && j < n && (v -= L[2, j] * x[j+1])
+    W >= 2 && j < n-1 && (v -= L[3, j] * x[j+2])
+    W >= 3 && j < n-2 && (v -= L[4, j] * x[j+3])
+    x[j] = v / L[1, j]
   end
   x
 end
