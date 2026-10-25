@@ -54,11 +54,19 @@ At each penalty, proximal Newton builds a weighted least-squares approximation
 to the smooth loss and solves its lasso subproblem by coordinate descent.
 Backtracking accepts a step that does not increase the penalized objective.
 The path uses warm starts, sequential strong screening and subsequent checks
-of the excluded coordinates. In the benchmarked dependency version, the
-convolution loss does not activate the solver's gap-based stopping rule;
-Newton stops on objective change and the quantile interface checks raw-dual
-accuracy afterward. The external `tol` marks acceptance without automatically
-refining a rejected fit.
+of the excluded coordinates. With a ProximalSolvers backend supporting convolution
+certificates, `tol` also sets the gap target, together with checks of the raw
+scores during solving. A smaller explicit `options.gaptol` is honored.
+Flat-tail curvature damping and absolute inner stopping reduce cancellation
+from large working responses; they change the quadratic step, not the objective.
+`options=CDOptions(gaptol=0)` selects the legacy objective-change route.
+Older solver versions retain their original stopping behavior and receive the
+same independent post-fit checks. On that route, external `tol` marks acceptance
+without automatically refining a rejected fit.
+
+The backend conservatively retains inner convergence failures. A returned pair
+can therefore have `converged=true` after passing the external numerical checks
+while `native_converged=false` and inner warnings remain visible.
 
 Its dual vectors are Epanechnikov convolution scores. They have the same scaling
 interface but are not automatically interchangeable with exact quantile scores

@@ -83,7 +83,10 @@ Inputs are converted to Float64; sparse designs remain sparse.
 The automatic grid starts at the intercept-only score maximum, inflated for
 roundoff, and ends at `λminratio` times that maximum. This is a numerical path,
 not pivotal calibration or cross-validation. `tol=2e-5` is the external KKT and
-relative raw-gap tolerance, distinct from backend stopping rules.
+relative raw-gap tolerance. Backends supporting convolution certificates also
+use it during smoothed fitting, honoring a smaller positive `options.gaptol`.
+An explicit `options.gaptol=0` keeps the legacy objective-change rule; older
+backends retain their original stopping and are checked afterward.
 
 For positive λ and factors, the certificate projects scores onto their box
 and intercept constraint, then contracts to meet the slope constraints. With
