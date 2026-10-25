@@ -1,0 +1,807 @@
+[
+  {
+    "case": "gaussian-moderate",
+    "file": "20.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-moderate",
+    "file": "12.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-moderate",
+    "file": "7.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-moderate",
+    "file": "6.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-moderate",
+    "file": "16.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-moderate",
+    "file": "15.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-moderate",
+    "file": "19.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-moderate",
+    "file": "18.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-moderate",
+    "file": "8.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "6.qp_half.error",
+    "error": "ArgumentError: QP for target 1 did not converge to a feasible optimum (residual=3.2754020726068145, gap=-0.008081746294919867)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "15.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=27.034732832921662, gap=-16430.160516669595)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "3.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=3.5269338302422284, gap=-18264.314403934375)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "10.qp_half.error",
+    "error": "ArgumentError: QP for target 1 did not converge to a feasible optimum (residual=1.2683662493136527, gap=-15.543922663006924)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "5.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 16 did not converge to a feasible optimum (residual=0.26870444776912794, gap=-0.0008890853914635954)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "19.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 1 did not converge to a feasible optimum (residual=4.41101115451027, gap=-8.906922887194014)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "2.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=2.5124538951284068, gap=-0.0035148048345945426)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "10.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 1 did not converge to a feasible optimum (residual=1.2683662493136527, gap=-15.543922663006924)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "9.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=0.2858511905302308, gap=-32090.648809089762)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "17.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=0.535469036349566, gap=-817.1738761857159)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "18.qp_half.error",
+    "error": "ArgumentError: QP for target 18 did not converge to a feasible optimum (residual=9.811396999149949, gap=-132.32973786733783)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "12.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=1.7826674542552912, gap=-268.2547155293287)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "14.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=9.454769294917526, gap=-5069.896940518607)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "1.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=10.05084345782113, gap=-5824.673320197238)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "8.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 3 did not converge to a feasible optimum (residual=2.0073332552657064, gap=-444.30148198061215)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "13.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=5.604038495369991, gap=-17048.7362423187)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "17.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=0.535469036349566, gap=-817.1738761857159)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "1.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=10.05084345782113, gap=-5824.673320197238)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "4.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=2.123602047426651, gap=-172.95335921926744)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "6.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 1 did not converge to a feasible optimum (residual=3.2754020726068145, gap=-0.008081746294919867)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "16.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=1.6203260149897574, gap=-2596.6329771282617)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "16.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=1.6203260149897574, gap=-2596.6329771282617)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "5.qp_half.error",
+    "error": "ArgumentError: QP for target 16 did not converge to a feasible optimum (residual=0.26870444776912794, gap=-0.0008890853914635954)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "11.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=0.5467481337787383, gap=-0.0013632236646117235)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "13.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=5.604038495369991, gap=-17048.7362423187)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "18.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 18 did not converge to a feasible optimum (residual=9.811396999149949, gap=-132.32973786733783)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "3.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=3.5269338302422284, gap=-18264.314403934375)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "4.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=2.123602047426651, gap=-172.95335921926744)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "20.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=0.3257093423561628, gap=-8690.031478885889)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "19.qp_half.error",
+    "error": "ArgumentError: QP for target 1 did not converge to a feasible optimum (residual=4.41101115451027, gap=-8.906922887194014)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "7.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=0.47022581408158715, gap=-4257.064118926806)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "8.qp_half.error",
+    "error": "ArgumentError: QP for target 3 did not converge to a feasible optimum (residual=2.0073332552657064, gap=-444.30148198061215)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "9.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=0.2858511905302308, gap=-32090.648809089762)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "12.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=1.7826674542552912, gap=-268.2547155293287)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "15.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=27.034732832921662, gap=-16430.160516669595)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "2.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=2.5124538951284068, gap=-0.0035148048345945426)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "11.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=0.5467481337787383, gap=-0.0013632236646117235)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "20.qp_half_refit.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=0.3257093423561628, gap=-8690.031478885889)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "7.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=0.47022581408158715, gap=-4257.064118926806)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-correlated",
+    "file": "14.qp_half.error",
+    "error": "ArgumentError: QP for target 2 did not converge to a feasible optimum (residual=9.454769294917526, gap=-5069.896940518607)\nStacktrace:\n  [1] (::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool})(ids::UnitRange{Int64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:311\n  [2] _inference_workers(f::HighDimensionalModels.var\"#348#349\"{Symbol, Float64, Nothing, Int64, Float64, Float64, Float64, Float64, Int64, CDOptions, Vector{UInt64}, Vector{Bool}, Vector{Bool}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Int64}, Vector{Bool}, Vector{SparseArrays.SparseVector{Float64, Int64}}, Vector{Float64}, Matrix{Float64}, Bool, Vector{Float64}, Vector{Int64}, Int64, Int64, Type{Float64}, Matrix{Float64}, Bool}, count::Int64, threads::Bool)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:68\n  [3] debiasing_matrix(X::Matrix{Float64}; method::Symbol, lambda::Nothing, mu::Float64, intercept::Bool, standardize_x::Bool, targets::Vector{Int64}, lambda_path::Nothing, gram::Symbol, max_gram_bytes::Int64, threads::Bool, nodewise_cv_folds::Int64, nodewise_cv_nlambda::Int64, nodewise_cv_nodes::Int64, ldpe_nlambda::Int64, ldpe_minratio::Float64, ldpe_kappa::Float64, ldpe_bias_target::Float64, ldpe_relax::Float64, ldpe_unpenalized::Int64, options::CDOptions, rng::Xoshiro)\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:293\n  [4] debiasing_matrix\n    @ ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:233 [inlined]\n  [5] debiased_lasso(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64; family::Symbol, initial::Vector{Float64}, initial_intercept::Float64, sigma::Nothing, projection::Nothing, robust::Bool, intercept::Bool, standardize_x::Bool, nodewise_lambda::Nothing, initial_tuning::Symbol, initial_cv_folds::Int64, initial_cv_nlambda::Int64, options::CDOptions, rng::Xoshiro, kwargs::@Kwargs{targets::Vector{Int64}, threads::Bool, method::Symbol, mu::Float64})\n    @ HighDimensionalModels ~/juliaPkg/runs/20261025-cd77-bias-tuning/source-v5/src/inference.jl:519\n  [6] (::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String})(io::IOStream)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:56\n  [7] open(::var\"#runrep##0#runrep##1\"{Int64, Vector{Int64}, Vector{Float64}, Vector{Float64}, Matrix{Float64}, String}, ::String, ::Vararg{String}; kwargs::@Kwargs{})\n    @ Base ./io.jl:429\n  [8] open\n    @ ./io.jl:426 [inlined]\n  [9] runrep(rep::Int64)\n    @ Main ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:43\n [10] top-level scope\n    @ ~/juliaPkg/runs/20261026-cd77-defaults/source-v2/pilot.jl:68\n [11] include(mod::Module, _path::String)\n    @ Base ./Base.jl:309\n [12] exec_options(opts::Base.JLOptions)\n    @ Base ./client.jl:344\n [13] _start()\n    @ Base ./client.jl:577\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "20.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "7.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "6.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "4.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "19.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "18.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "1.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "3.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "2.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "10.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "8.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "11.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "12.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "17.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "16.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "14.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "gaussian-weak",
+    "file": "15.hdm_ds.error",
+    "error": "number of items to replace is not a multiple of replacement length\n"
+  },
+  {
+    "case": "binomial-moderate",
+    "file": "3.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-moderate",
+    "file": "13.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-moderate",
+    "file": "1.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-moderate",
+    "file": "8.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-moderate",
+    "file": "9.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-moderate",
+    "file": "15.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-correlated",
+    "file": "9.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-correlated",
+    "file": "17.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-correlated",
+    "file": "5.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-correlated",
+    "file": "16.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-correlated",
+    "file": "1.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "7.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "15.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "19.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "17.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "5.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "2.cvds_min.error",
+    "error": "initial refit invalid\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "4.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "16.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "11.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "18.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "1.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "13.cvds_min.error",
+    "error": "initial refit invalid\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "14.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "6.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-random",
+    "file": "8.cvds_min.error",
+    "error": "initial refit invalid\n"
+  },
+  {
+    "case": "binomial-weak",
+    "file": "5.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "6.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "1.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "19.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "10.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "8.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "17.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "3.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "20.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "4.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "15.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "12.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "14.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "13.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "2.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "5.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "11.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "9.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "16.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "7.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-largen",
+    "file": "18.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "3.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "12.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "11.cvds_1se.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "19.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "11.cvds_min.error",
+    "error": "initial refit invalid\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "16.cvds_min.error",
+    "error": "initial refit invalid\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "9.cvds_min.error",
+    "error": "initial refit invalid\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "18.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "14.cvds_min.error",
+    "error": "initial refit invalid\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "2.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "5.cvds_min.error",
+    "error": "initial refit invalid\n"
+  },
+  {
+    "case": "binomial-independent",
+    "file": "13.cvds_min.error",
+    "error": "initial refit invalid\n"
+  },
+  {
+    "case": "belloni-0",
+    "file": "10.cvds_min.error",
+    "error": "initial refit invalid\n"
+  },
+  {
+    "case": "belloni-0",
+    "file": "6.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0",
+    "file": "12.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0",
+    "file": "2.cvds_min.error",
+    "error": "initial refit invalid\n"
+  },
+  {
+    "case": "belloni-0",
+    "file": "10.cvds_1se.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0",
+    "file": "18.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0",
+    "file": "9.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0p2",
+    "file": "6.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0p2",
+    "file": "18.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0p2",
+    "file": "3.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0p2",
+    "file": "4.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0p2",
+    "file": "13.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0p2",
+    "file": "17.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0p2",
+    "file": "9.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0p2",
+    "file": "10.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "belloni-0p2",
+    "file": "19.cvds_min.error",
+    "error": "final refit invalid or separated\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "18.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "7.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "16.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "9.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "11.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "5.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "2.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "13.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "14.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "12.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "15.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "20.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "4.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "3.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "17.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "8.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "10.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "19.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "1.full_mle.error",
+    "error": "MLE not converged\n"
+  },
+  {
+    "case": "binomial-sihr",
+    "file": "6.full_mle.error",
+    "error": "MLE not converged\n"
+  }
+]

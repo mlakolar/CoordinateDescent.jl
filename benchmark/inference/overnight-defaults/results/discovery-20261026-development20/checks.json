@@ -1,0 +1,11 @@
+{
+  "stage": "development",
+  "cases": 19,
+  "datasets": 380,
+  "target_records": 48574,
+  "unique_target_records": 48574,
+  "missing_dataset_markers": [],
+  "method_error_count": 161,
+  "warning_files": 223,
+  "finite_successful_outputs": true
+}
