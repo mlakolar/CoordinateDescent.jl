@@ -5,6 +5,7 @@
 end
 
 using ProximalAlgorithms
+import ProximalBase
 
 @testset "Low-rank solver choices and diagnostics" begin
   rng = Xoshiro(81082)
