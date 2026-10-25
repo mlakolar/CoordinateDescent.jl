@@ -40,6 +40,7 @@ makedocs(
         "Paths, screening and solver options" => "paths.md",
         "The group lasso" => "group.md",
         "Primal–dual quantile regression" => "quantile.md",
+        "Fused regression, trend filtering and graphs" => "structured.md",
         "Writing a loss or a penalty" => "extending.md",
         "Varying-coefficient models" => "varying.md",
         "Examples" => example_pages,

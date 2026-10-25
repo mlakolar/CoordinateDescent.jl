@@ -1,0 +1,4 @@
+Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
+3	:	1792934583.114	   378.875	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness-holdout/holdout-worker.sh 8303 > holdout/julia/worker-8303.log 2>&1
+1	:	1792934583.109	   383.651	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness-holdout/holdout-worker.sh 8301 > holdout/julia/worker-8301.log 2>&1
+2	:	1792934583.112	   383.650	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness-holdout/holdout-worker.sh 8302 > holdout/julia/worker-8302.log 2>&1

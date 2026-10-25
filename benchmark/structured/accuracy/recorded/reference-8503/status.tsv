@@ -1,0 +1,16 @@
+seed	case	reference	converged	iterations	columns
+8503	signal-n1000-k2-l0.1	glmgen-1e12	TRUE	1406	1
+8503	signal-n1000-k2-l1	glmgen-1e12	TRUE	1951	1
+8503	signal-n1000-k2-l10	glmgen-1e12	TRUE	13963	1
+8503	signal-n10000-k2-l0.1	glmgen-1e12	TRUE	1494	1
+8503	signal-n10000-k2-l1	glmgen-1e12	TRUE	3455	1
+8503	signal-n10000-k2-l10	glmgen-1e12	TRUE	13607	1
+8503	irregular-n10000-k2-l0.1	glmgen-1e12	TRUE	1576	1
+8503	irregular-n10000-k2-l1	glmgen-1e12	TRUE	3111	1
+8503	irregular-n10000-k2-l10	glmgen-1e12	TRUE	15559	1
+8503	signal-path-n1000-k2	glmgen-1e12	TRUE	193094	50
+8503	signal-path-n10000-k2	glmgen-1e12	TRUE	279762	50
+8503	fused-p100-l0.01	genlasso-special	TRUE	354	1
+8503	fused-path-p100	genlasso-special	TRUE	431	50
+8503	graph-p100-l0.1	genlasso-special	TRUE	25	1
+8503	graph-path-p100	genlasso-special	TRUE	192	50

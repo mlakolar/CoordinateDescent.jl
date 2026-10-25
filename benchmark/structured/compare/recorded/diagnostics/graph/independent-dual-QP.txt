@@ -1,0 +1,2 @@
+lambda=0.692324 column=48 optim_status=0 projected_gradient=0
+relative_error_vs_Julia=1.10254e-07 relative_error_vs_genlasso=0.40474

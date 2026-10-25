@@ -1,0 +1,16 @@
+id	family	n	p	order	grid	path	lo	hi	genlasso	r_setting
+signal-n1000-k1-l0.1	signal	1000	1000	1	unit	0	0.1	0.1	FALSE	glmgen-1e8
+signal-n1000-k1-l1	signal	1000	1000	1	unit	0	1	1	FALSE	glmgen-1e8
+signal-n1000-k1-l10	signal	1000	1000	1	unit	0	10	10	FALSE	glmgen-1e8
+signal-n10000-k1-l0.1	signal	10000	10000	1	unit	0	0.1	0.1	FALSE	glmgen-1e8
+signal-n10000-k1-l1	signal	10000	10000	1	unit	0	1	1	FALSE	glmgen-1e8
+signal-n10000-k1-l10	signal	10000	10000	1	unit	0	10	10	FALSE	glmgen
+signal-n100000-k1-l0.1	signal	1e+05	1e+05	1	unit	0	0.1	0.1	FALSE	glmgen-1e8
+signal-n100000-k1-l1	signal	1e+05	1e+05	1	unit	0	1	1	FALSE	glmgen-1e8
+signal-n100000-k1-l10	signal	1e+05	1e+05	1	unit	0	10	10	FALSE	glmgen-1e8
+irregular-n10000-k1-l0.1	signal	10000	10000	1	irregular	0	0.1	0.1	FALSE	glmgen-1e8
+irregular-n10000-k1-l1	signal	10000	10000	1	irregular	0	1	1	FALSE	glmgen-1e8
+irregular-n10000-k1-l10	signal	10000	10000	1	irregular	0	10	10	FALSE	glmgen
+signal-path-n1000-k1	signal	1000	1000	1	unit	50	0.1	10	FALSE	glmgen-1e8
+signal-path-n10000-k1	signal	10000	10000	1	unit	50	0.1	10	FALSE	glmgen
+million-k1	signal	1e+06	1e+06	1	unit	0	1	1	FALSE	glmgen-1e8
