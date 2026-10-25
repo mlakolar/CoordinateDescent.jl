@@ -109,13 +109,14 @@ end
     loss=HighDimensionalModels.ProximalBase.ConvolutionCheck(.5,.2)
     if HighDimensionalModels.ProximalSolvers._hasconjugate(loss)
       for τ in (.2,.5,.8), screening in (false,true)
+        current_loss=HighDimensionalModels.ProximalBase.ConvolutionCheck(τ,.2)
         p=QuantileLassoPath(X,y,[.3,.1,.03];method=:smooth,tau=τ,bandwidth=.2,
           standardize_x=false,tol=1e-6,screening,rng=Xoshiro(19))
         @test p.complete && all(s.converged for s in p.solutions)
         @test all(s.certificate_gap <= 1e-6*(1+abs(s.objective)) for s in p.solutions)
         for s in p.solutions
-          expected=[-last(HighDimensionalModels.ProximalBase.value_and_deriv(loss,predict(s,X)[i],y[i])) for i in eachindex(y)]
-          τ==.5 && @test dual_scores(s) ≈ expected
+          expected=[-last(HighDimensionalModels.ProximalBase.value_and_deriv(current_loss,predict(s,X)[i],y[i])) for i in eachindex(y)]
+          @test dual_scores(s) ≈ expected
         end
       end
       p=QuantileLassoPath(X,y,[.1,0.];method=:smooth,penalty_factors=[0.,1,1,1,1],
