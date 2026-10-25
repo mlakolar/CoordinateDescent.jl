@@ -19,7 +19,7 @@ if(mode=='generate') {
  write.table(ord,paste0(base,'-order.tsv'),sep='\t',row.names=FALSE,col.names=FALSE,quote=FALSE)
  quit(status=0)
 }
-method=args[4];rep=as.integer(args[5]);d=readRDS(paste0(base,'.rds'))
+method=args[4];rep=as.integer(args[5]);set.seed(seed+10000L*rep);d=readRDS(paste0(base,'.rds'))
 library(quantreg);library(conquer);library(rqPen)
 # rqfnb swaps the bounded LP scores x into wn column3 before return.
 # Instrument a local copy only; do not modify the installed package namespace.

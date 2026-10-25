@@ -5,7 +5,7 @@ This is the second stage of issue78, after the initial solver study. It measures
 to0.02lambda_max. Shapes are1000x100 Gaussian,1000x100 tail tau0.1 with
 heteroscedastic t3 errors,10000x100,1000x1000 correlated, and1000x3000. R generates
 centered sample-SD1 columns for all methods. Three fresh seeds1201–1203 and two
-shuffled blocks across Julia and R methods give six observations per method/shape. Input-level means, SDs,
+shuffled blocks across Julia and R methods give six observations per method/shape. Solver RNGs are fixed separately from input generation. Input-level means, SDs,
 t intervals and paired contrasts use three inputs, never six independent inputs.
 
 The public API returns coefficients, raw observation scores and independent
@@ -46,7 +46,9 @@ observations.
 The external gate is2e-5 KKT and2e-5 relative raw gap at every requested level.
 API/Gurobi LP feasibility/optimality tolerances are1e-8, quantreg eps1e-8,
 conquer coefficient-step tolerance1e-7, rqPen convergence tolerance1e-8.
-Native criteria differ and retained achieved residuals govern interpretation.
+Native criteria differ and retained achieved residuals govern interpretation. R
+wrappers that return without an error do not report a convergence flag; the
+CSV marks their native flag as `not_reported`, and checks their returned pair.
 Exact paths have60-second budgets; R methods have a60-second R time limit and
 75-second external process cap including startup/loading/warmup. Native R
 routines may not check R interrupts immediately. Scientific failures, timeouts

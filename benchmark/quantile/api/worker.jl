@@ -23,7 +23,7 @@ function gurobipath(X,y,ls,τ;limit=60.)
 end
 function runmethod(name,X,y,ls,τ)
  name=="api-exact" && return QuantileLassoPath(X,y,ls;tau=τ,standardize_x=false,tol=2e-5,time_limit=60.).solutions
- name=="api-smooth" && return QuantileLassoPath(X,y,ls;tau=τ,standardize_x=false,tol=2e-5,method=:smooth,bandwidth=.2).solutions
+ name=="api-smooth" && return QuantileLassoPath(X,y,ls;tau=τ,standardize_x=false,tol=2e-5,method=:smooth,bandwidth=.2,rng=Xoshiro(20261025)).solutions
  gurobipath(X,y,ls,τ)
 end
 function main()
@@ -39,7 +39,7 @@ function main()
   full=length(ss)==L;qualified=full && all(s.converged for s in ss)
   push!(pathrows,(case,seed,rep,method,n,p,τ,L,length(ss),fit_s,diag_s,fit_s+diag_s,bytes,available,qualified,status,gethostname()))
   for (k,s) in enumerate(ss)
-   push!(solrows,(case,seed,rep,method,k,s.λ,s.objective,s.check_objective,s.dual_objective,s.duality_gap,s.certificate_gap,s.kkt_residual,s.dual_feasibility,s.complementarity,s.converged,s.native_converged,s.status))
+   push!(solrows,(case,seed,rep,method,k,s.λ,s.objective,s.check_objective,s.dual_objective,s.duality_gap,s.certificate_gap,s.kkt_residual,s.dual_feasibility,s.complementarity,s.converged,s.status==:R_returned ? "not_reported" : s.native_converged,s.status))
   end
   saved[(method,rep)]=ss
  end
@@ -49,7 +49,7 @@ function main()
   if method in ["api-exact","api-smooth","gurobi-primal"]
    try
     t=@timed runmethod(method,X,y,ls,τ)
-    record(method,rep,t.value,t.time,0.,t.bytes,true,"returned")
+    record(method,rep,t.value,t.time,0.,t.bytes,true,length(t.value)==L ? "returned" : "incomplete")
     println("DONE $case $seed $rep $method $(t.time)s levels=$(length(t.value))");flush(stdout)
    catch e
     showerror(stderr,e,catch_backtrace());println(stderr)
