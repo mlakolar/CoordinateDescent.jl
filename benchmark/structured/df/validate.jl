@@ -6,6 +6,7 @@ maxcoef,maxobj,points=0.,0.,0
     for rep in 1:7, label in cases
         a=deserialize(joinpath(root,"fit-baseline-$rep-$label.bin"))
         b=deserialize(joinpath(root,"fit-candidate-$rep-$label.bin"))
+        @test a.inputdigest == b.inputdigest
         @test a.x == b.x
         @test a.objective == b.objective
         @test a.df == b.df

@@ -410,6 +410,13 @@ end
   A = [1. -1.;2. -2.]
   D = difference_matrix(2)
   @test HDM._structured_df(A,D,ones(2),0.) == dense_df(A,D,ones(2),0.)
+  # Julia rank uses min(m,n)*eps, even for a very tall design. Preserve a
+  # singular value lying between the min- and max-dimension cutoffs.
+  A = zeros(50,3); A[1,1] = 1; A[2,2] = 5eps(Float64)
+  D = spzeros(0,3)
+  ws = HDM._StructuredDFWorkspace(A,D)
+  @test ws.design_rank == rank(A) == 2
+  @test HDM._structured_df(A,D,zeros(3),0.;workspace=ws) == dense_df(A,D,zeros(3),0.)
   D = graph_difference(3,[(1,2),(2,3)];weights=[1.,1e-20])
   @test HDM._incidence_components(sparse(D'),[1,2];check_rank=true) === nothing
   @test HDM._structured_df(Matrix{Float64}(I,3,3),D,zeros(3),0.) == dense_df(Matrix{Float64}(I,3,3),D,zeros(3),0.)

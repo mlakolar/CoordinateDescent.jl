@@ -253,7 +253,7 @@ function _StructuredDFWorkspace(A, D)
     design_rank, full_column_rank = p, true
   else
     s = svdvals(Matrix(A))
-    threshold = isempty(s) ? zero(eltype(A)) : max(size(A)...) * eps(eltype(s)) * first(s)
+    threshold = isempty(s) ? zero(eltype(A)) : min(size(A)...) * eps(eltype(s)) * first(s)
     design_rank = count(>(threshold), s)
     full_column_rank = length(s) == p && last(s) > 16threshold
   end
@@ -298,7 +298,7 @@ function _structured_df_rank(A, D, β, inactive, workspace)
     C = sparse(rows, labels[rows], values, length(β), k)
     AC = Matrix(A * C)
     s = svdvals(AC)
-    threshold = max(size(AC)...) * eps(eltype(s)) * first(s)
+    threshold = min(size(AC)...) * eps(eltype(s)) * first(s)
     # Cancellation or a singular value close to the rank threshold can make
     # the two orthonormal bases disagree numerically. Preserve the old dense
     # calculation in those cases, including a design annihilating a component.

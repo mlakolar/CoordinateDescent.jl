@@ -34,6 +34,9 @@ for (ci,(label,n,p,family,nlevels)) in enumerate(cases)
     levels = exp.(range(log(.5),log(.003);length=nlevels))
     D = family==:graph ? graph_difference(p,[(j,j+1) for j in 1:p-1];weights=0.5 .+ rand(rng,p-1)) :
         family==:trend ? difference_matrix(p,2) : [difference_matrix(p);spdiagm(0=>ones(p))]
+    inputio=IOBuffer(); serialize(inputio,(X,y,D,levels))
+    inputdigest=bytes2hex(sha256(take!(inputio)))
+    println(metadata,"$label input_sha256=",inputdigest)
     fitpath() = family==:graph ? GeneralizedLassoPath(X,y,D,levels;rho=100.,max_iter=40_000) :
         family==:trend ? trend_filter_path(X,y,levels;order=1,max_iter=40_000) :
         fused_lasso_path(X,y,levels;max_iter=40_000)
@@ -52,7 +55,7 @@ for (ci,(label,n,p,family,nlevels)) in enumerate(cases)
     @assert all(s->s.converged,warm.solutions) "$label convergence"
     expected = [dense_df(X,D,s.x,1e-4) for s in warm.solutions]
     @assert expected == [s.df for s in warm.solutions] "$label dense DF disagreement"
-    state = (x=coef(warm),objective=[s.objective for s in warm.solutions],df=expected,
+    state = (inputdigest=inputdigest,x=coef(warm),objective=[s.objective for s in warm.solutions],df=expected,
         iterations=[s.iterations for s in warm.solutions],converged=[s.converged for s in warm.solutions])
     serialize(joinpath(out,"fit-$variant-$rep-$label.bin"),state)
     # Repeat the actual path patterns, measuring diagnostic work and cache setup separately.
