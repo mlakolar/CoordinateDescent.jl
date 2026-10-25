@@ -64,9 +64,14 @@ function _lr_exact_df(f, r, q, intercept)
   base = r * (f.xrank + q - r) + q * intercept
   correction = zero(eltype(f.s))
   for i in 1:r, j in r+1:length(f.H.S)
-    gap = f.H.S[i]^2 - f.H.S[j]^2
-    gap > eps(eltype(f.s)) * max(f.H.S[i]^2, one(eltype(f.s))) || return Inf
-    correction += 2f.H.S[j]^2 / gap
+    # Normalize before squaring: the Stein score is invariant to response
+    # scale, and raw squares can underflow/overflow on otherwise valid data.
+    si = f.H.S[i]
+    iszero(si) && return Inf
+    ratio = f.H.S[j] / si
+    gap = one(ratio) - ratio^2
+    gap > eps(eltype(f.s)) || return Inf
+    correction += 2ratio^2 / gap
   end
   base + correction
 end

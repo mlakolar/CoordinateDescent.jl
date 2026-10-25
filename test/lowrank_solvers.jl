@@ -166,3 +166,23 @@ end
   penalty = ext.NuclearPenalty(ProximalBase.NuclearNorm(0.2))
   @test penalty([3.0 0.0; 0.0 1.0]) ≈ 0.8
 end
+
+
+@testset "Exact rank degrees of freedom preserve response scale" begin
+  # For X=I and singular values (2,1), rank-one Stein df is
+  # 1*(2+2-1) + 2/(4-1) = 11/3, independent of response units.
+  for T in (Float32, Float64)
+    X = Matrix{T}(I, 2, 2)
+    scales = T === Float32 ? T[1e-12, 1, 1e12] : T[1e-100, 1, 1e100]
+    for scale in scales
+      Y = Matrix(Diagonal(T[2, 1] .* scale))
+      s = reduced_rank(X, Y, 1; intercept = false)
+      @test isfinite(s.df_exact)
+      @test s.df_exact ≈ T(11)/T(3)
+      @test isfinite(lowrank_ic(s; df = :exact))
+    end
+    tied = reduced_rank(X, X, 1; intercept = false)
+    @test isinf(tied.df_exact)
+    @test isinf(lowrank_ic(tied; df = :exact))
+  end
+end

@@ -237,7 +237,12 @@ the current master dependency stack. The original module names in frozen
 harnesses/manifests are intentional. The exact measured package is preserved
 in [measured-package-267430f.tar.gz](provenance/measured-package-267430f.tar.gz)
 so rewriting branch history does not remove the source needed for recreation.
-Post-rebase correctness is checked separately by GitHub CI.
+Post-rebase correctness is checked separately by GitHub CI. A subsequent
+correctness review changed the optional exact Stein degrees-of-freedom tie
+check to use relative singular-value ratios, preserving response-scale
+invariance and avoiding squared-value underflow/overflow. This report retains
+the original measured implementation; that small score correction is not a
+new performance measurement.
 
 The measured production implementation is commit
 `267430fc240841e072aab77cf6341bd135a74076`. Before baselines use the frozen
