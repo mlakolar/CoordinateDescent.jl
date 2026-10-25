@@ -2,9 +2,9 @@
 
 This follow-up preserves CSC storage for `slope` and `SLOPEPath`, including
 implicit centering and standardization. The estimator calls the screened SLOPE
-APG engine from ProximalSolvers commit
-`3bee2f91604fe08d34a07d45bcc638e3b4face3a` through the temporary companion
-exception in the master bootstrap. The completed broad benchmark uses
+APG engine from the ProximalSolvers sibling master checkout. PR #90 merged as
+`b9cf11c46a12b0d686f242ee63162692a9091a85`; the temporary companion exception
+has been removed. The completed broad benchmark uses
 the numerically identical SLOPE engine at `335ea905da207a6cc1cd3bd945bb7bbbf9f4eba4`;
 the [report](REPORT.md) records the source comparison and current-dependency
 integration tests. Statistical penalties and defaults

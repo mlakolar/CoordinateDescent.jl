@@ -103,6 +103,21 @@ end
   @test Wswap[[1,2,4,5,6,7,8]] ≈ W[[1,2,4,5,6,7,8]] atol=1e-7
   result = knockoff_filter(X,y,0.1;method=:provided,Xk,q=0.5)
   @test result.selected == findall(>=(result.threshold), result.W)
+  # Public construction routes must agree with the same supplied knockoffs.
+  # Cyclic coordinate updates keep the statistic independent of RNG consumption
+  # during Gaussian construction.
+  for method in (:fixed, :gaussian)
+    built = knockoff_filter(X,y,0.1;method,mu=zeros(p),Sigma=S,q=0.5,
+      rng=Xoshiro(91),order=:cyclic,opt_tol=1e-10)
+    K = method === :fixed ? fixed_knockoffs(X) :
+      gaussian_knockoffs(X,zeros(p),S;rng=Xoshiro(91))
+    supplied = knockoff_filter(X,y,0.1;method=:provided,Xk=K,q=0.5,
+      order=:cyclic,opt_tol=1e-10)
+    @test built.Xk ≈ K
+    @test built.W ≈ supplied.W atol=1e-9
+    @test built.selected == supplied.selected
+    @test built.method === method
+  end
   @test_throws ArgumentError fixed_knockoffs(randn(10,8))
   @test_throws ArgumentError gaussian_knockoffs(X,zeros(p),ones(p,p))
   @test_throws ArgumentError gaussian_knockoffs(X,zeros(p),S;s=fill(1e8,p))

@@ -165,8 +165,9 @@ least-squares constructors, caches, value/gradient methods and sorted-penalty
 code; only unrelated partial/nonconvex/entropy sources differ. This is a
 comparison with the PB source actually used here, not the different PB source
 used by the earlier dense extraction study. After the concurrent package rename,
-the final bootstrap uses companion API `3bee2f91604fe08d34a07d45bcc638e3b4face3a`
-until ProximalOPT PR #90 merges. SLOPE itself remains byte-identical; APG changes
+the renamed validation used companion API `3bee2f91604fe08d34a07d45bcc638e3b4face3a`.
+PR #90 subsequently merged as `b9cf11c46a12b0d686f242ee63162692a9091a85`;
+the bootstrap now uses the normal sibling master checkout. SLOPE itself remains byte-identical; APG changes
 are canonical field names, with the same update operations. Current PB master
 `b6c949f3dd26cad09252e1c2c9e49810eb69403e` retains the same relevant loss and
 sorted-penalty code. Historical measurements are retained with their actual
