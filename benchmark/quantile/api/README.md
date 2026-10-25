@@ -56,8 +56,11 @@ routines may not check R interrupts immediately. Scientific failures, timeouts
 and missing outputs remain explicit; they never become speed measurements.
 
 All numerical work runs under Slurm on Discovery. Reuse the existing solver
-Manifest and the pinned PB/PS source directories from the first run, but develop
-the new API package source in a fresh run directory. Copy these scripts there;
+Manifest and ProximalBase `0111d1bb4ca51b40c28d8ea5dab0f63be4d76e6a`.
+Use ProximalSolvers `73a1c8e927d8917e4f16483271b053fcdb25b488`, whose
+path API supports the current package's `gaptol` keyword; the older solver-study
+PS snapshot does not. Develop all three source paths together in a fresh run
+directory, preserving resolved solver versions. Copy these scripts there;
 `focused.sbatch` uses GNU Parallel/srun, and `summarize.py` runs in that allocation.
 The run registry records actual committed sources and exact jobs. The API tests
 must pass before the main benchmark is submitted. Pivotal calibration, CV,
