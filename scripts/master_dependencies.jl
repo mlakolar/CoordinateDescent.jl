@@ -1,6 +1,10 @@
 # Run from a package's scripts/instantiate.jl, or pass an environment directory.
 using Pkg, TOML
 
+# Temporary companion for PR #84 until ProximalOPT #90 reaches master.
+# Only a newly created checkout is changed; existing checkouts remain untouched.
+const SLOPE_COMPANION_REV = "3bee2f91604fe08d34a07d45bcc638e3b4face3a"
+
 const WORKSPACE_PACKAGES = Dict(
     "ProximalBase" => ("ProximalBase.jl", "ProximalBase.jl"),
     "ProximalSolvers" => ("ProximalOPT.jl", "ProximalSolvers.jl"),
@@ -35,9 +39,18 @@ function instantiate_master(environment::AbstractString;
             if !isdir(checkout)
                 url = "https://github.com/mlakolar/$repository"
                 run(`git clone --branch master --single-branch $url $checkout`)
+                if name == "ProximalSolvers" && !isfile(joinpath(checkout, "src", "solvers", "slope.jl"))
+                    run(`git -C $checkout fetch origin $SLOPE_COMPANION_REV`)
+                    run(`git -C $checkout checkout --detach $SLOPE_COMPANION_REV`)
+                end
             end
             branch = strip(read(`git -C $checkout branch --show-current`, String))
-            (is_owner || branch == "master") || error("$name must use its master checkout: $checkout is on $branch")
+            companion = name == "ProximalSolvers" &&
+                strip(read(`git -C $checkout rev-parse HEAD`, String)) == SLOPE_COMPANION_REV
+            (is_owner || branch == "master" || companion) || error("$name must use its master checkout: $checkout is on $branch")
+            if name == "ProximalSolvers" && !isfile(joinpath(checkout, "src", "solvers", "slope.jl"))
+                error("SLOPE requires companion PR #90 ($SLOPE_COMPANION_REV) until it reaches master; existing checkout left unchanged: $checkout")
+            end
             dependency = TOML.parsefile(joinpath(checkout, "Project.toml"))
             dependency["name"] == name || error("wrong package name at $checkout")
             dependency["uuid"] == deps[name] || error("wrong UUID for $name at $checkout")

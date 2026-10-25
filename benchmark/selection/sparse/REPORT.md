@@ -132,15 +132,21 @@ installed ProximalBase `86sFe` source identified by the retained manifest and
 The HDM sparse runtime has SHA256
 `b32489f93b06453f2301ffe6074b966038fff470af379d0a66fa3e87966bc386`.
 
-The final integration pins ProximalSolvers
-`36f623a1747dfec6cac964fba8341819685c5146`, which also accepts the current
-HDM master's gap-stopped lasso API. Its SLOPE, APG, image-model, solve and types
+The pre-rename integration used ProximalSolvers
+`36f623a1747dfec6cac964fba8341819685c5146`, which also accepts the gap-stopped
+lasso API. Its SLOPE, APG, image-model, solve and types
 blobs equal those of the measured 335 revision. The measured PB source and
 current PB `0e98c8eddc2e251be7e0b963c4d32e9a5a69231d` have identical
 least-squares constructors, caches, value/gradient methods and sorted-penalty
 code; only unrelated partial/nonconvex/entropy sources differ. This is a
 comparison with the PB source actually used here, not the different PB source
-used by the earlier dense extraction study. See the
+used by the earlier dense extraction study. After the concurrent package rename,
+the final bootstrap uses companion API `3bee2f91604fe08d34a07d45bcc638e3b4face3a`
+until ProximalOPT PR #90 merges. SLOPE itself remains byte-identical; APG changes
+are canonical field names, with the same update operations. Current PB master
+`b6c949f3dd26cad09252e1c2c9e49810eb69403e` retains the same relevant loss and
+sorted-penalty code. Historical measurements are retained with their actual
+335/PB86 source labels rather than relabelled as a new timing campaign. See the
 [source identity receipt](discovery-20261025/metadata/runtime-identity.json).
 
 Full HDM tests passed 2732/2732 on Discovery with the earlier integrated API,
