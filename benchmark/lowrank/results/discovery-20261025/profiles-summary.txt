@@ -1,0 +1,114 @@
+Sampling profiles, q = 1000; five independent data replications per method.
+Top five frames by summed Overhead column (self samples); timing was measured separately.
+
+rank: 527 snapshots
+   207 ( 39.3%) @LinearAlgebra/src/lapack.jl:1706 gesdd!(job::Char, A::Matrix{Float…
+    67 ( 12.7%) @Base/boot.jl:588 GenericMemory
+    27 (  5.1%) @Base/cmem.jl:28 memmove
+    26 (  4.9%) @Base/array.jl:1037 _setindex!
+    13 (  2.5%) @LinearAlgebra/src/blas.jl:1654 gemm!(transA::Char, transB::Char,…
+
+nuclear: 6294 snapshots
+  3987 ( 63.3%) @ProximalBase/src/lapack.jl:157 _gesdd!(jobz::Char, A::Matrix{Flo…
+   643 ( 10.2%) @Base/boot.jl:588 GenericMemory
+   238 (  3.8%) @Base/array.jl:1037 _setindex!
+    83 (  1.3%) @LinearAlgebra/src/blas.jl:1654 gemm!(transA::Char, transB::Char,…
+    81 (  1.3%) @LinearAlgebra/src/lapack.jl:1706 gesdd!(job::Char, A::Matrix{Float…
+
+nuclear_path: 22083 snapshots
+ 13806 ( 62.5%) @ProximalBase/src/lapack.jl:157 _gesdd!(jobz::Char, A::Matrix{Flo…
+  2403 ( 10.9%) @Base/boot.jl:588 GenericMemory
+   887 (  4.0%) @Base/array.jl:1037 _setindex!
+   299 (  1.4%) @LinearAlgebra/src/lapack.jl:1706 gesdd!(job::Char, A::Matrix{Float…
+   270 (  1.2%) @CoordinateDescent/src/lowrank.jl:180 _lr_nuclear(d::@NamedTuple{X::Mat…
+
+sparse: 827 snapshots
+   275 ( 33.3%) @LinearAlgebra/src/lapack.jl:1706 gesdd!(job::Char, A::Matrix{Float…
+   166 ( 20.1%) @Base/boot.jl:588 GenericMemory
+    36 (  4.4%) @LinearAlgebra/src/blas.jl:1654 gemm!(transA::Char, transB::Char,…
+    28 (  3.4%) @Base/boot.jl:652 Array
+    27 (  3.3%) @Base/array.jl:1037 _setindex!
+
+sparse_svd: 9635 snapshots
+  2648 ( 27.5%) @Base/boot.jl:588 GenericMemory
+  1516 ( 15.7%) @LinearAlgebra/src/lapack.jl:1706 gesdd!(job::Char, A::Matrix{Float…
+   905 (  9.4%) @Base/array.jl:1037 _setindex!
+   522 (  5.4%) @CoordinateDescent/src/sparse_svd.jl:49 _lr_unit(d::@NamedTuple{X::Matrix…
+   397 (  4.1%) @LinearAlgebra/src/blas.jl:1654 gemm!(transA::Char, transB::Char,…
+
+Snapshot counts in all 75 raw profiles:
+profile-rep1-q10-nuclear.txt: 22
+profile-rep1-q10-nuclear_path.txt: 66
+profile-rep1-q10-rank.txt: 12
+profile-rep1-q10-sparse.txt: 17
+profile-rep1-q10-sparse_svd.txt: 63
+profile-rep1-q100-nuclear.txt: 223
+profile-rep1-q100-nuclear_path.txt: 794
+profile-rep1-q100-rank.txt: 25
+profile-rep1-q100-sparse.txt: 30
+profile-rep1-q100-sparse_svd.txt: 281
+profile-rep1-q1000-nuclear.txt: 1234
+profile-rep1-q1000-nuclear_path.txt: 4474
+profile-rep1-q1000-rank.txt: 97
+profile-rep1-q1000-sparse.txt: 165
+profile-rep1-q1000-sparse_svd.txt: 1974
+profile-rep2-q10-nuclear.txt: 22
+profile-rep2-q10-nuclear_path.txt: 65
+profile-rep2-q10-rank.txt: 13
+profile-rep2-q10-sparse.txt: 19
+profile-rep2-q10-sparse_svd.txt: 68
+profile-rep2-q100-nuclear.txt: 232
+profile-rep2-q100-nuclear_path.txt: 847
+profile-rep2-q100-rank.txt: 22
+profile-rep2-q100-sparse.txt: 65
+profile-rep2-q100-sparse_svd.txt: 256
+profile-rep2-q1000-nuclear.txt: 1290
+profile-rep2-q1000-nuclear_path.txt: 4412
+profile-rep2-q1000-rank.txt: 119
+profile-rep2-q1000-sparse.txt: 183
+profile-rep2-q1000-sparse_svd.txt: 1948
+profile-rep3-q10-nuclear.txt: 21
+profile-rep3-q10-nuclear_path.txt: 59
+profile-rep3-q10-rank.txt: 13
+profile-rep3-q10-sparse.txt: 17
+profile-rep3-q10-sparse_svd.txt: 64
+profile-rep3-q100-nuclear.txt: 231
+profile-rep3-q100-nuclear_path.txt: 862
+profile-rep3-q100-rank.txt: 25
+profile-rep3-q100-sparse.txt: 60
+profile-rep3-q100-sparse_svd.txt: 251
+profile-rep3-q1000-nuclear.txt: 1350
+profile-rep3-q1000-nuclear_path.txt: 4496
+profile-rep3-q1000-rank.txt: 102
+profile-rep3-q1000-sparse.txt: 176
+profile-rep3-q1000-sparse_svd.txt: 2020
+profile-rep4-q10-nuclear.txt: 22
+profile-rep4-q10-nuclear_path.txt: 60
+profile-rep4-q10-rank.txt: 13
+profile-rep4-q10-sparse.txt: 17
+profile-rep4-q10-sparse_svd.txt: 65
+profile-rep4-q100-nuclear.txt: 219
+profile-rep4-q100-nuclear_path.txt: 860
+profile-rep4-q100-rank.txt: 26
+profile-rep4-q100-sparse.txt: 59
+profile-rep4-q100-sparse_svd.txt: 257
+profile-rep4-q1000-nuclear.txt: 1213
+profile-rep4-q1000-nuclear_path.txt: 4555
+profile-rep4-q1000-rank.txt: 88
+profile-rep4-q1000-sparse.txt: 157
+profile-rep4-q1000-sparse_svd.txt: 1987
+profile-rep5-q10-nuclear.txt: 22
+profile-rep5-q10-nuclear_path.txt: 66
+profile-rep5-q10-rank.txt: 12
+profile-rep5-q10-sparse.txt: 16
+profile-rep5-q10-sparse_svd.txt: 59
+profile-rep5-q100-nuclear.txt: 200
+profile-rep5-q100-nuclear_path.txt: 831
+profile-rep5-q100-rank.txt: 25
+profile-rep5-q100-sparse.txt: 29
+profile-rep5-q100-sparse_svd.txt: 257
+profile-rep5-q1000-nuclear.txt: 1207
+profile-rep5-q1000-nuclear_path.txt: 4146
+profile-rep5-q1000-rank.txt: 121
+profile-rep5-q1000-sparse.txt: 146
+profile-rep5-q1000-sparse_svd.txt: 1706

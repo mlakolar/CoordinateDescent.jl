@@ -1,0 +1,800 @@
+{
+  "timing_rows": 5460,
+  "profiles": 290,
+  "memory_observations": 170,
+  "coefficient_checks": 1400,
+  "coefficient_passes": 1395,
+  "failed_checks": [
+    {
+      "case": "ill-1",
+      "solver": "r_rrr",
+      "family": "rank",
+      "frac": "0.0",
+      "objective": "48.7165995277095",
+      "gap": "0.0003733820573580333",
+      "residual": "0.0",
+      "passed": "False"
+    },
+    {
+      "case": "ill-2",
+      "solver": "r_rrr",
+      "family": "rank",
+      "frac": "0.0",
+      "objective": "48.72567215187581",
+      "gap": "0.0005989466234085029",
+      "residual": "0.0",
+      "passed": "False"
+    },
+    {
+      "case": "ill-3",
+      "solver": "r_rrr",
+      "family": "rank",
+      "frac": "0.0",
+      "objective": "49.25962368590633",
+      "gap": "8.770708098139488e-05",
+      "residual": "0.0",
+      "passed": "False"
+    },
+    {
+      "case": "ill-4",
+      "solver": "r_rrr",
+      "family": "rank",
+      "frac": "0.0",
+      "objective": "49.29079350552073",
+      "gap": "9.996909573677322e-05",
+      "residual": "0.0",
+      "passed": "False"
+    },
+    {
+      "case": "ill-5",
+      "solver": "r_rrr",
+      "family": "rank",
+      "frac": "0.0",
+      "objective": "49.59025947700551",
+      "gap": "0.0002206166033372256",
+      "residual": "0.0",
+      "passed": "False"
+    }
+  ],
+  "native_flags": {
+    "cd_component:true": 270,
+    "component_fista:true": 270,
+    "cd_rank:true": 90,
+    "cd_nuclear:true": 270,
+    "ps_fista:true": 270,
+    "ps_admm:true": 270,
+    "pa_fista:true": 270,
+    "pa_panoc:true": 270,
+    "cd_sparse:true": 270,
+    "block_fista:true": 270,
+    "py_fista:True": 270,
+    "py_admm:True": 270,
+    "scipy_rrr:True": 90,
+    "r_rrr_qr:TRUE": 90,
+    "r_srrr:NA": 270,
+    "r_component:TRUE": 270,
+    "r_rrr:TRUE": 90,
+    "pa_pg:true": 90,
+    "pa_rank:true": 27,
+    "pa_rank:false": 3
+  },
+  "paired_comparisons": {
+    "pa_fista": {
+      "family": "nuclear",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 2.2889354140579736,
+          "min_ratio": 1.8904604785903492,
+          "max_ratio": 2.717167455703742,
+          "objective_difference": 3.485811376700173e-16
+        },
+        {
+          "case": "ill",
+          "ratio": 2.9814994828676484,
+          "min_ratio": 2.839381045977299,
+          "max_ratio": 4.232100963432601,
+          "objective_difference": 3.52250122703863e-16
+        },
+        {
+          "case": "medium",
+          "ratio": 2.406189880077214,
+          "min_ratio": 2.1834041584512565,
+          "max_ratio": 2.633905766553615,
+          "objective_difference": 4.326484322194546e-16
+        },
+        {
+          "case": "responses",
+          "ratio": 3.136703250054476,
+          "min_ratio": 3.041238833924005,
+          "max_ratio": 3.567012916269639,
+          "objective_difference": 5.02354896447117e-16
+        },
+        {
+          "case": "small",
+          "ratio": 2.2229810850605958,
+          "min_ratio": 2.0037648233190044,
+          "max_ratio": 2.2778139229080754,
+          "objective_difference": 4.30803427978269e-16
+        },
+        {
+          "case": "wide",
+          "ratio": 2.489627180438645,
+          "min_ratio": 2.294688449104187,
+          "max_ratio": 2.7176644639324348,
+          "objective_difference": 3.155289247843893e-16
+        }
+      ],
+      "all_penalties_ratio_range": [
+        1.491099749842385,
+        5.403785291021295
+      ],
+      "max_relative_objective_difference": 5.230745353653811e-15
+    },
+    "pa_panoc": {
+      "family": "nuclear",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 0.7246507697892652,
+          "min_ratio": 0.6686551516623993,
+          "max_ratio": 1.282003272819058,
+          "objective_difference": 3.485811376700173e-16
+        },
+        {
+          "case": "ill",
+          "ratio": 0.5735324242667753,
+          "min_ratio": 0.5357789627853545,
+          "max_ratio": 0.6541776593420288,
+          "objective_difference": 3.633958452170001e-16
+        },
+        {
+          "case": "medium",
+          "ratio": 0.6582615269056349,
+          "min_ratio": 0.6348975677721139,
+          "max_ratio": 0.6732958528164232,
+          "objective_difference": 4.646271690999232e-16
+        },
+        {
+          "case": "responses",
+          "ratio": 1.0452942217391936,
+          "min_ratio": 0.9998347294394093,
+          "max_ratio": 2.1652057852675535,
+          "objective_difference": 6.69806528596156e-16
+        },
+        {
+          "case": "small",
+          "ratio": 0.8001512048585592,
+          "min_ratio": 0.7734228782824509,
+          "max_ratio": 1.2529135703979475,
+          "objective_difference": 2.154017139891345e-16
+        },
+        {
+          "case": "wide",
+          "ratio": 0.6471810126135653,
+          "min_ratio": 0.5965084695486367,
+          "max_ratio": 0.8001901431225956,
+          "objective_difference": 1.0295374247192462e-15
+        }
+      ],
+      "all_penalties_ratio_range": [
+        0.5057578972541927,
+        2.2694572304203775
+      ],
+      "max_relative_objective_difference": 9.663369128467102e-15
+    },
+    "pa_pg": {
+      "family": "nuclear",
+      "middle_penalty": [
+        {
+          "case": "ill",
+          "ratio": 2.791060852856807,
+          "min_ratio": 2.31630108654451,
+          "max_ratio": 3.0955227708973636,
+          "objective_difference": 3.5621981986349717e-16
+        },
+        {
+          "case": "medium",
+          "ratio": 1.7932533228382668,
+          "min_ratio": 1.7378957690545034,
+          "max_ratio": 2.0749520146889644,
+          "objective_difference": 4.634102348741524e-16
+        }
+      ],
+      "all_penalties_ratio_range": [
+        1.4051401743624983,
+        6.214643445835489
+      ],
+      "max_relative_objective_difference": 1.8930096000031113e-15
+    },
+    "ps_admm": {
+      "family": "nuclear",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 1.531758315063496,
+          "min_ratio": 1.517381546339731,
+          "max_ratio": 1.734842807302642,
+          "objective_difference": 3.485811376700173e-16
+        },
+        {
+          "case": "ill",
+          "ratio": 1.922891643040623,
+          "min_ratio": 1.625912968332035,
+          "max_ratio": 2.156182118132514,
+          "objective_difference": 1.8786673210872695e-15
+        },
+        {
+          "case": "medium",
+          "ratio": 1.6390307601003773,
+          "min_ratio": 1.61097079960086,
+          "max_ratio": 1.669855615060966,
+          "objective_difference": 4.634102348741524e-16
+        },
+        {
+          "case": "responses",
+          "ratio": 1.4681745676270392,
+          "min_ratio": 1.3911666522278385,
+          "max_ratio": 1.66401563679873,
+          "objective_difference": 7.774276069776082e-16
+        },
+        {
+          "case": "small",
+          "ratio": 1.6314661356639841,
+          "min_ratio": 1.5790214101695246,
+          "max_ratio": 1.6607836460576688,
+          "objective_difference": 2.154017139891345e-16
+        },
+        {
+          "case": "wide",
+          "ratio": 1.7581766072544842,
+          "min_ratio": 1.5603116023232304,
+          "max_ratio": 1.820567118859181,
+          "objective_difference": 7.353838747994615e-16
+        }
+      ],
+      "all_penalties_ratio_range": [
+        1.4533011806147222,
+        4.091278229508525
+      ],
+      "max_relative_objective_difference": 1.0612563392588135e-14
+    },
+    "ps_fista": {
+      "family": "nuclear",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 1.0938338236118639,
+          "min_ratio": 0.9570394128112184,
+          "max_ratio": 1.494693065746117,
+          "objective_difference": 5.109434479688105e-16
+        },
+        {
+          "case": "ill",
+          "ratio": 0.9011835684468738,
+          "min_ratio": 0.7625784012723471,
+          "max_ratio": 1.1021426636117386,
+          "objective_difference": 1.662359159362987e-15
+        },
+        {
+          "case": "medium",
+          "ratio": 1.1015841969807394,
+          "min_ratio": 0.9518775865120199,
+          "max_ratio": 1.4944063306487494,
+          "objective_difference": 4.326484322194546e-16
+        },
+        {
+          "case": "responses",
+          "ratio": 1.5487047469392046,
+          "min_ratio": 1.4131611372627224,
+          "max_ratio": 1.9030442013787525,
+          "objective_difference": 8.88488693688695e-16
+        },
+        {
+          "case": "small",
+          "ratio": 1.222414796503461,
+          "min_ratio": 1.1258518292494175,
+          "max_ratio": 1.3572475526051926,
+          "objective_difference": 1.2484460526833482e-16
+        },
+        {
+          "case": "wide",
+          "ratio": 0.8207911733460594,
+          "min_ratio": 0.6728739438268218,
+          "max_ratio": 0.9288338547528399,
+          "objective_difference": 9.46586774353168e-16
+        }
+      ],
+      "all_penalties_ratio_range": [
+        0.6497859557278415,
+        1.9494032713101475
+      ],
+      "max_relative_objective_difference": 3.506045606177831e-14
+    },
+    "py_admm": {
+      "family": "nuclear",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 1.9608665457717736,
+          "min_ratio": 1.9489297865505009,
+          "max_ratio": 2.121313575512582,
+          "objective_difference": 2.5547172398440526e-16
+        },
+        {
+          "case": "ill",
+          "ratio": 2.4160534120350303,
+          "min_ratio": 2.028651423989894,
+          "max_ratio": 2.709077590256972,
+          "objective_difference": 2.277841923747557e-16
+        },
+        {
+          "case": "medium",
+          "ratio": 1.9195276089692437,
+          "min_ratio": 1.8116463708154709,
+          "max_ratio": 2.0552195613098925,
+          "objective_difference": 2.323135845499616e-16
+        },
+        {
+          "case": "responses",
+          "ratio": 2.0345401303445554,
+          "min_ratio": 1.8291125113292985,
+          "max_ratio": 2.1474049307264074,
+          "objective_difference": 6.663665202665212e-16
+        },
+        {
+          "case": "small",
+          "ratio": 3.968118969569112,
+          "min_ratio": 3.964260609512594,
+          "max_ratio": 4.355689009138089,
+          "objective_difference": 2.1972343671668318e-16
+        },
+        {
+          "case": "wide",
+          "ratio": 2.0808165573563877,
+          "min_ratio": 1.8393138733384822,
+          "max_ratio": 2.191739640147327,
+          "objective_difference": 6.725371013387814e-16
+        }
+      ],
+      "all_penalties_ratio_range": [
+        1.9057907567618368,
+        5.131416559918032
+      ],
+      "max_relative_objective_difference": 3.062427992637227e-15
+    },
+    "py_fista": {
+      "family": "nuclear",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 1.8186039425745844,
+          "min_ratio": 1.5699734918499635,
+          "max_ratio": 2.0829113778451656,
+          "objective_difference": 5.22871706505026e-16
+        },
+        {
+          "case": "ill",
+          "ratio": 2.470338916395893,
+          "min_ratio": 2.132429567754308,
+          "max_ratio": 3.007146819036445,
+          "objective_difference": 2.348334151359087e-16
+        },
+        {
+          "case": "medium",
+          "ratio": 2.067172565322464,
+          "min_ratio": 1.9868405525240231,
+          "max_ratio": 2.202861516364604,
+          "objective_difference": 4.326484322194546e-16
+        },
+        {
+          "case": "responses",
+          "ratio": 2.0429294977227155,
+          "min_ratio": 1.885792659539875,
+          "max_ratio": 2.2448733519310835,
+          "objective_difference": 5.02354896447117e-16
+        },
+        {
+          "case": "small",
+          "ratio": 3.712616502021767,
+          "min_ratio": 3.360286476967732,
+          "max_ratio": 3.7862853456587273,
+          "objective_difference": 4.2037908881096293e-16
+        },
+        {
+          "case": "wide",
+          "ratio": 2.331890920695896,
+          "min_ratio": 2.0574748224616743,
+          "max_ratio": 2.4188632575440687,
+          "objective_difference": 5.883070998395692e-16
+        }
+      ],
+      "all_penalties_ratio_range": [
+        1.6117441332637488,
+        4.242763002726931
+      ],
+      "max_relative_objective_difference": 5.405103532108939e-15
+    },
+    "block_fista": {
+      "family": "sparse",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 0.3916322240485141,
+          "min_ratio": 0.3721157350680712,
+          "max_ratio": 0.4068186820656572,
+          "objective_difference": 3.7994878747703277e-16
+        },
+        {
+          "case": "ill",
+          "ratio": 0.402300875873239,
+          "min_ratio": 0.2907665066988488,
+          "max_ratio": 0.4659522385034985,
+          "objective_difference": 2.3374456029606196e-16
+        },
+        {
+          "case": "medium",
+          "ratio": 0.5917301645466716,
+          "min_ratio": 0.5777239840365687,
+          "max_ratio": 0.6251780747698628,
+          "objective_difference": 3.9975292684597594e-16
+        },
+        {
+          "case": "responses",
+          "ratio": 0.40493270491531996,
+          "min_ratio": 0.3257809747720497,
+          "max_ratio": 0.4328260783533719,
+          "objective_difference": 2.9375850291138834e-16
+        },
+        {
+          "case": "small",
+          "ratio": 1.1070338346757471,
+          "min_ratio": 1.0739625025945472,
+          "max_ratio": 1.1543393014027659,
+          "objective_difference": 4.4019775988292007e-16
+        },
+        {
+          "case": "wide",
+          "ratio": 1.6343652865951488,
+          "min_ratio": 1.3220065142051423,
+          "max_ratio": 1.7198131178568519,
+          "objective_difference": 3.364130408989149e-16
+        }
+      ],
+      "all_penalties_ratio_range": [
+        0.14026317443573272,
+        1.6343652865951488
+      ],
+      "max_relative_objective_difference": 5.170436161583204e-16
+    },
+    "r_srrr": {
+      "family": "sparse",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 5.18027795939393,
+          "min_ratio": 4.979356565677148,
+          "max_ratio": 5.4573465103007015,
+          "objective_difference": 2.802714360975501e-15
+        },
+        {
+          "case": "ill",
+          "ratio": 4.36371127812388,
+          "min_ratio": 3.7463702229204716,
+          "max_ratio": 4.774509292610773,
+          "objective_difference": 6.289763247058631e-16
+        },
+        {
+          "case": "medium",
+          "ratio": 5.3866082623929055,
+          "min_ratio": 4.927707683640873,
+          "max_ratio": 5.516340696406226,
+          "objective_difference": 1.3343214953528398e-15
+        },
+        {
+          "case": "responses",
+          "ratio": 3.5074981726052963,
+          "min_ratio": 3.4303022299119243,
+          "max_ratio": 4.2366656019267435,
+          "objective_difference": 2.3545076949114587e-15
+        },
+        {
+          "case": "small",
+          "ratio": 11.267669792412855,
+          "min_ratio": 10.44317878986135,
+          "max_ratio": 11.943460894908094,
+          "objective_difference": 2.6935227415609277e-15
+        },
+        {
+          "case": "wide",
+          "ratio": 1.3304495565549526,
+          "min_ratio": 1.2390782123116526,
+          "max_ratio": 1.5546843467402756,
+          "objective_difference": 2.6062540433095166e-15
+        }
+      ],
+      "all_penalties_ratio_range": [
+        0.5153157672909,
+        11.267669792412855
+      ],
+      "max_relative_objective_difference": 0.16264615181260117
+    },
+    "component_fista": {
+      "family": "component",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 2.0336040447345645,
+          "min_ratio": 1.9415377385678272,
+          "max_ratio": 2.1480780151815893,
+          "objective_difference": 1.838745165472425e-16
+        },
+        {
+          "case": "ill",
+          "ratio": 4.1521643917931055,
+          "min_ratio": 2.6883832440736155,
+          "max_ratio": 4.484485066316799,
+          "objective_difference": 1.3419566350491241e-16
+        },
+        {
+          "case": "medium",
+          "ratio": 1.91304682609862,
+          "min_ratio": 1.7638562264628992,
+          "max_ratio": 1.9712985086623265,
+          "objective_difference": 1.620719571073982e-16
+        },
+        {
+          "case": "responses",
+          "ratio": 1.256415674874417,
+          "min_ratio": 1.2255249414545946,
+          "max_ratio": 1.3688685248483954,
+          "objective_difference": 2.1053510642392937e-16
+        },
+        {
+          "case": "small",
+          "ratio": 2.522182968305701,
+          "min_ratio": 2.2392465245235864,
+          "max_ratio": 2.638850476315905,
+          "objective_difference": 2.493394920082323e-16
+        },
+        {
+          "case": "wide",
+          "ratio": 7.4478528815868,
+          "min_ratio": 7.044808495765931,
+          "max_ratio": 8.590942158473908,
+          "objective_difference": 3.9077409255617226e-16
+        }
+      ],
+      "all_penalties_ratio_range": [
+        0.9697769659422378,
+        7.880895382286458
+      ],
+      "max_relative_objective_difference": 5.752216075421886e-16
+    },
+    "r_component": {
+      "family": "component",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 29.504657414098578,
+          "min_ratio": 26.445620802671485,
+          "max_ratio": 31.29924915107745,
+          "objective_difference": 1.369588178898502e-15
+        },
+        {
+          "case": "ill",
+          "ratio": 19.078112701585255,
+          "min_ratio": 13.595382121754826,
+          "max_ratio": 22.42372901714417,
+          "objective_difference": 9.817466697017591e-16
+        },
+        {
+          "case": "medium",
+          "ratio": 35.54440507247141,
+          "min_ratio": 33.70770992809711,
+          "max_ratio": 37.60787400560318,
+          "objective_difference": 2.615021809030253e-15
+        },
+        {
+          "case": "responses",
+          "ratio": 342.8047811230761,
+          "min_ratio": 253.65672010226453,
+          "max_ratio": 420.94170667692333,
+          "objective_difference": 5.487553696359861e-14
+        },
+        {
+          "case": "small",
+          "ratio": 12.468905825252648,
+          "min_ratio": 11.492421648644614,
+          "max_ratio": 16.09041618244796,
+          "objective_difference": 2.992073904098788e-15
+        },
+        {
+          "case": "wide",
+          "ratio": 3.7424644660247757,
+          "min_ratio": 3.52075924146598,
+          "max_ratio": 4.048465999298971,
+          "objective_difference": 1.684682497310026e-15
+        }
+      ],
+      "all_penalties_ratio_range": [
+        3.379777754643292,
+        342.8047811230761
+      ],
+      "max_relative_objective_difference": 5.487553696359861e-14
+    },
+    "pa_rank": {
+      "family": "rank",
+      "middle_penalty": [
+        {
+          "case": "medium",
+          "ratio": 72.84120346141528,
+          "min_ratio": 7.237548372739722,
+          "max_ratio": 1557.517908033161,
+          "objective_difference": 2.870192356959975e-16
+        },
+        {
+          "case": "wide",
+          "ratio": 664.1180674993485,
+          "min_ratio": 34.55260134572403,
+          "max_ratio": 1442.0218356098515,
+          "objective_difference": 6.331729669654797e-15
+        }
+      ],
+      "all_penalties_ratio_range": [
+        72.84120346141528,
+        664.1180674993485
+      ],
+      "max_relative_objective_difference": 6.331729669654797e-15
+    },
+    "r_rrr": {
+      "family": "rank",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 2.2554423085325985,
+          "min_ratio": 2.1989189100228903,
+          "max_ratio": 2.3331302597695265,
+          "objective_difference": 8.714419132124101e-16
+        },
+        {
+          "case": "medium",
+          "ratio": 2.6805695212354532,
+          "min_ratio": 2.6382157013100507,
+          "max_ratio": 2.898542570926536,
+          "objective_difference": 7.285478518373028e-16
+        },
+        {
+          "case": "responses",
+          "ratio": 8.962331415513702,
+          "min_ratio": 6.324596977768979,
+          "max_ratio": 10.98925800555471,
+          "objective_difference": 5.7537987834587e-16
+        },
+        {
+          "case": "small",
+          "ratio": 2.081077048124102,
+          "min_ratio": 1.8300437438361408,
+          "max_ratio": 2.364460379266352,
+          "objective_difference": 1.125704845320346e-15
+        },
+        {
+          "case": "wide",
+          "ratio": 2.832587789406052,
+          "min_ratio": 2.7326519218764402,
+          "max_ratio": 2.955194033693529,
+          "objective_difference": 1.044503701975104e-15
+        }
+      ],
+      "all_penalties_ratio_range": [
+        2.081077048124102,
+        8.962331415513702
+      ],
+      "max_relative_objective_difference": 1.125704845320346e-15
+    },
+    "r_rrr_qr": {
+      "family": "rank",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 3.2896872331474394,
+          "min_ratio": 3.1417275699112306,
+          "max_ratio": 3.408879409545621,
+          "objective_difference": 8.714419132124101e-16
+        },
+        {
+          "case": "ill",
+          "ratio": 2.693873752807993,
+          "min_ratio": 2.407763154975813,
+          "max_ratio": 2.915779339264842,
+          "objective_difference": 1.021347347638103e-15
+        },
+        {
+          "case": "medium",
+          "ratio": 4.25308545466668,
+          "min_ratio": 4.036729969894451,
+          "max_ratio": 4.573798177779242,
+          "objective_difference": 7.285478518373028e-16
+        },
+        {
+          "case": "responses",
+          "ratio": 13.493763057042345,
+          "min_ratio": 10.229090972233637,
+          "max_ratio": 16.215561111532242,
+          "objective_difference": 5.7537987834587e-16
+        },
+        {
+          "case": "small",
+          "ratio": 2.697576287154305,
+          "min_ratio": 2.3866460049387754,
+          "max_ratio": 3.2173396051764453,
+          "objective_difference": 1.125704845320346e-15
+        },
+        {
+          "case": "wide",
+          "ratio": 1.501142631175657,
+          "min_ratio": 1.144402543105828,
+          "max_ratio": 1.6623795726317485,
+          "objective_difference": 1.044503701975104e-15
+        }
+      ],
+      "all_penalties_ratio_range": [
+        1.501142631175657,
+        13.493763057042345
+      ],
+      "max_relative_objective_difference": 1.125704845320346e-15
+    },
+    "scipy_rrr": {
+      "family": "rank",
+      "middle_penalty": [
+        {
+          "case": "deficient",
+          "ratio": 0.6187311783965506,
+          "min_ratio": 0.6133838817828199,
+          "max_ratio": 0.6551390247992055,
+          "objective_difference": 1.4524031886873502e-16
+        },
+        {
+          "case": "ill",
+          "ratio": 0.6609203350556825,
+          "min_ratio": 0.6175127485065741,
+          "max_ratio": 0.7023730537978794,
+          "objective_difference": 1.4591252138445318e-16
+        },
+        {
+          "case": "medium",
+          "ratio": 0.6758569328921799,
+          "min_ratio": 0.6391589223791205,
+          "max_ratio": 0.7132337788062497,
+          "objective_difference": 1.4350961784799875e-16
+        },
+        {
+          "case": "responses",
+          "ratio": 0.5347890179984293,
+          "min_ratio": 0.4386620602517252,
+          "max_ratio": 0.5514347129610697,
+          "objective_difference": 2.2945348990321044e-16
+        },
+        {
+          "case": "small",
+          "ratio": 0.7957693904620727,
+          "min_ratio": 0.7748123126264299,
+          "max_ratio": 0.8219040797505149,
+          "objective_difference": 1.9071565739912502e-16
+        },
+        {
+          "case": "wide",
+          "ratio": 0.6723169280794747,
+          "min_ratio": 0.6593870691701157,
+          "max_ratio": 0.6784534927011866,
+          "objective_difference": 2.9777764280816946e-16
+        }
+      ],
+      "all_penalties_ratio_range": [
+        0.5347890179984293,
+        0.7957693904620727
+      ],
+      "max_relative_objective_difference": 2.9777764280816946e-16
+    }
+  }
+}
