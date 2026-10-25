@@ -77,8 +77,13 @@ use an eigenvalue square root, clipping only roundoff-sized negative values.
 
 The statistic is ``W_j=|\widehat\beta_j|-|\widehat\beta_{p+j}|`` from the
 joint lasso on ``[X\ \widetilde X]``. The filter fits without an intercept or
-standardization **after** constructing knockoffs. Preprocess before constructing
-fixed-X knockoffs if needed. A prespecified positive penalty, independent of y,
+standardization **after** constructing knockoffs. Scaling must precede fixed-X
+construction. This fixed-X interface assumes a model without an intercept.
+For an intercept, project both X and y onto an orthonormal basis orthogonal to
+the constant vector, then construct knockoffs in those n−1 coordinates
+(requiring n−1 ≥ 2p). Subtracting column means alone does not ensure that the
+knockoffs are orthogonal to the removed intercept.
+A prespecified positive penalty, independent of y,
 preserves fixed-X sufficiency. Cross-validating this penalty does not have the
 same fixed-X guarantee. Model-X also requires a swap-antisymmetric statistic;
 nonunique lasso solutions and exact ties need care. A failure of the joint

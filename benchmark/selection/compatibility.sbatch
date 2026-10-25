@@ -9,8 +9,9 @@
 #SBATCH --time=00:20:00
 set -euo pipefail
 cd "$RUN/source"
-export JULIA_DEPOT_PATH="$RUN/depot:/home1/mkolar/juliaPkg/depot:"
-export JULIA_NUM_THREADS=2 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
+source benchmark/selection/cache_inputs.sh
+export JULIA_DEPOT_PATH="$RUN/depot:$RUN/shared-inputs"
+export JULIA_NUM_THREADS=2 JULIA_NUM_PRECOMPILE_TASKS=2 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 export CD_SELECTION_GOLDEN="$RUN/golden"
 # Reuse the exact dependency sources already resolved by the 1.13 environment.
 /home1/mkolar/juliaPkg/julia-1.13.2/bin/julia --startup-file=no --project=benchmark/selection -e 'using Pkg, TOML; d=Dict(p.name=>p.source for p in values(Pkg.dependencies()) if p.name in ("ProximalBase","ProximalSolvers")); open(ENV["RUN"]*"/dependency-paths.toml","w") do io; TOML.print(io,d); end'

@@ -76,7 +76,7 @@ function _slope_fit!(β, Z, y, λ, candidates; max_iter, tol)
   # reduced problem and the starting point.
   target = tol * max(one(eltype(β)), norm(transpose(Z) * y / length(y), Inf))
   while true
-    if !isempty(E) && total < max_iter
+    if !isempty(E) && total + 1 < max_iter
       b = β[E]
       f = (one(eltype(β)) / length(y)) * LeastSquaresLoss(y, Z[:, E])
       g = ProximalBase.SLOPE(λ[1:length(E)])
@@ -88,7 +88,7 @@ function _slope_fit!(β, Z, y, λ, candidates; max_iter, tol)
     end
     residual, grad, trial = _slope_kkt(Z, y, β, λ)
     residual <= target && return total, true, residual, length(E), repairs, grad
-    total >= max_iter && return total, false, residual, length(E), repairs, grad
+    total + 1 >= max_iter && return total, false, residual, length(E), repairs, grad
     # Add every excluded coordinate moved by the full prox. Include all
     # remaining columns as a conservative fallback when only E fails KKT.
     added = setdiff(findall(j -> abs(trial[j]) > target, 1:p), E)

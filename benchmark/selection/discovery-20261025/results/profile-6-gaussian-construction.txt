@@ -1,0 +1,143 @@
+rep=6 case=gaussian-construction calls=60 Julia=1.13.2 threads=2 job=13423195
+ Count  Overhead File                    Line Function
+ =====  ======== ====                    ==== ========
+     1         0 @Base/boot.jl           667 Array
+     1         1 @Base/simdloop.jl        84 macro expansion
+     1         0 @Base/array.jl          627 zeros
+     1         0 @Base/array.jl          359 fill!
+     1         0 @Base/array.jl          363 _fill!
+     1         0 @Base/array.jl         1020 setindex!
+     1         1 @Base/array.jl         1025 _setindex!
+     1         0 @Base/array.jl          407 similar
+     1         0 @Random/src/normal.jl    89 _randn
+     1         1 @Base/int.jl             85 -
+     1         0 @LinearAlgebra/src/triangular.jl  158 Array
+     1         0 @Base/simdloop.jl        76 macro expansion
+     1         0 @Base/multidimensional.jl  519 simd_index
+     1         1 @Base/int.jl             87 +
+     1         0 @CoordinateDescent/src/knockoffs.jl    6 _knockoff_covariance(Sigma::Matri…
+     1         0 @Random/src/normal.jl    91 _randn
+     1         1 @Random/src/normal.jl     ? randn_unlikely(rng::Xoshiro, idx:…
+     1         0 @Base/broadcast.jl      617 getindex
+     1         0 @Base/broadcast.jl      621 _getindex
+     1         0 @Base/broadcast.jl      676 _broadcast_getindex
+     1         0 @Base/broadcast.jl      700 _getindex
+     1         0 @Base/broadcast.jl      670 _broadcast_getindex
+     1         0 @Base/multidimensional.jl  772 getindex
+     1         0 @Base/array.jl          963 getindex
+     1         1 @Base/essentials.jl     975 getindex
+     1         0 @LinearAlgebra/src/symmetriceigen.jl    6 eigencopy_oftype(A::Hermitian{Flo…
+     1         0 @Base/arraymath.jl        8 -
+     1         0 @LinearAlgebra/…tructuredbroadcast.jl  259 copy(bc::Base.Broadcast.Broadcast…
+     1         1 @Base/essentials.jl       ? copy
+     1         0 @Base/broadcast.jl      229 similar
+     1         0 @Base/broadcast.jl      230 similar
+     1         0 @Base/abstractarray.jl  876 similar
+     1         0 @Base/array.jl          409 similar
+     1         0 @Base/abstractarray.jl  877 similar
+     1         0 @Base/boot.jl           671 Array
+     2         0 @LinearAlgebra/src/triangular.jl  159 Array
+     2         0 @LinearAlgebra/src/triangular.jl  664 copy!(dest::Matrix{Float64}, U::U…
+     2         0 @LinearAlgebra/src/triangular.jl  675 _copy!
+     2         0 @LinearAlgebra/src/triangular.jl  709 copy_unaliased!
+     2         0 @LinearAlgebra/src/triangular.jl  682 copy_unaliased_stored!
+     2         0 @Random/src/normal.jl   260 randn!(rng::Xoshiro, A::Matrix{Fl…
+     2         0 @CoordinateDescent/src/knockoffs.jl   62 gaussian_knockoffs(X::Matrix{Floa…
+     2         0 @CoordinateDescent/src/knockoffs.jl   59 gaussian_knockoffs(X::Matrix{Floa…
+     2         0 @LinearAlgebra/src/symmetriceigen.jl    9 eigencopy_oftype(A::Symmetric{Flo…
+     2         0 @LinearAlgebra/src/matmul.jl  270 mul!
+     2         0 @LinearAlgebra/src/matmul.jl  302 mul!
+     2         0 @LinearAlgebra/src/matmul.jl  333 _mul!
+     2         0 @LinearAlgebra/src/matmul.jl  533 generic_matmatmul_wrapper!(C::Mat…
+     2         0 @LinearAlgebra/src/matmul.jl  559 _syrk_herk_gemm_wrapper!
+     2         0 @LinearAlgebra/src/matmul.jl  925 gemm_wrapper!
+     2         2 @LinearAlgebra/src/blas.jl 1654 gemm!(transA::Char, transB::Char,…
+     3         0 @CoordinateDescent/src/knockoffs.jl   22 equicorrelated_s(Sigma::Matrix{Fl…
+     3         0 @CoordinateDescent/src/knockoffs.jl   65 gaussian_knockoffs(X::Matrix{Floa…
+     3         0 @Random/src/normal.jl   272 randn
+     3         0 @LinearAlgebra/src/LinearAlgebra.jl  739 ldiv(F::Cholesky{Float64, Matrix{…
+     3         0 @LinearAlgebra/src/cholesky.jl  738 ldiv!
+     3         3 @LinearAlgebra/src/lapack.jl 3343 potrs!(uplo::Char, A::Matrix{Floa…
+     3         0 @CoordinateDescent/src/knockoffs.jl   41 _knockoff_parameters(S::Matrix{Fl…
+     3         0 @Base/array.jl          652 Array
+     3         0 @Base/abstractarray.jl 1186 copyto_axcheck!(dest::Matrix{Floa…
+     3         0 @LinearAlgebra/src/symmetric.jl  413 copyto!
+     3         0 @LinearAlgebra/src/symmetric.jl  418 _copyto!
+     3         0 @LinearAlgebra/src/matmul.jl  141 *
+     3         0 @CoordinateDescent/src/knockoffs.jl   24 equicorrelated_s(Sigma::Matrix{Fl…
+     3         0 @Base/reducedim.jl     1013 all
+     3         0 @Base/reducedim.jl     1013 #all#769
+     3         0 @Base/anyall.jl         217 _all
+     3         0 @Base/abstractarray.jl 1247 iterate
+     3         0 @Base/abstractarray.jl 1254 _iterate_abstractarray
+     3         3 @Base/essentials.jl     385 checkbounds
+     3         0 @LinearAlgebra/src/cholesky.jl  182 cholcopy
+     4         0 @CoordinateDescent/src/knockoffs.jl    7 _knockoff_covariance(Sigma::Matri…
+     4         0 @LinearAlgebra/src/dense.jl   93 isposdef
+     4         0 @LinearAlgebra/src/cholesky.jl  552 _cholesky
+     4         0 @LinearAlgebra/src/cholesky.jl  552 #_cholesky#175
+     4         0 @LinearAlgebra/src/cholesky.jl  416 cholesky!
+     4         0 @LinearAlgebra/src/cholesky.jl  417 #cholesky!#163
+     4         0 @LinearAlgebra/src/cholesky.jl  187 _chol!
+     4         4 @LinearAlgebra/src/lapack.jl 3293 potrf!(uplo::Char, A::Matrix{Floa…
+     4         0 @Base/array.jl          626 zeros
+     4         0 @Base/arraymath.jl        8 -(A::Matrix{Float64}, B::Matrix{F…
+     4         0 @CoordinateDescent/src/knockoffs.jl   35 _knockoff_parameters(S::Matrix{Fl…
+     5         0 @LinearAlgebra/src/LinearAlgebra.jl  730 ldiv(F::Cholesky{Float64, Matrix{…
+     5         0 @LinearAlgebra/src/LinearAlgebra.jl  668 _zeros
+     5         0 @Base/array.jl          622 zeros
+     6         0 @Base/boot.jl           675 Array
+     6         0 @LinearAlgebra/src/generic.jl 2167 copytrito!
+     6         6 @LinearAlgebra/src/lapack.jl 7198 lacpy!(B::Matrix{Float64}, A::Mat…
+     7         0 @LinearAlgebra/src/cholesky.jl  542 cholesky
+     7         0 @LinearAlgebra/src/cholesky.jl  542 #cholesky#171
+     7         0 @Base/boot.jl           662 Array
+     7         0 @Base/arraymath.jl       16 +(A::Matrix{Float64}, Bs::Matrix{…
+     8         0 @LinearAlgebra/src/LinearAlgebra.jl  714 \
+     8         0 @Base/boot.jl           652 Array
+     8         0 @Base/boot.jl           605 new_as_memoryref
+     8         8 @Base/boot.jl           588 GenericMemory
+    11         0 @CoordinateDescent/src/knockoffs.jl   34 _knockoff_parameters(S::Matrix{Fl…
+    12         0 @CoordinateDescent/src/knockoffs.jl   25 equicorrelated_s(Sigma::Matrix{Fl…
+    12         0 @LinearAlgebra/src/symmetriceigen.jl  246 eigmin
+    12         0 @LinearAlgebra/src/symmetriceigen.jl  203 eigvals
+    12         0 @LinearAlgebra/src/symmetriceigen.jl  172 eigvals!
+    12         0 @Base/broadcast.jl      888 broadcast_preserving_zero_d
+    13         0 @Base/multidimensional.jl  774 setindex!
+    14         0 @Base/simdloop.jl        77 macro expansion
+    14         0 @Base/broadcast.jl     1000 macro expansion
+    15         0 @Base/array.jl         1031 setindex!
+    15        15 @Base/array.jl         1037 _setindex!
+    16         0 @Base/broadcast.jl      952 copyto!
+    16         0 @Base/broadcast.jl      999 copyto!
+    17         0 @CoordinateDescent/src/knockoffs.jl   68 gaussian_knockoffs(X::Matrix{Floa…
+    17         0 @Base/broadcast.jl      924 copy
+    18         0 @CoordinateDescent/src/knockoffs.jl   31 _knockoff_parameters(S::Matrix{Fl…
+    18         0 @CoordinateDescent/src/knockoffs.jl   20 equicorrelated_s
+    18         0 @Base/broadcast.jl      899 materialize
+    67         0 @CoordinateDescent/src/knockoffs.jl   37 _knockoff_parameters(S::Matrix{Fl…
+    67         0 @LinearAlgebra/src/symmetriceigen.jl   58 eigen
+    67         0 @LinearAlgebra/src/symmetriceigen.jl   59 #eigen#254
+    67         0 @LinearAlgebra/src/symmetriceigen.jl   63 _eigen
+    67         0 @LinearAlgebra/src/symmetriceigen.jl   65 #_eigen#255
+    67         0 @LinearAlgebra/src/symmetriceigen.jl   22 eigen!
+    67         0 @LinearAlgebra/src/symmetriceigen.jl   28 #eigen!#253
+    79        79 @LinearAlgebra/src/lapack.jl 5410 syevr!(jobz::Char, range::Char, u…
+   103         0 @CoordinateDescent/src/knockoffs.jl   63 gaussian_knockoffs(X::Matrix{Floa…
+   127         0 @Base/client.jl         577 _start()
+   127         0 @Base/client.jl         344 exec_options(opts::Base.JLOptions)
+   127         0 @Base/Base.jl           309 include(mod::Module, _path::Strin…
+   127         0 @Base/loading.jl       3105 _include(mapexpr::Function, mod::…
+   127         0 @Base/loading.jl       3045 include_string(mapexpr::typeof(id…
+   127         0 @Base/boot.jl           489 eval(m::Module, e::Any)
+   127         0 …selection/campaign.jl   32 measure(rep::Int64, out::String)
+   127         0 @Base/io.jl             426 open
+   127         0 @Base/io.jl             429 #open#324
+   127         0 …selection/campaign.jl   41 (::var"#measure##0#measure##1"{In…
+   127         0 @Profile/src/Profile.jl   60 macro expansion
+   127         0 …selection/campaign.jl   42 macro expansion
+   127         0 …selection/campaign.jl   23 (::var"#benchmark_workloads##12#b…
+   127         0 @CoordinateDescent/src/knockoffs.jl   57 gaussian_knockoffs
+   318         0 @Base/task.jl          1196 wait_forever()
+   318       318 @Base/task.jl          1297 wait()
+Total snapshots: 636. Utilization: 50% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.

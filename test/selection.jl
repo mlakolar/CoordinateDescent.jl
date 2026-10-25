@@ -61,6 +61,10 @@ end
   r = CoordinateDescent._slope_fit!(β,X,y,[0.4,0.3,0.2,0.1],Int[];max_iter=500,tol=1e-9)
   @test r[2] && r[5] >= 1
   @test β ≈ [1.1,0.7,0.3,0.] atol=1e-7
+  # A reduced zero fit can finish in one iteration, leaving only one
+  # iteration: the inner solver requires at least two, so stop at the cap.
+  limited = CoordinateDescent._slope_fit!(zeros(4),X,y,[0.4,0.3,0.2,0.1],[4];max_iter=2,tol=1e-9)
+  @test limited[1] <= 2
   @test_throws ArgumentError SLOPEPath(X,y,[0.1,1.])
   @test_throws ArgumentError SLOPEPath(X,y;lambda=zeros(4))
   z = SLOPEPath(X,zeros(4);nλ=1)

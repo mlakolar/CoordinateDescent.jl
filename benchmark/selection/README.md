@@ -4,11 +4,16 @@ All benchmarks and profiles run under Slurm on USC Discovery. The campaign
 uses account `mkolar_1314`, partition `main`, constraint `epyc-7513`, Julia
 1.13.2, two Julia threads and one BLAS/OpenMP thread per worker. Two workers
 run with GNU Parallel and exclusive `srun` steps in a 4-CPU, 12-GB allocation.
-The regression job requests 2 CPUs and 4 GB, so their combined request is
+Discovery serialized the outstanding `srun` benchmark steps under the allocation's
+step-memory semantics. The retained measurements therefore have one active
+benchmark process at a time; each threaded stability fit still uses two Julia
+threads. The regression job requests 2 CPUs and 4 GB, so the combined request is
 6 CPUs and 16 GB. Setup and all retries count against the task's standing
 8-CPU/16-GB/two-hour allowance.
 
-`setup.jl` instantiates this environment. The retained Manifest identifies the
+`setup.jl` instantiates this environment. Correctness and documentation jobs use
+a task-local compiled cache; `cache_inputs.sh` reuses shared installed package
+sources and artifacts without sharing their mutable compiled-cache directory. The retained Manifest identifies the
 exact ProximalBase and ProximalSolvers trees; no dependency checkout is edited.
 `setup.R` installs only missing R references in a run-local library, reusing
 Discovery's existing glmnet library. R runs in the site's R 4.5.3 Apptainer

@@ -21,6 +21,12 @@ for name in sorted({r['case'] for r in rows}):
     ts=[1000*float(r['seconds']) for r in rs]
     mem=[int(r['bytes'])/2**20 for r in rs]
     lines.append(f'| {name} | {statistics.median(ts):.3f} | {min(ts):.3f}–{max(ts):.3f} | {statistics.median(mem):.2f} |')
+by={(int(r['rep']),r['case']):float(r['seconds']) for r in rows}
+lines += ['', 'Paired time ratios (full/ screened or serial/threaded), summarized across the same seven replications:', '', '| Comparison | Median ratio | Min–max |', '|---|---:|---:|']
+for a,b in [('slope-path-full','slope-path-screened'),('slope-wide-full','slope-wide-screened'),('stability-serial','stability-threaded')]:
+    ratios=[by[i,a]/by[i,b] for i in range(1,8)]
+    lines.append(f'| {a} / {b} | {statistics.median(ratios):.2f} | {min(ratios):.2f}–{max(ratios):.2f} |')
+lines += ['', 'The small stability workloads have substantial timing spread; the paired median ratio differs from the ratio of marginal medians. These are measurements of the listed workloads, not general speedup guarantees.']
 lines += ['', 'Monte Carlo uses 350 independent data/noise repetitions per procedure. '
           'The orthogonal known-noise model follows the SLOPE paper; normalized random fixed designs '
           'and a Gaussian AR(1) model with correlation 0.4 follow the knockoff design families. '

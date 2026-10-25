@@ -1,0 +1,82 @@
+  Activating new project at `~/juliaPkg/runs/20261025-cd82-selection/env110`
+   Resolving package versions...
+   Installed PrecompileTools ─ v1.2.1
+    Updating `~/juliaPkg/runs/20261025-cd82-selection/env110/Project.toml`
+  [c00ed354] + CoordinateDescent v0.8.0 `~/juliaPkg/runs/20261025-cd82-selection/source`
+  [0a755509] + ProximalBase v0.5.3 `~/juliaPkg/runs/20261025-cd82-selection/depot/packages/ProximalBase/86sFe`
+  [fc4971f5] + ProximalSolvers v0.1.1 `~/juliaPkg/runs/20261025-cd82-selection/depot/packages/ProximalSolvers/4JP0K`
+    Updating `~/juliaPkg/runs/20261025-cd82-selection/env110/Manifest.toml`
+  [c00ed354] + CoordinateDescent v0.8.0 `~/juliaPkg/runs/20261025-cd82-selection/source`
+  [ffbed154] + DocStringExtensions v0.10.2
+  [92d709cd] + IrrationalConstants v0.2.7
+  [692b3bcd] + JLLWrappers v1.8.0
+  [2ab3a3ac] + LogExpFunctions v1.0.3
+⌅ [aea7be01] + PrecompileTools v1.2.1
+  [21216c6a] + Preferences v1.6.1
+  [0a755509] + ProximalBase v0.5.3 `~/juliaPkg/runs/20261025-cd82-selection/depot/packages/ProximalBase/86sFe`
+  [fc4971f5] + ProximalSolvers v0.1.1 `~/juliaPkg/runs/20261025-cd82-selection/depot/packages/ProximalSolvers/4JP0K`
+  [276daf66] + SpecialFunctions v2.9.1
+  [82ae8749] + StatsAPI v1.8.0
+  [efe28fd5] + OpenSpecFun_jll v0.5.6+0
+  [56f22d72] + Artifacts
+  [ade2ca70] + Dates
+  [8f399da3] + Libdl
+  [37e2e46d] + LinearAlgebra
+  [de0858da] + Printf
+  [9a3f8284] + Random
+  [ea8e919c] + SHA v0.7.0
+  [9e88b42a] + Serialization
+  [2f01184e] + SparseArrays v1.10.0
+  [10745b16] + Statistics v1.10.0
+  [fa267f1f] + TOML v1.0.3
+  [4ec0a83e] + Unicode
+  [e66e0078] + CompilerSupportLibraries_jll v1.1.2+1
+  [4536629a] + OpenBLAS_jll v0.3.23+5
+  [05823500] + OpenLibm_jll v0.8.5+0
+  [bea87d4a] + SuiteSparse_jll v7.2.1+1
+  [8e850b90] + libblastrampoline_jll v5.11.0+0
+        Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`
+   Resolving package versions...
+    Updating `~/juliaPkg/runs/20261025-cd82-selection/env110/Project.toml`
+  [8bb1440f] + DelimitedFiles v1.9.1
+    Updating `~/juliaPkg/runs/20261025-cd82-selection/env110/Manifest.toml`
+  [8bb1440f] + DelimitedFiles v1.9.1
+  [a63ad114] + Mmap
+Precompiling packages...
+    550.7 ms  ✓ OpenLibm_jll
+    344.7 ms  ✓ StatsAPI
+    409.0 ms  ✓ CompilerSupportLibraries_jll
+   1532.9 ms  ✓ IrrationalConstants
+    403.1 ms  ✓ DelimitedFiles
+    482.7 ms  ✓ SuiteSparse_jll
+   1163.9 ms  ✓ DocStringExtensions
+    593.0 ms  ✓ Preferences
+    486.2 ms  ✓ LogExpFunctions
+    356.6 ms  ✓ PrecompileTools
+    419.3 ms  ✓ JLLWrappers
+    450.3 ms  ✓ OpenSpecFun_jll
+   3225.4 ms  ✓ SparseArrays
+    617.3 ms  ✓ Statistics
+   2206.4 ms  ✓ SpecialFunctions
+  13523.1 ms  ✓ ProximalBase
+  19546.3 ms  ✓ ProximalSolvers
+  15608.4 ms  ✓ CoordinateDescent
+  18 dependencies successfully precompiled in 56 seconds
+Test Summary:                       | Pass  Total  Time
+SLOPE orthogonal solution and scale |   22     22  8.5s
+Test Summary:                  | Pass  Total  Time
+SLOPE screening and KKT repair |   25     25  0.6s
+Test Summary:                                  | Pass  Total  Time
+Knockoff construction, threshold and statistic |   19     19  5.2s
+Test Summary:                                          | Pass  Total  Time
+Complementary pairs and deterministic parallel fitting |   14     14  5.6s
+SLOPE intercept=false standardize=false max_abs_error=3.075572296840079e-9
+SLOPE intercept=false standardize=true max_abs_error=2.956964173517207e-9
+SLOPE intercept=true standardize=false max_abs_error=1.071831623455921e-9
+SLOPE intercept=true standardize=true max_abs_error=1.02881425600998e-9
+Gaussian knockoff max_abs_error=5.849615236641625e-11
+Coefficient difference max_abs_error=3.184432206815302e-8
+Stability frequency max_abs_error=0.0
+Test Summary: | Pass  Total  Time
+R golden data |   17     17  2.8s
+GOLDEN_COMPARISON_DONE

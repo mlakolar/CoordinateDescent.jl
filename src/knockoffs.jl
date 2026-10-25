@@ -75,8 +75,8 @@ Fixed-X knockoffs for a full-column-rank design with n ≥ 2p. Uses the
 orthogonal complement from QR and the equicorrelated diagonal by default.
 The output satisfies `Xk'Xk = X'X`, `X'Xk = X'X - diag(s)`, to roundoff.
 Columns need not have unit norm; s is computed on the correlation scale and
-mapped back to the Gram matrix. For fixed-X FDR control, use independent
-homoscedastic Gaussian errors and a swap-antisymmetric statistic with the
+mapped back to the Gram matrix. For fixed-X FDR control, use a linear model without an intercept, independent
+homoscedastic Gaussian errors, and a swap-antisymmetric statistic with the
 sufficiency property, such as a lasso fit at a prespecified penalty level.
 """
 function fixed_knockoffs(X::AbstractMatrix{<:Real}; s=nothing)
@@ -129,8 +129,10 @@ end
 
 Coefficient-difference statistic `abs(β[1:p]) - abs(β[p+1:2p])` from a
 joint lasso on `[X Xk]`, at a prespecified finite positive lambda. Fits without
-an intercept or column standardization to preserve fixed-X sufficiency. Center
-or scale the data before constructing fixed-X knockoffs if needed. Additional
+an intercept or column standardization to preserve fixed-X sufficiency. Scale X
+before construction if needed. To remove an intercept, project X and y onto an
+orthonormal basis orthogonal to the constant vector before construction;
+subtracting means alone is insufficient. Additional
 keywords are CDOptions fields. Failure to converge raises an error.
 """
 function lasso_coefdiff(X::AbstractMatrix{<:Real}, Xk::AbstractMatrix{<:Real},

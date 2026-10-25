@@ -10,7 +10,7 @@
 set -euo pipefail
 cd "$RUN/source"
 export JULIA_DEPOT_PATH="$RUN/depot:/home1/mkolar/juliaPkg/depot:"
-export JULIA_NUM_THREADS=2 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
+export JULIA_NUM_THREADS=2 JULIA_NUM_PRECOMPILE_TASKS=2 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 export SELECTION_RLIB="$RUN/Rlib"
 module load apptainer
 /home1/mkolar/juliaPkg/julia-1.13.2/bin/julia --startup-file=no benchmark/selection/setup.jl > "$RUN/setup.log" 2>&1

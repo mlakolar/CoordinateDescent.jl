@@ -1,5 +1,9 @@
 # Benchmarks
 
+SLOPE, knockoff+ and complementary-pairs stability selection have a
+[replicated Discovery campaign](selection/README.md), with
+[timings, profiles and FDR/power results](selection/discovery-20261025/results/summary.md).
+
 Run the scripts from the root of the repository, in the environment of this
 folder, which loads CoordinateDescent from this checkout:
 
