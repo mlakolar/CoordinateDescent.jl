@@ -310,3 +310,5 @@ StatsAPI.nobs(sol::QuantileLassoSolution) = length(sol.residuals)
 StatsAPI.nobs(path::QuantileLassoPath) = path.nobs
 StatsAPI.dof(sol::QuantileLassoSolution) = count(!iszero, sol.β)+sol.hasintercept
 StatsAPI.fit(::Type{QuantileLassoPath}, X::AbstractMatrix, y::AbstractVector, args...; kwargs...) = QuantileLassoPath(X,y,args...;kwargs...)
+
+StatsAPI.fit(::Type{QuantileLassoSolution}, X::AbstractMatrix, y::AbstractVector, λ::Real; kwargs...) = quantile_lasso(X,y,λ;kwargs...)

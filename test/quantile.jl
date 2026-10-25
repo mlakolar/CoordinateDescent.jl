@@ -4,6 +4,8 @@ const QMOI = HiGHS.MOI
 # Independent primal split formulation, with exactly QR.jl's row orientation.
 function primal_qr_oracle(X,y,λ,τ,w;intercept=true)
   n,p=size(X);o=HiGHS.Optimizer();QMOI.set(o,QMOI.Silent(),true)
+  QMOI.set(o,QMOI.RawOptimizerAttribute("threads"),1)
+  QMOI.set(o,QMOI.RawOptimizerAttribute("parallel"),"off")
   bplus=QMOI.add_variables(o,p);bminus=QMOI.add_variables(o,p)
   rp=QMOI.add_variables(o,n);rn=QMOI.add_variables(o,n)
   a=intercept ? QMOI.add_variable(o) : nothing
