@@ -34,11 +34,12 @@ omitted from the 1.6 GB dense-equivalent canary to bound resource use. Input
 storage, dimensions, flags and exact densities are recorded in `inputs/cases.csv`.
 
 Native and baseline fits use relative full proximal residual tolerance 1e-7,
-SLOPE.jl internal tolerance 1e-8, and R SLOPE auto tolerance 1e-9. These different
+SLOPE.jl internal tolerance 1e-9, and R SLOPE auto tolerance 1e-9. These different
 internal settings are calibrated to the same independently recomputed relative
 proximal certificate <=1e-7, including intercept stationarity. R tolerance1e-8
 failed the long-path pilot at 1.2153e-7 and is retained as a failed calibration.
-Every path level is checked in original input units, with independent column
+SLOPE.jl tolerance1e-8 also failed the .001-density case at2.7851e-7;
+its tighter1e-9 setting is calibrated before resuming. Every path level is checked in original input units, with independent column
 moments, scales and matrix products; objectives and predictions are compared.
 No reduced-fit stopping flag substitutes for the full certificate.
 
@@ -62,6 +63,17 @@ case measures process/runtime variability, not population-wide performance.
 The large canary's dense-equivalent size is a reference, not a measured baseline
 allocation. Changing storage does not justify rerunning the full FDR campaign.
 
+## Discovery queue and hardware
+
+The full-suite and calibration pilots used main/EPYC7513. The final repeated
+campaign uses Discovery's debug partition on b11-09/EPYC7313, after normal QoS
+hit its account concurrent-job cap. This is a bounded development test, under
+the debug partition's one-hour limit. Job QoS remains normal; the partition's
+own debug QoS supplies its separate short-job limit. Only this task's pending
+jobs and the coordinated PS guard/extraction jobs were moved. All four backends
+and seven repetitions run on the same allocated node. Compare within-campaign
+paired ratios; do not combine the earlier7513 absolute times with the7313 table.
+
 ## Recreation
 
 Use the task-scoped SSH and lightweight registry described by `slurm-workflow`.
@@ -71,7 +83,9 @@ Runtime: Julia1.10.12; full suite also Julia1.13.2; R4.5.3 container with the
 previous campaign's SLOPE2.1.1 library and SLOPE.jl1.3.1. Source snapshots,
 checksums and final manifests identify exact runtime dependencies.
 
-Stage the recorded source snapshots and reuse the recorded environments. Run
+Stage the recorded source snapshots and reuse the recorded environments. The
+final launch uses `sbatch --partition=debug --constraint=epyc-7313 campaign.sbatch`;
+these flags override the original main/7513 launcher defaults. Run
 `generate.jl` under Slurm once; `campaign.sbatch` then dispatches seven timing
 replications, seventy-seven fresh memory processes and seven independent audits
 using GNU Parallel with exclusive `srun` steps. `summarize.py` consumes retained

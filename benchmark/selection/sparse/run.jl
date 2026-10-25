@@ -15,7 +15,7 @@ function fit(c)
   if engine=="SLOPE.jl"
     f=SJ.slope(c.X,c.y;α=c.factors,λ=c.lambda,fit_intercept=c.intercept,
       centering=c.intercept ? :mean : :none,scaling=c.standardize_x ? :sd : :none,
-      tol=1e-8,max_it=100000,max_clusters=size(c.X,2)+1,dev_change_tol=0.0,dev_ratio_tol=1.0)
+      tol=1e-9,max_it=100000,max_clusters=size(c.X,2)+1,dev_change_tol=0.0,dev_ratio_tol=1.0)
     length(f.coefficients)==length(c.factors) || error("truncated path")
     hcat((vec(Matrix(b)) for b in f.coefficients)...),c.intercept ? [only(b) for b in f.intercepts] : zeros(length(c.factors))
   else

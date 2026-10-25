@@ -17,15 +17,41 @@ mkdir -p "$RUN/results" "$RUN/memory" "$RUN/metadata"
 cp "$RUN/$ENV_DIR/Project.toml" "$RUN/$ENV_DIR/Manifest.toml" "$RUN/metadata/"
 export RESULTS_DIR=results CASES=1,2,3,4,5,6,7,8,9,10,11
 # PS335 guard suites run once in coordinated job13424116, a dependency.
-cd "$RUN/source"
-/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/$ENV_DIR" -e 'using CoordinateDescent,Test; include("test/selection.jl"); include("test/slope_sparse.jl"); include("test/selection_golden.jl")' > "$RUN/final335-tests-110.log" 2>&1
+# Targeted335estimator tests already passed in13424143; reuse their receipt.
+# Calibrate the previously untested density strata before repeated timing.
+if ! grep -q AUDIT_DONE "$RUN/calibration-density/audit.log" 2>/dev/null; then
+export RESULTS_DIR=calibration-density CASES=5,6,7
+mkdir -p "$RUN/$RESULTS_DIR"
+for id in 5 6 7; do
+ for engine in native baseline; do
+  cp "$RUN/results/coef-1-$id-$engine.csv" "$RUN/$RESULTS_DIR/coef-0-$id-$engine.csv"
+ done
+done
+for engine in SLOPE.jl R; do
+ if ! grep -q 'case=7' "$RUN/$RESULTS_DIR/$engine.log" 2>/dev/null; then
+  bash "$source_dir/worker.sh" "$engine" 0 timing > "$RUN/$RESULTS_DIR/$engine.log" 2>&1
+ fi
+done
+/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/$ENV_DIR" "$source_dir/audit.jl" 0 > "$RUN/$RESULTS_DIR/audit.log" 2>&1
+fi
+export RESULTS_DIR=results CASES=1,2,3,4,5,6,7,8,9,10,11
 # Serialize timing processes; rotate backend order between replications.
 python3 - <<'PY' > "$RUN/tasks.tsv"
+import csv,json,os
+from pathlib import Path
+out=Path(os.environ['RUN'])/'results'
+def complete(engine,rep):
+ p=out/f'timing-{engine}-{rep}.csv';receipt=out/f'process-rss-{engine}-{rep}.json'
+ if not p.exists() or not receipt.exists():return False
+ with p.open() as f:rows=list(csv.DictReader(f))
+ expected=30 if engine=='baseline' else 33
+ return json.loads(receipt.read_text())['exit_code']==0 and len(rows)==expected
 engines=['native','baseline','SLOPE.jl','R']
 for rep in range(1,8):
  order=engines[(rep-1)%4:]+engines[:(rep-1)%4]
  if rep%2==0: order=order[::-1]
- for engine in order: print(engine,rep,sep='\t')
+ for engine in order:
+  if not complete(engine,rep):print(engine,rep,sep='\t')
 PY
 parallel --colsep '\t' --jobs 1 --halt soon,fail=1 --joblog "$RUN/timing-joblog.tsv" \
  "srun --exclusive --exact -N1 -n1 -c2 --mem=4G python3 '$source_dir/measure.py' '$RUN/results/process-rss-{1}-{2}.json' bash '$source_dir/worker.sh' {1} {2} timing > '$RUN/results/worker-{1}-{2}.log' 2>&1" :::: "$RUN/tasks.tsv"
