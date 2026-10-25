@@ -1,5 +1,10 @@
 # Competitiveness of PR #83
 
+The newer [default-accuracy report](../accuracy/RESULTS.md) calibrates Float64
+residual defaults beyond linear signals and validates 15 targeted workloads on
+fresh data. The tables below retain their original source and selected controls;
+they are not measurements of every estimator at the latest public defaults.
+
 The later [linear-stopping calibration](../stopping/RESULTS.md) changes the
 default stopping rule for double-precision linear signal fits and validates it
 on new datasets. The measurements below retain their original source and

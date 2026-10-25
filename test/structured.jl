@@ -282,6 +282,11 @@ end
       @test fit.converged
       @test fit.dual_residual <= sqrt(4)*1e-8
     end
+    # Returned-point verification also works at single precision, whose
+    # defaults deliberately retain the original residual scale.
+    single = fused_lasso(Float32.(X),Float32.(y),.0075,.0225)
+    @test single.converged
+    @test single.x isa Vector{Float32}
   end
 end
 

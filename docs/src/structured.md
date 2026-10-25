@@ -55,9 +55,9 @@ storage in signal length at fixed order. Signal fits do not allocate a dense
 identity. Orders one through three use a compact banded Cholesky factor and
 in-place triangular solves; other systems use the general factorization.
 The default augmented parameter follows the input-spacing rule;
-`rho` overrides it on the unnormalized-loss scale. Both ADMM residual tests
-must pass before `converged` becomes true. Always inspect this field when
-changing tolerances or iteration limits.
+`rho` overrides it on the unnormalized-loss scale. Convergence checks both
+primal and dual residuals, with the linear-signal rule described below.
+Always inspect `converged` when changing tolerances or iteration limits.
 
 ## Paths and tuning
 

@@ -1,5 +1,9 @@
 # Linear trend-filter stopping: decision and evidence
 
+This report records the linear-rule calibration at its original source revision.
+The later [default-accuracy report](../accuracy/RESULTS.md) changes residual
+defaults for other Float64 structured fits and retains this linear-signal rule.
+
 The targeted stopping change is retained in PR #83. General tolerance defaults
 are unchanged. Float64 linear signal fits use a feasible objective-gap check
 with a residual guard; other orders, designs, Float32 fits and absolute-only
