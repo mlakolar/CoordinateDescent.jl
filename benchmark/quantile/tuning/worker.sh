@@ -10,6 +10,6 @@ else
  module purge
  module load r/4.5.3
  export R_LIBS_USER=/home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/Rlib:/home1/mkolar/juliaPkg/Rlib-cd-r4.5.3
- apptainer exec --cleanenv --env "R_LIBS_USER=$R_LIBS_USER,OPENBLAS_NUM_THREADS=1,OMP_NUM_THREADS=1" /apps/containers/r/4.5/r-4.5.3.sif Rscript reference.R
+ apptainer exec --cleanenv --env "R_LIBS_USER=$R_LIBS_USER,OPENBLAS_NUM_THREADS=1,OMP_NUM_THREADS=1" /apps/containers/r/4.5/r-4.5.3.sif Rscript reference.R regular
  "$J" --depwarn=error --project=ltsenv validate.jl
 fi

@@ -122,6 +122,15 @@ Ineligible levels have `cvm=Inf`; an entirely ineligible grid raises an error.
 No folds are silently omitted to make a penalty look better. Prediction offsets
 must be provided for new observations. Numerical tolerances can require tuning
 for a difficult fold, and `time_limit` applies to each exact path separately.
+An exact quantile fit can be nonunique, including intercept-only fits at an
+integer empirical quantile rank. Different valid optimizers can then give
+different held-out predictions despite agreeing on training objectives and KKT
+conditions. CV retains the chosen backend's saved fits; it does not average
+alternative optima or alter their raw duals.
+With older ProximalSolvers versions, objective-based smoothed stopping may fail
+the requested accuracy on some folds. CV excludes the affected levels. The
+convolution gap/raw-score stopping backend is needed for the stricter behavior
+demonstrated in the solver follow-up benchmarks.
 
 Quantile inference is tracked separately in
 [issue #104](https://github.com/mlakolar/HighDimensionalModels.jl/issues/104).

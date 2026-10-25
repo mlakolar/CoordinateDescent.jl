@@ -39,7 +39,8 @@ end
   offset = .2 .* sin.(1:n)
   folds = [(i%3)+1 for i in 1:n]
   ls = [.3,.15,.05]
-  for method in (:exact,:smooth), tau in (.2,.5,.8)
+  certified = HighDimensionalModels.ProximalSolvers._hasconjugate(HighDimensionalModels.ProximalBase.ConvolutionCheck(.5,.2))
+  for method in (certified ? (:exact,:smooth) : (:exact,)), tau in (.2,.5,.8)
     cv = CVQuantileLassoPath(X,y,ls;folds,tau,method,offset,threads=false,rng=Xoshiro(19),tol=2e-5)
     expected = zeros(3,3)
     for k in 1:3
@@ -68,6 +69,20 @@ end
     @test nobs(cv) == n
     @test_throws ArgumentError coef(cv;λ=.123)
     @test_throws ArgumentError dual_scores(cv;λ=:other)
+  end
+  if !certified
+    # Older solvers can return inaccurate smooth folds. Their API contract is
+    # to exclude those levels, not to certify them or average fewer folds.
+    for tau in (.2,.5,.8)
+      legacy = CVQuantileLassoPath(X,y,ls;folds,tau,method=:smooth,offset,
+                                  threads=false,rng=Xoshiro(19),tol=2e-5)
+      for j in eachindex(ls)
+        eligible = legacy.path[j].converged && all(isfinite,legacy.fold_errors[:,j])
+        @test isfinite(legacy.cvm[j]) == eligible
+        @test eligible || isnan(legacy.cvse[j])
+      end
+      @test all(isfinite,dual_scores(legacy))
+    end
   end
   a = CVQuantileLassoPath(X,y,ls;folds,threads=false,rng=Xoshiro(2))
   b = CVQuantileLassoPath(sparse(X),y,ls;folds,threads=true,rng=Xoshiro(2))
