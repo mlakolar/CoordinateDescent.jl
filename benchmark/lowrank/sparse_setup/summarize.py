@@ -12,7 +12,7 @@ for case,tag in sorted(set((r['case'],r['config']) for r in rows)):
             baseline_allocated=statistics.median(int(r['bytes']) for r in values['baseline']),candidate_allocated=statistics.median(int(r['bytes']) for r in values['candidate']),
             matched_objective=pair.get('matched_objective'),objective_difference=pair.get('objective_relative_difference'),coefficient_difference=pair.get('coefficient_relative_difference')))
 with (base/'summary.csv').open('w') as f:
-    w=csv.DictWriter(f,list(table[0]));w.writeheader();w.writerows(table)
+    w=csv.DictWriter(f,list(table[0]),lineterminator="\n");w.writeheader();w.writerows(table)
 summary=dict(phase=phase,independent_inputs_per_case=1,timing_rows=len(rows),expected_timing_rows=228,
     table=table,validation={k:v for k,v in validation.items() if k not in ('certificates','pairs')})
 (base/'summary.json').write_text(json.dumps(summary,indent=2))
