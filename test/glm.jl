@@ -74,8 +74,9 @@ end
     solmax = glm_lasso(X, y, path.λpath[1])
     @test nnz(solmax.x) == 0
     @test solmax.intercept ≈ log(ȳ / (1 - ȳ))
-    # the path from λmax (warm_start = false) gives the direct solution
-    solw = glm_lasso(X, y, 0.02, ProximalBase.Logistic(), CDOptions(; warm_start = false, num_steps = 10))
+    # the path from λmax (warm_start = false) gives the direct solution; gaptol = 0
+    # stops its last level on the change of the objective, as the direct solve
+    solw = glm_lasso(X, y, 0.02, ProximalBase.Logistic(), CDOptions(; warm_start = false, num_steps = 10, gaptol = 0))
     @test Vector(solw.x) ≈ b atol = 1e-6
     @test solw.intercept ≈ b0 atol = 1e-6
     # integer responses and Float32 data
@@ -110,7 +111,10 @@ end
   end
 
   @testset "paths" begin
-    path = GLMLassoPath(X, y; nλ = 30, λminratio = 0.01)
+    # gaptol = 0: each level stops on the change of the objective, for the
+    # near-exact comparisons with the direct solves below
+    exact = CDOptions(; gaptol = 0)
+    path = GLMLassoPath(X, y, ProximalBase.Logistic(), exact; nλ = 30, λminratio = 0.01)
     @test length(path.λpath) == 30 && all(path.converged) && path.intercept
     @test nnz(path.βpath[1]) == 0
     @test issorted(path.devratio)
@@ -122,7 +126,7 @@ end
       @test path.devratio[k] ≈ 1 - sol.deviance / sol.nulldeviance atol = 1e-6
     end
     # screening gives the solutions of the path without it
-    path0 = GLMLassoPath(X, y, path.λpath; screening = false)
+    path0 = GLMLassoPath(X, y, path.λpath, ProximalBase.Logistic(), exact; screening = false)
     @test all(norm(path.βpath[k] - path0.βpath[k]) < 1e-6 for k in eachindex(path.λpath))
     @test all(path0.kkt_checks .== 0)
     # the deviance stop on separable data, and max_hat_s
@@ -168,7 +172,7 @@ end
     # loss itself is for lasso
     yc = X * β .+ randn(rng, n)
     hb = glm_lasso(X, yc, 0.05, ProximalBase.Huber(100.0); newton_tol = 1e-12)
-    ls = lasso(X, yc, 0.05, CDOptions(; opt_tol = 1e-12); intercept = true, standardize_x = true)
+    ls = lasso(X, yc, 0.05, CDOptions(; opt_tol = 1e-12, gaptol = 0); intercept = true, standardize_x = true)
     @test Vector(hb.x) ≈ Vector(ls.x) atol = 1e-6
     @test hb.intercept ≈ ls.intercept atol = 1e-6
     @test_throws ArgumentError glm_lasso(X, yc, 0.05, ProximalBase.Squared())

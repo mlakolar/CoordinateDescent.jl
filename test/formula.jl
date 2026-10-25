@@ -90,7 +90,7 @@ logistic(z) = 1 / (1 + exp(-z))
     @test group_lasso(@formula(y ~ x1 + g + x2), data, 0.05; groups = [1:1, 2:4]).model.groups == [[1], [2, 3, 4]]
     gpath = fit(GroupLassoPath, @formula(y ~ x1 + g + x2), data; nλ = 8)
     λs = gpath.model.λpath
-    gq = fit(GroupLassoPath, @formula(y ~ x1 + g + x2), data, λs, CDOptions(; opt_tol = 1e-10))
+    gq = fit(GroupLassoPath, @formula(y ~ x1 + g + x2), data, λs, CDOptions(; opt_tol = 1e-10, gaptol = 0))
     @test gq.model.λpath == λs && gq.model.groups == [[1], [2, 3], [4]]
 
     r = rlasso(@formula(y ~ x1 + x2 + g), data)

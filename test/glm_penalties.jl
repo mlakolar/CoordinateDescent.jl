@@ -20,7 +20,7 @@ dscad(λ, a) = t -> sign(t) * (abs(t) <= λ ? λ : max(a * λ - abs(t), 0.0) / (
   y = Float64.(rand(rng, n) .< logistic.(0.3 .+ X * β))
   s = vec(sqrt.(mean((X .- mean(X; dims = 1)) .^ 2; dims = 1)))  # the scales of standardize_x
   Xs = X ./ transpose(s)
-  tight = CDOptions(; opt_tol = 1e-12)
+  tight = CDOptions(; opt_tol = 1e-12, gaptol = 0)
   # the gradient of the mean logistic loss in the coefficients t = s .* β of the standardized columns
   grad(sol) = Xs' * (logistic.(sol.intercept .+ X * Vector(sol.x)) .- y) / n
   λ = 0.02
