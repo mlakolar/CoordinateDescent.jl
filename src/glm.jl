@@ -193,7 +193,7 @@ function glm_lasso(X::AbstractMatrix{T}, y::AbstractVector{T}, λ::T,
   else
     λs = [λmax * (λ / λmax)^(T(k) / options.num_steps) for k in 0:options.num_steps]
     λs[end] = λ
-    path = solve_path(m, g1, λs, method; x, devmax = 1)
+    path = solve_path(m, g1, λs, method; x, devmax = 1, _gapkw(options)...)
     iterations, converged = sum(path.passes), last(path.converged)
   end
   β0 = ProximalSolvers.intercept(m, x)
@@ -302,7 +302,8 @@ function _glmlassopath(m, g, s, p::Int, λpath::Vector{T}, loss, options::CDOpti
   record(k, λ, x, m) = (push!(β0path, ProximalSolvers.intercept(m, x));
                         push!(devratio, 1 - ProximalSolvers.deviance(m) / D0); false)
   path = solve_path(m, g, λpath, _newton(options, newton_tol, newton_max_iter; rng);
-                    x = SparseIterate(T, p), screening, maxnnz = max_hat_s, devmax, callback = record)
+                    x = SparseIterate(T, p), screening, maxnnz = max_hat_s, devmax, callback = record,
+                    _gapkw(options)...)
   βpath = s === nothing ? path.solutions : [_unscale(β, s) for β in path.solutions]
   GLMLassoPath{T, typeof(loss)}(path.λ, βpath, β0path, devratio, path.passes, path.converged,
                                 path.kkt_checks, intercept, loss, D0, n, g, s)
