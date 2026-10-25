@@ -21,9 +21,11 @@ const CD = CoordinateDescent
     @test xb ≈ xbd
     @test v ≈ vd
     @test yb ≈ ybd
-    @test Matrix(Z) ≈ D atol=1e-14
+    # Sparse and dense reductions distribute roundoff differently. Supplying
+    # atol alone disables isapprox's default relative tolerance on Julia 1.10.
+    @test Matrix(Z) ≈ D rtol=100eps(Float64) atol=1e-14
     @test Z[:,[4,2,5]].X isa SparseMatrixCSC
-    @test Matrix(Z[:,[4,2,5]]) ≈ D[:,[4,2,5]] atol=1e-14
+    @test Matrix(Z[:,[4,2,5]]) ≈ D[:,[4,2,5]] rtol=100eps(Float64) atol=1e-14
     b,r = randn(rng,22),randn(rng,70)
     a = randn(rng,70); expected = 0.7D*b - 0.3a
     mul!(a,Z,b,0.7,-0.3)
