@@ -1,0 +1,223 @@
+{
+  "paths": 41,
+  "solutions": 305,
+  "groups": 9,
+  "invalid_or_incomplete": 11,
+  "files": 12
+}
+{
+  "paths": 552,
+  "solutions": 3133,
+  "groups": 92,
+  "invalid_or_incomplete": 222,
+  "files": 24
+}
+{
+  "paths": 46,
+  "solutions": 360,
+  "groups": 23,
+  "invalid_or_incomplete": 4,
+  "files": 1
+}
+{
+  "paths": 72,
+  "solutions": 402,
+  "groups": 12,
+  "invalid_or_incomplete": 38,
+  "files": 12
+}
+{
+  "paths": 90,
+  "solutions": 622,
+  "groups": 15,
+  "invalid_or_incomplete": 18,
+  "files": 9
+}
+{
+  "paths": 12,
+  "solutions": 96,
+  "groups": 2,
+  "invalid_or_incomplete": 0,
+  "files": 3
+}
+{
+  "paths": 54,
+  "solutions": 232,
+  "groups": 9,
+  "invalid_or_incomplete": 30,
+  "files": 9
+}
+{
+  "paths": 41,
+  "solutions": 305,
+  "groups": 9,
+  "invalid_or_incomplete": 11,
+  "files": 12
+}
+{
+  "summary": {
+    "present": true,
+    "counts": {
+      "paths": 552,
+      "solutions": 3133,
+      "groups": 92,
+      "invalid_or_incomplete": 222,
+      "files": 24
+    },
+    "expected_paths": 552,
+    "expected_groups": 92,
+    "expected_files": 24,
+    "coverage_complete": true
+  },
+  "pilot-summary": {
+    "present": true,
+    "counts": {
+      "paths": 46,
+      "solutions": 360,
+      "groups": 23,
+      "invalid_or_incomplete": 4,
+      "files": 1
+    },
+    "expected_paths": 46,
+    "expected_groups": 23,
+    "expected_files": 1,
+    "coverage_complete": true
+  },
+  "admm-summary": {
+    "present": true,
+    "counts": {
+      "paths": 72,
+      "solutions": 402,
+      "groups": 12,
+      "invalid_or_incomplete": 38,
+      "files": 12
+    },
+    "expected_paths": 72,
+    "expected_groups": 12,
+    "expected_files": 12,
+    "coverage_complete": true
+  },
+  "rbench-summary": {
+    "present": true,
+    "counts": {
+      "paths": 90,
+      "solutions": 622,
+      "groups": 15,
+      "invalid_or_incomplete": 18,
+      "files": 9
+    },
+    "expected_paths": 90,
+    "expected_groups": 15,
+    "expected_files": 9,
+    "coverage_complete": true
+  },
+  "rho-eligibility": {
+    "eligible_cases": [
+      "small"
+    ],
+    "reason": "Confirmation is conditional on an eligible full-path tuning choice; failed pilot configurations remain in tuning.csv."
+  },
+  "rho-summary": {
+    "present": true,
+    "counts": {
+      "paths": 12,
+      "solutions": 96,
+      "groups": 2,
+      "invalid_or_incomplete": 0,
+      "files": 3
+    },
+    "expected_paths": 12,
+    "expected_groups": 2,
+    "expected_files": 3,
+    "coverage_complete": true
+  },
+  "split-summary": {
+    "present": true,
+    "counts": {
+      "paths": 54,
+      "solutions": 232,
+      "groups": 9,
+      "invalid_or_incomplete": 30,
+      "files": 9
+    },
+    "expected_paths": 54,
+    "expected_groups": 9,
+    "expected_files": 9,
+    "coverage_complete": true
+  },
+  "basis-summary": {
+    "present": true,
+    "counts": {
+      "paths": 41,
+      "solutions": 305,
+      "groups": 9,
+      "invalid_or_incomplete": 11,
+      "files": 12
+    },
+    "expected_paths": 60,
+    "expected_groups": 10,
+    "expected_files": 12,
+    "coverage_complete": false
+  },
+  "density": {
+    "rows": 108,
+    "expected_rows": 108,
+    "coverage_complete": true
+  },
+  "approximation": {
+    "rows": 144,
+    "expected_rows": 144,
+    "coverage_complete": true
+  }
+}
+{
+  "main-results": {
+    "solution_rows": 3133,
+    "distinct_problems": 192,
+    "bounds_improved": 1067,
+    "max_gap_reduction": 0.10401675605803656,
+    "negative_gap_failures": 0
+  },
+  "pilot-v2": {
+    "solution_rows": 360,
+    "distinct_problems": 8,
+    "bounds_improved": 78,
+    "max_gap_reduction": 0.0015374757569306396,
+    "negative_gap_failures": 0
+  },
+  "admm-results": {
+    "solution_rows": 402,
+    "distinct_problems": 90,
+    "bounds_improved": 198,
+    "max_gap_reduction": 0.04202481571102856,
+    "negative_gap_failures": 0
+  },
+  "rbench-results": {
+    "solution_rows": 622,
+    "distinct_problems": 72,
+    "bounds_improved": 306,
+    "max_gap_reduction": 0.001694953579561842,
+    "negative_gap_failures": 0
+  },
+  "rho-results": {
+    "solution_rows": 96,
+    "distinct_problems": 24,
+    "bounds_improved": 48,
+    "max_gap_reduction": 1.9212887337083373e-05,
+    "negative_gap_failures": 0
+  },
+  "split-results": {
+    "solution_rows": 232,
+    "distinct_problems": 48,
+    "bounds_improved": 0,
+    "max_gap_reduction": 0.0,
+    "negative_gap_failures": 0
+  },
+  "basis-results": {
+    "solution_rows": 305,
+    "distinct_problems": 85,
+    "bounds_improved": 0,
+    "max_gap_reduction": 0.0,
+    "negative_gap_failures": 0
+  }
+}

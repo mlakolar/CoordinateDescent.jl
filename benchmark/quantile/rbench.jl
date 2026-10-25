@@ -45,7 +45,7 @@ function main()
      push!(answers,(;b,a,u,lambda=ls[k]))
     end
     r=(;answers,status="complete",setup=NaN,optimize=NaN,extract=NaN,iters=0)
-    record(name,rep,r,Float64(row[5]),0.,0.)
+    record(name,rep,r,Float64(row[5]),NaN,NaN)
    end
    for name in ("lp-dual-dual-warm","gurobi-primal-primal-warm","newton-0.2")
     tx=X[1:60,1:12];ty=y[1:60]

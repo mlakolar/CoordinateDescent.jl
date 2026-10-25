@@ -1,0 +1,10 @@
+RECOVER ultrawide 1001 1 lp-split-primal-warm TIME_LIMIT 30.080436444s first_pivots=NaN
+RECOVER ultrawide 1001 2 lp-split-primal-warm TIME_LIMIT 30.073989731s first_pivots=NaN
+RECOVER ultrawide 1001 2 lp-split-nullbasis-dual TIME_LIMIT 30.285207917s first_pivots=0
+RECOVER ultrawide 1001 1 lp-split-dual-warm TIME_LIMIT 30.641562661s first_pivots=NaN
+RECOVER ultrawide 1001 2 lp-split-dual-warm TIME_LIMIT 30.669603868s first_pivots=NaN
+RECOVER ultrawide 1001 1 lp-split-nullbasis-dual TIME_LIMIT 30.278203557s first_pivots=0
+RECOVER ultrawide 1001 2 lp-split-nullbasis-primal TIME_LIMIT 30.281080937s first_pivots=0
+RECOVER ultrawide 1001 1 lp-split-nullbasis-primal TIME_LIMIT 30.280647501s first_pivots=0
+RECOVER ultrawide 1001 2 lp-dual-nullbasis-warm TIME_LIMIT 30.247724616s first_pivots=0
+RECOVER ultrawide 1001 2 lp-dual-dual-warm TIME_LIMIT 30.238329359s first_pivots=NaN

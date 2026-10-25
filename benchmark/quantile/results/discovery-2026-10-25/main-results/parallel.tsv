@@ -1,0 +1,25 @@
+Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
+1	:	1792920118.443	    99.764	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl small 201 2 main main-results > main-logs/small-201.log 2>&1
+3	:	1792920118.450	   107.753	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl correlated 201 2 main main-results > main-logs/correlated-201.log 2>&1
+5	:	1792920218.214	   369.099	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl large 201 2 scale main-results > main-logs/large-201.log 2>&1
+6	:	1792920226.208	   410.838	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl ultrawide 201 2 scale main-results > main-logs/ultrawide-201.log 2>&1
+4	:	1792920118.455	   558.689	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl tall 201 2 main main-results > main-logs/tall-201.log 2>&1
+2	:	1792920118.445	   560.286	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl wide 201 2 main main-results > main-logs/wide-201.log 2>&1
+9	:	1792920677.162	    98.900	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl small 202 2 main main-results > main-logs/small-202.log 2>&1
+11	:	1792920776.083	   111.913	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl correlated 202 2 main main-results > main-logs/correlated-202.log 2>&1
+7	:	1792920587.319	   387.072	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl tall100k 201 2 scale main-results > main-logs/tall100k-201.log 2>&1
+8	:	1792920637.050	   405.587	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl sparse100k 201 2 scale main-results > main-logs/sparse100k-201.log 2>&1
+10	:	1792920678.751	   532.225	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl wide 202 2 main main-results > main-logs/wide-202.log 2>&1
+13	:	1792920974.397	   366.817	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl large 202 2 scale main-results > main-logs/large-202.log 2>&1
+12	:	1792920888.015	   549.717	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl tall 202 2 main main-results > main-logs/tall-202.log 2>&1
+14	:	1792921042.643	   413.019	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl ultrawide 202 2 scale main-results > main-logs/ultrawide-202.log 2>&1
+17	:	1792921437.752	   107.072	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl small 203 2 main main-results > main-logs/small-203.log 2>&1
+15	:	1792921210.999	   382.756	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl tall100k 202 2 scale main-results > main-logs/tall100k-202.log 2>&1
+19	:	1792921544.844	   111.684	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl correlated 203 2 main main-results > main-logs/correlated-203.log 2>&1
+16	:	1792921341.220	   409.730	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl sparse100k 202 2 scale main-results > main-logs/sparse100k-202.log 2>&1
+18	:	1792921455.666	   566.473	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl wide 203 2 main main-results > main-logs/wide-203.log 2>&1
+21	:	1792921656.550	   366.285	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl large 203 2 scale main-results > main-logs/large-203.log 2>&1
+20	:	1792921593.774	   543.746	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl tall 203 2 main main-results > main-logs/tall-203.log 2>&1
+22	:	1792921750.957	   408.335	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl ultrawide 203 2 scale main-results > main-logs/ultrawide-203.log 2>&1
+23	:	1792922022.146	   380.341	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl tall100k 203 2 scale main-results > main-logs/tall100k-203.log 2>&1
+24	:	1792922022.840	   404.848	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=4G --cpu-bind=cores timeout 900 "$J" --project=. worker.jl sparse100k 203 2 scale main-results > main-logs/sparse100k-203.log 2>&1

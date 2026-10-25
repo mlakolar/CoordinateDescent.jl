@@ -2,11 +2,15 @@
 import csv,json,sys,statistics as st,subprocess,re
 from pathlib import Path
 root=Path(sys.argv[1]);out=root/'report-inputs';out.mkdir(exist_ok=True)
-expected={'summary':(552,92,24),'pilot-summary':(46,23,1),'admm-summary':(72,12,12),'rbench-summary':(90,15,9),'rho-summary':(24,4,6),'split-summary':(54,9,9)}
+expected={'summary':(552,92,24),'pilot-summary':(46,23,1),'admm-summary':(72,12,12),'rbench-summary':(90,15,9),'rho-summary':(24,4,6),'split-summary':(54,9,9),'basis-summary':(96,16,12)}
 checks={};summaries={}
 for folder,(paths,groups,files) in expected.items():
     f=root/folder
-    datafolder={'summary':'main-results','pilot-summary':'pilot-v2','admm-summary':'admm-results','rbench-summary':'rbench-results','rho-summary':'rho-results','split-summary':'split-results'}[folder]
+    if folder=='rho-summary':
+        eligible_cases=sorted(p.name.removesuffix('-choice.txt') for p in (root/'rho-results').glob('*-choice.txt'))
+        paths,groups,files=12*len(eligible_cases),2*len(eligible_cases),3*len(eligible_cases)
+        checks['rho-eligibility']={'eligible_cases':eligible_cases,'reason':'Confirmation is conditional on an eligible full-path tuning choice; failed pilot configurations remain in tuning.csv.'}
+    datafolder={'summary':'main-results','pilot-summary':'pilot-v2','admm-summary':'admm-results','rbench-summary':'rbench-results','rho-summary':'rho-results','split-summary':'split-results','basis-summary':'basis-results'}[folder]
     if not (f/'coverage.json').exists() and list((root/datafolder).glob('*-paths.csv')):
         subprocess.run([sys.executable,str(root/'summarize.py'),str(root/datafolder),str(f)],check=True)
     if not (f/'coverage.json').exists():
@@ -42,7 +46,7 @@ print(json.dumps(checks,indent=2))
 # Paired input contrasts; retain only comparisons whose entire timing groups
 # pass the common post-fit gate. Within-process repetitions are averaged first.
 contrasts=[]
-for folder,datafolder in [('summary','main-results'),('admm-summary','admm-results'),('rbench-summary','rbench-results'),('rho-summary','rho-results'),('split-summary','split-results')]:
+for folder,datafolder in [('summary','main-results'),('admm-summary','admm-results'),('rbench-summary','rbench-results'),('rho-summary','rho-results'),('split-summary','split-results'),('basis-summary','basis-results')]:
     if folder not in summaries:continue
     eligible={(s['case'],s['method']) for s in summaries[folder] if int(s['valid_paths'])==int(s['total_paths'])==6 and int(s['independent_inputs'])==3}
     raw=[]
@@ -50,7 +54,7 @@ for folder,datafolder in [('summary','main-results'),('admm-summary','admm-resul
     times={}
     for r in raw:
         if (r['case'],r['method']) in eligible:times.setdefault((r['case'],r['method'],r['seed']),[]).append(float(r['total_s']))
-    pairs=[('lp-dual-dual-cold','lp-dual-dual-warm'),('gurobi-primal-dual-warm','gurobi-primal-primal-warm'),('gurobi-primal-dual-warm','lp-dual-dual-warm'),('apg-0.2','newton-0.2'),('linear-admm','block-admm'),('lp-dual-dual-warm','block-admm'),('lp-dual-dual-warm','quantreg-fn'),('gurobi-primal-primal-warm','quantreg-fn'),('conquer','newton-0.2'),('lp-dual-dual-warm','tuned-admm'),('lp-dual-dual-warm','lp-split-primal-warm'),('lp-dual-dual-warm','lp-split-dual-warm')]
+    pairs=[('lp-dual-dual-cold','lp-dual-dual-warm'),('gurobi-primal-dual-warm','gurobi-primal-primal-warm'),('gurobi-primal-dual-warm','lp-dual-dual-warm'),('apg-0.2','newton-0.2'),('linear-admm','block-admm'),('lp-dual-dual-warm','block-admm'),('lp-dual-dual-warm','quantreg-fn'),('gurobi-primal-primal-warm','quantreg-fn'),('conquer','newton-0.2'),('lp-dual-dual-warm','tuned-admm'),('lp-dual-dual-warm','lp-split-primal-warm'),('lp-dual-dual-warm','lp-split-dual-warm'),('lp-dual-dual-warm','lp-dual-nullbasis-warm')]
     for case in sorted({s['case'] for s in summaries[folder]}):
         for baseline,candidate in pairs:
             if (case,baseline) not in eligible or (case,candidate) not in eligible:continue

@@ -1,0 +1,4 @@
+DONE tall100k 702 1 lp-dual-nullbasis-warm complete 22.330193409s first_pivots=0
+DONE tall100k 702 1 lp-dual-dual-warm TIME_LIMIT 30.239765886s first_pivots=NaN
+DONE tall100k 702 2 lp-dual-dual-warm TIME_LIMIT 30.226435961s first_pivots=NaN
+DONE tall100k 702 2 lp-dual-nullbasis-warm complete 22.368156823s first_pivots=0

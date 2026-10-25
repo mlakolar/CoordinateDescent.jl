@@ -25,4 +25,4 @@ for f in CoordinateDescent.jl ProximalBase.jl ProximalSolvers.jl; do
 done
 "$J" --project=. -e 'using Pkg; Pkg.develop([PackageSpec(path="source/ProximalBase.jl"),PackageSpec(path="source/ProximalSolvers.jl"),PackageSpec(path="source/CoordinateDescent.jl")]); Pkg.instantiate(); get(ENV,"BENCH_GUROBI","0")=="1" && Pkg.build("Gurobi"); Pkg.precompile(); Pkg.status()'
 "$J" --project=. validate.jl > validation.log 2>&1
-"$J" --project=. worker.jl small 101 2 pilot pilot-results > pilot.log 2>&1
+"$J" --project=. worker.jl small 101 2 pilot pilot-v2 > pilot-v2.log 2>&1

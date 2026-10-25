@@ -2,7 +2,7 @@
 
 This is an experimental benchmark and correctness suite for [issue78](https://github.com/mlakolar/CoordinateDescent.jl/issues/78). It does not yet add a supported quantile-regression API, pivotal penalty selection, CV, post-selection refits, or debiased inference.
 
-See [QR_AUDIT.md](QR_AUDIT.md) for the historical solver choice and parametric-simplex considerations.
+See [REPORT.md](results/discovery-2026-10-25/REPORT.md) for the completed Discovery study and solver recommendation, [REPRODUCE.md](REPRODUCE.md) for source pins and the execution recipe, and [QR_AUDIT.md](QR_AUDIT.md) for the historical solver choice and parametric-simplex considerations.
 
 ## Matched objectives and diagnostics
 
@@ -51,3 +51,9 @@ The final ADMM sensitivity stage separates tuning from confirmation. It chooses 
 `split_lp.jl` adds the standard positive/negative slope formulation, with n equality rows and nonnegative positive/negative coefficients and residuals. This avoids choosing an LP method solely from the historical absolute-value epigraph formulation. Its bounded study has a4second full-path cap, distinct from the main study's30second cap; completed matched paths can be compared within that study, while incomplete observations are not speed measurements.
 
 The saved-fit approximation report also checks the Epanechnikov Fenchel identity. For `q=u-(tau-1/2)`, `s=2sin(asin(2q)/3)` and `u` in the check-loss subgradient interval, the convolved loss has conjugate `-3h(1-s^2)^2/16`. The report checks1206 value/derivative identities and uses projected feasible duals to bound the smoothed objective for the saved conquer fits. This separates optimization accuracy from the discrepancy between the smoothed and exact estimators; it adds no fitting runs.
+
+`null_basis.jl` supplies one analytic intercept-only basis to the compact dual LP through HiGHS's documented C basis interface. It chooses one empirical-quantile column as basic, puts observations below/above that quantile at their lower/upper bounds, and makes the remaining constraint slacks basic. The supplied basis is applied once, then normal model/basis reuse continues along the lambda grid. This is a startup and grid-continuation experiment; it is not a full parametric-simplex breakpoint implementation. The canary checks different quantiles at n60/61, strong duality and zero startup pivots at a sufficiently large penalty. The100000-row part loads the exact saved R comparison inputs and lambda grid.
+
+The final accuracy reconciliation uses the strongest saved feasible dual lower bound for each identical study/input/lambda problem. Every candidate's own primal value stays unchanged. The original duals and gaps are retained, as are all raw outputs. This tightens loose reconstructed R dual bounds without fitting again, weakening a tolerance or sharing across unrelated datasets. Native convergence flags remain distinct from externally certified accuracy. Timing records are not pooled across separate studies or time caps.
+
+R timing ends when the coefficient matrix is returned; its reconstructed dual and KKT checks are outside the timer. Native LP times include available dual extraction; Julia smoothed paths include score-vector extraction. R allocation/GC and iteration fields in the original raw CSV use placeholder zeros and are unmeasured, not allocation-free behavior. Julia byte counts exclude native solver allocations. These output and stopping-rule differences are part of the interpretation limits.

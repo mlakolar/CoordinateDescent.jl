@@ -1,0 +1,372 @@
+name=gurobi-primal-dual n=1000 p=100 seed=501 fits=2 elapsed=2.1002938747406006 host=b09-15.hpc.usc.edu
+ Count  Overhead File                                                                                            Line Function
+ =====  ======== ====                                                                                            ==== ========
+     1         0 @juliasrc/gf.c                                                                                 4219 sig_match_fast
+     1         1 @juliasrc/gf.c                                                                                 4228 sig_match_fast
+     1         0 @JuMP/src/optimizer_interface.jl                                                               1245 _moi_get_result(::Gurobi.Optimizer, ::MathOptInterface.ConstraintDual, ::Vararg{Any})
+     1         0 @Base/simdloop.jl                                                                                75 macro expansion
+     1         1 @Base/int.jl                                                                                     83 <
+     1         1 /lib64/libm.so.6                                                                                  ? ilogbf32x
+     1         0 @juliasrc/builtins.c                                                                            788 jl_f__apply_iterate
+     1         0 @juliasrc/datatype.c                                                                           1858 ijl_get_nth_field
+     1         1 @juliasrc/datatype.c                                                                           1129 ijl_new_bits
+     1         0 @Base/libc.jl                                                                                   295 time
+     1         1 @juliasrc/support/timefuncs.c                                                                    37 jl_clock_now
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000012acd9
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a8e758
+     1         0 /lib64/libc.so.6                                                                                  ? __libc_calloc
+     1         1 /lib64/libc.so.6                                                                                  ? _int_malloc
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a632b1
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a3d674
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a43db1
+     1         0 /lib64/libc.so.6                                                                                  ? vsnprintf
+     1         0 /lib64/libc.so.6                                                                                  ? _IO_str_init_static_internal
+     1         1 /lib64/libc.so.6                                                                                  ? _IO_setb
+     1         1 @Gurobi/src/MOI_wrapper/MOI_callbacks.jl                                                         35 _gurobi_callback_wrapper(p_model::Ptr{Nothing}, cb_data::Ptr{Nothing}, cb_where::Int32, p_user_data::Ptr{Nothing})
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a73e55
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a73e55_quick
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000001e19e5
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000003a1e63
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004fd73d
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004fc5fd
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a8e891
+     1         1 /lib64/libc.so.6                                                                                  ? malloc_usable_size
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000077f5a
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000003ee7fd
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004ef103
+     1         0 @JuMP/src/macros/@objective.jl                                                                  103 macro expansion
+     1         0 @MutableArithmetics/src/interface.jl                                                            241 operate
+     1         0 @JuMP/src/mutable_arithmetics.jl                                                                313 add_mul
+     1         0 @MutableArithmetics/src/interface.jl                                                            254 operate
+     1         1 @juliasrc/gf.c                                                                                 4393 ijl_apply_generic
+     1         0 @JuMP/src/jump_moi_function.jl                                                                   59 moi_function
+     1         0 @JuMP/src/jump_moi_function.jl                                                                  171 check_belongs_to_model(a::AffExpr, model::Model)
+     1         0 @Base/abstractdict.jl                                                                            66 iterate
+     1         0 @OrderedCollections/src/ordered_dict.jl                                                         481 iterate
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         2175 add_constraint(model::Gurobi.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64}, s::MathOptInterface.EqualTo{Float64})
+     1         0 @Gurobi/src/gen120/libgrb_api.jl                                                               1723 GRBaddconstr
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? GRBaddconstr
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         2170 add_constraint(model::Gurobi.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64}, s::MathOptInterface.EqualTo{Float64})
+     1         1 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                           90 _ConstraintInfo
+     1         1 @juliasrc/support/hashing.c                                                                      34 int64hash
+     1         0 @Base/hashing.jl                                                                                 76 hash
+     1         0 @Base/hashing.jl                                                                                 57 hash_finalizer
+     1         1 @Base/int.jl                                                                                    419 xor
+     1         0 @OrderedCollections/src/ordered_dict.jl                                                         305 _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+     1         1 @juliasrc/genericmemory.c                                                                        31 jl_alloc_genericmemory_unchecked
+     1         0 @OrderedCollections/src/ordered_dict.jl                                                         304 _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+     1         0 @Base/genericmemory.jl                                                                          139 unsafe_copyto!
+     1         0 @Base/cmem.jl                                                                                    28 memmove
+     1         0 @Base/array.jl                                                                                 1349 _push!
+     1         1 @Base/array.jl                                                                                 1044 __safe_setindex!
+     1         0 @Base/genericmemory.jl                                                                          143 unsafe_copyto!
+     1         1 @juliasrc/genericmemory.c                                                                       225 jl_genericmemory_copyto
+     1         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                    64 lpmodel(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol; limit::Float64, engine::…
+     1         0 @JuMP/src/Containers/macro.jl                                                                   604 #13
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000002d332
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a5df78
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a591f4
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         3270 get(model::Gurobi.Optimizer, attr::MathOptInterface.ConstraintDual, c::MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, Mat…
+     1         0 @Gurobi/src/gen120/libgrb_api.jl                                                                327 GRBgetdblattrelement
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? GRBgetdblattrelement
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000cb114
+     1         1 @juliasrc/builtins.c                                                                            722 jl_f__apply_iterate
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         3262 get(model::Gurobi.Optimizer, attr::MathOptInterface.ConstraintDual, c::MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, Mat…
+     1         0 @MathOptInterface/src/attributes.jl                                                             237 check_result_index_bounds
+     1         1 @Base/int.jl                                                                                    560 <=
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000a02bd
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         3006 get(model::Gurobi.Optimizer, attr::MathOptInterface.DualStatus)
+     1         1 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         2998 _is_qcp
+     1         0 @Gurobi/src/MOI_wrapper/MOI_callbacks.jl                                                         36 _gurobi_callback_wrapper(p_model::Ptr{Nothing}, cb_data::Ptr{Nothing}, cb_where::Int32, p_user_data::Ptr{Nothing})
+     1         0 @Base/c.jl                                                                                      181 reenable_sigint
+     1         0 @Gurobi/src/MOI_wrapper/MOI_callbacks.jl                                                         38 (::Gurobi.var"#_gurobi_callback_wrapper##0#_gurobi_callback_wrapper##1"{Ptr{Nothing}, Int32, Ptr{Nothing}})()
+     1         1 @juliasrc/gf.c                                                                                 4310 jl_lookup_generic_
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         3010 get(model::Gurobi.Optimizer, attr::MathOptInterface.DualStatus)
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a4843a
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000075e19
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004f3719
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004659ca
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000531725
+     1         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a806fe
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a7da74_quick
+     1         0 @JuMP/src/macros/@objective.jl                                                                  107 macro expansion
+     1         0 @JuMP/src/objective.jl                                                                          352 set_objective
+     1         0 @JuMP/src/objective.jl                                                                          291 set_objective_function
+     1         0 @JuMP/src/objective.jl                                                                          277 set_objective_function(model::Model, func::MathOptInterface.ScalarAffineFunction{Float64})
+     1         0 @JuMP/src/optimizer_interface.jl                                                               1328 set(m::Model, attr::MathOptInterface.ObjectiveFunction{MathOptInterface.ScalarAffineFunction{Float64}}, value::MathOptInterface.ScalarAffineFunction{Float6…
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         1282 set(model::Gurobi.Optimizer, ::MathOptInterface.ObjectiveFunction{MathOptInterface.ScalarAffineFunction{Float64}}, f::MathOptInterface.ScalarAffineFunction…
+     1         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000f22f7
+     1         0 @juliasrc/gf.c                                                                                 4334 jl_lookup_generic_
+     1         0 @juliasrc/gf.c                                                                                 3254 arg_type_tuple
+     1         0 @juliasrc/jltypes.c                                                                            2489 jl_inst_arg_tuple_type
+     1         0 @juliasrc/jltypes.c                                                                            1146 lookup_typevalue
+     1         1 @juliasrc/jltypes.c                                                                            1072 lookup_type_setvalue
+     1         0 @juliasrc/gf.c                                                                                 4339 jl_lookup_generic_
+     1         0 @juliasrc/gf.c                                                                                 1619 lookup_leafcache
+     1         0 @juliasrc/iddict.c                                                                              157 ijl_eqtable_get
+     1         0 @juliasrc/iddict.c                                                                              118 jl_table_peek_bp
+     1         0 @juliasrc/builtins.c                                                                            510 ijl_object_id_
+     1         0 @juliasrc/builtins.c                                                                            483 jl_object_id__cold
+     1         0 @juliasrc/builtins.c                                                                            350 hash_svec
+     1         0 @juliasrc/support/hashing.h                                                                      31 bitmix
+     1         1 @juliasrc/support/hashing.c                                                                      32 int64hash
+     1         0 @JuMP/src/jump_moi_function.jl                                                                   60 moi_function
+     1         0 @JuMP/src/jump_moi_function.jl                                                                  166 moi_function
+     1         0 @JuMP/src/aff_expr.jl                                                                           757 MathOptInterface.ScalarAffineFunction(a::AffExpr)
+     1         0 @Base/array.jl                                                                                  704 _array_for
+     1         0 @Base/array.jl                                                                                  700 _array_for_inner
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         2173 add_constraint(model::Gurobi.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64}, s::MathOptInterface.EqualTo{Float64})
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                          893 _indices_and_coefficients(model::Gurobi.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64})
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                          874 _indices_and_coefficients(indices::Vector{Int32}, coefficients::Vector{Float64}, model::Gurobi.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64})
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                          996 c_column
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                          981 column
+     1         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                          962 _info
+     1         0 @MathOptInterface/src/Utilities/CleverDicts.jl                                                  166 getindex(c::MathOptInterface.Utilities.CleverDicts.CleverDict{MathOptInterface.VariableIndex, Gurobi._VariableInfo, typeof(MathOptInterface.Utilities.Cleve…
+     1         1 @juliasrc/support/hashing.c                                                                      38 int64hash
+     1         1 @OrderedCollections/src/ordered_dict.jl                                                         301 _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+     1         0 @JuMP/src/aff_expr.jl                                                                           402 _map_aff(f::typeof(MutableArithmetics.copy_if_mutable), constant::Float64, a::AffExpr)
+     1         0 @JuMP/src/aff_expr.jl                                                                           473 iterate
+     1         1 @OrderedCollections/src/ordered_dict.jl                                                         480 iterate
+     1         1 @Base/Base_compiler.jl                                                                            ? ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+     1         0 @OrderedCollections/src/ordered_dict.jl                                                         141 rehash!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, newsz::Int64)
+     1         0 @Base/array.jl                                                                                  622 zeros
+     1         0 @Base/array.jl                                                                                  626 zeros
+     1         0 @Base/boot.jl                                                                                   661 Array
+     1         0 @OrderedCollections/src/ordered_dict.jl                                                         260 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+     1         0 @Base/hashing.jl                                                                                 58 hash_finalizer
+     1         1 @Base/int.jl                                                                                     88 *
+     1         1 @juliasrc/support/hashing.c                                                                      36 int64hash
+     1         0 /lib64/libc.so.6                                                                                  ? sprintf
+     1         0 /lib64/libc.so.6                                                                                  ? vsprintf
+     1         0 /lib64/libc.so.6                                                                                  ? _IO_vfprintf
+     2         2 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000002113c3
+     2         1 @juliasrc/gf.c                                                                                 4309 jl_lookup_generic_
+     2         0 /lib64/libm.so.6                                                                                  ? pow
+     2         2 /lib64/libm.so.6                                                                                  ? [unknown function]
+     2         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         2911 get
+     2         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         2898 _raw_status(model::Gurobi.Optimizer)
+     2         0 @Gurobi/src/gen120/libgrb_api.jl                                                                131 GRBgetintattr
+     2         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a8d7a8
+     2         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000aa763e
+     2         2 /lib64/libc.so.6                                                                                  ? __strcmp_avx2
+     2         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         2793 optimize!(model::Gurobi.Optimizer)
+     2         2 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000f5341..0
+     2         2 /lib64/libc.so.6                                                                                  ? __memset_avx2_unaligned_erms
+     2         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004f48ea
+     2         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000395deb
+     2         2 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004f836f
+     2         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a40f82
+     2         2 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a54d30
+     2         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                    68 lpmodel(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol; limit::Float64, engine::…
+     2         0 @JuMP/src/macros.jl                                                                             442 macro expansion
+     2         2 @Base/int.jl                                                                                     87 +
+     2         0 @JuMP/src/constraints.jl                                                                       1026 add_constraint(model::Model, con::ScalarConstraint{AffExpr, MathOptInterface.EqualTo{Float64}}, name::String)
+     2         0 @JuMP/src/jump_moi_function.jl                                                                  543 moi_function
+     2         2 @Base/essentials.jl                                                                             975 getindex
+     2         0 @JuMP/src/variables.jl                                                                          315 owner_model
+     2         0 @OrderedCollections/src/ordered_dict.jl                                                         181 rehash!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, newsz::Int64)
+     2         0 @Base/hashing.jl                                                                                 75 hash
+     2         0 @Base/hashing.jl                                                                                 63 hash_64_64
+     2         0 @Base/array.jl                                                                                 1181 _growend_internal!(a::Vector{Bool}, delta::Int64, len::Int64)
+     2         0 @Base/array.jl                                                                                 1101 array_new_memory
+     2         0 @Base/array.jl                                                                                 1185 _growend_internal!(a::Vector{Float64}, delta::Int64, len::Int64)
+     2         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                    63 lpmodel(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol; limit::Float64, engine::…
+     2         0 @JuMP/src/Containers/macro.jl                                                                   604 #11
+     2         2 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000009ed81
+     2         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         2830 optimize!(model::Gurobi.Optimizer)
+     2         0 @JuMP/src/constraints.jl                                                                       1041 add_constraint(model::Model, con::ScalarConstraint{AffExpr, MathOptInterface.EqualTo{Float64}}, name::String)
+     2         0 @Base/boot.jl                                                                                   648 Array
+     2         0 @juliasrc/genericmemory.c                                                                        41 jl_alloc_genericmemory_unchecked
+     2         0 @juliasrc/gc-stock.c                                                                            806 jl_gc_alloc_
+     2         0 @juliasrc/gc-stock.c                                                                            792 jl_gc_small_alloc_noinline
+     2         0 @juliasrc/gc-stock.c                                                                            772 jl_gc_small_alloc_inner
+     2         0 @juliasrc/gc-stock.c                                                                            714 gc_add_page
+     2         2 @juliasrc/gc-stock.h                                                                            350 set_page_metadata
+     3         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a3758f
+     3         3 /lib64/libm.so.6                                                                                  ? __sqrt_finite
+     3         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                          575 _update_if_necessary
+     3         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                          603 _update_if_necessary(model::Gurobi.Optimizer; force::Bool, check_attribute_change::Bool)
+     3         0 @Gurobi/src/gen120/libgrb_api.jl                                                               2403 GRBupdatemodel
+     3         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? GRBupdatemodel
+     3         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000eb367
+     3         1 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/depot/compiled/v1.13/Gurobi/do9v6_Uv5kU.so     ? jlcapi__gurobi_callback_wrapper_3789
+     3         3 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000003658bc
+     3         0 @JuMP/src/constraints.jl                                                                       1007 _moi_add_constraint(model::Gurobi.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64}, s::MathOptInterface.EqualTo{Float64})
+     3         3 @Base/Base_compiler.jl                                                                           57 getproperty
+     3         0 @OrderedCollections/src/ordered_dict.jl                                                         316 _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+     3         0 @OrderedCollections/src/ordered_dict.jl                                                         303 _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+     3         0 @JuMP/src/Containers/container.jl                                                                75 container
+     3         0 @JuMP/src/Containers/container.jl                                                                71 container
+     3         0 @JuMP/src/Containers/container.jl                                                                85 container
+     3         0 @Base/abstractarray.jl                                                                         3426 map
+     3         0 @Base/array.jl                                                                                  838 collect(itr::Base.Generator{JuMP.Containers.VectorizedProductIterator{Tuple{Base.OneTo{Int64}}}, JuMP.Containers.var"#container##0#container##1"{var"#13#14…
+     3         0 @Base/array.jl                                                                                  864 collect_to_with_first!
+     3         0 @Base/array.jl                                                                                  886 collect_to!(dest::Vector{VariableRef}, itr::Base.Generator{JuMP.Containers.VectorizedProductIterator{Tuple{Base.OneTo{Int64}}}, JuMP.Containers.var"#contai…
+     3         0 @Base/generator.jl                                                                               48 iterate
+     3         0 @JuMP/src/Containers/container.jl                                                                85 #container##0
+     3         0 @JuMP/src/macros/@variable.jl                                                                   337 macro expansion
+     3         0 @JuMP/src/variables.jl                                                                         2203 add_variable(model::Model, v::ScalarVariable{Int64, Float64, Float64, Float64}, name::String)
+     3         0 @JuMP/src/variables.jl                                                                         2251 _moi_add_variable(moi_backend::Gurobi.Optimizer, model::Model, v::ScalarVariable{Int64, Float64, Float64, Float64}, name::String)
+     3         0 @JuMP/src/variables.jl                                                                         2211 _moi_add_constrained_variable
+     3         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         1099 add_constrained_variable(model::Gurobi.Optimizer, set::MathOptInterface.GreaterThan{Float64})
+     3         0 @Gurobi/src/gen120/libgrb_api.jl                                                               1610 GRBaddvar
+     3         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? GRBaddvar
+     3         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? GRBaddvars
+     3         2 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? GRBXaddvars
+     4         4 linux-vdso.so.1                                                                                   ? __vdso_gettimeofday
+     4         0 @juliasrc/builtins.c                                                                            876 jl_f__apply_iterate
+     4         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? GRBgetintattr
+     4         4 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000009f3e7
+     4         4 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000884b7
+     4         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000466259
+     4         4 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004de622
+     4         0 @JuMP/src/constraints.jl                                                                       1030 add_constraint(model::Model, con::ScalarConstraint{AffExpr, MathOptInterface.EqualTo{Float64}}, name::String)
+     4         1 @Base/runtime_internals.jl                                                                      901 objectid
+     4         0 @Base/array.jl                                                                                 1348 _push!
+     4         0 @Base/array.jl                                                                                 1205 _growend!
+     4         0 @Base/boot.jl                                                                                   588 GenericMemory
+     5         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a8d814
+     5         0 @juliasrc/gf.c                                                                                 4394 ijl_apply_generic
+     5         5 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000500bd2
+     5         2 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000036e364
+     5         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004eb3f4
+     5         0 @Base/array.jl                                                                                 1345 push!
+     5         1 @JuMP/src/aff_expr.jl                                                                            24 _add_or_set!
+     6         0 @JuMP/src/optimizer_interface.jl                                                               1248 _moi_get_result(::Gurobi.Optimizer, ::MathOptInterface.ConstraintDual, ::Vararg{Any})
+     6         6 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004e7b2a
+     6         0 @OrderedCollections/src/ordered_dict.jl                                                         331 setindex!
+     6         0 @JuMP/src/aff_expr.jl                                                                            26 _add_or_set!
+     7         0 @Base/broadcast.jl                                                                              676 _broadcast_getindex
+     7         0 @Base/broadcast.jl                                                                              700 _getindex
+     7         0 @Base/broadcast.jl                                                                              701 _getindex
+     7         0 @JuMP/src/constraints.jl                                                                       1394 dual
+     7         0 @JuMP/src/constraints.jl                                                                       1398 #dual#17
+     7         0 @JuMP/src/constraints.jl                                                                       1409 _constraint_dual(con_ref::ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Fl…
+     7         0 @JuMP/src/optimizer_interface.jl                                                               1317 get(model::Model, attr::MathOptInterface.ConstraintDual, cr::ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Fl…
+     7         2 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000005004db
+     8         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000097b405
+     8         8 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000076922
+     8         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                   116 lppath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol, warm::Bool; limi…
+     8         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                    89 lpget(s::@NamedTuple{m::Model, b::Vector{VariableRef}, a::VariableRef, t::Vector{VariableRef}, eq::Vector{ConstraintRef{Model, MathOptInterface.ConstraintI…
+     8         8 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000021a38e
+     8         8 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004df170
+     8         0 @OrderedCollections/src/ordered_dict.jl                                                         261 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+     8         0 @JuMP/src/macros/@constraint.jl                                                                 194 macro expansion
+     8         0 @Base/hashing.jl                                                                                 40 hash
+     8         0 @JuMP/src/variables.jl                                                                          562 hash
+     9         9 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000a1e9e
+     9         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000004ebb0d
+     9         0 @JuMP/src/aff_expr.jl                                                                           401 _map_aff(f::typeof(MutableArithmetics.copy_if_mutable), constant::Float64, a::AffExpr)
+     9         0 @MutableArithmetics/src/implementations/LinearAlgebra.jl                                         12 mutable_copy(A::Vector{AffExpr})
+     9         0 @OrderedCollections/src/ordered_dict.jl                                                         337 setindex!
+    10         0 @MutableArithmetics/src/interface.jl                                                            378 copy_if_mutable
+    10         0 @MutableArithmetics/src/interface.jl                                                            367 copy_if_mutable_fallback
+    10         0 @JuMP/src/mutable_arithmetics.jl                                                                184 mutable_copy
+    10         0 @JuMP/src/aff_expr.jl                                                                           395 map_coefficients
+    10         0 @OrderedCollections/src/dict_support.jl                                                           6 hashindex
+    11        11 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000a1d3f
+    11         0 @MutableArithmetics/src/implementations/LinearAlgebra.jl                                        453 operate
+    11         0 @MutableArithmetics/src/implementations/LinearAlgebra.jl                                        415 operate_to!
+    11         0 @MutableArithmetics/src/implementations/LinearAlgebra.jl                                        383 operate!
+    11         0 @MutableArithmetics/src/implementations/LinearAlgebra.jl                                        337 buffered_operate!(buffer::Nothing, ::typeof(MutableArithmetics.add_mul), C::Vector{AffExpr}, A::Matrix{Float64}, B::Vector{VariableRef})
+    11         0 @MutableArithmetics/src/interface.jl                                                            716 buffered_operate!!
+    11         0 @MutableArithmetics/src/interface.jl                                                            739 buffered_operate_fallback!!
+    11         0 @MutableArithmetics/src/interface.jl                                                            606 buffered_operate!
+    11         0 @MutableArithmetics/src/interface.jl                                                            589 buffered_operate_fallback!
+    11         0 @JuMP/src/mutable_arithmetics.jl                                                                242 operate!
+    11         0 @JuMP/src/aff_expr.jl                                                                           590 add_to_expression!
+    12        12 /lib64/libc.so.6                                                                                  ? __memmove_avx_unaligned_erms
+    15        15 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000216532
+    16         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000001e53fb
+    17        17 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a72b03_quick
+    18         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000523d8
+    19        19 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000284219
+    20        18 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000007c250
+    20        18 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000001be28b
+    20         3 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000a72b03
+    20         0 @JuMP/src/macros/@constraint.jl                                                                 190 macro expansion
+    21         0 @JuMP/src/macros.jl                                                                             264 macro expansion
+    21         0 @MutableArithmetics/src/rewrite.jl                                                              384 macro expansion
+    22         1 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000052de75
+    24         0 @Base/simdloop.jl                                                                                77 macro expansion
+    24         0 @Base/broadcast.jl                                                                             1000 macro expansion
+    24         0 @Base/broadcast.jl                                                                              617 getindex
+    24         0 @Base/broadcast.jl                                                                              621 _getindex
+    24         0 @Base/broadcast.jl                                                                              677 _broadcast_getindex
+    24         0 @Base/broadcast.jl                                                                              704 _broadcast_getindex_evalf
+    24         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000053a598
+    24         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000534aac
+    25         0 @Base/broadcast.jl                                                                              899 materialize
+    25         0 @Base/broadcast.jl                                                                              924 copy
+    25         0 @Base/broadcast.jl                                                                              952 copyto!
+    25         0 @Base/broadcast.jl                                                                              999 copyto!
+    28         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000002e165
+    28         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                    65 lpmodel(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol; limit::Float64, engine::…
+    31         0 @JuMP/src/macros.jl                                                                             425 macro expansion
+    33         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                   104 lppath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol, warm::Bool; limi…
+    33         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                    36 lpmodel
+    35         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000009beba
+    39        15 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000475d2
+    45        45 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000215495
+    59        59 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000020d221
+    65         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000c09e9
+    65         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000003826f8
+    67         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000009abd5
+    67         2 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000021b332
+    84        31 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000001c312b
+    86        86 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000020ee98
+    97         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000009bfa8
+   132        87 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000021bcc7
+   192       190 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000001d451b
+   200       169 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000001b5f8e
+   204         4 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000001b7a0
+   208       208 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000212f73
+   343       150 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000353a7
+   444        90 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000005a1bc
+   747       434 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000009ad4c
+   754         7 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000890ad
+  1008        17 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000276e3
+  1716         2 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE000000000006160f
+  1745         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000cb1a3
+  1811         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE00000000000c1531
+  1814         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         2819 optimize!(model::Gurobi.Optimizer)
+  1814         0 @Base/c.jl                                                                                      167 disable_sigint
+  1814         0 @Gurobi/src/MOI_wrapper/MOI_wrapper.jl                                                         2820 #49
+  1814         0 @Gurobi/src/gen120/libgrb_api.jl                                                               1196 GRBoptimize
+  1814         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? GRBoptimize
+  1814         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000956c69
+  1814         0 /apps/generic/gurobi/12.0.3/lib/libgurobi120.so                                                   ? PRIVATE0000000000bae8bf
+  1818         0 @JuMP/src/optimizer_interface.jl                                                                569 optimize!
+  1818         0 @JuMP/src/optimizer_interface.jl                                                                633 optimize!(model::Model; ignore_optimize_hook::Bool, _differentiation_backend::MathOptInterface.Nonlinear.SparseReverseMode, kwargs::Base.Pairs{Symbol, Unio…
+  1818         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/depot/compiled/v1.13/Gurobi/do9v6_Uv5kU.so     ? jfptr_optimizeNOT._3967
+  1819         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                   110 lppath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol, warm::Bool; limi…
+  1860         0 /workspace/srcdir/glibc-2.17/csu/../sysdeps/x86_64/start.S                                      123 [unknown function]
+  1860         0 /lib64/libc.so.6                                                                                  ? __libc_start_main
+  1860         0 /cache/build/builder-amdci4-4/julialang/julia-ci/cli/loader_exe.c                                58 main
+  1860         0 @juliasrc/jlapi.c                                                                              1152 jl_repl_entrypoint
+  1860         0 @juliasrc/jlapi.c                                                                               985 true_main
+  1860         0 @juliasrc/julia.h                                                                              2319 jl_apply
+  1860         0 @julialib/julia/sys.so                                                                            ? jfptr__start_60477.1
+  1860         0 @Base/client.jl                                                                                 577 _start()
+  1860         0 @Base/client.jl                                                                                 344 exec_options(opts::Base.JLOptions)
+  1860         0 @Base/Base.jl                                                                                   309 include(mod::Module, _path::String)
+  1860         0 @Base/loading.jl                                                                               3105 _include(mapexpr::Function, mod::Module, _path::String)
+  1860         0 @Base/loading.jl                                                                               3045 include_string(mapexpr::typeof(identity), mod::Module, code::String, filename::String)
+  1860         0 @Base/boot.jl                                                                                   489 eval(m::Module, e::Any)
+  1860         0 @juliasrc/toplevel.c                                                                            799 ijl_toplevel_eval_in
+  1860         0 @juliasrc/toplevel.c                                                                            754 ijl_toplevel_eval
+  1860         0 @juliasrc/toplevel.c                                                                            683 jl_toplevel_eval_flex
+  1860         0 @juliasrc/toplevel.c                                                                            585 jl_eval_toplevel_stmts
+  1860         0 @juliasrc/toplevel.c                                                                            742 jl_toplevel_eval_flex
+  1860         0 @juliasrc/interpreter.c                                                                         884 jl_interpret_toplevel_thunk
+  1860         0 @juliasrc/interpreter.c                                                                         679 eval_body
+  1860         0 @juliasrc/interpreter.c                                                                         194 eval_stmt_value
+  1860         0 @juliasrc/interpreter.c                                                                         243 eval_value
+  1860         0 @juliasrc/interpreter.c                                                                         123 do_call
+  1860         0 [any unknown stackframes]
+  1860         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl                                    32 main()
+  1860         0 @Profile/src/Profile.jl                                                                          60 macro expansion
+  1860         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl                                    33 macro expansion
+  1860         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl                                    10 runprofile(name::String, X::Matrix{Float64}, y::Vector{Float64}, ls::Vector{Float64})
+  1860         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                    97 lppath
+Total snapshots: 1860. Utilization: 100% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.

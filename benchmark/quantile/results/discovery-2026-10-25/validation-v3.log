@@ -1,0 +1,20 @@
+Set parameter TokenServer to value "hpc-licenses.hpcc.usc.edu"
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 0.33 > tolerance 3.18e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-quantile/source/ProximalSolvers.jl/src/cd/solver.jl:558
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 0.0874 > tolerance 3.89e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-quantile/source/ProximalSolvers.jl/src/cd/solver.jl:558
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 0.196 > tolerance 2.82e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-quantile/source/ProximalSolvers.jl/src/cd/solver.jl:558
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 0.117 > tolerance 2.97e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-quantile/source/ProximalSolvers.jl/src/cd/solver.jl:558
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 1.4 > tolerance 4.03e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-quantile/source/ProximalSolvers.jl/src/cd/solver.jl:558
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 0.214 > tolerance 4.03e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-quantile/source/ProximalSolvers.jl/src/cd/solver.jl:558
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 0.966 > tolerance 3.04e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-quantile/source/ProximalSolvers.jl/src/cd/solver.jl:558
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 0.0258 > tolerance 3.15e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-quantile/source/ProximalSolvers.jl/src/cd/solver.jl:558
+Test Summary:                                         | Pass  Total  Time
+LP formulations, signs, warm starts, and certificates | 1650   1650  8.3s
+VALIDATION COMPLETE
