@@ -6,8 +6,8 @@
 
 A quantile-lasso fit on the original columns of `X`. `β`, `intercept`,
 `residuals`, `λ` and the effective `penalty_factors` describe the fitted problem.
-`dual` contains the raw observation-level scores; see [`dual_scores`](@ref) and
-[`qr_dual`](@ref). `certificate_dual` is a separate feasible vector used only
+`dual` contains the raw observation-level scores; see [`dual_scores`](@ref).
+`certificate_dual` is a separate feasible vector used only
 for lower bounds. No rounding or projection is applied to `dual` or `β`.
 
 `objective` is the fitted (exact or smoothed) penalized objective;
@@ -118,7 +118,7 @@ end
 
 """
     dual_scores(sol::QuantileLassoSolution)
-    dual_scores(path::QuantileLassoPath[, k])
+    dual_scores(path::QuantileLassoPath)
 
 Raw observation scores `u`. At a valid solution, `tau-1 ≤ uᵢ ≤ tau`.
 A stopped fit can retain an infeasible iterate; check `converged` and its
@@ -127,28 +127,16 @@ numerical diagnostics before using it. At an exact solution,
 at zero residuals come from the optimizer, not from a residual-sign rule.
 With an intercept, `sum(u)=0`; slope stationarity is
 `X'u/n ∈ λ*w .* ∂abs(β)`. For a smooth fit these are convolution-loss scores.
-A whole path returns an n-by-level matrix; `k` returns one vector.
+A whole path returns an n-by-level matrix; `dual_scores(path[k])` returns one vector.
 The returned vectors are owned by the saved fits, not by a live optimizer.
+
+QR.jl's historical `getXi` convention is `-dual_scores(sol)/nobs(sol)`, the
+dual of `y - a - X*β == rp - rn` with the mean check-loss objective. Apply the
+same conversion to a path; transpose it for QR.jl's level-by-observation layout.
+This changes only sign and normalization, and always uses the raw scores.
 """
 dual_scores(sol::QuantileLassoSolution) = sol.dual
-dual_scores(path::QuantileLassoPath, k::Integer) = dual_scores(path[k])
 dual_scores(path::QuantileLassoPath) = isempty(path.solutions) ? zeros(path.nobs, 0) : reduce(hcat, dual_scores.(path.solutions))
-
-"""
-    qr_dual(sol::QuantileLassoSolution)
-    qr_dual(path::QuantileLassoPath[, k])
-
-Scores in QR.jl's `getXi` convention: `-dual_scores(sol)/n`, the dual of
-`y - a - X*β == rp - rn` with the mean check-loss objective. The sign is tied
-to that equality orientation; the normalization assumes unit observation
-weights. A path returns an n-by-level matrix (transpose it for old QR.jl's
-level-by-observation `xi` layout). This conversion preserves the raw pair;
-it does not use the projected certificate. For smooth fits it is the analogous
-convolution score, not an exact check-loss rank score.
-"""
-qr_dual(sol::QuantileLassoSolution) = -sol.dual / length(sol.dual)
-qr_dual(path::QuantileLassoPath, k::Integer) = qr_dual(path[k])
-qr_dual(path::QuantileLassoPath) = -dual_scores(path) / path.nobs
 Base.length(path::QuantileLassoPath) = length(path.solutions)
 Base.getindex(path::QuantileLassoPath, k::Integer) = path.solutions[k]
 

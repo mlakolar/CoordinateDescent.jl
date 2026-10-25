@@ -10,7 +10,7 @@ sol = quantile_lasso(X, y, 0.05; tau=0.5)
 path = QuantileLassoPath(X, y, [0.2, 0.1, 0.05]; tau=0.5)
 B = coef(path)                  # coefficient columns, intercept first
 U = dual_scores(path)           # n observations × penalty levels
-xi = qr_dual(path)              # QR.jl's row-dual sign and normalization
+xi = -U / nobs(path)            # QR.jl's row-dual sign and normalization
 s = path[2]
 ```
 
@@ -24,7 +24,7 @@ valid duals. Compare their KKT conditions and the quantities your inference uses
 not necessarily the vectors entry by entry in a degenerate problem.
 
 QR.jl used the equality `y - a - Xβ == rp - rn` and divided its loss by n.
-`qr_dual(s)` therefore returns `-dual_scores(s)/n`, without projection. QR.jl
+Convert with `-dual_scores(s)/nobs(s)`, without projection. QR.jl
 stored whole-path `xi` with levels in rows; transpose the new matrix for that
 layout. The compatibility test compares against an independent primal LP with
 that equality orientation. The historical JuMP/Gurobi binary stack is not used.

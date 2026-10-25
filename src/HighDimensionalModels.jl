@@ -56,7 +56,7 @@ export
   LLA,                 # ProximalSolvers' local linear approximation, for lla
 
   # primal–dual quantile regression
-  quantile_lasso, QuantileLassoSolution, QuantileLassoPath, dual_scores, qr_dual,
+  quantile_lasso, QuantileLassoSolution, QuantileLassoPath, dual_scores,
 
   # generalized linear models
   glm_lasso,

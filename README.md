@@ -133,7 +133,7 @@ using HighDimensionalModels, HiGHS  # optional exact backend
 path = QuantileLassoPath(X, y, [0.2, 0.1, 0.05]; tau=0.5)
 beta = coef(path)
 u = dual_scores(path)          # observations × penalty levels, raw solver scores
-xi = qr_dual(path)             # QR.jl sign and mean-loss normalization
+xi = -u / nobs(path)           # QR.jl sign and mean-loss normalization
 ```
 
 Both exact and convolution-smoothed fits retain raw dual scores, separate

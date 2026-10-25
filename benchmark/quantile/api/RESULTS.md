@@ -8,7 +8,7 @@ residuals. Feasible gap certificates are stored separately.
 using HighDimensionalModels, HiGHS
 path = QuantileLassoPath(X, y, [0.2, 0.1, 0.05])
 u = dual_scores(path)  # observations × penalties
-xi = qr_dual(path)     # QR.jl convention: -u/n
+xi = -u / nobs(path)   # QR.jl convention: -u/n
 ```
 
 Mean seconds per complete **32-level exact path**, including duals and

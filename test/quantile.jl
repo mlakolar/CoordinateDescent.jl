@@ -29,6 +29,7 @@ function primal_qr_oracle(X,y,λ,τ,w;intercept=true)
 end
 
 @testset "Quantile primal–dual API" begin
+  @test !isdefined(HighDimensionalModels, :qr_dual)
   rng=Xoshiro(286);X=randn(rng,61,5);y=.7 .+ X*[1.,.4,0,0,0] .+ randn(rng,61)
   for τ in (.2,.5,.8), int in (true,false), sp in (false,true)
     A=sp ? sparse(X) : X; w=[1.,.7,1.5,1.,.8]
@@ -36,14 +37,13 @@ end
     @test path.complete && length(path)==3
     @test size(coef(path))==(5+int,3)
     @test size(dual_scores(path))==(61,3)
-    @test qr_dual(path) ≈ -dual_scores(path)/61
     @test predict(path,A) ≈ reduce(hcat,[predict(s,A) for s in path.solutions])
     for (k,s) in enumerate(path.solutions)
       oracle=primal_qr_oracle(X,y,s.λ,τ,w;intercept=int)
       @test s.converged && s.native_converged
       @test s.kkt_residual < 1e-6
       @test abs(s.objective-oracle.objective)<1e-7
-      @test qr_dual(s) ≈ oracle.xi atol=1e-7
+      @test -dual_scores(s)/nobs(s) ≈ oracle.xi atol=1e-7
       @test s.duality_gap ≈ 0 atol=1e-7
       @test -1e-7 <= s.certificate_gap <= 1e-6
       @test residuals(s) ≈ y-predict(s,A)
@@ -82,6 +82,7 @@ end
   @test predict(scaled,X.*[1. 2 3 4 5]) ≈ predict(original,X) atol=1e-6
   auto=QuantileLassoPath(X,y;nλ=5,λminratio=.05)
   @test auto.complete && all(s.converged for s in auto.solutions)
+  @test !applicable(dual_scores, auto, 1)
   @test norm(auto[1].β,Inf)<1e-6
   @test length(auto)==5
   # Ties and rank deficiency: test optimality, not equality of nonunique duals.
