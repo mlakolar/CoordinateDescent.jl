@@ -100,3 +100,67 @@ using ProximalAlgorithms
   @test_throws ArgumentError LowRankPath(X, Y; method = :rank, solver = :panoc)
   @test_throws ArgumentError LowRankPath(X, Y; method = :nuclear, block_solver = :fista)
 end
+
+@testset "Low-rank solver boundary behavior and StatsAPI entry points" begin
+  # A single sweep on a coupled quadratic is not a converged block solve.
+  H = [2.0 1.0; 1.0 2.0]
+  C = ones(2, 1)
+  A = zeros(2, 1)
+  @test !HighDimensionalModels._lr_group!(A, H, C, 0.0, ones(2);
+    max_iter = 1, tol = 1e-12)
+  @test vec(A) ≈ [0.5, 0.25]
+  @test norm(H*A - C) > 1e-12
+
+  fill!(A, 0)
+  @test !HighDimensionalModels._lr_group_fista!(A, H, C, 0.0, ones(2);
+    max_iter = 1, tol = 1e-12, L = 3.0)
+  @test norm(H*A - C) > 1e-12
+
+  # A zero quadratic has the zero minimum-norm solution, including with a
+  # nonzero warm start. The final KKT check still rejects an inconsistent C.
+  fill!(A, 2)
+  @test HighDimensionalModels._lr_group_fista!(A, zeros(2, 2), zeros(2, 1),
+    0.1, ones(2); max_iter = 1, tol = 1e-12, L = 0.0)
+  @test iszero(A)
+  @test !HighDimensionalModels._lr_group_fista!(A, zeros(2, 2), C,
+    0.1, ones(2); max_iter = 1, tol = 1e-12, L = 0.0)
+
+  u = zeros(2)
+  @test !HighDimensionalModels._lr_lasso_gram!(u, H, ones(2), 0.0;
+    max_iter = 1, tol = 1e-12)
+  @test u ≈ [0.5, 0.25]
+
+  # Both ways to remove a sparse component must return a valid zero fit.
+  d = HighDimensionalModels._lr_data(Matrix{Float64}(I, 2, 2), zeros(2, 2), false)
+  B, ok, _, df = HighDimensionalModels._lr_unit(d, 0.1, ones(2), ones(2),
+    ones(2), [1.0, 0.0]; max_iter = 2, tol = 1e-12,
+    inner_max_iter = 1, inner_tol = 1e-12)
+  @test ok && iszero(B) && df == 0
+
+  # Correlated predictors can leave nonzero u after one inexact sweep even
+  # for Y=0. The exact response update must then remove the whole component.
+  d = HighDimensionalModels._lr_data(ones(2, 2), zeros(2, 2), false)
+  B, ok, _, df = HighDimensionalModels._lr_unit(d, 0.1, ones(2), ones(2),
+    ones(2), [1.0, 0.0]; max_iter = 2, tol = 1e-12,
+    inner_max_iter = 1, inner_tol = 1e-12)
+  @test ok && iszero(B) && df == 0
+
+  rng = Xoshiro(81083)
+  X, Y = randn(rng, 24, 3), randn(rng, 24, 2)
+  @test_throws ArgumentError LowRankPath(X, Y; weights = ones(3))
+  @test_throws ArgumentError LowRankPath(X, Y; adaptive = true)
+  p = fit(LowRankPath, X, Y; method = :rank, ranks = 0:2)
+  @test p isa LowRankPath
+  @test p.ranks == [0, 1, 2]
+  @test p.solutions[end].B ≈ reduced_rank(X, Y, 2).B
+  cv = fit(CVLowRankPath, X, Y; method = :rank, ranks = 0:2,
+    folds = repeat(1:3, 8))
+  @test cv isa CVLowRankPath
+  @test predict(cv, X) ≈ predict(cv.path.solutions[cv.index], X)
+
+  # The optional ProximalAlgorithms bridge must expose the penalty value as
+  # well as its prox: lambda * sum of the coefficient singular values.
+  ext = Base.get_extension(HighDimensionalModels, :HighDimensionalModelsProximalAlgorithmsExt)
+  penalty = ext.NuclearPenalty(ProximalBase.NuclearNorm(0.2))
+  @test penalty([3.0 0.0; 0.0 1.0]) ≈ 0.8
+end
