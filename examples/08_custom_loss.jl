@@ -13,7 +13,7 @@
 # and optionally coordinate_scale(f, k) and response_scale(f), for a stopping
 # rule in the units of the problem, and full_gradient!(grad, f, x), a faster
 # way to compute the whole gradient. These functions are not exported: extend
-# them as CoordinateDescent.initialize! and so on. Coordinate descent itself is
+# them as HighDimensionalModels.initialize! and so on. Coordinate descent itself is
 # ProximalSolvers's, which calls descend_coordinate! for each step.
 #
 # The logistic loss is built into ProximalBase as well (MyLogisticLoss, a
@@ -22,7 +22,7 @@
 #
 #     julia --project=examples examples/08_custom_loss.jl
 
-using CoordinateDescent, ProximalBase, ProximalSolvers
+using HighDimensionalModels, ProximalBase, ProximalSolvers
 using LinearAlgebra, Printf, Random, Statistics
 
 sigmoid(t) = 1 / (1 + exp(-t))
@@ -37,17 +37,17 @@ end
 MyLogisticLoss(y::Vector{T}, X::Matrix{T}) where {T} =
   MyLogisticLoss(y, X, zeros(T, length(y)), vec(sum(abs2, X; dims = 1)) / (4 * length(y)))
 
-CoordinateDescent.num_coordinates(f::MyLogisticLoss) = size(f.X, 2)
+HighDimensionalModels.num_coordinates(f::MyLogisticLoss) = size(f.X, 2)
 
 # coordinate_descent! calls initialize! before its first pass, and x need not
 # be zero
-function CoordinateDescent.initialize!(f::MyLogisticLoss, x)
+function HighDimensionalModels.initialize!(f::MyLogisticLoss, x)
   f.η .= f.X * x
   nothing
 end
 
 # ∂f/∂xₖ = X[:, k]'(σ(η) - y) / n
-function CoordinateDescent.gradient(f::MyLogisticLoss{T}, x, k) where {T}
+function HighDimensionalModels.gradient(f::MyLogisticLoss{T}, x, k) where {T}
   s = zero(T)
   @inbounds for i in eachindex(f.η)
     s += f.X[i, k] * (sigmoid(f.η[i]) - f.y[i])
@@ -62,10 +62,10 @@ end
 # objective. prox_entry is the proximal operator of the penalty on one entry,
 # which makes the loss work with every separable penalty: NormL1,
 # ZeroFunction, ElasticNet, MCP, …, and those of 09_custom_penalty.jl.
-function CoordinateDescent.descend_coordinate!(f::MyLogisticLoss, g, x, k)
+function HighDimensionalModels.descend_coordinate!(f::MyLogisticLoss, g, x, k)
   a = f.a[k]
   old = x[k]
-  h = prox_entry(g, old - CoordinateDescent.gradient(f, x, k) / a, k, 1 / a) - old
+  h = prox_entry(g, old - HighDimensionalModels.gradient(f, x, k) / a, k, 1 / a) - old
   if !iszero(h)                         # write x[k], and keep the cache current: η += h X[:, k]
     x[k] = old + h
     @inbounds for i in eachindex(f.η)
@@ -79,11 +79,11 @@ end
 # |Δxₖ| coordinate_scale(f, k) and compared with opt_tol response_scale(f).
 # ‖X[:, k]‖ / √n is the root mean square change of η, and the default
 # response_scale(f) = 1 compares it with opt_tol on the scale of the log-odds.
-CoordinateDescent.coordinate_scale(f::MyLogisticLoss, k) = sqrt(4 * f.a[k])
+HighDimensionalModels.coordinate_scale(f::MyLogisticLoss, k) = sqrt(4 * f.a[k])
 
 # the whole gradient X'(σ(η) - y) / n in one product, used by the screening
 # and to find λmax when warm_start = false
-function CoordinateDescent.full_gradient!(grad, f::MyLogisticLoss, x)
+function HighDimensionalModels.full_gradient!(grad, f::MyLogisticLoss, x)
   mul!(grad, transpose(f.X), sigmoid.(f.η) .- f.y)
   grad ./= length(f.η)
 end
@@ -112,7 +112,7 @@ println("selects ", findall(!iszero, x[2:end]), " in $(r.passes) passes; interce
 
 # the solution satisfies |∂f/∂βⱼ| ≤ λωⱼ where βⱼ = 0, and ∂f/∂βⱼ = -λωⱼ sign(βⱼ)
 # elsewhere
-grad = CoordinateDescent.full_gradient!(zeros(p + 1), f, x)
+grad = HighDimensionalModels.full_gradient!(zeros(p + 1), f, x)
 kkt = maximum(j -> iszero(x[j]) ? max(abs(grad[j]) - λ * ω[j], 0.0) : abs(grad[j] + λ * ω[j] * sign(x[j])), 1:p+1)
 @printf("largest violation of the optimality conditions: %.1e\n", kkt)
 
@@ -135,8 +135,8 @@ yv = Float64.(rand(2000) .< sigmoid.(-0.5 .+ Xv * β))
 logloss(η, y) = mean(@. log(1 + exp(η)) - y * η)
 x = SparseIterate(p + 1)
 x[1] = log(mean(y) / (1 - mean(y)))
-CoordinateDescent.initialize!(f, x)
-λmax = maximum(abs, CoordinateDescent.full_gradient!(zeros(p + 1), f, x)[2:end])
+HighDimensionalModels.initialize!(f, x)
+λmax = maximum(abs, HighDimensionalModels.full_gradient!(zeros(p + 1), f, x)[2:end])
 println("       λ  nonzeros  validation log-loss")
 best = (Inf, 0.0)
 for λk in λmax * exp10.(range(0, -2; length = 12))

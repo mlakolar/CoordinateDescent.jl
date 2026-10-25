@@ -1,5 +1,5 @@
 using LinearAlgebra, SparseArrays, Statistics, Random, DelimitedFiles
-import CoordinateDescent as CD
+import HighDimensionalModels as CD
 import ProximalBase as PB
 BLAS.set_num_threads(1)
 const ROOT=ENV["RUN"]

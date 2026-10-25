@@ -1,6 +1,6 @@
 module PenaltiesTest
 
-using CoordinateDescent, ProximalBase, ProximalSolvers
+using HighDimensionalModels, ProximalBase, ProximalSolvers
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 # the largest violation of the optimality conditions of ‖yc - Xc b‖²/(2n) + ∑ⱼ pen(bⱼ)

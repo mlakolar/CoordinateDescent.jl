@@ -5,7 +5,7 @@
 #     julia --project=benchmark/lla benchmark/lla/compare_lla.jl gen DIR       # data and levels
 #     Rscript benchmark/lla/compare_lla.R DIR                                  # needs glmtlp and ncpen
 #     julia --project=benchmark/lla benchmark/lla/compare_lla.jl compare DIR   # our fits against R's
-using CoordinateDescent, ProximalBase, DelimitedFiles, Random, Printf, Statistics
+using HighDimensionalModels, ProximalBase, DelimitedFiles, Random, Printf, Statistics
 
 const TAU = 0.25
 mode, dir = ARGS[1], ARGS[2]

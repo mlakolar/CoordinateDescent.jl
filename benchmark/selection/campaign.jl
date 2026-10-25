@@ -1,5 +1,5 @@
 # One independent process per replication; all timing/profiling under Slurm.
-using CoordinateDescent, LinearAlgebra, Random, Statistics, DelimitedFiles, Profile
+using HighDimensionalModels, LinearAlgebra, Random, Statistics, DelimitedFiles, Profile
 BLAS.set_num_threads(1)
 rep = parse(Int,ARGS[1]); out = ARGS[2]; mkpath(out)
 function require_converged(s)

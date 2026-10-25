@@ -11,4 +11,4 @@ open(io->TOML.print(io,d),joinpath(fixed,"Project.toml"),"w")
 Pkg.activate(joinpath(root,"testenv"))
 Pkg.develop([PackageSpec(path=joinpath(root,"pb-source")),
              PackageSpec(path=joinpath(root,"ps-source")),PackageSpec(path=fixed)])
-Pkg.test("CoordinateDescent";julia_args=["--depwarn=error"])
+Pkg.test("HighDimensionalModels";julia_args=["--depwarn=error"])

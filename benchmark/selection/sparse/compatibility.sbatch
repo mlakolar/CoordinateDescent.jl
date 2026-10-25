@@ -19,7 +19,7 @@ mkdir -p "$RUN/results" "$RUN/memory" "$RUN/metadata"
 /home1/mkolar/juliaPkg/julia-1.13.2/bin/julia --startup-file=no "$source_dir/compatibility_tests.jl" > "$RUN/full-tests-113.log" 2>&1
 export JULIA_NUM_THREADS=1 RESULTS_DIR=results CASES=1,2,3,4,10,11 CASE_IDS=1,2,3,4,10,11
 cd "$RUN/source"
-/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/env" -e 'using CoordinateDescent,Test; include("test/selection.jl"); include("test/slope_sparse.jl"); include("test/selection_golden.jl"); include(joinpath(ENV["RUN"],"ps-source","test","slope.jl"))' > "$RUN/targeted-tests-110.log" 2>&1
+/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/env" -e 'using HighDimensionalModels,Test; include("test/selection.jl"); include("test/slope_sparse.jl"); include("test/selection_golden.jl"); include(joinpath(ENV["RUN"],"ps-source","test","slope.jl"))' > "$RUN/targeted-tests-110.log" 2>&1
 cp "$RUN/env/Project.toml" "$RUN/env/Manifest.toml" "$RUN/metadata/"
 python3 - <<'PY' > "$RUN/tasks.tsv"
 engines=['native','baseline','SLOPE.jl','R']

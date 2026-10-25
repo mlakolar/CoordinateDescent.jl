@@ -5,7 +5,7 @@ SLOPE, knockoff+ and complementary-pairs stability selection have a
 [timings, profiles and FDR/power results](selection/discovery-20261025/results/summary.md).
 
 Run the scripts from the root of the repository, in the environment of this
-folder, which loads CoordinateDescent from this checkout:
+folder, which loads HighDimensionalModels from this checkout:
 
 ```
 julia --project=benchmark -e 'using Pkg; Pkg.instantiate()'

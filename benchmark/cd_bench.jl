@@ -5,7 +5,7 @@
 #     CD_BENCH_N=300 CD_BENCH_P=500 julia --project=benchmark benchmark/cd_bench.jl
 
 import ProximalBase
-import CoordinateDescent
+import HighDimensionalModels
 using LinearAlgebra, Printf, Random, Statistics
 
 n = parse(Int, get(ENV, "CD_BENCH_N", "3000"))
@@ -18,17 +18,17 @@ Y = X[:,1:s] * (randn(s) .* (1. .+ rand(s))) + 6. * randn(n)
 
 stdX = vec(std(X, dims=1))
 
-options = CoordinateDescent.IterLassoOptions(;opt_tol=1e-3, max_iter=50)
+options = HighDimensionalModels.IterLassoOptions(;opt_tol=1e-3, max_iter=50)
 x = ProximalBase.SparseIterate(p)
 λ = sqrt(2. * log(p) / n)
-@time CoordinateDescent.scaled_lasso!(x, X, Y, λ, stdX, options)
+@time HighDimensionalModels.scaled_lasso!(x, X, Y, λ, stdX, options)
 
 
-@show σinit = std(CoordinateDescent._find_init_residuals!(X, Y, 30, zeros(n)))
-options = CoordinateDescent.IterLassoOptions(;opt_tol=1e-2, max_iter=10, init_procedure=:InitStd, σinit=σinit)
+@show σinit = std(HighDimensionalModels._find_init_residuals!(X, Y, 30, zeros(n)))
+options = HighDimensionalModels.IterLassoOptions(;opt_tol=1e-2, max_iter=10, init_procedure=:InitStd, σinit=σinit)
 x = ProximalBase.SparseIterate(p)
 λ = sqrt(2. * log(p) / n)
-@time CoordinateDescent.scaled_lasso!(x, X, Y, λ, stdX, options)
+@time HighDimensionalModels.scaled_lasso!(x, X, Y, λ, stdX, options)
 
 
 # The lasso at fractions of λmax, the smallest penalty with a zero solution
@@ -36,16 +36,16 @@ x = ProximalBase.SparseIterate(p)
 # penalty levels from λmax
 function lasso_table(X, Y, stdX)
   n, p = size(X)
-  f = CoordinateDescent.CDLeastSquaresLoss(Y, X)
+  f = HighDimensionalModels.CDLeastSquaresLoss(Y, X)
   c = abs.(X' * Y) ./ n
   println("  λ / λmax  loadings  start              time (s)  passes  nonzeros")
   for frac in (0.05, 0.01),
       (loadings, g) in (("unit", ProximalBase.NormL1(frac * maximum(c))),
                         ("stdX", ProximalBase.NormL1(frac * maximum(c ./ stdX), stdX))),
-      (start, options) in (("from zero", CoordinateDescent.CDOptions(; warm_start=true)),
-                           ("path, 50 levels", CoordinateDescent.CDOptions(; warm_start=false, num_steps=50)))
+      (start, options) in (("from zero", HighDimensionalModels.CDOptions(; warm_start=true)),
+                           ("path, 50 levels", HighDimensionalModels.CDOptions(; warm_start=false, num_steps=50)))
     x = ProximalBase.SparseIterate(p)
-    t = @elapsed r = CoordinateDescent.solve!(x, f, g, options)
+    t = @elapsed r = HighDimensionalModels.solve!(x, f, g, options)
     @printf("  %8.2f  %-8s  %-16s  %9.2f  %6d  %8d\n", frac, loadings, start, t, r.passes, count(!iszero, x))
   end
 end

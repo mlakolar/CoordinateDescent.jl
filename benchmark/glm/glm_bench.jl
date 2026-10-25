@@ -15,7 +15,7 @@
 
 import GLMNet, Lasso
 using Distributions: Binomial, Poisson
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Printf, Random
 BLAS.set_num_threads(1)
 
@@ -51,7 +51,7 @@ lassojl(X, y, λs, family) = Lasso.fit(Lasso.LassoPath, X, y, family === :logist
                                       λ = λs, standardize = true)
 
 # the coefficients of each level as a matrix with the intercept in row 1
-coefs(p::CoordinateDescent.GLMLassoPath) = [p.β0path'; reduce(hcat, Vector.(p.βpath))]
+coefs(p::HighDimensionalModels.GLMLassoPath) = [p.β0path'; reduce(hcat, Vector.(p.βpath))]
 coefs(g::GLMNet.GLMNetPath) = [g.a0'; Matrix(g.betas)]
 coefs(l::Lasso.LassoPath) = Matrix(Lasso.coef(l))
 

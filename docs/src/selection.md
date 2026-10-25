@@ -19,7 +19,7 @@ For the loss normalized by the number of observations,
 ```
 
 ```julia
-using CoordinateDescent, Random, LinearAlgebra
+using HighDimensionalModels, Random, LinearAlgebra
 rng = Xoshiro(82)
 n, p = 240, 100
 X = sqrt(n) * Matrix(qr(randn(rng, n, p)).Q)
@@ -157,7 +157,7 @@ and Monte Carlo recipe are in `benchmark/selection`. Monte Carlo evidence
 checks the listed finite simulation designs; it does not prove a guarantee.
 
 ```@autodocs
-Modules = [CoordinateDescent]
+Modules = [HighDimensionalModels]
 Pages = ["src/slope.jl", "src/knockoffs.jl", "src/stability.jl"]
 Private = false
 ```

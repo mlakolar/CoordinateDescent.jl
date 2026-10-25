@@ -1,5 +1,5 @@
 module SelectionTests
-using CoordinateDescent, ProximalBase, ProximalSolvers, LinearAlgebra, Random, SparseArrays, Statistics, Test
+using HighDimensionalModels, ProximalBase, ProximalSolvers, LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 @testset "SLOPE orthogonal solution and scale" begin
   rng = Xoshiro(82)

@@ -4,5 +4,5 @@ Pkg.develop([PackageSpec(path="/home1/mkolar/juliaPkg/runs/20261025-cd82-selecti
 Pkg.add([PackageSpec(name="SLOPE",version="1.3.1"), PackageSpec(name="Knockoffs",version="3.1.4"), PackageSpec(name="GLMNet"), PackageSpec(name="DelimitedFiles"), PackageSpec(name="StatsAPI")])
 Pkg.precompile()
 Pkg.status(;mode=Pkg.PKGMODE_MANIFEST)
-using CoordinateDescent, SLOPE, Knockoffs, GLMNet, DelimitedFiles
+using HighDimensionalModels, SLOPE, Knockoffs, GLMNet, DelimitedFiles
 println("PREPARE_DONE")

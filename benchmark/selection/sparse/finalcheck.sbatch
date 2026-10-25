@@ -14,7 +14,7 @@ module load gcc/13.3.0 apptainer parallel/20240522
 source_dir="$RUN/source/benchmark/selection/sparse"
 JULIA=/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia
 cd "$RUN/source"
-"$JULIA" --startup-file=no --project="$RUN/env" -e 'using CoordinateDescent,Test; include("test/selection.jl"); include("test/slope_sparse.jl"); include("test/selection_golden.jl")' > "$RUN/final-tests-110.log" 2>&1
+"$JULIA" --startup-file=no --project="$RUN/env" -e 'using HighDimensionalModels,Test; include("test/selection.jl"); include("test/slope_sparse.jl"); include("test/selection_golden.jl")' > "$RUN/final-tests-110.log" 2>&1
 export RESULTS_DIR=final-pilot CASES=1,4,8,9,10,11
 mkdir -p "$RUN/$RESULTS_DIR"
 for engine in native baseline SLOPE.jl R; do

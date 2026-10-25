@@ -10,7 +10,7 @@
 #
 #     julia --project=examples examples/05_group_lasso.jl
 
-using CoordinateDescent, ProximalBase, ProximalSolvers
+using HighDimensionalModels, ProximalBase, ProximalSolvers
 using LinearAlgebra, Printf, Random, Statistics
 
 Random.seed!(5)

@@ -1,6 +1,6 @@
 module CVGLMTest
 
-using CoordinateDescent, ProximalBase, StatsModels
+using HighDimensionalModels, ProximalBase, StatsModels
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 logistic(z) = 1 / (1 + exp(-z))

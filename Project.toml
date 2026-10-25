@@ -1,4 +1,4 @@
-name = "CoordinateDescent"
+name = "HighDimensionalModels"
 uuid = "c00ed354-b9be-54b8-8a23-c5ac771bc43a"
 authors = ["Mladen Kolar <mkolar@chicagobooth.edu>"]
 version = "0.8.0"
@@ -18,12 +18,12 @@ StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 
 [extensions]
-CoordinateDescentStatsModelsExt = "StatsModels"
+HighDimensionalModelsStatsModelsExt = "StatsModels"
 
 [sources]
-KernelSmoothing = {url = "https://github.com/mlakolar/KernelSmoothing.jl", rev = "master"}
-ProximalBase = {url = "https://github.com/mlakolar/ProximalBase.jl", rev = "master"}
-ProximalSolvers = {url = "https://github.com/mlakolar/ProximalSolvers.jl", rev = "36f623a1747dfec6cac964fba8341819685c5146"}
+KernelSmoothing = {path = "../KernelSmoothing.jl"}
+ProximalBase = {path = "../ProximalBase.jl"}
+ProximalSolvers = {path = "../ProximalOPT.jl"}
 
 [compat]
 Aqua = "0.8"

@@ -1,7 +1,7 @@
 # Solutions and StatsAPI
 
 ```@autodocs
-Modules = [CoordinateDescent]
+Modules = [HighDimensionalModels]
 Pages = ["src/statsapi.jl", "src/formula.jl"]
 Private = false
 ```

@@ -4,7 +4,7 @@ engine=ARGS[1];rep=parse(Int,ARGS[2]);mode=ARGS[3]
 if engine=="baseline"
   @eval module Baseline
     using LinearAlgebra, Statistics, ProximalBase, ProximalSolvers
-    using CoordinateDescent: erfcinv
+    using HighDimensionalModels: erfcinv
     import StatsAPI
     include("baseline_slope.jl")
   end
@@ -32,7 +32,7 @@ path=joinpath(OUT,"$(mode)-$(engine)-$(rep)$(mode=="memory" ? "-$(only(ids))" : 
 mkpath(OUT)
 open(joinpath(OUT,"environment-$engine-$rep.txt"),"w") do io
   println(io,"Julia=$VERSION node=$(gethostname()) threads=$(Threads.nthreads()) BLAS=$(BLAS.get_config())")
-  println(io,"CoordinateDescent=$(pathof(CD)) ProximalBase=$(pathof(PB)) ProximalSolvers=$(pathof(CD.ProximalSolvers))")
+  println(io,"HighDimensionalModels=$(pathof(CD)) ProximalBase=$(pathof(PB)) ProximalSolvers=$(pathof(CD.ProximalSolvers))")
   engine=="SLOPE.jl" && println(io,"SLOPE=$(pkgversion(SJ))")
 end
 open(path,"w") do io

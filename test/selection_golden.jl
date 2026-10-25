@@ -1,5 +1,5 @@
 module SelectionGoldenTests
-using CoordinateDescent, DelimitedFiles, LinearAlgebra, Random, Test
+using HighDimensionalModels, DelimitedFiles, LinearAlgebra, Random, Test
 const D = get(ENV, "CD_SELECTION_GOLDEN", joinpath(@__DIR__, "data", "selection"))
 readmat(name) = readdlm(joinpath(D,name*".csv"),',',Float64)
 readvec(name) = vec(readmat(name))

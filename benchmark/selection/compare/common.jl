@@ -1,5 +1,5 @@
 using LinearAlgebra, Random, Statistics, SparseArrays, DelimitedFiles
-import CoordinateDescent as CD
+import HighDimensionalModels as CD
 import SLOPE as SJ
 import Knockoffs as KJ
 import GLMNet as GN

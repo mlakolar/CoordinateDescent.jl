@@ -10,7 +10,7 @@
 #
 #     julia --project=examples examples/03_lasso_path.jl
 
-using CoordinateDescent
+using HighDimensionalModels
 using ProximalBase: MCP
 using LinearAlgebra, Printf, Random, Statistics
 

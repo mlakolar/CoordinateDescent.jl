@@ -1,11 +1,11 @@
 # Estimators
 
 ```@docs
-CoordinateDescent
+HighDimensionalModels
 ```
 
 ```@autodocs
-Modules = [CoordinateDescent]
+Modules = [HighDimensionalModels]
 Pages = ["src/lasso.jl", "src/penalties.jl", "src/glm.jl", "src/group.jl", "src/sparsegroup.jl", "src/multiresponse.jl", "src/cv.jl", "src/hdm.jl"]
 Private = true
 ```

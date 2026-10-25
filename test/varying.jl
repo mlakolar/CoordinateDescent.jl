@@ -1,6 +1,6 @@
 module VaryingTest
 
-using CoordinateDescent, KernelSmoothing
+using HighDimensionalModels, KernelSmoothing
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 # the weighted least squares fit of y on the columns Xᵢⱼ (zᵢ - z₀)ʳ, with
@@ -148,7 +148,7 @@ end
         @test coef(fit; refit = true)[S, g] ≈ θ[(1:length(S)) .* 2 .- 1] rtol = 1e-8
         @test all(iszero, coef(fit; refit = true)[setdiff(1:8, S), g])
       end
-      @test predict(fit, Xl, z; refit = true) ≈ [dot(Xl[i, :], CoordinateDescent._interpolate(coef(fit; refit = true), fit.zgrid, z[i])) for i in 1:n]
+      @test predict(fit, Xl, z; refit = true) ≈ [dot(Xl[i, :], HighDimensionalModels._interpolate(coef(fit; refit = true), fit.zgrid, z[i])) for i in 1:n]
     end
     # the group penalty at one point: the group lasso on the locally weighted, scaled design
     z0 = 0.4

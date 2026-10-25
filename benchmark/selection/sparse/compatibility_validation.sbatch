@@ -16,6 +16,6 @@ mkdir -p "$RUN/metadata"
 /home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no "$source_dir/compatibility_setup.jl" > "$RUN/setup-110.log" 2>&1
 /home1/mkolar/juliaPkg/julia-1.13.2/bin/julia --startup-file=no "$source_dir/compatibility_tests.jl" > "$RUN/full-tests-113.log" 2>&1
 cd "$RUN/source"
-/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/env" -e 'using CoordinateDescent,Test; include("test/selection.jl"); include("test/slope_sparse.jl"); include("test/selection_golden.jl"); include(joinpath(ENV["RUN"],"ps-source","test","slope.jl"))' > "$RUN/targeted-tests-110.log" 2>&1
+/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/env" -e 'using HighDimensionalModels,Test; include("test/selection.jl"); include("test/slope_sparse.jl"); include("test/selection_golden.jl"); include(joinpath(ENV["RUN"],"ps-source","test","slope.jl"))' > "$RUN/targeted-tests-110.log" 2>&1
 cp "$RUN/env/Project.toml" "$RUN/env/Manifest.toml" "$RUN/metadata/"
 echo CURRENT_COMPATIBILITY_VALIDATION_DONE

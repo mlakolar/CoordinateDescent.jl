@@ -1,6 +1,6 @@
 module SparseSLOPETests
-using CoordinateDescent, ProximalBase, ProximalSolvers, LinearAlgebra, Random, SparseArrays, Statistics, Test
-const CD = CoordinateDescent
+using HighDimensionalModels, ProximalBase, ProximalSolvers, LinearAlgebra, Random, SparseArrays, Statistics, Test
+const CD = HighDimensionalModels
 
 @testset "Sparse SLOPE transformations and products" begin
   rng = Xoshiro(8201)

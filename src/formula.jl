@@ -11,7 +11,7 @@ A model fitted from a formula and a table. Loading StatsModels.jl adds formula
 methods to the estimators, which return it:
 
 ```julia
-using CoordinateDescent, StatsModels
+using HighDimensionalModels, StatsModels
 path = fit(LassoPath, @formula(y ~ x1 + x2 + log(x3) + region), data)
 sol = lasso(@formula(y ~ x1 + x2 + region), data, 0.1; standardize_x = true)
 grp = group_lasso(@formula(y ~ x1 + region + x2 & region), data, 0.05)   # a group per term

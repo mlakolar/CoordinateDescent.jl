@@ -4,7 +4,7 @@
 #
 #     julia --project=. benchmark/refit_bench.jl
 
-using CoordinateDescent, LinearAlgebra, Random, Printf
+using HighDimensionalModels, LinearAlgebra, Random, Printf
 BLAS.set_num_threads(1)
 
 # the implementation before RefitCache

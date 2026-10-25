@@ -1,4 +1,4 @@
-# CoordinateDescent.jl
+# HighDimensionalModels.jl
 
 Lasso estimators computed by coordinate descent. For a response
 ``y \in \mathbb{R}^n`` and ``n`` observations of ``p`` predictors in the rows of
@@ -9,7 +9,7 @@ Lasso estimators computed by coordinate descent. For a response
 ```
 
 with an unpenalized intercept ``\beta_0`` and penalty loadings ``\omega_j \ge 0``.
-CoordinateDescent solves it at one penalty level ``\lambda`` and along a path of
+HighDimensionalModels solves it at one penalty level ``\lambda`` and along a path of
 levels, and solves the estimators built on it:
 
 - the lasso, with an intercept, standardized columns, penalty loadings,
@@ -32,12 +32,16 @@ separates across coordinates, including your own.
 
 ## Installation
 
-```julia
-using Pkg
-Pkg.add("CoordinateDescent")
+Use the master checkout and prepare its dependency master checkouts:
+
+```sh
+git clone --branch master https://github.com/mlakolar/HighDimensionalModels.jl.git
+cd HighDimensionalModels.jl
+julia scripts/instantiate.jl
+julia --project=.
 ```
 
-CoordinateDescent requires Julia 1.10 or later.
+HighDimensionalModels requires Julia 1.10 or later.
 
 ## A first example
 
@@ -45,7 +49,7 @@ The lasso with an intercept at ``\lambda = 0.1``, on 200 observations of 50
 predictors of which the first five matter:
 
 ```@example index
-using CoordinateDescent, Random
+using HighDimensionalModels, Random
 
 rng = Xoshiro(1)
 n, p = 200, 50
@@ -90,12 +94,12 @@ path = LassoPath(X, y; nλ = 50, intercept = true)
 
 ## The family
 
-CoordinateDescent is one of five Julia packages for high-dimensional statistics,
+HighDimensionalModels is one of five Julia packages for high-dimensional statistics,
 three for estimation and inference and two for the optimization beneath them:
 
 | Package | |
 |---|---|
-| **CoordinateDescent.jl** (this package) | the lasso and its paths; the group, square-root, scaled and heteroscedastic lasso; varying-coefficient models |
+| **HighDimensionalModels.jl** (this package) | the lasso and its paths; the group, square-root, scaled and heteroscedastic lasso; varying-coefficient models |
 | [CovarianceSelection.jl](https://github.com/mlakolar/CovarianceSelection.jl) | Gaussian graphical models: the graphical lasso, CLIME and ACLIME, precision matrices by the scaled lasso, the fused graphical lasso, and the difference of two precision matrices |
 | [DiffPrecTest.jl](https://github.com/mlakolar/DiffPrecTest.jl) | confidence intervals and tests for the difference of two precision matrices |
 | [ProximalSolvers.jl](https://github.com/mlakolar/ProximalSolvers.jl) | the solvers: coordinate descent with penalty paths, screening and active sets; proximal gradient methods, proximal Newton and ADMM |
@@ -103,3 +107,10 @@ three for estimation and inference and two for the optimization beneath them:
 
 Most users need one of the first three. To solve a problem of your own, use
 ProximalSolvers; to write your own algorithm, ProximalBase.
+
+## Development tests
+
+From the repository root, run `julia scripts/test_master.jl`. It prepares an
+isolated environment containing dependency master checkouts and the test extras,
+then runs the full suite on Julia 1.10 and newer. The repository's
+`CONTRIBUTING.md` describes the naming convention and bootstrap scripts.

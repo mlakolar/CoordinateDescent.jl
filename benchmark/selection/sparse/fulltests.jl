@@ -16,4 +16,4 @@ Pkg.activate(joinpath(root,get(ENV,"SPARSE_TEST_ENV","testenv-fixed")))
 Pkg.develop([PackageSpec(path=d["sources"]["ProximalBase"]["path"]),
              PackageSpec(path=d["sources"]["ProximalSolvers"]["path"]),
              PackageSpec(path=fixed)])
-Pkg.test("CoordinateDescent";julia_args=["--depwarn=error"])
+Pkg.test("HighDimensionalModels";julia_args=["--depwarn=error"])
