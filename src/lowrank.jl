@@ -333,15 +333,41 @@ function _lr_group_fista!(A, XX, C, λ, w; max_iter, tol, L)
   return false
 end
 
-function _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol, block_solver = :cd)
+# The design SVD already supplies the gradient's spectral scale. Keep the
+# sufficient statistics local to one fit/path, reusing them across penalties.
+function _lr_factor_rank(B, L, R)
+  iszero(L) && return 0
+  p, q = size(B)
+  T, r = eltype(B), size(L, 2)
+  core = Matrix(qr(L).R) * Matrix(qr(R').R)'
+  σ = svdvals!(core)
+  cutoff = min(p, q) * eps(T) * first(σ)
+  ambiguous = any(<=(8cutoff), σ) || 8r*eps(T)*norm(L)*norm(R) > cutoff
+  ambiguous ? LinearAlgebra.rank(B) : count(>(cutoff), σ)
+end
+
+function _lr_sparse_setup(d, f, block_solver)
+  T, n = eltype(d.X), size(d.X, 1)
+  XX, XY = d.X' * d.X / n, d.X' * d.Y / n
+  L = block_solver == :fista && !isempty(f.s) ?
+      (one(T) + sqrt(eps(T))) * abs2(first(f.s)) / n : zero(T)
+  (; XX, XY, L, design_rank = f.diagnostic_xrank)
+end
+
+function _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol,
+                    block_solver = :cd, setup = nothing)
   T = eltype(d.X)
   n, p = size(d.X)
   r == 0 && return _lr_solution(d, zeros(T, p, size(d.Y, 2)), λ, 0, true, sum(abs2, d.Y)/(2n), :sparse)
   F = svd(initial; full = false)
   V = F.V[:, 1:r]
   A = initial * V
-  XX, XY = d.X' * d.X / n, d.X' * d.Y / n
-  L = block_solver == :fista ? eigmax(Symmetric(XX)) : zero(T)
+  if setup === nothing
+    XX, XY = d.X' * d.X / n, d.X' * d.Y / n
+    L = block_solver == :fista ? eigmax(Symmetric(XX)) : zero(T)
+  else
+    XX, XY, L = setup.XX, setup.XY, setup.L
+  end
   B = A * V'
   iteration, converged = 0, false
   for k in 1:max_iter
@@ -364,8 +390,16 @@ function _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_t
       end
     end
   end
-  objective = sum(abs2, d.Y - d.X * B) / (2n) + λ * sum(w[j] * norm(view(A, j, :)) for j in 1:p)
-  _lr_solution(d, B, λ, iteration, converged, objective, :sparse)
+  rows = _activerows(B)
+  coefficient_rank = _lr_factor_rank(B, A, V')
+  k = isempty(rows) ? 0 : length(rows) == p && setup !== nothing ?
+      setup.design_rank : LinearAlgebra.rank(d.X[:, rows])
+  q = size(B, 2)
+  df = coefficient_rank * (k + q - coefficient_rank) + q * d.intercept
+  E = r * (p + q) < p * q ? d.Y - (d.X * A) * V' : d.Y - d.X * B
+  objective = sum(abs2, E) / (2n) + λ * sum(w[j] * norm(view(A, j, :)) for j in 1:p)
+  _lr_solution(d, B, λ, iteration, converged, objective, :sparse;
+    rows, coefficient_rank, residual = E, df)
 end
 
 function _lr_weights(d, initial, weights, adaptive, gamma)
@@ -406,7 +440,8 @@ function sparse_reduced_rank(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real
   _lr_rank(r, min(f.xrank, size(Y, 2)))
   initial = _lr_rrcoef(d, f, r)
   w = _lr_weights(d, initial, weights, adaptive, gamma)
-  _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol, block_solver)
+  setup = r == 0 ? nothing : _lr_sparse_setup(d, f, block_solver)
+  _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol, block_solver, setup)
 end
 
 """
@@ -501,10 +536,11 @@ function LowRankPath(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real};
     throw(ArgumentError("row weights apply only to method = :sparse"))
   end
   g = method == :nuclear ? _lr_gradient(d) : nothing
+  sparse_setup = method == :sparse && rank > 0 ? _lr_sparse_setup(d, f, block_solver) : nothing
   if λpath === nothing
     nλ >= 1 || throw(ArgumentError("nλ must be positive"))
     isfinite(λminratio) && 0 < λminratio <= 1 || throw(ArgumentError("λminratio must be in (0, 1]"))
-    C = d.X' * d.Y / size(X, 1)
+    C = sparse_setup === nothing ? d.X' * d.Y / size(X, 1) : sparse_setup.XY
     λmax = method == :nuclear ? opnorm(C) : maximum(norm(view(C, j, :))/w[j] for j in axes(C, 1))
     λmax *= 1 + sqrt(eps(T))
     λs = T[λmax * λminratio^(k/max(1, nλ-1)) for k in 0:nλ-1]
@@ -517,7 +553,7 @@ function LowRankPath(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real};
   start = copy(initial)
   for λ in λs
     s = method == :nuclear ? _lr_nuclear(d, g, λ, start; max_iter, tol, solver) :
-      _lr_sparse(d, rank, λ, w, start; max_iter, tol, inner_max_iter, inner_tol, block_solver)
+      _lr_sparse(d, rank, λ, w, start; max_iter, tol, inner_max_iter, inner_tol, block_solver, setup = sparse_setup)
     push!(sols, s)
     start = s.rank == 0 ? copy(initial) : copy(s.B)
   end

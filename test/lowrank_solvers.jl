@@ -186,3 +186,61 @@ end
     @test isinf(lowrank_ic(tied; df = :exact))
   end
 end
+
+@testset "Sparse-path setup preserves the weighted orthogonal solution" begin
+  rng = Xoshiro(102261026)
+  for T in (Float32,Float64), solver in (:cd,:fista)
+    X = T.(Matrix(qr(randn(rng,30,6)).Q)[:,1:6] * sqrt(30))
+    Y = T.(randn(rng,30,4)); C = X'Y/30
+    w = T[1,2,.5,.7,3,1.1]
+    tol = T === Float32 ? 1e-5 : 1e-10
+    path = LowRankPath(X,Y;method=:sparse,rank=4,block_solver=solver,
+      λpath=T[100,.2,.05],weights=w,intercept=false,tol,inner_tol=tol)
+    @test path.solutions[1].rank == 0
+    for (λ,s) in zip(path.λpath,path.solutions)
+      target=copy(C)
+      for j in axes(target,1)
+        row=view(target,j,:);nr=norm(row)
+        row .*= max(zero(T),1-λ*w[j]/nr)
+      end
+      @test s.converged
+      @test s.B ≈ target atol=100tol rtol=100tol
+      @test s.objective ≈ sum(abs2,Y-X*target)/60 + λ*sum(w[j]*norm(view(target,j,:)) for j in axes(target,1)) atol=100tol rtol=100tol
+      @test predict(s,X)+residuals(s) ≈ Y atol=100tol rtol=100tol
+    end
+  end
+end
+
+@testset "Factor-based sparse rank keeps dense numerical-rank semantics" begin
+  rng=Xoshiro(102261027)
+  for T in (Float32,Float64), (p,q) in ((8,6),(80,100),(120,40))
+    Q=Matrix(qr(randn(rng,T,p,3)).Q)[:,1:3]
+    V=Matrix(qr(randn(rng,T,q,3)).Q)[:,1:3]
+    for multiplier in T[.5,2,32], scale in T[1e-8,1e8]
+      A=Q*Diagonal(T[1,.3,min(p,q)*eps(T)*multiplier].*scale)
+      B=A*V'
+      @test HighDimensionalModels._lr_factor_rank(B,A,V')==rank(B)
+    end
+    A=zeros(T,p,3);B=A*V'
+    @test HighDimensionalModels._lr_factor_rank(B,A,V')==rank(B)==0
+  end
+end
+
+@testset "Sparse thin residuals retain the orthogonal rank-two fit" begin
+  rng=Xoshiro(102261028)
+  for T in (Float32,Float64), solver in (:cd,:fista)
+    X=T.(Matrix(qr(randn(rng,30,10)).Q)[:,1:10]*sqrt(30))
+    L=zeros(T,10,2);L[1:4,:].=randn(rng,T,4,2)
+    Y=X*(L*randn(rng,T,2,80));C=X'Y/30;target=copy(C)
+    for row in eachrow(target)
+      nr=norm(row);row .*= nr==0 ? zero(T) : max(zero(T),1-T(.1)/nr)
+    end
+    tol=T===Float32 ? 1e-4 : 1e-10
+    s=sparse_reduced_rank(X,Y,2,T(.1);intercept=false,block_solver=solver,tol,inner_tol=tol)
+    @test s.converged
+    @test s.B ≈ target atol=100tol rtol=100tol
+    @test norm(residuals(s)-(Y-X*s.B)) <= 100eps(T)*max(norm(Y),norm(X)*norm(s.B))
+    @test s.rank==rank(s.B)
+    @test dof(s)==s.rank*(rank(X[:,s.activerows])+80-s.rank)
+  end
+end
