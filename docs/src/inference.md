@@ -15,7 +15,7 @@ See `benchmark/inference/automatic-tuning/results/discovery-20261025/RESULTS.md`
 for settings, uncertainty, diagnostics and matched computational comparisons.
 
 ```julia
-using CoordinateDescent, Random
+using HighDimensionalModels, Random
 rng = Xoshiro(77)
 X = randn(rng, 200, 30)
 y = X[:, 1] + randn(rng, 200)

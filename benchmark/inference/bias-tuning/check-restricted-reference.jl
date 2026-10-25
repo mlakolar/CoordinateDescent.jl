@@ -1,4 +1,4 @@
-using CoordinateDescent, DelimitedFiles, Test, Random
+using HighDimensionalModels, DelimitedFiles, Test, Random
 X=readdlm("source-v3/test/data/inference/X.csv",',',Float64;skipstart=1)
 levels=[.4,.3,.2,.15,.1,.07,.05,.03,.02,.01,.005,.001]
 @testset "Independent residualized glmnet LDPE reference" begin

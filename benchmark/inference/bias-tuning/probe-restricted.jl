@@ -1,4 +1,4 @@
-using CoordinateDescent, ProximalBase, Random, LinearAlgebra, Statistics
+using HighDimensionalModels, ProximalBase, Random, LinearAlgebra, Statistics
 BLAS.set_num_threads(1)
 stage,case,shard,maxrep=ARGS
 shard=parse(Int,shard);maxrep=parse(Int,maxrep)

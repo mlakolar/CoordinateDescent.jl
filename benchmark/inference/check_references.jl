@@ -1,4 +1,4 @@
-using CoordinateDescent, DelimitedFiles, Test, LinearAlgebra, Statistics, Random
+using HighDimensionalModels, DelimitedFiles, Test, LinearAlgebra, Statistics, Random
 using CovarianceSelection
 readcsv(name) = readdlm(joinpath(ARGS[1],name),',',Float64;skipstart=1)
 X = readcsv("X.csv"); y = vec(readcsv("y.csv")); ref = readcsv("hdi.csv")

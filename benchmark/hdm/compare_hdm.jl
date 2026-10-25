@@ -6,7 +6,7 @@
 #     julia --project=benchmark/hdm benchmark/hdm/compare_hdm.jl compare DIR   # the comparison
 #     julia --project=benchmark/hdm benchmark/hdm/compare_hdm.jl coverage      # 500 replications
 
-using CoordinateDescent, DelimitedFiles, Printf, Random, Statistics
+using HighDimensionalModels, DelimitedFiles, Printf, Random, Statistics
 
 # heteroskedastic designs with a treatment d that depends on the controls that
 # also enter y, so that selecting on y alone would bias the estimate of α = 0.5

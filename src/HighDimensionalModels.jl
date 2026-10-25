@@ -1,5 +1,5 @@
 """
-    CoordinateDescent
+    HighDimensionalModels
 
 Lasso estimators computed by coordinate descent: [`lasso`](@ref),
 [`sqrt_lasso`](@ref), [`scaled_lasso`](@ref), [`feasible_lasso!`](@ref),
@@ -19,7 +19,7 @@ real data and penalties of any type and convert them to a common floating point
 type: the element type of `X` and `y` promoted to a float, or that of the
 iterate passed to `scaled_lasso!` and `feasible_lasso!`.
 """
-module CoordinateDescent
+module HighDimensionalModels
 
 using ProximalBase
 using ProximalSolvers

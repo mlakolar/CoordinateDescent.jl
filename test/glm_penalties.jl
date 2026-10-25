@@ -1,6 +1,6 @@
 module GLMPenaltiesTest
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 logistic(z) = 1 / (1 + exp(-z))
@@ -110,7 +110,7 @@ dscad(λ, a) = t -> sign(t) * (abs(t) <= λ ? λ : max(a * λ - abs(t), 0.0) / (
     a = adaptive_lasso(X, y, λ, ProximalBase.Logistic(), tight; newton_tol = 1e-12)
     ω = [iszero(first.x[j]) ? Inf : 1 / abs(first.x[j]) for j in 1:p]
     b = glm_lasso(X, y, λ, ProximalBase.Logistic(), tight; standardize_x = false, penalty = NormL1(1, ω), newton_tol = 1e-12)
-    @test a isa CoordinateDescent.GLMLassoSolution
+    @test a isa HighDimensionalModels.GLMLassoSolution
     @test Vector(a.x) ≈ Vector(b.x) atol = 1e-6
     @test all(j -> !iszero(first.x[j]) || iszero(a.x[j]), 1:p)        # dropped by the first fit, kept out
     r = adaptive_lasso(X, y, λ, ProximalBase.Logistic(); init = :ridge, initλ = 0.1)

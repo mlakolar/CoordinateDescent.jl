@@ -1,5 +1,5 @@
 # One independent process per fit, under Slurm. No local Julia execution.
-using CoordinateDescent, ProximalBase, Random, LinearAlgebra, DelimitedFiles, Statistics
+using HighDimensionalModels, ProximalBase, Random, LinearAlgebra, DelimitedFiles, Statistics
 BLAS.set_num_threads(1)
 engine, mode, scenario, rep = ARGS
 dest = joinpath("data", scenario, rep)

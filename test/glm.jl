@@ -1,6 +1,6 @@
 module GLMLassoTest
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 logistic(z) = 1 / (1 + exp(-z))

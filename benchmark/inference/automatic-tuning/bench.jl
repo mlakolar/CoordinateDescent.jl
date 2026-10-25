@@ -1,4 +1,4 @@
-using CoordinateDescent, Random, LinearAlgebra, Statistics, DelimitedFiles
+using HighDimensionalModels, Random, LinearAlgebra, Statistics, DelimitedFiles
 BLAS.set_num_threads(1)
 engine,label,rep=ARGS
 base=joinpath("bench-data",label,rep); out=joinpath("bench",join(ARGS,'-'))

@@ -12,7 +12,7 @@
 #     Rscript benchmark/sparsegroup/compare_sparsegroup.R DIR            # needs sparsegl (SGL optional)
 #     julia --project=benchmark/sparsegroup benchmark/sparsegroup/compare_sparsegroup.jl compare DIR
 
-using CoordinateDescent, DelimitedFiles, LinearAlgebra, Printf, Random, Statistics
+using HighDimensionalModels, DelimitedFiles, LinearAlgebra, Printf, Random, Statistics
 
 const SETTINGS = [(n = 200, p = 60, ρ = 0.5, gsize = 5), (n = 400, p = 120, ρ = 0.0, gsize = 10),
                   (n = 100, p = 200, ρ = 0.3, gsize = 8)]

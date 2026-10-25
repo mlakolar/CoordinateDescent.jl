@@ -28,11 +28,11 @@ end
 
 @testset "CV paths with unreached tail levels" begin
   errors=[2. 1. NaN; 3. 2. NaN; 1. 1. NaN]
-  m,se,best,one_se=CoordinateDescent._cvsummary(errors,ones(3))
+  m,se,best,one_se=HighDimensionalModels._cvsummary(errors,ones(3))
   @test m[end]==Inf
   @test best==2
   @test one_se in 1:2
-  @test_throws ArgumentError CoordinateDescent._cvsummary(fill(NaN,3,2),ones(3))
+  @test_throws ArgumentError HighDimensionalModels._cvsummary(fill(NaN,3,2),ones(3))
 end
 
 @testset "Restricted LDPE projections" begin

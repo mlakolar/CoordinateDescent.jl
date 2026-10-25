@@ -5,7 +5,7 @@
 #     Rscript benchmark/grpreg/compare_grpreg.R DIR                  # needs grpreg
 #     julia --project=benchmark/grpreg benchmark/grpreg/compare_grpreg.jl compare DIR
 
-using CoordinateDescent, DelimitedFiles, Printf, Random
+using HighDimensionalModels, DelimitedFiles, Printf, Random
 
 # groups of sizes 1 to 5; correlated columns within groups and on different
 # scales, so that orthonormalization matters; four groups in the model

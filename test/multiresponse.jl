@@ -1,6 +1,6 @@
 module MultiLassoTest
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 function kkt_rows(G, B, λ, ω)

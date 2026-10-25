@@ -1,5 +1,5 @@
 # All simulation and inference runs under Slurm on Discovery.
-using CoordinateDescent, Random, LinearAlgebra, Statistics, DelimitedFiles
+using HighDimensionalModels, Random, LinearAlgebra, Statistics, DelimitedFiles
 BLAS.set_num_threads(1)
 stage, case, shard = ARGS
 shard=parse(Int,shard)

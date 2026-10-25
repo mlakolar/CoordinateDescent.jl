@@ -8,6 +8,11 @@ normalizations, tuning, assumptions and Discovery validation. Initial penalties
 and nodewise projections now have bounded automatic CV defaults, with explicit
 penalties and the original theoretical rules available for expert use.
 
+The expert nodewise rule `:ldpe` adds a finite-grid bias/noise search, including
+restricted projections with `ldpe_unpenalized`. Diagnostics report the original
+bias target, reference noise, and grid boundaries. It remains experimental.
+Cross-validation excludes tuning levels with no finite fold errors from selection.
+
 ## Paths stop on a certified duality gap
 
 With ProximalSolvers' gap stopping (ProximalSolvers #86), the paths (`LassoPath`, `CVLassoPath`,
@@ -23,6 +28,15 @@ and 9% more. The new option
 ProximalSolvers' `PATH_GAPTOL = 1e-4`, `1e-3` is the faster setting, and
 `gaptol = 0` stops on the changes with `opt_tol`, as before. Tests that compare
 paths with near-exact solutions pass `gaptol = 0`.
+
+# Development changes
+
+CoordinateDescent.jl is now HighDimensionalModels.jl. The Julia module is
+`HighDimensionalModels`; replace `using CoordinateDescent` and qualified
+`CoordinateDescent.` calls with the new name. The StatsModels extension is
+`HighDimensionalModelsStatsModelsExt`. The package UUID and version remain
+unchanged. Active development environments use local master checkouts of
+ProximalBase, ProximalSolvers and KernelSmoothing.
 
 # Version 0.8.0
 

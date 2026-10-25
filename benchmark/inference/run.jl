@@ -1,5 +1,5 @@
 # Discovery only. See README.md for resource layout and the exact recipe.
-using CoordinateDescent, ProximalBase, Random, LinearAlgebra, Statistics, SparseArrays, Profile, DelimitedFiles
+using HighDimensionalModels, ProximalBase, Random, LinearAlgebra, Statistics, SparseArrays, Profile, DelimitedFiles
 BLAS.set_num_threads(1)
 mode = ARGS[1]
 out = get(ENV, "CD77_OUTPUT", "outputs")

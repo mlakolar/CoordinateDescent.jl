@@ -38,3 +38,9 @@ No holdout is used for choosing among these candidates. Restriction is an expert
 option and remains disabled by default while its calibration is evaluated.
 The m=4 choice follows the published simulation, not the known simulation
 support. References: Zhang and Zhang, Sections 2.3 and 4, linked above.
+
+The measured immutable source-v1/v2/v3 snapshots predate the module rename from
+CoordinateDescent to HighDimensionalModels. Current scripts use the new module
+name; reproduce a historical measurement with its recorded snapshot/environment.
+A current-source parity bridge is required before calling the renamed source
+validated by these measurements. Raw data and historical lockfiles remain frozen.
