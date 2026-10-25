@@ -8,7 +8,7 @@
 #SBATCH --time=00:14:00
 set -euo pipefail
 export BASE_RUN="$RUN"
-export RUN="$BASE_RUN/compat" ENV_DIR=env
+export RUN="$BASE_RUN/${VALIDATION_SUBDIR:-compat}" ENV_DIR=env
 export JULIA_DEPOT_PATH="$RUN/depot:$BASE_RUN/depot:/home1/mkolar/juliaPkg/runs/20261025-cd82-compare/depot:/home1/mkolar/juliaPkg/runs/20261025-cd82-selection/depot:/home1/mkolar/juliaPkg/depot:"
 export JULIA_NUM_THREADS=2 JULIA_NUM_PRECOMPILE_TASKS=2 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 source_dir="$RUN/source/benchmark/selection/sparse"

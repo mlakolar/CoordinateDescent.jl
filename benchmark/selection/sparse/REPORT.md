@@ -145,8 +145,13 @@ used by the earlier dense extraction study. See the
 
 Full HDM tests passed 2732/2732 on Discovery with the earlier integrated API,
 and the guarded PS engine passed 53/53 on both Julia 1.10.12 and 1.13.2.
-Current-dependency confirmation is recorded separately with its exact sources
-and logs. Benchmark measurements remain labelled with their actual dependency
+Job 13424680 then confirmed PS36/PB0e98: **2742/2742 full-suite assertions on
+Julia 1.13.2 and 245/245 selection/sparse/R-golden plus 53/53 engine assertions
+on Julia 1.10.12**. The [logs and manifests](discovery-20261025/compatibility/)
+identify the exact pre-module-rename source snapshot. A Julia 1.10 CI failure
+in the old test snapshot was an overly strict absolute-only matrix comparison;
+the correction adds a 100eps(Float64) relative roundoff bound and leaves all
+solver/certificate thresholds unchanged. Benchmark measurements remain labelled with their actual dependency
 cohort; unchanged numerical kernels justify reusing those runs, while newer
 package imports could change fixed RSS overhead.
 

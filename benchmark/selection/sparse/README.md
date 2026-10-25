@@ -87,6 +87,10 @@ Runtime: Julia1.10.12; full suite also Julia1.13.2; R4.5.3 container with the
 previous campaign's SLOPE2.1.1 library and SLOPE.jl1.3.1. Source snapshots,
 checksums and final manifests identify exact runtime dependencies.
 
+For the reported broad cohort, restore harness commit
+`2af17278c2f30337f89ce4d2cb293b45f0ab67fa` and the recorded snapshots/manifest;
+it predates the Julia module rename. Current active launchers import
+`HighDimensionalModels`; retained receipts keep the original module names.
 Stage the recorded source snapshots and reuse the recorded environments. The
 final launch uses `sbatch --partition=debug --constraint=epyc-7313 campaign.sbatch`;
 these flags override the original main/7513 launcher defaults. Run
