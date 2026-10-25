@@ -1,7 +1,14 @@
 args=commandArgs(TRUE);case=args[1];seed=as.integer(args[2]);epsilon=as.double(args[3]);rep=as.integer(args[4]);label=args[5]
-library(conquer)
+library(conquer);library(quantreg)
+fn.dual=quantreg::rq.fit.lasso
+body(fn.dual)=substitute({ans=ORIGINAL;ans$dual=z$wn[2L*N+seq_len(n)]-(1-tau);ans},list(ORIGINAL=body(fn.dual)))
 d=readRDS(file.path('inputs',paste0(case,'-',seed,'.rds')))
 fit=function(X,y,ls,tau) {
+ if(label=='quantreg-precomputed') {
+  design=cbind(1,X);n=nrow(X);p=ncol(X)
+  ans=lapply(ls,function(lambda) fn.dual(design,y,tau=tau,lambda=2*n*lambda,eps=1e-8))
+  return(list(B=vapply(ans,function(z) as.numeric(z$coefficients),numeric(p+1)),U=vapply(ans,function(z) z$dual,numeric(n))))
+ }
  a=conquer.reg(X,y,lambda=ls,tau=tau,kernel='parabolic',h=.2,penalty='lasso',epsilon=epsilon,iteMax=30000)
  B=as.matrix(a$coeff)[,match(ls,a$lambda),drop=FALSE]
  R=matrix(y,nrow(X),length(ls))-cbind(1,X)%*%B;s=pmax(-1,pmin(1,R/.2))
