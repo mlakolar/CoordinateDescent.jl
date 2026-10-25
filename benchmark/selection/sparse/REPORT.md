@@ -6,6 +6,10 @@ sparse storage, and performance. A replacement backend is not warranted by
 these measurements. Statistical calibration and knockoff construction choices
 remain separate priorities from the [earlier selection study](../compare/RECOMMENDATION.md).
 
+The timing and RSS figures below retain their original measured revisions.
+The later numerical review and repairs are documented in the final section;
+their regression validation does not constitute a new performance campaign.
+
 | Target | Evidence | Outcome |
 |---|---|---|
 | Independent full relative proximal residual ≤1e-7 | Maximum 6.366e-8 over every level of 301 timed paths; maximum 4.119e-8 in 77 fresh memory processes | Pass |
@@ -167,7 +171,7 @@ comparison with the PB source actually used here, not the different PB source
 used by the earlier dense extraction study. After the concurrent package rename,
 the renamed validation used companion API `3bee2f91604fe08d34a07d45bcc638e3b4face3a`.
 PR #90 subsequently merged as `b9cf11c46a12b0d686f242ee63162692a9091a85`;
-the bootstrap now uses the normal sibling master checkout. SLOPE itself remains byte-identical; APG changes
+the bootstrap now uses the normal sibling master checkout. At that integration checkpoint, SLOPE itself remained byte-identical; APG changes
 are canonical field names, with the same update operations. Current PB master
 `b6c949f3dd26cad09252e1c2c9e49810eb69403e` retains the same relevant loss and
 sorted-penalty code. Historical measurements are retained with their actual
@@ -215,7 +219,7 @@ inputs and adverse calibration results are retained here; large per-path
 coefficient outputs remain at
 `/home1/mkolar/juliaPkg/runs/20261025-cd82-sparse` on Discovery.
 
-The final accounting remains within the approved shared allowance: at most
+At completion of that campaign, accounting was within the approved shared allowance: at most
 158.1 running-union minutes of 180 and a conservative 11.4 allocated CPU-hours
 of 16, including coordinated solver work and retries. Current-phase allocations
 never exceed 8 CPUs or 16 GB. At historical source head `8a6589c`, platform
@@ -232,3 +236,48 @@ Julia threads in CI so the existing serial/threaded CPSS agreement test
 exercises both branches. No coverage thresholds were reduced. These changes
 do not modify the numerical solver or the benchmark inputs. PR #84 remains
 draft for its model/statistical review.
+
+## Numerical review repairs
+
+The review at `9e28e04` found three counterexamples outside the measured designs:
+large-offset sparse columns could stall APG backtracking, small-scale custom
+knockoff diagonals could pass an absolute feasibility tolerance despite being
+infeasible, and floating-point centering of a dense constant column could create
+a false selection. These findings qualify the measured workload results above.
+
+HDM `74bc14b3b897b2c579136ae79cdf635b14768dbb` centers fully stored sparse columns
+before scaling while preserving CSC storage and implicit zeros, uses the existing
+constant-aware means for dense input, and checks knockoff feasibility on the
+correlation scale. The independent shared-solver guard in
+[ProximalSolvers #97](https://github.com/mlakolar/ProximalSolvers.jl/pull/97), commit
+`b388317a3841820187c5b062aad5683e1b038655`, raises an explicit numerical error
+when backtracking cannot represent a step satisfying its descent bound or cannot
+increase its curvature estimate finitely. The standard HDM dependency policy
+remains in place; the model preprocessing fix also passes hosted tests against
+the current solver master.
+
+Discovery job **13434298** passed **three independent Julia 1.10.12 processes
+with 511 assertions each**, including the former stall at two tolerances,
+constant-column automatic paths, Float32/Float64 knockoff rescaling and PSD
+boundary cases, explicit-design optimality checks, sparse storage checks and
+R golden comparisons. The **full HDM Julia 1.13.2 suite passed 2952/2952**.
+All **33 solver numerical test files** passed. The staging archive also included
+16 macOS `._*.jl` metadata files, which the example runner incorrectly attempted
+to parse; all 16 real examples passed. That error log is preserved in the project
+run evidence. After making a separate clean staged copy, job **13436198** passed
+all **27 example/Aqua assertions**, completing the solver test coverage without
+repeating its passed numerical suite. The unused timeout continuation rejected
+this non-timeout error and performed no Julia computation.
+
+The [repair receipt and logs](discovery-20261025/review-fixes/receipt.json)
+separate scheduler outcomes from validated checks. Recreation uses the pinned
+commits and existing frozen PB/Kernel dependencies in that receipt, with the
+saved [setup](discovery-20261025/review-fixes/setup.jl),
+[regression driver](discovery-20261025/review-fixes/regressions.jl),
+[main launcher](discovery-20261025/review-fixes/repair.sbatch), and
+[example recovery launcher](discovery-20261025/review-fixes/examples.sbatch).
+Use a fresh run directory and exclude `._*` metadata when staging source, for
+example with `COPYFILE_DISABLE=1 tar --exclude='._*' ...` on macOS. All Julia
+execution ran on Discovery; no new timing, profiling or process-RSS claims are
+made for these repairs. Total related resource use is now **175.6/180 approved
+union-running minutes** and at most **12.33/16 allocated CPU-hours**.

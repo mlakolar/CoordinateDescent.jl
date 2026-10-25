@@ -1,0 +1,64 @@
+{
+  "hdm_commit": "74bc14b3b897b2c579136ae79cdf635b14768dbb",
+  "solver_commit": "b388317a3841820187c5b062aad5683e1b038655",
+  "solver_pr": "https://github.com/mlakolar/ProximalSolvers.jl/pull/97",
+  "proximal_base_commit": "b6c949f3dd26cad09252e1c2c9e49810eb69403e",
+  "kernel_smoothing_commit": "653784f0c2d48084ac5251db1d992f270708bae0",
+  "remote_root": "/home1/mkolar/juliaPkg/runs/20261025-cd82-sparse/repair-74bc14b",
+  "regressions": {
+    "julia": "1.10.12",
+    "independent_process_replications": 3,
+    "passed_assertions_each": 511,
+    "threads": 2
+  },
+  "model_full": {
+    "julia": "1.13.2",
+    "passed_assertions": 2952
+  },
+  "solver_full": {
+    "julia": "1.13.2",
+    "numerical_test_files_passed": 33,
+    "examples_and_aqua_assertions": 27,
+    "all_test_files_covered": true,
+    "original_staging_error": "16 macOS AppleDouble ._*.jl metadata files were misidentified as examples; all16actualexamples passed; clean examples+Aqua rerun passed27assertions. Original error retained."
+  },
+  "jobs": [
+    {
+      "JobID": "13434298",
+      "State": "FAILED",
+      "ElapsedRaw": "639",
+      "AllocCPUS": "4",
+      "ReqMem": "12G",
+      "Start": "2026-10-25T11:03:49",
+      "End": "2026-10-25T11:14:28",
+      "ExitCode": "1:0"
+    },
+    {
+      "JobID": "13435883",
+      "State": "FAILED",
+      "ElapsedRaw": "0",
+      "AllocCPUS": "4",
+      "ReqMem": "12G",
+      "Start": "2026-10-25T11:14:28",
+      "End": "2026-10-25T11:14:28",
+      "ExitCode": "1:0"
+    },
+    {
+      "JobID": "13436198",
+      "State": "COMPLETED",
+      "ElapsedRaw": "82",
+      "AllocCPUS": "2",
+      "ReqMem": "6G",
+      "Start": "2026-10-25T11:16:00",
+      "End": "2026-10-25T11:17:22",
+      "ExitCode": "0:0"
+    }
+  ],
+  "resources": {
+    "union_running_seconds": 721,
+    "allocated_CPU_seconds": 2720,
+    "peak_CPUs": 4,
+    "peak_memory_GB": 12
+  },
+  "benchmarks": "No new timing/profile/RSS campaign; prior published numbers retain their original source cohorts."
+}
