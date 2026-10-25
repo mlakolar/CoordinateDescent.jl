@@ -53,4 +53,4 @@ Source provenance is retained as immutable snapshots in the run record: `source-
 
 Recreate the work using `setup.sbatch`, `evaluate.sbatch`, `golden.R`, `run.jl` and `regression.jl` in this folder, with the recorded snapshots/environments and seeds. The local run record is `.slurm/runs/20261025-cd80-structured.json` in the enclosing juliaPkg workspace; remote results are under `/home1/mkolar/juliaPkg/runs/20261025-cd80-structured`.
 
-GitHub-hosted Julia CI is intentionally skipped on the PR head commit to honor the requirement that all remaining Julia execution run on Discovery. This is a report of the Slurm checks above, not a GitHub CI result.
+GitHub CI was initially skipped following a Discovery-only relay. The user clarified that GitHub CI is allowed and that the concern is excessive simultaneous Julia processes on the laptop. Normal GitHub CI is now enabled. The Slurm results above remain independent of the GitHub CI outcome; benchmarking and profiling stay on Discovery.
