@@ -46,4 +46,4 @@ for case in sorted({r['case'] for r in paths}):
 (out/'paired-contrasts.json').write_text(json.dumps(contrasts,indent=2))
 # Strong-duality and feasibility of the native quantreg workspace is an explicit
 # qualification, not assumed merely because the wrapper returned a vector.
-(out/'dual-checks.json').write_text(json.dumps({m:{'rows':len([r for r in sol if r['method']==m]),'max_dual_feasibility':max((float(r['dual_feasibility']) for r in sol if r['method']==m),default=None),'max_kkt':max((float(r['kkt']) for r in sol if r['method']==m),default=None)} for m in ['api-exact','api-smooth','gurobi-primal','quantreg-native-dual','conquer-dual']},indent=2))
+(out/'dual-checks.json').write_text(json.dumps({m:{'rows':len([r for r in sol if r['method']==m]),'max_dual_feasibility':max((float(r['dual_feasibility']) for r in sol if r['method']==m),default=None),'max_kkt':max((float(r['kkt']) for r in sol if r['method']==m),default=None),'max_kkt_converged_fits':max((float(r['kkt']) for r in sol if r['method']==m and r['converged']=='true'),default=None)} for m in ['api-exact','api-smooth','gurobi-primal','quantreg-native-dual','conquer-dual']},indent=2))

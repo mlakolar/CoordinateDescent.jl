@@ -26,7 +26,8 @@ These two R fit/score timers exclude startup and binary I/O. Julia then times
 the same diagnostics used by the public API; `total_s` sums fit/score and
 numerical-diagnostic time across the two processes. It excludes cross-language
 transport and is an explicit wrapper cost, not one contiguous wall-clock call.
-No reconstructed residual-sign dual is passed off as a native score. The
+All native dispatches and the external-output diagnostic dispatch are warmed
+on smaller matching data before measurements. No reconstructed residual-sign dual is passed off as a native score. The
 workspace interpretation must pass box/intercept/slope feasibility and KKT/gap
 checks before its timing qualifies.
 

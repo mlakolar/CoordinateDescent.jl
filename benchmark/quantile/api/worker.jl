@@ -26,12 +26,20 @@ function runmethod(name,X,y,ls,τ)
  name=="api-smooth" && return QuantileLassoPath(X,y,ls;tau=τ,standardize_x=false,tol=2e-5,method=:smooth,bandwidth=.2,rng=Xoshiro(20261025)).solutions
  gurobipath(X,y,ls,τ)
 end
+function rdiagnostics(X,y,B,U,ls,w,τ,h)
+ [CD._qsolution(X,y,B[2:end,k],B[1,k],U[:,k],ls[k],w,τ,true,h==0 ? :exact : :smooth,h,:R_returned,0,false,2e-5) for k in eachindex(ls)]
+end
 function main()
  case=ARGS[1];seed=parse(Int,ARGS[2]);base="inputs/$case-$seed"
  n,p,τ,L=vec(readdlm(base*"-meta.csv",',',Float64));n=Int(n);p=Int(p);L=Int(L)
  X=reshape(loadbin(base*"-X.bin"),n,p);y=loadbin(base*"-y.bin");ls=loadbin(base*"-ls.bin");w=ones(p)
  for method in ["api-exact","api-smooth","gurobi-primal"]
   runmethod(method,X[1:60,1:12],y[1:60],[.2,.1],τ)
+ end
+ # Warm the external-output diagnostic dispatch too; its first compilation
+ # must not be charged to the first R method in a shuffled block.
+ for h in (0.,.2)
+  rdiagnostics(X[1:60,1:12],y[1:60],zeros(13,2),zeros(60,2),[.2,.1],ones(12),τ,h)
  end
  # Validate the extracted quantreg workspace before ranking any timing.
  pathrows=Any[];solrows=Any[];saved=Dict{Tuple{String,Int},Any}()
@@ -71,7 +79,7 @@ function main()
    B=reshape(loadbin(file*"-B.bin"),p+1,L);fit_s=parse(Float64,strip(read(file*"-seconds.txt",String)))
    if isfile(file*"-U.bin")
     U=reshape(loadbin(file*"-U.bin"),n,L);h=method=="conquer-dual" ? .2 : 0.
-    t=@timed [CD._qsolution(X,y,B[2:end,k],B[1,k],U[:,k],ls[k],w,τ,true,h==0 ? :exact : :smooth,h,:R_returned,0,true,2e-5) for k in 1:L]
+    t=@timed rdiagnostics(X,y,B,U,ls,w,τ,h)
     record(method,rep,t.value,fit_s,t.time,NaN,true,"returned")
    else
     record(method,rep,QuantileLassoSolution[],fit_s,NaN,NaN,false,"coefficients_only")
