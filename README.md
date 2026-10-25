@@ -21,6 +21,8 @@ Estimators:
 * Lasso, with an intercept, standardization and penalty loadings
 * Elastic net, MCP and SCAD, bounds on the coefficients, and the adaptive lasso
 * Penalized logistic and Poisson regression, by proximal Newton
+* SLOPE with BH weights and screened paths; Gaussian and fixed-X knockoff+;
+  complementary-pairs stability selection ([guarantees and examples](https://mlakolar.github.io/CoordinateDescent.jl/dev/selection/))
 * Group lasso, and the multi-response lasso
 * Fused lasso regression, trend filtering and the graph/generalized lasso,
   with paths, cross-validation and generalized-lasso degrees of freedom

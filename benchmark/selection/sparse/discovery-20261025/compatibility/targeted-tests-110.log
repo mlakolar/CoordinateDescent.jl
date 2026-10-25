@@ -1,0 +1,26 @@
+Test Summary:                       | Pass  Total  Time
+SLOPE orthogonal solution and scale |   22     22  9.5s
+Test Summary:                  | Pass  Total  Time
+SLOPE screening and KKT repair |   29     29  0.7s
+Test Summary:                                  | Pass  Total  Time
+Knockoff construction, threshold and statistic |   19     19  4.5s
+Test Summary:                                          | Pass  Total  Time
+Complementary pairs and deterministic parallel fitting |   14     14  5.0s
+Test Summary:                             | Pass  Total  Time
+Sparse SLOPE transformations and products |   72     72  0.8s
+Test Summary:                               | Pass  Total  Time
+Sparse SLOPE fit, path and full certificate |   68     68  7.8s
+Test Summary:                             | Pass  Total  Time
+Sparse SLOPE storage and loss restriction |    4      4  0.1s
+SLOPE intercept=false standardize=false max_abs_error=3.075572296840079e-9
+SLOPE intercept=false standardize=true max_abs_error=2.956964173517207e-9
+SLOPE intercept=true standardize=false max_abs_error=1.071831623455921e-9
+SLOPE intercept=true standardize=true max_abs_error=1.02881425600998e-9
+Gaussian knockoff max_abs_error=5.849615236641625e-11
+Coefficient difference max_abs_error=3.184432206815302e-8
+Stability frequency max_abs_error=0.0
+Test Summary: | Pass  Total  Time
+R golden data |   17     17  2.3s
+GOLDEN_COMPARISON_DONE
+Test Summary:                       | Pass  Total  Time
+Screened SLOPE APG numerical engine |   53     53  1.6s

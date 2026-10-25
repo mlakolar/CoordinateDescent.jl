@@ -1,0 +1,82 @@
+{
+  "comparison": "Exact installed PB86sFe used in broad335cohort vs current PB0e98",
+  "identical_source_files": [
+    "testing.jl",
+    "ProximalBase.jl",
+    "ballconstrained.jl",
+    "atomIterate.jl",
+    "composition.jl",
+    "sparseIterate.jl",
+    "lapack.jl",
+    "envelope.jl",
+    "lla.jl",
+    "utils.jl",
+    "metric.jl",
+    "constrained.jl",
+    "deprecated.jl",
+    "spectralfunction.jl",
+    "interface.jl",
+    "constrained_nonconvex.jl",
+    "calculus.jl",
+    "second_order.jl",
+    "caches.jl",
+    "precompile.jl",
+    "affineconstrained.jl",
+    "functions/sets.jl",
+    "functions/sparsegroup.jl",
+    "functions/intersection.jl",
+    "functions/ordered.jl",
+    "functions/losses.jl",
+    "functions/leastsquares.jl",
+    "functions/fibers.jl",
+    "functions/norms.jl",
+    "functions/separable.jl",
+    "functions/smooth.jl",
+    "functions/spectral.jl",
+    "functions/logdet.jl",
+    "functions/matrixsets.jl",
+    "functions/affine.jl",
+    "functions/singular.jl",
+    "functions/glm.jl"
+  ],
+  "changed_source_files": [
+    "partial.jl",
+    "functions/nonconvex.jl",
+    "functions/entropy.jl"
+  ],
+  "least_squares_sha256": "287a8c1f14eb35c41b095a39feb299177a7e568be865c469a3b21477ecd6489b",
+  "PS_measured": "335ea905da207a6cc1cd3bd945bb7bbbf9f4eba4",
+  "PS_current": "36f623a1747dfec6cac964fba8341819685c5146",
+  "PB_current": "0e98c8eddc2e251be7e0b963c4d32e9a5a69231d",
+  "PS_identical_blobs": {
+    "src/solvers/slope.jl": "7ea91082238d8420091e2dd6a2fb0f50883115e4",
+    "src/solvers/accelerated_proximal_gradient_descent.jl": "5e94703efee5cde4de0e735b08ffd0e59638d60a",
+    "src/solvers/image_models.jl": "80d725167848fbc627a5f883ec7c02ae28496841",
+    "src/solve.jl": "b3b43fd47c487e325bfa422c1f5476c2186b322d",
+    "src/types.jl": "aec69381ca1062a471689057fc21e903fa9a90ff"
+  },
+  "HDM_slope_sha256": "b32489f93b06453f2301ffe6074b966038fff470af379d0a66fa3e87966bc386",
+  "renamed_integration": {
+    "PS": "3bee2f91604fe08d34a07d45bcc638e3b4face3a",
+    "PB": "b6c949f3dd26cad09252e1c2c9e49810eb69403e",
+    "KernelSmoothing": "653784f0c2d48084ac5251db1d992f270708bae0",
+    "PS_verbatim_blobs": {
+      "src/solvers/slope.jl": "7ea91082238d8420091e2dd6a2fb0f50883115e4",
+      "src/solvers/image_models.jl": "80d725167848fbc627a5f883ec7c02ae28496841",
+      "src/solve.jl": "b3b43fd47c487e325bfa422c1f5476c2186b322d"
+    },
+    "APG_equal_after_name_substitutions": {
+      "deltaX": "delta_x",
+      "maxResidual": "max_residual"
+    },
+    "PB_relevant_sources_equal_to_0e98": true,
+    "timings": "Original335/PB86cohort; no numerical re-fit for canonical field/module names; new package imports may alter fixed RSS overhead.",
+    "PB_verbatim_blobs": {
+      "src/functions/leastsquares.jl": "df9a436f3acc1324577e347a764860d99246cb59",
+      "src/functions/ordered.jl": "906fe22ca51eecf6d26f1c911c7504df7290dbb2",
+      "src/functions/norms.jl": "6da173a75114ca5b5b66d425686157b4dfd69036",
+      "src/caches.jl": "dc57582fb659348a66e3221f8d5eaeb30e44093b",
+      "src/calculus.jl": "fec316b23d308a6db8bdf7f3e26593a21256d1d7"
+    }
+  }
+}

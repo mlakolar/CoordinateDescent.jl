@@ -1,0 +1,14 @@
+{
+  "replications": 1,
+  "datasets_per_scenario": 2,
+  "timing_rows": 90,
+  "mc_rows": 270,
+  "accuracy_rows": 15,
+  "maximum_relative_prox_residual": 7.361234820369353e-08,
+  "matching_comparisons": 70,
+  "selection_mismatches": 0,
+  "max_fixed_gram_error": 1.8277393487586835e-13,
+  "max_fixed_cross_gram_error": 2.99372819867472e-08,
+  "max_cpss_frequency_difference": 0.0,
+  "status": "coverage_and_arithmetic_checked"
+}

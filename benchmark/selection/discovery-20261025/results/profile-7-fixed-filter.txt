@@ -1,0 +1,198 @@
+rep=7 case=fixed-filter calls=38 Julia=1.13.2 threads=2 job=13423195
+ Count  Overhead File                    Line Function
+ =====  ======== ====                    ==== ========
+     1         0 @CoordinateDescent/src/knockoffs.jl   40 _knockoff_parameters(S::Matrix{Fl…
+     1         0 @LinearAlgebra/src/cholesky.jl  552 _cholesky
+     1         0 @LinearAlgebra/src/cholesky.jl  552 #_cholesky#175
+     1         0 @LinearAlgebra/src/cholesky.jl  416 cholesky!
+     1         0 @LinearAlgebra/src/cholesky.jl  417 #cholesky!#163
+     1         0 @LinearAlgebra/src/cholesky.jl  187 _chol!
+     1         1 @LinearAlgebra/src/lapack.jl 3293 potrf!(uplo::Char, A::Matrix{Floa…
+     1         0 @LinearAlgebra/src/abstractq.jl  227 mul!(C::Matrix{Float64}, Q::Linea…
+     1         0 @Base/array.jl          626 zeros
+     1         0 @Base/broadcast.jl      617 getindex
+     1         0 @Base/broadcast.jl      621 _getindex
+     1         0 @Base/broadcast.jl      677 _broadcast_getindex
+     1         0 @Base/broadcast.jl      704 _broadcast_getindex_evalf
+     1         0 @CoordinateDescent/src/knockoffs.jl   24 equicorrelated_s(Sigma::Matrix{Fl…
+     1         0 @Base/abstractarray.jl 1186 copyto_axcheck!
+     1         0 @ProximalSolvers/…rc/cd/leastsquares.jl  387 coordinate_step!
+     1         0 @ProximalSolvers/…rc/cd/leastsquares.jl  359 _residual_axpy!
+     1         0 @ProximalSolvers/…rc/cd/leastsquares.jl  234 _column_axpy!
+     1         0 @ProximalSolvers/…rc/cd/leastsquares.jl  235 macro expansion
+     1         1 @Base/essentials.jl     975 getindex
+     1         0 @LinearAlgebra/src/matmul.jl  559 _syrk_herk_gemm_wrapper!
+     1         0 @LinearAlgebra/src/matmul.jl  925 gemm_wrapper!
+     1         1 @LinearAlgebra/src/blas.jl 1654 gemm!(transA::Char, transB::Char,…
+     1         0 @CoordinateDescent/src/knockoffs.jl    7 _knockoff_covariance(Sigma::Matri…
+     1         0 @LinearAlgebra/src/dense.jl   93 isposdef
+     1         0 @LinearAlgebra/src/symmetriceigen.jl    6 eigencopy_oftype(A::Hermitian{Flo…
+     1         0 @Base/array.jl          627 zeros
+     1         0 @Base/array.jl          359 fill!
+     1         0 @Base/array.jl          363 _fill!
+     1         0 @Base/array.jl         1020 setindex!
+     1         1 @Base/array.jl         1025 _setindex!
+     1         0 @ProximalSolvers/src/cd/solver.jl  240 _pass!(x::ProximalBase.SparseIter…
+     1         0 @ProximalSolvers/src/cd/solver.jl  254 _fullpass!(x::ProximalBase.Sparse…
+     1         0 @ProximalSolvers/…rc/cd/leastsquares.jl  178 _column_dot
+     1         0 @CoordinateDescent/src/knockoffs.jl   35 _knockoff_parameters(S::Matrix{Fl…
+     1         0 @Base/arraymath.jl        8 -
+     1         0 @LinearAlgebra/…tructuredbroadcast.jl  259 copy(bc::Base.Broadcast.Broadcast…
+     1         0 @LinearAlgebra/src/qr.jl  424 qr(::Matrix{Float64}; kwargs::Bas…
+     1         0 @LinearAlgebra/src/LinearAlgebra.jl  515 copy_similar
+     2         0 @SparseArrays/src/sparsevector.jl 1273 hcat
+     2         0 @Base/abstractarray.jl 1721 typed_hcat
+     2         0 @Base/abstractarray.jl 1754 _typed_hcat(::Type{Float64}, A::T…
+     2         0 @LinearAlgebra/src/cholesky.jl  182 cholcopy
+     2         0 @Base/broadcast.jl      229 similar
+     2         0 @Base/broadcast.jl      230 similar
+     2         0 @Base/abstractarray.jl  876 similar
+     2         0 @Base/array.jl          409 similar
+     2         0 @Base/abstractarray.jl  877 similar
+     2         0 @Base/boot.jl           671 Array
+     2         2 @Base/simdloop.jl        75 macro expansion
+     2         0 @CoordinateDescent/src/knockoffs.jl    6 _knockoff_covariance(Sigma::Matri…
+     2         0 @Base/anyall.jl         211 _all
+     2         0 @Base/float.jl          711 isfinite
+     2         0 @LinearAlgebra/src/LinearAlgebra.jl  714 \
+     2         0 @LinearAlgebra/src/LinearAlgebra.jl  730 ldiv(F::Cholesky{Float64, Matrix{…
+     2         0 @LinearAlgebra/src/LinearAlgebra.jl  668 _zeros
+     2         0 @Base/array.jl          622 zeros
+     2         0 @Base/simdloop.jl        76 macro expansion
+     2         0 @Base/simdloop.jl        54 simd_index
+     2         2 @Base/int.jl             87 +
+     2         0 @CoordinateDescent/src/knockoffs.jl   41 _knockoff_parameters(S::Matrix{Fl…
+     2         0 @Base/boot.jl           675 Array
+     2         0 @LinearAlgebra/src/triangular.jl  159 Array
+     2         0 @LinearAlgebra/src/triangular.jl  664 copy!(dest::Matrix{Float64}, U::U…
+     2         0 @LinearAlgebra/src/triangular.jl  675 _copy!
+     2         0 @LinearAlgebra/src/triangular.jl  711 copy_unaliased!
+     2         0 @CoordinateDescent/src/knockoffs.jl   85 fixed_knockoffs(X::Matrix{Float64…
+     2         0 @Base/array.jl          652 Array
+     2         0 @CoordinateDescent/src/lasso.jl  408 lasso(X::Matrix{Float64}, y::Vect…
+     2         0 @CoordinateDescent/src/lasso.jl  183 _lsmodel
+     2         0 @CoordinateDescent/src/lasso.jl  187 _lsmodel(X::Matrix{Float64}, y::V…
+     2         0 @CoordinateDescent/src/losses.jl   33 CDLeastSquaresLoss
+     2         0 @CoordinateDescent/src/losses.jl   33 #CDLeastSquaresLoss#13
+     2         0 @ProximalSolvers/…rc/cd/leastsquares.jl   65 cdmodel
+     2         0 @ProximalSolvers/…rc/cd/leastsquares.jl   65 #cdmodel#32
+     2         0 @ProximalSolvers/…rc/cd/leastsquares.jl   39 LSModel
+     2         0 @ProximalSolvers/…rc/cd/leastsquares.jl   46 ProximalSolvers.LSModel(y::Vector…
+     2         0 @ProximalSolvers/…rc/cd/leastsquares.jl   98 _check_finite
+     2         0 @Base/anyall.jl         217 _all
+     2         0 @Base/abstractarray.jl 1247 iterate
+     2         0 @Base/abstractarray.jl 1254 _iterate_abstractarray
+     2         2 @Base/essentials.jl     385 checkbounds
+     2         0 @LinearAlgebra/src/matmul.jl  545 _syrk_herk_gemm_wrapper!(C::Matri…
+     2         0 @LinearAlgebra/src/matmul.jl  814 syrk_wrapper!(C::Matrix{Float64},…
+     2         2 @LinearAlgebra/src/blas.jl 1914 syrk!(uplo::Char, trans::Char, al…
+     2         0 @Base/arraymath.jl       16 +(A::Matrix{Float64}, Bs::Matrix{…
+     2         0 @CoordinateDescent/src/knockoffs.jl   22 equicorrelated_s(Sigma::Matrix{Fl…
+     3         0 @CoordinateDescent/src/knockoffs.jl   34 _knockoff_parameters(S::Matrix{Fl…
+     3         0 @LinearAlgebra/src/cholesky.jl  542 cholesky
+     3         0 @LinearAlgebra/src/cholesky.jl  542 #cholesky#171
+     3         0 @Base/arraymath.jl        8 -(A::Matrix{Float64}, B::Matrix{F…
+     3         0 @Base/array.jl          318 copyto!
+     3         0 @Base/array.jl          311 _copyto2arg!
+     3         0 @CoordinateDescent/src/knockoffs.jl   87 fixed_knockoffs(X::Matrix{Float64…
+     3         3 @Base/float.jl          493 -
+     3         0 @ProximalSolvers/…rc/cd/leastsquares.jl  191 macro expansion
+     3         3 @Base/float.jl          492 +
+     3         0 @Base/array.jl          407 similar
+     3         0 @LinearAlgebra/src/matmul.jl  270 mul!
+     3         0 @LinearAlgebra/src/matmul.jl  302 mul!
+     3         0 @LinearAlgebra/src/matmul.jl  333 _mul!
+     3         0 @LinearAlgebra/src/matmul.jl  533 generic_matmatmul_wrapper!(C::Mat…
+     4         0 @LinearAlgebra/src/symmetriceigen.jl    9 eigencopy_oftype(A::Symmetric{Flo…
+     4         0 @Base/reducedim.jl     1013 all
+     4         0 @Base/reducedim.jl     1013 #all#769
+     4         0 @LinearAlgebra/src/matmul.jl  141 *
+     4         0 @Base/multidimensional.jl  774 setindex!
+     5         0 @Base/array.jl          291 copyto!
+     5         0 @Base/array.jl          300 _copyto_impl!
+     5         0 @Base/genericmemory.jl  139 unsafe_copyto!
+     5         5 @Base/cmem.jl            28 memmove
+     5         0 @LinearAlgebra/src/generic.jl 2167 copytrito!
+     5         4 @LinearAlgebra/src/lapack.jl 7198 lacpy!(B::Matrix{Float64}, A::Mat…
+     5         0 @Base/broadcast.jl      952 copyto!
+     5         0 @Base/broadcast.jl      999 copyto!
+     5         0 @Base/broadcast.jl     1000 macro expansion
+     6         0 @Base/broadcast.jl      888 broadcast_preserving_zero_d
+     6         0 @ProximalSolvers/…rc/cd/leastsquares.jl  190 _column_dot
+     6         0 @LinearAlgebra/src/abstractq.jl    ? mul!(C::Matrix{Float64}, Q::Linea…
+     6         0 @LinearAlgebra/src/abstractq.jl  327 lmul!
+     6         6 @LinearAlgebra/src/lapack.jl 3149 gemqrt!(side::Char, trans::Char, …
+     6         0 @Base/array.jl         1031 setindex!
+     6         6 @Base/array.jl         1037 _setindex!
+     7         0 @CoordinateDescent/src/knockoffs.jl   95 fixed_knockoffs(X::Matrix{Float64…
+     7         0 @Base/broadcast.jl      899 materialize
+     7         0 @Base/broadcast.jl      924 copy
+     7         0 @Base/boot.jl           662 Array
+     7         0 @Base/boot.jl           652 Array
+     7         0 @Base/boot.jl           605 new_as_memoryref
+     7         7 @Base/boot.jl           588 GenericMemory
+     7         0 @ProximalSolvers/src/cd/solver.jl  242 _pass!(x::ProximalBase.SparseIter…
+     7         0 @ProximalSolvers/src/cd/solver.jl  293 _activepass!(x::ProximalBase.Spar…
+     7         0 @ProximalSolvers/…rc/cd/leastsquares.jl  380 coordinate_step!
+     7         0 @ProximalSolvers/…rc/cd/leastsquares.jl  349 _column_dot
+     7         0 @ProximalSolvers/…rc/cd/leastsquares.jl  350 _column_dot
+     8         0 @CoordinateDescent/src/lasso.jl  411 lasso(X::Matrix{Float64}, y::Vect…
+     8         0 @CoordinateDescent/src/penalties.jl  141 _solve_levels!
+     8         0 @CoordinateDescent/src/penalties.jl  146 #_solve_levels!#53
+     8         0 @CoordinateDescent/src/utils.jl  164 _solve!
+     8         0 @CoordinateDescent/src/utils.jl  166 _solve!(x::ProximalBase.SparseIte…
+     8         0 @ProximalSolvers/src/cd/solver.jl  619 solve!(x::ProximalBase.SparseIter…
+     8         0 @ProximalSolvers/src/cd/solver.jl  315 _cd!(x::ProximalBase.SparseIterat…
+     8         0 @ProximalSolvers/src/cd/solver.jl  385 _cd_momentum!(x::ProximalBase.Spa…
+     8         0 @ProximalSolvers/src/cd/models.jl  172 _visit!
+     9         0 @CoordinateDescent/src/knockoffs.jl   94 fixed_knockoffs(X::Matrix{Float64…
+     9         0 @LinearAlgebra/src/abstractq.jl  191 *
+     9         0 @Base/simdloop.jl        77 macro expansion
+    10         0 @CoordinateDescent/src/lasso.jl  381 lasso
+    10         0 @LinearAlgebra/src/symmetriceigen.jl  172 eigvals!
+    11         0 @CoordinateDescent/src/knockoffs.jl   25 equicorrelated_s(Sigma::Matrix{Fl…
+    11         0 @LinearAlgebra/src/symmetriceigen.jl  246 eigmin
+    11         0 @LinearAlgebra/src/symmetriceigen.jl  203 eigvals
+    12         0 @CoordinateDescent/src/knockoffs.jl  195 knockoff_filter(X::Matrix{Float64…
+    12         0 @CoordinateDescent/src/knockoffs.jl  136 lasso_coefdiff
+    12         0 @CoordinateDescent/src/knockoffs.jl  141 lasso_coefdiff(X::Matrix{Float64}…
+    13         0 @LinearAlgebra/src/qr.jl  425 qr(::Matrix{Float64}; kwargs::Bas…
+    13         0 @LinearAlgebra/src/qr.jl  432 _qr
+    13         0 @LinearAlgebra/src/qr.jl  432 #_qr#296
+    13         0 @LinearAlgebra/src/qr.jl  336 qr!
+    13         0 @LinearAlgebra/src/qr.jl  291 qr!
+    13         0 @LinearAlgebra/src/qr.jl  291 #qr!#292
+    13         0 @LinearAlgebra/src/lapack.jl  746 geqrt!
+    13        13 @LinearAlgebra/src/lapack.jl  479 geqrt!(A::Matrix{Float64}, T::Mat…
+    14         0 @CoordinateDescent/src/knockoffs.jl   31 _knockoff_parameters(S::Matrix{Fl…
+    14         0 @CoordinateDescent/src/knockoffs.jl   20 equicorrelated_s
+    14         0 @CoordinateDescent/src/knockoffs.jl   89 fixed_knockoffs(X::Matrix{Float64…
+    14         0 @LinearAlgebra/src/qr.jl  422 qr
+    42         0 @LinearAlgebra/src/symmetriceigen.jl   22 eigen!
+    42         0 @LinearAlgebra/src/symmetriceigen.jl   28 #eigen!#253
+    44         0 @CoordinateDescent/src/knockoffs.jl   37 _knockoff_parameters(S::Matrix{Fl…
+    44         0 @LinearAlgebra/src/symmetriceigen.jl   58 eigen
+    44         0 @LinearAlgebra/src/symmetriceigen.jl   59 #eigen#254
+    44         0 @LinearAlgebra/src/symmetriceigen.jl   63 _eigen
+    44         0 @LinearAlgebra/src/symmetriceigen.jl   65 #_eigen#255
+    52        52 @LinearAlgebra/src/lapack.jl 5410 syevr!(jobz::Char, range::Char, u…
+    65         0 @CoordinateDescent/src/knockoffs.jl   88 fixed_knockoffs(X::Matrix{Float64…
+   100         0 @CoordinateDescent/src/knockoffs.jl  187 knockoff_filter(X::Matrix{Float64…
+   100         0 @CoordinateDescent/src/knockoffs.jl   82 fixed_knockoffs
+   112         0 @Base/client.jl         577 _start()
+   112         0 @Base/client.jl         344 exec_options(opts::Base.JLOptions)
+   112         0 @Base/Base.jl           309 include(mod::Module, _path::Strin…
+   112         0 @Base/loading.jl       3105 _include(mapexpr::Function, mod::…
+   112         0 @Base/loading.jl       3045 include_string(mapexpr::typeof(id…
+   112         0 @Base/boot.jl           489 eval(m::Module, e::Any)
+   112         0 …selection/campaign.jl   32 measure(rep::Int64, out::String)
+   112         0 @Base/io.jl             426 open
+   112         0 @Base/io.jl             429 #open#324
+   112         0 …selection/campaign.jl   41 (::var"#measure##0#measure##1"{In…
+   112         0 @Profile/src/Profile.jl   60 macro expansion
+   112         0 …selection/campaign.jl   42 macro expansion
+   112         0 …selection/campaign.jl   24 (::var"#benchmark_workloads##14#b…
+   112         0 @CoordinateDescent/src/knockoffs.jl  176 knockoff_filter
+   304         0 @Base/task.jl          1196 wait_forever()
+   304       304 @Base/task.jl          1297 wait()
+Total snapshots: 608. Utilization: 50% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.

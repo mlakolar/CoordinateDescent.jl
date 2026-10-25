@@ -1,0 +1,13 @@
+{
+  "exit_code": 0,
+  "peak_rss_kib": 477584,
+  "elapsed_seconds": 7.434838679153472,
+  "command": [
+    "bash",
+    "/home1/mkolar/juliaPkg/runs/20261025-cd82-sparse/source/benchmark/selection/sparse/worker.sh",
+    "native",
+    "1",
+    "memory",
+    "10"
+  ]
+}
