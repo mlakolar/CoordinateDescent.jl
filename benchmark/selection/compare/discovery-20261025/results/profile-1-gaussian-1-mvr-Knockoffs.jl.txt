@@ -1,0 +1,117 @@
+rep=1 calls=6 Julia=1.10.12 threads=2
+ Count  Overhead File                    Line Function
+ =====  ======== ====                    ==== ========
+     2         0 @Random/src/normal.jl    258 randn
+     2         0 @Random/src/normal.jl    252 randn
+     2         0 …ntrin/intrin_funcs.jl   492 vfmadd_fast
+     2         0 …Base/src/base_defs.jl   393 vmuladd_fast
+     2         0 …src/vecunroll/fmap.jl   233 vmuladd_fast
+     2         0 …src/vecunroll/fmap.jl    25 fmap
+     2         0 …src/vecunroll/fmap.jl    25 macro expansion
+     2         0 …ntrin/intrin_funcs.jl   437 vmuladd_fast
+     2         2 …ntrin/intrin_funcs.jl   437 macro expansion
+     2         0 …c/vecunroll/memory.jl   788 _vload
+     2         0 …c/vecunroll/memory.jl   710 _vload_unroll
+     2         0 …Base/src/base_defs.jl    97 mul_fast
+     2         0 …src/vecunroll/fmap.jl   111 vmul_fast
+     2         0 …src/vecunroll/fmap.jl    11 fmap
+     2         0 …_intrin/binary_ops.jl   115 vmul_fast
+     2         2 …_intrin/binary_ops.jl   115 macro expansion
+     2         0 @Base/array.jl          2385 findlast
+     2         2 @Base/array.jl          2337 findprev
+     2         0 …src/symmetriceigen.jl     5 eigencopy_oftype
+     2         0 …/src/LinearAlgebra.jl   398 copy_similar(A::Symmetric{Float64…
+     2         0 @Base/arraymath.jl         8 -(A::Matrix{Float64}, B::Matrix{F…
+     2         0 @Base/abstractarray.jl  1067 copyto!
+     2         0 @Base/abstractarray.jl  1093 copyto_unaliased!(deststyle::Inde…
+     2         0 …nearAlgebra/src/lu.jl   494 inv!
+     2         2 …Algebra/src/lapack.jl  1044 getri!(A::Matrix{Float64}, ipiv::…
+     2         0 …offs/src/utilities.jl   141 solve_MVR(Σ::Symmetric{Float64, M…
+     3         3 …arAlgebra/src/blas.jl  2071 trmm!(side::Char, uplo::Char, tra…
+     3         0 …ockoffs/src/modelX.jl   104 condition(X::Matrix{Float64}, μ::…
+     3         0 …ebra/src/symmetric.jl   603 inv
+     3         0 …ebra/src/symmetric.jl   587 _inv(A::Symmetric{Float64, Matrix…
+     3         0 …rc/modeling/graphs.jl   236 vcmpend
+     3         0 …_intrin/binary_ops.jl    48 vsub_nsw
+     3         3 …_intrin/binary_ops.jl    48 macro expansion
+     3         0 @Base/arraymath.jl        16 +(A::Matrix{Float64}, Bs::Matrix{…
+     3         3 @Base/array.jl          1021 setindex!
+     4         0 @Base/array.jl           388 copyto!
+     4         0 @Base/array.jl           368 copyto!
+     4         0 @Base/array.jl           376 _copyto_impl!(dest::Matrix{Float6…
+     4         0 @Base/array.jl           337 unsafe_copyto!
+     4         4 @Base/cmem.jl             26 memmove
+     5         0 …bra/src/triangular.jl  1505 *
+     5         0 …bra/src/triangular.jl   692 mul!
+     5         0 …bra/src/triangular.jl   709 _trimul!
+     5         0 …bra/src/triangular.jl   827 generic_mattrimul!
+     5         0 …c/vecunroll/memory.jl  1803 _vstore!
+     5         0 …c/vecunroll/memory.jl  1314 _vstore_unroll!
+     5         0 …c/vecunroll/memory.jl   872 macro expansion
+     5         0 …rs/stridedpointers.jl   198 _vstore!
+     5         0 …intrin/memory_addr.jl  1720 __vstore!
+     5         5 …intrin/memory_addr.jl  1720 macro expansion
+     5         0 @Base/broadcast.jl       892 broadcast_preserving_zero_d
+     6         0 @Base/broadcast.jl       903 materialize
+     6         0 @Base/broadcast.jl       928 copy
+     6         0 @Base/broadcast.jl       956 copyto!
+     6         0 @Base/broadcast.jl      1003 copyto!
+     6         0 @Base/simdloop.jl         77 macro expansion
+     6         0 @Base/broadcast.jl      1004 macro expansion
+     6         0 …e/multidimensional.jl   698 setindex!
+     6         6 @Base/array.jl          1024 setindex!
+     7         0 …src/symmetriceigen.jl    66 eigvals!
+     7         0 …src/symmetriceigen.jl    67 #eigvals!#194
+     7         6 …Algebra/src/lapack.jl  5245 syevr!(jobz::Char, range::Char, u…
+     8         0 …offs/src/utilities.jl   104 solve_equi
+     8         0 …offs/src/utilities.jl   108 solve_equi(Σ::Symmetric{Float64, …
+     8         0 …src/symmetriceigen.jl    72 eigvals
+     8         0 …src/symmetriceigen.jl    74 #eigvals#195
+    13         0 …ockoffs/src/modelX.jl   110 condition(X::Matrix{Float64}, μ::…
+    13         0 …offs/src/utilities.jl   617 lowrankdowndate_turbo!(C::Cholesk…
+    15         0 …c/vecunroll/memory.jl   771 _vload
+    15         0 …c/vecunroll/memory.jl   610 _vload_unroll
+    17         0 …ockoffs/src/modelX.jl    64 modelX_gaussian_knockoffs(X::Matr…
+    17         0 …ockoffs/src/modelX.jl    94 condition
+    17         0 …offs/src/utilities.jl   555 lowrankupdate_turbo!(C::Cholesky{…
+    17         0 …c/vecunroll/memory.jl    60 macro expansion
+    17         0 …rs/stridedpointers.jl    94 _vload
+    17         0 …intrin/memory_addr.jl  1184 __vload
+    17        17 …intrin/memory_addr.jl  1184 macro expansion
+    29         0 …econstruct_loopset.jl  1107 _turbo_!
+    29         0 …econstruct_loopset.jl  1107 macro expansion
+    30         0 …c/condense_loopset.jl  1179 macro expansion
+    34         0 …offs/src/utilities.jl   164 solve_MVR(Σ::Symmetric{Float64, M…
+    36         0 …offs/src/utilities.jl   184 forward_backward!(x::Vector{Float…
+    37         0 …offs/src/utilities.jl   153 solve_MVR(Σ::Symmetric{Float64, M…
+    39         0 …offs/src/utilities.jl   185 forward_backward!(x::Vector{Float…
+    75         0 …offs/src/utilities.jl   150 solve_MVR(Σ::Symmetric{Float64, M…
+   111       111 …Algebra/src/lapack.jl  3557 trtrs!(uplo::Char, trans::Char, d…
+   112         0 …bra/src/triangular.jl   745 ldiv!
+   112         0 …bra/src/triangular.jl   752 _ldiv!
+   112         0 …bra/src/triangular.jl   830 generic_trimatdiv!
+   157         0 …ockoffs/src/modelX.jl    62 modelX_gaussian_knockoffs(X::Matr…
+   157         0 …offs/src/utilities.jl    27 solve_s
+   157         0 …offs/src/utilities.jl    40 solve_s(Σ::Symmetric{Float64, Mat…
+   157         0 …offs/src/utilities.jl   124 solve_MVR
+   174         0 @Base/client.jl          550 _start()
+   174         0 @Base/client.jl          316 exec_options(opts::Base.JLOptions)
+   174         0 @Base/Base.jl            495 include(mod::Module, _path::Strin…
+   174         0 @Base/loading.jl        2220 _include(mapexpr::Function, mod::…
+   174         0 @Base/loading.jl        2160 include_string(mapexpr::typeof(id…
+   174         0 @Base/boot.jl            385 eval
+   174         0 …ection/compare/run.jl    36 benchmark(rep::Int64)
+   174         0 @Base/io.jl              393 open
+   174         0 @Base/io.jl              396 open(::var"#21#37"{Int64, IOStrea…
+   174         0 …ection/compare/run.jl    38 #21
+   174         0 …ection/compare/run.jl    63 (::var"#22#38"{IOStream, Int64, I…
+   174         0 …ection/compare/run.jl     6 timed
+   174         0 …ection/compare/run.jl    22 timed(io::IOStream, rep::Int64, c…
+   174         0 …rofile/src/Profile.jl    43 macro expansion
+   174         0 …ection/compare/run.jl    23 macro expansion
+   174         0 …ection/compare/run.jl    63 #28
+   174         0 …ockoffs/src/modelX.jl    53 modelX_gaussian_knockoffs
+   195         0 @Base/task.jl            682 task_done_hook(t::Task)
+   195         0 @Base/task.jl           1008 wait()
+   195       195 @Base/task.jl            999 poptask(W::Base.IntrusiveLinkedLi…
+Total snapshots: 390. Utilization: 50% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.

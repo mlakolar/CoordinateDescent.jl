@@ -21,6 +21,8 @@ Estimators:
 * Lasso, with an intercept, standardization and penalty loadings
 * Elastic net, MCP and SCAD, bounds on the coefficients, and the adaptive lasso
 * Penalized logistic and Poisson regression, by proximal Newton
+* SLOPE with BH weights and screened paths; Gaussian and fixed-X knockoff+;
+  complementary-pairs stability selection ([guarantees and examples](https://mlakolar.github.io/CoordinateDescent.jl/dev/selection/))
 * Group lasso, and the multi-response lasso
 * Fused lasso regression, trend filtering and the graph/generalized lasso,
   with paths, cross-validation and generalized-lasso degrees of freedom
@@ -106,6 +108,17 @@ The [documentation](https://mlakolar.github.io/HighDimensionalModels.jl/dev/) ha
 the mathematics of each estimator and its conventions, the options of
 coordinate descent and when each pays off, the group lasso, varying-coefficient
 models, how to write a loss or a penalty of your own, and the API reference.
+
+## Low-rank multivariate regression
+
+For a response matrix `Y`, `reduced_rank(X, Y, r)` fits rank-constrained
+least squares and `select_rank(X, Y)` chooses its rank by the criterion of
+Bunea, She and Wegkamp. `nuclear_regression(X, Y, λ)` penalizes the nuclear
+norm of the coefficient matrix. `sparse_reduced_rank(X, Y, r, λ)` selects
+predictors as well as reducing rank, and `sparse_svd_regression(X, Y, r)`
+selects sparse predictor and response loadings. `LowRankPath` and
+`CVLowRankPath` provide paths and cross-validation; see the
+[low-rank regression guide](docs/src/lowrank.md) for objectives and conventions.
 
 ## Examples
 

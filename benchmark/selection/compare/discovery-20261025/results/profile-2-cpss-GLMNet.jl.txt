@@ -1,0 +1,43 @@
+rep=2 calls=2 Julia=1.10.12 threads=2
+ Count  Overhead File                    Line Function
+ =====  ======== ====                    ==== ========
+     2         0 @Base/boot.jl            487 Array
+     2         2 @Base/boot.jl            479 Array
+     2         0 @Base/cartesian.jl        66 macro expansion
+     2         0 @Base/array.jl           945 iterate
+     2         0 @Base/int.jl             526 <
+     2         2 @Base/int.jl             519 <
+     7         7 @Base/array.jl          1021 setindex!
+     8         0 …e/multidimensional.jl   917 macro expansion
+     9         0 @Base/cartesian.jl        64 macro expansion
+    11         0 …e/multidimensional.jl   903 _unsafe_getindex(::IndexLinear, :…
+    11         0 …e/multidimensional.jl   912 _unsafe_getindex!
+    12        12 @Base/array.jl           411 copy
+    12         0 @Base/abstractarray.jl  1290 getindex
+    12         0 …e/multidimensional.jl   889 _getindex
+   274       273 @GLMNet/src/GLMNet.jl    291 glmnet!(X::Matrix{Float64}, y::Ve…
+   276         0 @GLMNet/src/GLMNet.jl    271 kwcall(::@NamedTuple{lambda::Vect…
+   288         0 …ion/compare/common.jl    89 lasso_gn(X::Matrix{Float64}, y::V…
+   288         0 @GLMNet/src/GLMNet.jl    485 glmnet
+   288         0 @GLMNet/src/GLMNet.jl    485 #glmnet#40
+   301         0 @Base/task.jl            682 task_done_hook(t::Task)
+   301         0 @Base/task.jl           1008 wait()
+   301       301 @Base/task.jl            999 poptask(W::Base.IntrusiveLinkedLi…
+   301         0 @Base/client.jl          550 _start()
+   301         0 @Base/client.jl          316 exec_options(opts::Base.JLOptions)
+   301         0 @Base/Base.jl            495 include(mod::Module, _path::Strin…
+   301         0 @Base/loading.jl        2220 _include(mapexpr::Function, mod::…
+   301         0 @Base/loading.jl        2160 include_string(mapexpr::typeof(id…
+   301         0 @Base/boot.jl            385 eval
+   301         0 …ection/compare/run.jl    36 benchmark(rep::Int64)
+   301         0 @Base/io.jl              393 open
+   301         0 @Base/io.jl              396 open(::var"#21#37"{Int64, IOStrea…
+   301         0 …ection/compare/run.jl    38 #21
+   301         0 …ection/compare/run.jl    87 (::var"#22#38"{IOStream, Int64, I…
+   301         0 …ection/compare/run.jl     6 kwcall(::@NamedTuple{profile::Boo…
+   301         0 …ection/compare/run.jl    22 timed(io::IOStream, rep::Int64, c…
+   301         0 …rofile/src/Profile.jl    43 macro expansion
+   301         0 …ection/compare/run.jl    23 macro expansion
+   301         0 …ection/compare/run.jl    86 #36
+   301         0 …ion/compare/common.jl   108 cpss_gn(X::Matrix{Float64}, y::Ve…
+Total snapshots: 602. Utilization: 50% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.

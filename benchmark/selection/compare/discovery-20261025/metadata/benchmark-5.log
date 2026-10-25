@@ -1,0 +1,12 @@
+DONE benchmark 5
+Loading required package: parallel
+Loading required package: Matrix
+Loaded glmnet 5.1
+Warning messages:
+1: In .resolve_control(control = control, nvars = nvars, deprecated = list(thresh = if (!missing(thresh)) thresh,  :
+  Passing 'thresh' to glmnet() is deprecated. Use control = list(thresh = ...) instead.
+2: In .resolve_control(control = control, nvars = nvars, deprecated = list(thresh = if (!missing(thresh)) thresh,  :
+  Passing 'maxit' to glmnet() is deprecated. Use control = list(maxit = ...) instead.
+DONE benchmark 5 
+AUDIT_DONE 5
+WORKER_DONE benchmark 5

@@ -1,0 +1,3 @@
+Julia=1.10.12 node=b11-09.hpc.usc.edu threads=1 BLAS=LBTConfig([ILP64] libopenblas64_.so)
+CoordinateDescent=/home1/mkolar/juliaPkg/runs/20261025-cd82-sparse/source/src/CoordinateDescent.jl ProximalBase=/home1/mkolar/juliaPkg/runs/20261025-cd82-selection/depot/packages/ProximalBase/86sFe/src/ProximalBase.jl ProximalSolvers=/home1/mkolar/juliaPkg/runs/20261025-cd82-sparse/ps-source335/src/ProximalSolvers.jl
+SLOPE=1.3.1

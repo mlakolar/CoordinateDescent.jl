@@ -1,0 +1,11 @@
+scenario,comparison,paired_power_difference,mc_se
+iid,mvr minus equi,0.0,0.0
+iid,maxent minus equi,0.0,0.0
+AR(.4),mvr minus equi,0.44142857142857145,0.028240373930210325
+AR(.4),maxent minus equi,0.4117857142857143,0.028640893843876202
+AR(.8),mvr minus equi,0.002142857142857143,0.0029500565505505465
+AR(.8),maxent minus equi,0.0,0.002027559349748439
+weak AR(.4),mvr minus equi,0.045,0.011628675970652091
+weak AR(.4),maxent minus equi,0.032857142857142856,0.010198082218138406
+wide AR(.4),mvr minus equi,0.0125,0.005295118852187102
+wide AR(.4),maxent minus equi,0.003928571428571429,0.0027794881274215166

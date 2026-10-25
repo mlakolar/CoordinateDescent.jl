@@ -1,0 +1,10 @@
+rep,case,seconds,bytes,gctime
+6,slope-wide-full,0.063785369,12013560,0.0
+6,gaussian-construction,0.003981337,3784504,0.0
+6,fixed-filter,0.004667947,5276368,0.0
+6,stability-serial,0.006021022,13282824,0.0
+6,stability-threaded,0.004783134,13283320,0.0
+6,slope-single,0.000521661,633848,0.0
+6,slope-path-screened,0.00140937,2436072,0.0
+6,slope-path-full,0.003949046,7267688,0.0
+6,slope-wide-screened,0.04559757,10905160,0.0

@@ -1,0 +1,14 @@
+{
+  "new_campaign_running_union_minutes": 32.05,
+  "new_campaign_allocated_cpu_hours": 2.135,
+  "whole_issue_running_union_minutes": 66.83333333333333,
+  "whole_issue_allocated_cpu_hours": 3.7061111111111105,
+  "whole_issue_peak_allocated_cpus": 6,
+  "whole_issue_peak_allocated_memory_gb": 16,
+  "standing_allowance": {
+    "cpus": 8,
+    "memory_gb": 16,
+    "running_union_minutes": 120
+  },
+  "all_attempts_included": true
+}

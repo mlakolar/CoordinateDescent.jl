@@ -4,6 +4,9 @@ using Aqua
 
 tests = [
   "coordinate_descent",
+  "selection",
+  "slope_sparse",
+  "selection_golden",
   "naming",
   "lasso",
   "cv",
@@ -19,6 +22,7 @@ tests = [
   "group",
   "sparsegroup",
   "multiresponse",
+  "lowrank",
   "hdm",
   "varying",
   "statsapi",

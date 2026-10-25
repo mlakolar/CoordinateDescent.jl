@@ -1,0 +1,2 @@
+rep,case,engine,inner,seconds,bytes,relative_residual,design_bytes,workspace_bytes
+7,11,SLOPE.jl,1,0.057798311,4.998376e6,1.1171563951695163e-9,0,0

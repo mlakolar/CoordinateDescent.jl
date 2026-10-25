@@ -14,7 +14,10 @@ the reweighting of ProximalSolvers.jl on the losses and penalties of
 ProximalBase.jl, as does [`coordinate_descent!`](@ref), which minimizes
 `f(x) + g(x)` for a loss `f` (a [`CoordinateDifferentiableFunction`](@ref) or a
 loss that ProximalSolvers knows) and a penalty `g` that separates across
-coordinates, such as the weighted ℓ1 norm `NormL1`. The lasso solvers accept
+coordinates, such as the weighted ℓ1 norm `NormL1`. Low-rank multivariate fits use [`reduced_rank`](@ref),
+[`nuclear_regression`](@ref), [`sparse_reduced_rank`](@ref), and
+[`sparse_svd_regression`](@ref), with [`LowRankPath`](@ref) and
+[`CVLowRankPath`](@ref) for tuning. The lasso solvers accept
 real data and penalties of any type and convert them to a common floating point
 type: the element type of `X` and `y` promoted to a float, or that of the
 iterate passed to `scaled_lasso!` and `feasible_lasso!`.
@@ -30,7 +33,7 @@ using ProximalSolvers
 using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel
 using StatsAPI: StatsAPI, aic, bic, coef, coefnames, confint, deviance, dof, fit, fitted, nobs, nulldeviance, predict,
   residuals, responsename, stderror, vcov
-using Random: AbstractRNG, Xoshiro, default_rng, randperm
+using Random: AbstractRNG, Xoshiro, default_rng, randperm, randn
 using SparseArrays
 using SpecialFunctions: erfc, erfcinv
 using Statistics
@@ -83,12 +86,21 @@ export
   difference_matrix, graph_difference,
   StructuredLassoSolution, GeneralizedLassoPath, CVGeneralizedLassoPath,
   fused_lasso_path, trend_filter_path, cv_fused_lasso, cv_trend_filter,
+  # low-rank multivariate regression
+  reduced_rank, select_rank, nuclear_regression, sparse_reduced_rank,
+  sparse_svd_regression, LowRankSolution, LowRankPath, CVLowRankPath, lowrank_ic,
 
   # inference after selection, as in R's hdm
   theory_lambda,
   rlasso,
   post_lasso,
   double_selection,
+
+  # selection with error control
+  slope, slope_bh, SLOPEPath, SLOPESolution,
+  equicorrelated_s, gaussian_knockoffs, fixed_knockoffs,
+  knockoff_threshold, lasso_coefdiff, knockoff_filter, KnockoffResult,
+  complementary_pairs, stability_bound, stability_selection, StabilitySelectionResult,
 
   # varying-coefficient models (kernels from KernelSmoothing.jl)
   varying_coefficient, varying_coefficient_lasso, varying_coefficient_cv, varying_coefficient_lasso_cv
@@ -106,10 +118,16 @@ include("multiresponse.jl")
 include("cv.jl")
 include("quantile_tuning.jl")
 include("structured.jl")
+include("lowrank.jl")
+include("sparse_svd.jl")
 include("hdm.jl")
 include("statsapi.jl")
 include("formula.jl")
 include("varying.jl")
+
+include("slope.jl")
+include("knockoffs.jl")
+include("stability.jl")
 
 include("deprecated.jl")
 

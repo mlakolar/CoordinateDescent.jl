@@ -1,0 +1,180 @@
+rep=4 calls=14 Julia=1.10.12 threads=2
+ Count  Overhead File                    Line Function
+ =====  ======== ====                    ==== ========
+     2         2 @Base/reduce.jl         1292 _all
+     2         0 @Base/sort.jl            671 _sort!(v::Vector{Int64}, a::Base.…
+     2         0 @Base/sort.jl            599 send_to_end!
+     2         0 @Base/sort.jl            599 #send_to_end!#16
+     2         0 @Base/sort.jl            572 send_to_end!
+     2         0 …/src/sparseIterate.jl   178 dropzeros!
+     2         0 @Base/sort.jl            674 _sort!(v::Vector{Int64}, a::Base.…
+     2         0 @Base/sort.jl            730 _sort!
+     2         0 @Base/sort.jl           1131 _sort!(v::Vector{Int64}, a::Base.…
+     2         0 @Base/sort.jl           1063 _sort!
+     2         0 @Base/set.jl              99 in!
+     2         0 @Base/math.jl            899 min
+     2         2 @Base/floatfuncs.jl       15 signbit
+     2         0 @Base/array.jl           632 zeros
+     2         0 @Base/dict.jl            185 rehash!(h::Dict{Int64, Nothing}, …
+     2         0 …vers/src/cd/solver.jl   395 _cd_momentum!(x::ProximalBase.Spa…
+     2         0 …vers/src/cd/solver.jl   477 _momentum_refresh!
+     2         0 …rc/cd/leastsquares.jl   147 initialize!
+     2         0 …vers/src/cd/solver.jl   231 _shuffle!(order::Vector{Int64}, n…
+     2         2 …vers/src/cd/solver.jl   225 _shuffle!(order::Vector{Int64}, n…
+     2         0 …vers/src/cd/solver.jl   252 _fullpass!(x::ProximalBase.Sparse…
+     2         0 …vers/src/cd/solver.jl   470 _momentum_update!(s::ProximalSolv…
+     2         0 @Base/array.jl           388 copyto!
+     2         0 @Base/array.jl           368 copyto!
+     2         0 @Base/array.jl           376 _copyto_impl!(dest::Vector{Float6…
+     2         0 @Base/array.jl           337 unsafe_copyto!
+     2         2 @Base/cmem.jl             26 memmove
+     2         0 @Base/array.jl          1119 push!
+     2         2 @Base/array.jl          1072 _growend!
+     3         1 …rc/cd/leastsquares.jl   385 coordinate_step!
+     3         3 …rc/cd/leastsquares.jl     ? coordinate_step!
+     3         0 @Base/math.jl            909 max
+     3         3 @Base/essentials.jl      647 ifelse
+     3         0 …rc/cd/leastsquares.jl    51 ProximalSolvers.LSModel(y::Vector…
+     3         0 @Base/boot.jl            486 Array
+     3         0 @Base/reduce.jl         1288 _all
+     3         0 @Base/float.jl           623 isfinite
+     3         0 @Base/number.jl           42 iszero
+     3         3 @Base/float.jl           534 ==
+     3         0 …vers/src/cd/solver.jl   397 _cd_momentum!(x::ProximalBase.Spa…
+     4         0 @Base/sort.jl           1651 kwcall(::@NamedTuple{alg::Base.So…
+     4         0 @Base/sort.jl           1664 #_sortperm#33
+     4         0 @Base/sort.jl           1456 sort!
+     4         0 @Base/sort.jl           1463 #sort!#28
+     4         0 @Base/sort.jl            636 _sort!
+     4         0 @Base/sort.jl            697 _sort!
+     4         0 @Base/sort.jl            752 _sort!
+     4         0 …vers/src/cd/solver.jl   230 _shuffle!(order::Vector{Int64}, n…
+     4         1 @Random/src/Random.jl    255 rand
+     4         0 @Base/dict.jl            335 ht_keyindex2_shorthash!(h::Dict{I…
+     5         0 …cent/src/stability.jl   111 (::CoordinateDescent.var"#fit_hal…
+     5         0 @Base/sort.jl           1637 sortperm
+     5         0 @Base/sort.jl           1646 sortperm(A::Vector{Float64}; alg:…
+     5         5 @Base/math.jl            687 sqrt
+     5         0 @Base/boot.jl            487 Array
+     5         5 @Base/boot.jl            479 Array
+     5         0 …rc/cd/leastsquares.jl   382 coordinate_step!
+     5         0 …/src/sparseIterate.jl   261 getindex
+     5         0 …/src/sparseIterate.jl   123 _getstored
+     5         0 …vers/src/cd/solver.jl   291 _activepass!(x::ProximalBase.Spar…
+     5         0 @Base/set.jl              97 in!
+     6         6 @Base/Base.jl             37 getproperty
+     6         0 …vers/src/cd/solver.jl   244 _pass!(x::ProximalBase.SparseIter…
+     6         0 …rc/cd/leastsquares.jl   180 macro expansion
+     6         0 …e/multidimensional.jl   901 _unsafe_getindex(::IndexLinear, :…
+     6         0 @Base/abstractarray.jl   830 similar
+     6         0 @Base/array.jl           420 similar
+     6         6 @Base/boot.jl            477 Array
+     7         0 …rc/cd/leastsquares.jl   368 _sqnorm!
+     8         0 …rc/cd/leastsquares.jl   179 macro expansion
+     8         0 @Base/cartesian.jl        66 macro expansion
+     9         9 @Base/essentials.jl       14 getindex
+     9         0 …imalBase/src/utils.jl    14 shrink
+     9         0 …cent/src/stability.jl    41 _stability_pairs(pairs::Vector{Tu…
+     9         0 …e/multidimensional.jl  1699 unique
+     9         0 …e/multidimensional.jl  1699 #unique#624
+     9         0 …e/multidimensional.jl  1701 _unique_dims
+     9         0 @Base/set.jl             176 unique(itr::Vector{Int64})
+    10         0 @Base/reduce.jl         1297 _all
+    10        10 @Base/float.jl           412 /
+    10         0 …unctions/separable.jl   221 prox_entry
+    10         0 …cent/src/stability.jl    99 stability_selection(X::Matrix{Flo…
+    11         1 …vers/src/cd/models.jl   173 _visit!
+    12         0 …rc/cd/leastsquares.jl   414 coordinate_scale(m::ProximalSolve…
+    12        12 @Base/float.jl           411 *
+    13        12 @Base/simdloop.jl         75 macro expansion
+    14         0 …rc/cd/leastsquares.jl    46 ProximalSolvers.LSModel(y::Vector…
+    14         0 …rc/cd/leastsquares.jl    98 _check_finite(A::Matrix{Float64},…
+    14         0 @Base/int.jl             526 <
+    15         0 @Base/reducedim.jl      1025 all
+    15         0 @Base/reducedim.jl      1025 #all#853
+    15        15 @Base/int.jl             519 <
+    17         0 @Base/task.jl            682 task_done_hook(t::Task)
+    17         0 …eDescent/src/lasso.jl   408 lasso(X::Matrix{Float64}, y::Vect…
+    17         0 …eDescent/src/lasso.jl   183 _lsmodel
+    17         0 …eDescent/src/lasso.jl   187 #_lsmodel#23
+    17         0 …Descent/src/losses.jl    33 CDLeastSquaresLoss
+    17         0 …Descent/src/losses.jl    33 #CDLeastSquaresLoss#16
+    17         0 …rc/cd/leastsquares.jl    65 cdmodel
+    17         0 …rc/cd/leastsquares.jl    65 #cdmodel#34
+    17         0 …rc/cd/leastsquares.jl    39 LSModel
+    17        17 @Base/essentials.jl       13 getindex
+    17         0 …cent/src/stability.jl   118 stability_selection(X::Matrix{Flo…
+    17         0 …hreadingconstructs.jl   220 macro expansion
+    17         0 …hreadingconstructs.jl   167 threading_run(fun::CoordinateDesc…
+    17         0 @Base/task.jl            317 _wait(t::Task)
+    17         0 @Base/condition.jl       125 wait
+    17         0 @Base/condition.jl       130 wait(c::Base.GenericCondition{Bas…
+    18         4 @Base/array.jl           945 iterate
+    18        17 @Base/float.jl           410 -
+    20         0 …rc/cd/leastsquares.jl   383 coordinate_step!
+    21         0 …e/multidimensional.jl   918 macro expansion
+    21         0 @Base/range.jl           901 iterate
+    23         0 …rc/cd/leastsquares.jl   178 _column_dot
+    23         0 @Base/simdloop.jl         78 macro expansion
+    26        26 @Base/promotion.jl       521 ==
+    28         0 …rc/cd/leastsquares.jl   191 macro expansion
+    28        28 @Base/int.jl              87 +
+    29         0 @Base/client.jl          550 _start()
+    29         0 @Base/client.jl          316 exec_options(opts::Base.JLOptions)
+    29         0 @Base/Base.jl            495 include(mod::Module, _path::Strin…
+    29         0 @Base/loading.jl        2220 _include(mapexpr::Function, mod::…
+    29         0 @Base/loading.jl        2160 include_string(mapexpr::typeof(id…
+    29         0 @Base/boot.jl            385 eval
+    29         0 …ection/compare/run.jl    36 benchmark(rep::Int64)
+    29         0 @Base/io.jl              393 open
+    29         0 @Base/io.jl              396 open(::var"#21#37"{Int64, IOStrea…
+    29         0 …ection/compare/run.jl    38 #21
+    29         0 …ection/compare/run.jl    87 (::var"#22#38"{IOStream, Int64, I…
+    29         0 …ection/compare/run.jl     6 kwcall(::@NamedTuple{profile::Boo…
+    29         0 …ection/compare/run.jl    22 timed(io::IOStream, rep::Int64, c…
+    29         0 …rofile/src/Profile.jl    43 macro expansion
+    29         0 …ection/compare/run.jl    23 macro expansion
+    29         0 …ection/compare/run.jl    86 #35
+    29         0 …ion/compare/common.jl   113 cpss_cd
+    29         0 …ion/compare/common.jl   114 cpss_cd(X::Matrix{Float64}, y::Ve…
+    29         0 …cent/src/stability.jl    89 stability_selection
+    34         0 @Base/task.jl           1008 wait()
+    34        34 @Base/task.jl            999 poptask(W::Base.IntrusiveLinkedLi…
+    35         0 …rc/cd/leastsquares.jl   235 macro expansion
+    36         0 …rc/cd/leastsquares.jl   387 coordinate_step!
+    37        37 @Base/float.jl           409 +
+    37         0 …rc/cd/leastsquares.jl   359 _residual_axpy!
+    37         0 …rc/cd/leastsquares.jl   234 _column_axpy!
+    39         0 …e/multidimensional.jl   917 macro expansion
+    41        41 @Base/array.jl          1021 setindex!
+    44         0 …vers/src/cd/solver.jl   254 _fullpass!(x::ProximalBase.Sparse…
+    46         0 …vers/src/cd/solver.jl   240 _pass!(x::ProximalBase.SparseIter…
+    53         0 …rc/cd/leastsquares.jl   190 _column_dot
+    60         0 @Base/cartesian.jl        64 macro expansion
+    68         0 …e/multidimensional.jl   903 _unsafe_getindex(::IndexLinear, :…
+    68         0 …e/multidimensional.jl   912 _unsafe_getindex!
+    74         0 …cent/src/stability.jl   106 (::CoordinateDescent.var"#fit_hal…
+    74         0 @Base/abstractarray.jl  1290 getindex
+    74         0 …e/multidimensional.jl   889 _getindex
+    78         0 @Base/simdloop.jl         77 macro expansion
+    79         0 …rc/cd/leastsquares.jl   380 coordinate_step!
+    79         0 …rc/cd/leastsquares.jl   349 _column_dot
+    79         0 …rc/cd/leastsquares.jl   350 _column_dot
+   114         0 …vers/src/cd/solver.jl   293 _activepass!(x::ProximalBase.Spar…
+   120         0 …vers/src/cd/solver.jl   242 _pass!(x::ProximalBase.SparseIter…
+   146         0 …vers/src/cd/models.jl   172 _visit!
+   173         0 …vers/src/cd/solver.jl   385 _cd_momentum!(x::ProximalBase.Spa…
+   179         0 …eDescent/src/utils.jl   166 _solve!(x::ProximalBase.SparseIte…
+   179         0 …vers/src/cd/solver.jl   619 solve!(x::ProximalBase.SparseIter…
+   179         0 …vers/src/cd/solver.jl   315 _cd!(x::ProximalBase.SparseIterat…
+   180         0 …eDescent/src/lasso.jl   411 lasso(X::Matrix{Float64}, y::Vect…
+   180         0 …cent/src/penalties.jl   141 kwcall(::@NamedTuple{rng::Xoshiro…
+   180         0 …cent/src/penalties.jl   146 #_solve_levels!#58
+   180         0 …eDescent/src/utils.jl   164 _solve!
+   197         0 …cent/src/stability.jl   107 (::CoordinateDescent.var"#fit_hal…
+   197         0 …eDescent/src/lasso.jl   381 lasso
+   276         0 …hreadingconstructs.jl   154 (::Base.Threads.var"#1#2"{Coordin…
+   276         0 …hreadingconstructs.jl   182 #250#threadsfor_fun
+   276         0 …hreadingconstructs.jl   215 (::CoordinateDescent.var"#250#thr…
+   276         0 …cent/src/stability.jl   119 macro expansion
+Total snapshots: 326. Utilization: 90% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.

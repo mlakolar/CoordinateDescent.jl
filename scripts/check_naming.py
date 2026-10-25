@@ -7,7 +7,7 @@ import re
 # Matrix caches and scientific notation retain their conventional identifiers.
 MATHEMATICAL = {'A','B','C','D','G','H','I','J','K','L','M','N','P','Q','R','S','T','U','V','W','X','Y','Z',
                 'Ax','At','Bt','Xt','Yt','XtY','XtX','sUtY','Ws','SX','SY','Xn','Yn','SXn','SYn',
-                'Xa','Ya','SXa','SYa','Xr','Yr','posA','posR','T0','F','Sx','Sy','Sxy','Sxx','Syy','AD','Vt','AU','D_calls','Dt_calls','Dx','Dxp','Dty','Dtyp','Bpath'}
+                'Xa','Ya','SXa','SYa','Xr','Yr','Xk','posA','posR','T0','F','Sx','Sy','Sxy','Sxx','Syy','AD','Vt','AU','D_calls','Dt_calls','Dx','Dxp','Dty','Dtyp','Bpath'}
 FUNCTION = re.compile(r'^\s*(?:function\s+)([\w.!]+)\s*\(|^\s*([\w.!]+)\([^\n]*\)\s*(?:where\s+[^=]+)?=(?!=)')
 FIELD = re.compile(r'^\s*(\w+)\s*::')
 LEGACY_KEYWORDS = {'printEvery','normD','maxK','requested_maxK','epsTol','maxIter','checkEvery','bootSamples','estimSupport'}

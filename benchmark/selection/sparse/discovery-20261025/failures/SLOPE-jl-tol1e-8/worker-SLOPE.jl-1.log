@@ -1,0 +1,18 @@
+DONE SLOPE.jl timing rep=1 case=1
+DONE SLOPE.jl timing rep=1 case=2
+DONE SLOPE.jl timing rep=1 case=3
+DONE SLOPE.jl timing rep=1 case=4
+ERROR: LoadError: SLOPE.jl case5 common certificate 2.7850798059100845e-7
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] (::var"#9#11")(io::IOStream)
+   @ Main ~/juliaPkg/runs/20261025-cd82-sparse/source/benchmark/selection/sparse/run.jl:62
+ [3] open(::var"#9#11", ::String, ::Vararg{String}; kwargs::@Kwargs{})
+   @ Base ./io.jl:396
+ [4] open(::Function, ::String, ::String)
+   @ Base ./io.jl:393
+ [5] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd82-sparse/source/benchmark/selection/sparse/run.jl:38
+in expression starting at /home1/mkolar/juliaPkg/runs/20261025-cd82-sparse/source/benchmark/selection/sparse/run.jl:38
+srun: error: b11-09: task 0: Exited with exit code 1
