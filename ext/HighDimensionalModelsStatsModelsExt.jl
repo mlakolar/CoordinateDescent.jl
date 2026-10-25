@@ -1,7 +1,7 @@
-module CoordinateDescentStatsModelsExt
+module HighDimensionalModelsStatsModelsExt
 
-using CoordinateDescent
-using CoordinateDescent: FormulaFit
+using HighDimensionalModels
+using HighDimensionalModels: FormulaFit
 using StatsModels
 using StatsModels: FormulaTerm, InterceptTerm, Tables, apply_schema, modelcols, schema, termvars, width
 using StatsAPI: StatsAPI, StatisticalModel
@@ -109,7 +109,7 @@ function StatsAPI.fit(::Type{GroupLassoPath}, f::FormulaTerm, data, args...; con
 end
 
 for fn in (:lasso, :sqrt_lasso, :adaptive_lasso)
-  @eval function CoordinateDescent.$fn(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
+  @eval function HighDimensionalModels.$fn(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
                                        weights = nothing, offset = nothing, kwargs...)
     _checkkeywords(kwargs)
     _formulafit(f, data; contrasts, weights, offset) do X, y, intercept, groups, w, o
@@ -118,7 +118,7 @@ for fn in (:lasso, :sqrt_lasso, :adaptive_lasso)
   end
 end
 
-function CoordinateDescent.glm_lasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
+function HighDimensionalModels.glm_lasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
                                     weights = nothing, offset = nothing, kwargs...)
   _checkkeywords(kwargs)
   _formulafit(f, data; contrasts, weights, offset) do X, y, intercept, groups, w, o
@@ -136,7 +136,7 @@ function StatsAPI.fit(::Type{SparseGroupLassoPath}, f::FormulaTerm, data, args..
   end
 end
 
-function CoordinateDescent.sparse_group_lasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
+function HighDimensionalModels.sparse_group_lasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
                                             groups = nothing, kwargs...)
   _checkkeywords(kwargs)
   _formulafit(f, data; contrasts) do X, y, intercept, termgroups, w, o
@@ -144,7 +144,7 @@ function CoordinateDescent.sparse_group_lasso(f::FormulaTerm, data, λ::Real, ar
   end
 end
 
-function CoordinateDescent.group_lasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
+function HighDimensionalModels.group_lasso(f::FormulaTerm, data, λ::Real, args...; contrasts = Dict{Symbol, Any}(),
                                       groups = nothing, kwargs...)
   _checkkeywords(kwargs)
   _formulafit(f, data; contrasts) do X, y, intercept, termgroups, w, o
@@ -152,7 +152,7 @@ function CoordinateDescent.group_lasso(f::FormulaTerm, data, λ::Real, args...; 
   end
 end
 
-function CoordinateDescent.rlasso(f::FormulaTerm, data, args...; contrasts = Dict{Symbol, Any}(), kwargs...)
+function HighDimensionalModels.rlasso(f::FormulaTerm, data, args...; contrasts = Dict{Symbol, Any}(), kwargs...)
   _checkkeywords(kwargs)
   _formulafit(f, data; contrasts) do X, y, intercept, groups, w, o
     rlasso(X, y, args...; intercept, kwargs...)

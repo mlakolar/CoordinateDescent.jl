@@ -1,5 +1,5 @@
 # Run with --depwarn=yes even when the canonical suite uses --depwarn=error.
-using CoordinateDescent, ProximalBase, ProximalSolvers, Test, Random, LinearAlgebra
+using HighDimensionalModels, ProximalBase, ProximalSolvers, Test, Random, LinearAlgebra
 
 @testset "deprecated names execute their forwards" begin
   X = randn(Xoshiro(2), 40, 4)
@@ -83,25 +83,25 @@ end
 struct LegacyLoss <: CoordinateDifferentiableFunction
   c::Vector{Float64}
 end
-CoordinateDescent.initialize!(::LegacyLoss, x) = nothing
-CoordinateDescent.gradient(f::LegacyLoss, x, k) = x[k] - f.c[k]
-CoordinateDescent.numCoordinates(f::LegacyLoss) = length(f.c)
-function CoordinateDescent.descendCoordinate!(f::LegacyLoss, g, x, k)
+HighDimensionalModels.initialize!(::LegacyLoss, x) = nothing
+HighDimensionalModels.gradient(f::LegacyLoss, x, k) = x[k] - f.c[k]
+HighDimensionalModels.numCoordinates(f::LegacyLoss) = length(f.c)
+function HighDimensionalModels.descendCoordinate!(f::LegacyLoss, g, x, k)
   old = x[k]
   x[k] = f.c[k]
   prox_coordinate!(x, g, k, 1.) - old
 end
-CoordinateDescent.coordinateScale(::LegacyLoss, k) = 1.
-CoordinateDescent.responseScale(::LegacyLoss) = 1.
-function CoordinateDescent.fullGradient!(grad, f::LegacyLoss, x)
+HighDimensionalModels.coordinateScale(::LegacyLoss, k) = 1.
+HighDimensionalModels.responseScale(::LegacyLoss) = 1.
+function HighDimensionalModels.fullGradient!(grad, f::LegacyLoss, x)
   grad .= Vector(x) .- f.c
 end
 @testset "deprecated interface bindings" begin
   for (old, new) in ((:numCoordinates, :num_coordinates), (:descendCoordinate!, :descend_coordinate!),
                      (:coordinateScale, :coordinate_scale), (:responseScale, :response_scale),
                      (:fullGradient!, :full_gradient!))
-    @test Base.isdeprecated(CoordinateDescent, old)
-    @test getfield(CoordinateDescent, old) === getfield(CoordinateDescent, new)
+    @test Base.isdeprecated(HighDimensionalModels, old)
+    @test getfield(HighDimensionalModels, old) === getfield(HighDimensionalModels, new)
   end
   x = SparseIterate(3)
   r = coordinate_descent!(x, LegacyLoss([2., -3., 0.1]), NormL1(1.), CDOptions(; warm_start=false))

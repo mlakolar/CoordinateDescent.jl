@@ -2,7 +2,7 @@ module LassoTest
 
 const  NUMBER_REPEAT = 1
 
-using CoordinateDescent
+using HighDimensionalModels
 using Test
 using ProximalBase
 using ProximalSolvers
@@ -855,7 +855,7 @@ end
   # largest also column 4, and the four largest, with the tie at 1, all
   X = Matrix(1.0I, 5, 5)
   y = [3.0, -1.0, -3.0, 2.0, 1.0]
-  find = CoordinateDescent._find_largest_correlations
+  find = HighDimensionalModels._find_largest_correlations
   @test find(X, y, 1) == find(X, y, 2) == [true, false, true, false, false]
   @test find(X, y, 3) == [true, false, true, true, false]
   @test find(X, y, 4) == trues(5)
@@ -1009,15 +1009,15 @@ end
   Xs[:, 3] .= 2.0                                     # a constant column
   Xs[:, 5] .= 0.0                                     # an empty one, which stores zeros
   Ys = Matrix(Xs)[:, 1:s] * ones(s) + 0.5 * randn(rng, n)
-  @test CoordinateDescent._design(Xs) === Xs
-  @test CoordinateDescent._design(transpose(sparse(Matrix(Xs)'))) isa SparseMatrixCSC
-  @test CoordinateDescent._column_means(Xs) ≈ CoordinateDescent._column_means(Matrix(Xs))
-  @test CoordinateDescent._column_means(Xs)[[3, 5]] == [2.0, 0.0]          # exactly, as for dense columns
+  @test HighDimensionalModels._design(Xs) === Xs
+  @test HighDimensionalModels._design(transpose(sparse(Matrix(Xs)'))) isa SparseMatrixCSC
+  @test HighDimensionalModels._column_means(Xs) ≈ HighDimensionalModels._column_means(Matrix(Xs))
+  @test HighDimensionalModels._column_means(Xs)[[3, 5]] == [2.0, 0.0]          # exactly, as for dense columns
   for intercept in (false, true)
-    @test CoordinateDescent._loadings(Xs, intercept) ≈ CoordinateDescent._loadings(Matrix(Xs), intercept)
+    @test HighDimensionalModels._loadings(Xs, intercept) ≈ HighDimensionalModels._loadings(Matrix(Xs), intercept)
   end
-  e, xbar = randn(rng, n), CoordinateDescent._column_means(Matrix(Xs))
-  @test CoordinateDescent._get_loadings!(zeros(p), Xs, e, xbar) ≈ CoordinateDescent._get_loadings!(zeros(p), Matrix(Xs), e, xbar)
+  e, xbar = randn(rng, n), HighDimensionalModels._column_means(Matrix(Xs))
+  @test HighDimensionalModels._get_loadings!(zeros(p), Xs, e, xbar) ≈ HighDimensionalModels._get_loadings!(zeros(p), Matrix(Xs), e, xbar)
   @test close(lasso(Xs, Ys, λ, opt; intercept = true, standardize_x = true),
               lasso(Matrix(Xs), Ys, λ, opt; intercept = true, standardize_x = true))
   @test close(feasible_lasso!(SparseIterate(p), Xs, Ys, λ, IterLassoOptions(; options_cd = opt); intercept = true),
@@ -1132,14 +1132,14 @@ end
 
   # :auto takes the Gram matrix for a path on a dense X with n ≥ p and
   # p ≤ 2000, the residuals otherwise and at one λ
-  @test CoordinateDescent._usegram(:auto, X, true)
-  @test CoordinateDescent._usegram(:auto, X[1:p, :], true)                # n = p
-  @test !CoordinateDescent._usegram(:auto, X[1:p-1, :], true)             # n < p
-  @test !CoordinateDescent._usegram(:auto, X, false)                      # one λ
-  @test !CoordinateDescent._usegram(:auto, sparse(X), true)
-  @test CoordinateDescent._usegram(:auto, falses(2000, 2000), true)
-  @test !CoordinateDescent._usegram(:auto, falses(3000, 2001), true)      # p > 2000
-  @test CoordinateDescent._usegram(true, sparse(X), false) && !CoordinateDescent._usegram(false, X, true)
+  @test HighDimensionalModels._usegram(:auto, X, true)
+  @test HighDimensionalModels._usegram(:auto, X[1:p, :], true)                # n = p
+  @test !HighDimensionalModels._usegram(:auto, X[1:p-1, :], true)             # n < p
+  @test !HighDimensionalModels._usegram(:auto, X, false)                      # one λ
+  @test !HighDimensionalModels._usegram(:auto, sparse(X), true)
+  @test HighDimensionalModels._usegram(:auto, falses(2000, 2000), true)
+  @test !HighDimensionalModels._usegram(:auto, falses(3000, 2001), true)      # p > 2000
+  @test HighDimensionalModels._usegram(true, sparse(X), false) && !HighDimensionalModels._usegram(false, X, true)
   @test_throws ArgumentError lasso(X, Y, λ; gram = :yes)
   a, b = lasso(X, Y, λ, opt), lasso(X, Y, λ, opt; gram = false)
   @test a.x == b.x && a.iterations == b.iterations
@@ -1150,15 +1150,15 @@ end
   # from a sparse X and in Float32
   xbar = vec(mean(X; dims = 1))
   ref(X, xbar) = (X .- xbar')' * (X .- xbar') / size(X, 1)
-  @test CoordinateDescent._gram(X, xbar) ≈ ref(X, xbar)
-  @test CoordinateDescent._gram(X, zeros(p)) ≈ X'X / n
-  @test issymmetric(CoordinateDescent._gram(X, xbar))
+  @test HighDimensionalModels._gram(X, xbar) ≈ ref(X, xbar)
+  @test HighDimensionalModels._gram(X, zeros(p)) ≈ X'X / n
+  @test issymmetric(HighDimensionalModels._gram(X, xbar))
   Xl = randn(rng, 30_000, 40) .+ 1.0                                      # 2 blocks of 26214 rows
   xl = vec(mean(Xl; dims = 1))
-  @test CoordinateDescent._gram(Xl, xl) ≈ ref(Xl, xl)
-  @test CoordinateDescent._gram(sparse(X), xbar) ≈ ref(X, xbar)
-  @test CoordinateDescent._gram(Float32.(X), Float32.(xbar)) ≈ Float32.(ref(X, xbar)) rtol = 1e-4
-  @test CoordinateDescent._gram(big.(X[1:20, 1:3]), big.(xbar[1:3])) ≈ ref(X[1:20, 1:3], xbar[1:3])
+  @test HighDimensionalModels._gram(Xl, xl) ≈ ref(Xl, xl)
+  @test HighDimensionalModels._gram(sparse(X), xbar) ≈ ref(X, xbar)
+  @test HighDimensionalModels._gram(Float32.(X), Float32.(xbar)) ≈ Float32.(ref(X, xbar)) rtol = 1e-4
+  @test HighDimensionalModels._gram(big.(X[1:20, 1:3]), big.(xbar[1:3])) ≈ ref(X[1:20, 1:3], xbar[1:3])
 
   # a sparse X on the Gram matrix, and NaN in the data
   Xs = sprandn(rng, n, p, 0.3)
@@ -1238,12 +1238,12 @@ end
 
   # the weighted loadings and Gram matrix, also of a sparse X
   xw = X' * w / sum(w)
-  @test CoordinateDescent._loadings(X, true, w) ≈ sqrt.(vec(sum(w .* (X .- xw') .^ 2; dims = 1)) / sum(w))
-  @test CoordinateDescent._loadings(sparse(X), true, w) ≈ CoordinateDescent._loadings(X, true, w)
+  @test HighDimensionalModels._loadings(X, true, w) ≈ sqrt.(vec(sum(w .* (X .- xw') .^ 2; dims = 1)) / sum(w))
+  @test HighDimensionalModels._loadings(sparse(X), true, w) ≈ HighDimensionalModels._loadings(X, true, w)
   Gw = (X .- xw')' * (w .* (X .- xw')) / sum(w)
-  @test CoordinateDescent._gram(X, xw, w) ≈ Gw
-  @test CoordinateDescent._gram(sparse(X), xw, w) ≈ Gw
-  @test CoordinateDescent._column_means(X, w) ≈ xw
+  @test HighDimensionalModels._gram(X, xw, w) ≈ Gw
+  @test HighDimensionalModels._gram(sparse(X), xw, w) ≈ Gw
+  @test HighDimensionalModels._column_means(X, w) ≈ xw
 
   # checks of the weights and the offset
   @test_throws ArgumentError lasso(X, Y, λ; weights = -w)

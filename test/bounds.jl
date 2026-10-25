@@ -1,6 +1,6 @@
 module BoundsTest
 
-using CoordinateDescent, ProximalBase, ProximalSolvers
+using HighDimensionalModels, ProximalBase, ProximalSolvers
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 logistic(z) = 1 / (1 + exp(-z))

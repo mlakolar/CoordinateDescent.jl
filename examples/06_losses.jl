@@ -21,7 +21,7 @@
 #
 #     julia --project=examples examples/06_losses.jl
 
-using CoordinateDescent, ProximalBase, ProximalSolvers
+using HighDimensionalModels, ProximalBase, ProximalSolvers
 using LinearAlgebra, Printf, Random, Statistics
 
 Random.seed!(6)

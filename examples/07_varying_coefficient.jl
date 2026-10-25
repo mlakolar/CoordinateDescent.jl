@@ -10,7 +10,7 @@
 #
 #     julia --project=examples examples/07_varying_coefficient.jl
 
-using CoordinateDescent
+using HighDimensionalModels
 using KernelSmoothing: EpanechnikovKernel, GaussianKernel
 using LinearAlgebra, Printf, Random, Statistics
 

@@ -1,6 +1,6 @@
 module StatsAPIEstimatorsTest
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 logistic(z) = 1 / (1 + exp(-z))
@@ -42,7 +42,7 @@ logistic(z) = 1 / (1 + exp(-z))
     sh = glm_lasso(X, X * β .+ randn(rng, n), 0.05, ProximalBase.Huber(1.0))
     @test predict(sh, X) ≈ predict(sh, X; type = :link)
     # a loss whose mean is not known has only the link scale
-    @test_throws ArgumentError CoordinateDescent._inverselink(ProximalBase.SquaredHinge(), 0.0)
+    @test_throws ArgumentError HighDimensionalModels._inverselink(ProximalBase.SquaredHinge(), 0.0)
 
     # gaptol = 0, for the comparison of two runs with different coordinate orders below
     exact = CDOptions(; gaptol = 0)

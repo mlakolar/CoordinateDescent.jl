@@ -15,7 +15,7 @@ below adapts to it.
 A loss is a subtype of [`CoordinateDifferentiableFunction`](@ref) that keeps whatever
 makes an update cheap, such as the residuals or the linear predictor, and
 extends these functions, which are not exported (write
-`function CoordinateDescent.gradient(f::MyLoss, x, k)` and so on):
+`function HighDimensionalModels.gradient(f::MyLoss, x, k)` and so on):
 
 | function | |
 |---|---|
@@ -32,17 +32,17 @@ quadratic upper bound of `f` along the coordinate plus the penalty, which is a
 proximal step:
 
 ```julia
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 
 struct MyLoss <: CoordinateDifferentiableFunction
   # the data, and a cache such as the linear predictor η = Xx
 end
 
-function CoordinateDescent.descend_coordinate!(f::MyLoss, g, x, k)
+function HighDimensionalModels.descend_coordinate!(f::MyLoss, g, x, k)
   a = curvature(f, k)                     # an upper bound on ∂²f/∂xₖ² along the coordinate
   old = x[k]
   # the proximal operator of g on entry k with step 1/a
-  h = prox_entry(g, old - CoordinateDescent.gradient(f, x, k) / a, k, 1 / a) - old
+  h = prox_entry(g, old - HighDimensionalModels.gradient(f, x, k) / a, k, 1 / a) - old
   if !iszero(h)
     x[k] = old + h
     update_cache!(f, k, h)                # for example η .+= h .* X[:, k]
