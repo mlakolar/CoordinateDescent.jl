@@ -8,6 +8,7 @@ refs=readdlm("reference/calibration.csv",',',Any;skipstart=1)
 @testset "independent R calibration and quantile CV reference" begin
  for row in eachrow(refs)
   tau=Float64(row[1]);standardized=lowercase(string(row[2]))=="true";key="$(tau)-$(standardized ? "TRUE" : "FALSE")"
+  println("REFERENCE tau=$tau standardized=$standardized")
   B=reshape(loadbin("$key-coef"),6,3);E=reshape(loadbin("$key-fold-errors"),3,3)
   cv=CVQuantileLassoPath(X,y,ls;tau,standardize_x=standardized,penalty_factors=w,offset=o,folds=fl,threads=false,tol=2e-6)
   @test maximum(abs.(coef(cv.path).-B)) <= 2e-5

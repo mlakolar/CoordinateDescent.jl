@@ -7,16 +7,22 @@ U=matrix(runif(n*128),n);w=c(.7,1,1.2,.8,2);ls=c(.3,.15,.05)
 wb=function(x,name)writeBin(as.double(x),file.path('reference',paste0(name,'.bin')),size=8,endian='little')
 wb(X,'X');wb(y,'y');wb(o,'offset');wb(U,'uniforms')
 results=list()
-for(tau in c(.2,.5,.8)) for(std in c(FALSE,TRUE)) {
+fit.dual=rq.fit.lasso
+body(fit.dual)=substitute({ans=ORIGINAL;ans$dual=z$wn[2L*N+seq_len(n)]-(1-tau);ans},list(ORIGINAL=body(fit.dual)))
+taus=if('regular' %in% commandArgs(TRUE)) c(.23,.51,.79) else c(.2,.5,.8)
+for(tau in taus) for(std in c(FALSE,TRUE)) {
  key=paste(tau,std,sep='-')
- fit=function(idx) {
+ fit=function(idx,dual=FALSE) {
   A=X[idx,,drop=FALSE];effective=w
   if(std)effective=effective*sqrt(colMeans(sweep(A,2,colMeans(A),'-')^2))
-  vapply(ls,function(lambda)as.numeric(rq.fit.lasso(cbind(1,A),y[idx]-o[idx],tau=tau,lambda=c(0,2*length(idx)*lambda*effective),eps=1e-9)$coefficients),numeric(p+1))
+  ans=lapply(ls,function(lambda)fit.dual(cbind(1,A),y[idx]-o[idx],tau=tau,lambda=c(0,2*length(idx)*lambda*effective),eps=1e-9))
+  B=vapply(ans,function(z)as.numeric(z$coefficients),numeric(p+1))
+  if(dual)list(B=B,U=vapply(ans,function(z)as.numeric(z$dual),numeric(length(idx)))) else B
  }
  B=fit(1:n);E=matrix(NA_real_,3,length(ls))
  for(k in 1:3) {
-  tr=which(fl!=k);te=which(fl==k);BF=fit(tr)
+  tr=which(fl!=k);te=which(fl==k);ans=fit(tr,TRUE);BF=ans$B
+  wb(BF,paste0(key,'-fold',k,'-coef'));wb(ans$U,paste0(key,'-fold',k,'-dual'))
   R=matrix(y[te]-o[te],length(te),length(ls))-cbind(1,X[te,,drop=FALSE])%*%BF
   E[k,]=colMeans(pmax(tau*R,(tau-1)*R))
  }
