@@ -7,13 +7,13 @@ w=[.7,1.,1.2,.8,2.];fl=[i%3+1 for i in 1:83];ls=[.3,.15,.05]
 refs=readdlm("reference/calibration.csv",',',Any;skipstart=1)
 @testset "independent R calibration and quantile CV reference" begin
  for row in eachrow(refs)
-  tau=Float64(row[1]);std=lowercase(string(row[2]))=="true";key="$(tau)-$(std ? "TRUE" : "FALSE")"
+  tau=Float64(row[1]);standardized=lowercase(string(row[2]))=="true";key="$(tau)-$(standardized ? "TRUE" : "FALSE")"
   B=reshape(loadbin("$key-coef"),6,3);E=reshape(loadbin("$key-fold-errors"),3,3)
-  cv=CVQuantileLassoPath(X,y,ls;tau,standardize_x=std,penalty_factors=w,offset=o,folds=fl,threads=false,tol=2e-6)
+  cv=CVQuantileLassoPath(X,y,ls;tau,standardize_x=standardized,penalty_factors=w,offset=o,folds=fl,threads=false,tol=2e-6)
   @test maximum(abs.(coef(cv.path).-B)) <= 2e-5
   @test maximum(abs.(cv.fold_errors.-E)) <= 2e-6
   @test cv.λmin==ls[argmin(vec(sum(E .* [27,28,28];dims=1)))]
-  effective=std ? w .* vec(sqrt.(mean((X.-mean(X;dims=1)).^2;dims=1))) : w
+  effective=standardized ? w .* vec(sqrt.(mean((X.-mean(X;dims=1)).^2;dims=1))) : w
   stats=HDM._quantile_score_maxima(X,effective,tau,true,U)
   @test 2quantile(stats,.9) ≈ Float64(row[3]) atol=1e-12
  end
