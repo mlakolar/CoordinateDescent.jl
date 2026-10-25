@@ -1,0 +1,2 @@
+# Preserve measured evidence and collapse generated data in review.
+results/** -text -whitespace linguist-generated=true

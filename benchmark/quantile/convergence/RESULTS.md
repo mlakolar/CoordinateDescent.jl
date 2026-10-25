@@ -43,5 +43,7 @@ retained. This stage used 17m14s of running allocation time, at most 2 CPUs /
 [Full primary table](results/discovery-2026-10-25/gap-main/summary/TABLE.md),
 [wide control](results/discovery-2026-10-25/gap-main/tight-reference/summary/TABLE.md),
 [recipe](README.md) and [run record](results/discovery-2026-10-25/run-record.json).
-Next work is pivotal calibration, CV and inference; full parametric breakpoints
-remain deferred.
+The subsequent [calibration and CV implementation](../tuning/RESULTS.md) is
+tracked separately from these measurements. Inference is now
+[issue #104](https://github.com/mlakolar/HighDimensionalModels.jl/issues/104);
+full parametric breakpoints remain deferred.
