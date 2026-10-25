@@ -26,6 +26,8 @@ losses with offsets and training-fold standardization.
 Final two-thread runs pass all 160 tuning assertions with the new backend and
 136 with the older backend, whose tests check its documented eligibility
 fallback. Warnings and the earlier failed compatibility assertions are retained.
+After integrating current master and preserving its structured APIs, all 775
+quantile API and tuning assertions pass again on Discovery.
 
 The first R fixture exposed nonunique exact solutions: 54 fold/penalty pairs
 agree on training objectives within 2.1e−12 and satisfy raw optimality checks,
