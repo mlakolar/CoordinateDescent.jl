@@ -1,5 +1,11 @@
 # Low-rank regression: Discovery validation and performance
 
+The subsequent [Python/Julia/R optimization comparison](optimization/results/discovery-20261025/README.md)
+uses five independent inputs on six designs, including wide, ill-conditioned,
+and rank-deficient cases. It compares the same fixed objectives, including
+generic proximal algorithms, and retains accuracy failures and profiler data.
+It is separate from the package-only baseline below.
+
 Run timing and profiling on Discovery. The Slurm launcher requests four CPUs,
 12 GB, and one hour; it uses GNU Parallel and exclusive single-CPU `srun`
 steps, with one Julia/BLAS thread per independent replication.

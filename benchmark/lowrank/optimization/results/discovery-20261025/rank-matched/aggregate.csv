@@ -1,0 +1,3 @@
+case,solver,median_ms,min_rep_ms,max_rep_ms,certified_replications
+medium,pa_rank_oracle,14.024287,13.45613,17.588297999999998,5
+wide,pa_rank_oracle,525.329804,485.75091399999997,559.444236,5
