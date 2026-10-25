@@ -14,7 +14,8 @@ warm-up. Compilation and profiles are excluded from timing. Raw CSVs report
 seconds, allocated bytes, rank and convergence; they retain every round.
 
 ```sh
-julia --project=benchmark/lowrank -e 'using Pkg; Pkg.instantiate()'
+srun --account=mkolar_1314 --partition=main --cpus-per-task=1 --mem=4G --time=00:15:00 \
+  julia --project=benchmark/lowrank -e 'using Pkg; Pkg.instantiate()'
 export JULIA=/path/to/julia
 sbatch --parsable --comment=YOUR_UNIQUE_RUN_ID benchmark/lowrank/discovery.sbatch
 ```
@@ -22,6 +23,8 @@ sbatch --parsable --comment=YOUR_UNIQUE_RUN_ID benchmark/lowrank/discovery.sbatc
 Julia 1.10 ignores `[sources]`; develop this checkout and add the unregistered
 ProximalSolvers and ProximalBase dependencies as in the repository CI setup.
 Pin dependency revisions and save the resolved manifest for a measured run.
+Run all Julia preparation, tests, oracles and compilation inside Slurm
+allocations as well; local editing and orchestration do not require Julia.
 
 `oracle.jl generate DIR` creates shared deterministic inputs.
 `Rscript oracle.R DIR` requires rrpack and writes independent R fits.
@@ -42,4 +45,25 @@ The coefficient nuclear penalty has independent orthonormal closed-form and
 subgradient-certificate tests in `test/lowrank.jl`; rrpack's fitted-value
 adaptive nuclear penalty solves a different objective.
 
-Results of the implementation run are recorded below after validation.
+## Validated Discovery baseline
+
+Run `20261025T0910Z-cd81` on 25 October 2026 used Julia 1.13.2, an AMD EPYC
+7513 core per worker, and one Julia/BLAS thread. Median milliseconds over
+five independent data replications (each the median of three timing rounds):
+
+| q | fixed rank | nuclear | nuclear path, 5 levels | row-sparse | sparse SVD, 8 levels |
+|---:|---:|---:|---:|---:|---:|
+| 10 | 1.58 | 1.97 | 5.62 | 1.70 | 5.97 |
+| 100 | 2.46 | 21.0 | 82.3 | 2.93 | 26.6 |
+| 1000 | 8.43 | 113 | 447 | 12.3 | 192 |
+
+All 225 timed fits reported convergence. Each method/size has five separate
+profiles, 75 in total. At q = 1000 the nuclear proximal SVD accounts for
+about 63% of self samples; sparse SVD spends more time in allocation (28%)
+and repeated SVDs (16%). No performance measurements ran on the laptop.
+
+[Full results](results/discovery-20261025/README.md) include replication ranges,
+allocated bytes, raw timing CSVs, all profiles, validation counts, pinned
+source/dependency references, and scheduler outcomes. Both Julia versions
+passed package validation, and the final API/golden checks passed 153 tests
+per version.

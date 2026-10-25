@@ -127,7 +127,7 @@ rrpack 0.1-14 interchanges its BIC/BICP selection labels inside `rssvd.eea`.
 The oracle harness aligns the actual BIC column explicitly; the methods here
 use the criterion names according to the formulas above.
 
-The [Discovery harness](../../benchmark/lowrank/README.md) records replicated
+The [Discovery harness](https://github.com/mlakolar/CoordinateDescent.jl/tree/master/benchmark/lowrank) records replicated
 timing, profiles and independent rrpack comparisons. rrpack uses unscaled
 squared losses: its penalty is `n * λ` for the objectives here. Its adaptive
 nuclear-norm estimator shrinks the fitted-value singular values, so it is
