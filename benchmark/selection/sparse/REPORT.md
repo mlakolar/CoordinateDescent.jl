@@ -218,9 +218,17 @@ coefficient outputs remain at
 The final accounting remains within the approved shared allowance: at most
 158.1 running-union minutes of 180 and a conservative 11.4 allocated CPU-hours
 of 16, including coordinated solver work and retries. Current-phase allocations
-never exceed 8 CPUs or 16 GB. Hosted CI at source head `8a6589c` passes all
-platform tests, docs and examples; patch coverage passes. Codecov's project
-gate remains red (99.75% versus 99.88%) against stale base `c408831`, three
-master commits behind, while explicitly reporting all modified coverable lines
-covered. No coverage thresholds were reduced. The PR remains draft for review
-with its companion dependency.
+never exceed 8 CPUs or 16 GB. At historical source head `8a6589c`, platform
+tests, docs, examples and patch coverage passed, while the project coverage
+gate reported 99.75% versus an older 99.88% baseline. Although Codecov's summary
+said modified coverable lines were tested, inspection of its raw report found
+untested Gaussian/fixed knockoff wrapper routes and the threaded CPSS branch.
+The latter had not run in hosted CI because Julia used one thread.
+
+After solver PR #90 merged, the temporary companion exception was removed;
+the bootstrap again matches normal sibling-master policy. The integration
+follow-up adds direct public-wrapper construction tests and configures two
+Julia threads in CI so the existing serial/threaded CPSS agreement test
+exercises both branches. No coverage thresholds were reduced. These changes
+do not modify the numerical solver or the benchmark inputs. PR #84 remains
+draft for its model/statistical review.
