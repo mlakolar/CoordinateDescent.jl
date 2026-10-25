@@ -72,3 +72,9 @@ Report paired input ratios, three-round medians, profiles, allocations and
 fresh-process baseline/peak RSS. Require a useful repeatable public-API gain
 without broad regression before enabling the internal default. No tolerance
 relaxation or TV-prox replacement is part of this candidate. Do not merge.
+
+The frozen holdout is complete. [Final evidence](results/discovery-20261026/RESULTS.md)
+records all27 inputs/81 processes and supports the automatic supported-order
+product route. Keep all tolerances and fallback behavior. The unchanged TV
+control has a reversed replication; the report preserves it. The conditional
+deadline recovery was a no-op. Do not merge before human review.

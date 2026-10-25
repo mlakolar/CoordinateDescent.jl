@@ -1,0 +1,6 @@
+{
+  "original_job": "13448193",
+  "missing_process_stages": [],
+  "failed_process_stages": [],
+  "interpretation": "Only absent completion receipts are eligible for deadline recovery; deterministic completed failures are preserved for diagnosis. Interrupted process stages are invalid for joint timing/memory provenance; partial files are retained separately."
+}

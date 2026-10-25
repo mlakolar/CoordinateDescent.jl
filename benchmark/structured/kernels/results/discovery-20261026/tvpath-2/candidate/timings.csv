@@ -1,0 +1,4 @@
+variant,case,rep,round,seconds,bytes,iterations,converged,primal_residual,dual_residual
+candidate,tvpath,2,1,0.022732244,31286976,50,true,0.0,0.0
+candidate,tvpath,2,2,0.022154629,31286752,50,true,0.0,0.0
+candidate,tvpath,2,3,0.01765983,31286752,50,true,0.0,0.0

@@ -1,0 +1,6 @@
+iterations = [340]
+df = [849]
+dual_residual = [1.1446993137355349e-7]
+converged = [true]
+objectives = [0.019070617890208665]
+primal_residual = [1.259438040568627e-5]

@@ -1,0 +1,17 @@
+current_after_timing = 499335168
+peak_after_timing = 0x1f3d5000
+rep = 1
+cpu_profile_delay = 0.001
+warmed_current_rss = 500342784
+julia_threads = 1
+case = "small"
+whole_worker_peak_rss = 0x26460000
+cpu = "AMD EPYC 7513 32-Core Processor"
+blas_threads = 1
+variant = "candidate"
+julia = "1.13.2"
+y_sha256 = "391f8830af6c151e0e84f3c726d5ecbe7a8110509d9355dda3abb28729159f4a"
+source_sha256 = "7b7d9c9e23e3c916f88393cc23ac4f8478d5a21d6c51002f6aa2f7e1c0541b05"
+warmed_peak_rss = 0x1dd2a000
+x_sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+blas = "LBTConfig([ILP64] libopenblas64_.so)"
