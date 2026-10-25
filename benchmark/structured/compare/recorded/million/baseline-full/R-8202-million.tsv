@@ -1,0 +1,10 @@
+seed	case	solver	round	seconds	converged	iterations	objective	worker_hwm_bytes	batch	status
+8202	million-k0	glmgen	1	0.989	TRUE	0	NA	870412288	1	ok
+8202	million-k0	glmgen	2	1.038	TRUE	0	NA	900444160	1	ok
+8202	million-k0	glmgen	3	0.913	TRUE	0	NA	900444160	1	ok
+8202	million-k1	glmgen-1e8	1	28.962	TRUE	323	NA	1318838272	1	ok
+8202	million-k1	glmgen-1e8	2	30.667	TRUE	323	NA	1318838272	1	ok
+8202	million-k1	glmgen-1e8	3	28.781	TRUE	323	NA	1318838272	1	ok
+8202	million-k2	glmgen	1	211.837	TRUE	2474	NA	1547063296	1	ok
+8202	million-k2	glmgen	2	202.165	TRUE	2474	NA	1555062784	1	ok
+8202	million-k2	glmgen	3	206.148	TRUE	2474	NA	1555062784	1	ok

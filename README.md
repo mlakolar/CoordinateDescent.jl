@@ -24,6 +24,8 @@ Estimators:
 * SLOPE with BH weights and screened paths; Gaussian and fixed-X knockoff+;
   complementary-pairs stability selection ([guarantees and examples](https://mlakolar.github.io/CoordinateDescent.jl/dev/selection/))
 * Group lasso, and the multi-response lasso
+* Fused lasso regression, trend filtering and the graph/generalized lasso,
+  with paths, cross-validation and generalized-lasso degrees of freedom
 * Square-root lasso
 * Scaled lasso, from the data or from sufficient statistics (`X'X/n`, `X'y/n`,
   `y'y/n`, or a covariance matrix, one variable on the others)
@@ -86,6 +88,11 @@ cv = CVGLMLassoPath(X, yb)                       # λ by cross-validation of the
 sol = group_lasso(X, y, 0.1, [1:5, 6:10, 11:50])  # the group lasso, with orthonormalized groups
 sol = sparse_group_lasso(X, y, 0.1, [1:5, 6:10, 11:50])  # groups, and variables within them
 sol = multi_lasso(X, [y y.^2], 0.1)               # the same predictors for every response
+sol = fused_lasso(X, y, 0.02, 0.1)               # sparsity and adjacent differences
+sol = trend_filter(y, 0.01; order=1)              # piecewise linear signal fit
+D = graph_difference(p, [(j,j+1) for j in 1:p-1])
+path = GeneralizedLassoPath(X, y, D, [0.2, 0.1, 0.03])
+bic(path), dof(path)
 ```
 
 With StatsModels.jl loaded, the estimators also take a formula and a table,

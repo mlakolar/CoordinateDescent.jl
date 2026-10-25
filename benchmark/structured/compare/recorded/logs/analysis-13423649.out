@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home1/mkolar/juliaPkg/runs/20261025-cd80-competitive/harness/summarize.py", line 128, in <module>
+    a=p.parse_args(); summarize(a.root,a.output)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home1/mkolar/juliaPkg/runs/20261025-cd80-competitive/harness/summarize.py", line 87, in summarize
+    ratios.append(dict(case=c["id"],family=c["family"],n=int(c["n"]),p=int(c["p"]),
+                                                         ^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '1e+05'

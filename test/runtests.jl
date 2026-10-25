@@ -10,6 +10,8 @@ tests = [
   "naming",
   "lasso",
   "cv",
+  "structured",
+  "structured_golden",
   "cv_glm",
   "penalties",
   "bounds",

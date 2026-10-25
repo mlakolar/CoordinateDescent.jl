@@ -1,0 +1,2 @@
+harness/worker.sh: line 11: apptainer: command not found
+srun: error: b09-15: task 0: Exited with exit code 127

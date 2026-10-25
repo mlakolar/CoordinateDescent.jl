@@ -1,0 +1,4 @@
+Test Summary:           | Pass  Total  Time
+Signal dual certificate |   74     74  1.8s
+warning: address range table at offset 0x39a0 has a premature terminator entry at offset 0x42f0
+warning: address range table at offset 0x39a0 has a premature terminator entry at offset 0x4350
