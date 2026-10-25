@@ -63,7 +63,7 @@ for case in expected_cases:
   d[metric+'_difference_mcse']=float(a.std(ddof=1)/np.sqrt(len(a))) if len(a)>1 else None
  paired.append(d)
 peaks=[]
-for f in Path('resources').glob('validation-v4-*.txt'):
+for f in Path('resources').glob('validation-v5-*.txt'):
  try:peaks.append(dict(file=str(f),**{k:float(v) for k,v in (t.split('=') for t in f.read_text().split())}))
  except ValueError:pass
 checks['resources']=dict(worker_processes=len(peaks),maximum_rss_kib=max((r['max_rss_kib'] for r in peaks),default=None),workers=peaks)
