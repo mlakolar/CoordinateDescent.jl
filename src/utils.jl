@@ -82,7 +82,7 @@ options passed to them.
   elastic net, the group lasso and the sparse group lasso). `nothing`, the
   default, takes ProximalSolvers' default `PATH_GAPTOL = 1e-4`; `1e-3` is
   the faster setting; `0` stops on the changes of the coordinates with
-  `opt_tol`, as before version 0.8.1. A positive `gaptol` also stops a single
+  `opt_tol`, as before. A positive `gaptol` also stops a single
   solve (`warm_start = true`), which otherwise uses `opt_tol`. The
   coefficients are within about `gaptol` of the solution, relative to the
   largest, and within about 50 `gaptol` at worst

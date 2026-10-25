@@ -1,8 +1,8 @@
-# Version 0.8.1
+# Unreleased
 
 ## Paths stop on a certified duality gap
 
-With ProximalSolvers 0.1.2, the paths (`LassoPath`, `CVLassoPath`,
+With ProximalSolvers' gap stopping (ProximalSolvers #86), the paths (`LassoPath`, `CVLassoPath`,
 `GLMLassoPath`, `GroupLassoPath`, `SparseGroupLassoPath`, `MultiLassoPath`)
 and the last level of `warm_start = false` stop each level once its relative
 duality gap is at most `1e-4`, for the losses and penalties that have a gap,
