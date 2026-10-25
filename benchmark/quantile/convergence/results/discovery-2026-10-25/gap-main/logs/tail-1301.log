@@ -1,0 +1,10 @@
+DONE tail 1301 1 conquer-1e-7 2.02823042869568 qualified=true
+DONE tail 1301 1 conquer-1e-6 1.41838479042053 qualified=false
+DONE tail 1301 1 certified 0.192952913 qualified=true
+DONE tail 1301 1 legacy 0.060863792 qualified=false
+DONE tail 1301 1 certified-tight 0.200476518 qualified=true
+DONE tail 1301 2 legacy 0.061040272 qualified=false
+DONE tail 1301 2 conquer-1e-6 1.40451455116272 qualified=false
+DONE tail 1301 2 certified-tight 0.208033645 qualified=true
+DONE tail 1301 2 certified 0.194531738 qualified=true
+DONE tail 1301 2 conquer-1e-7 1.92342472076416 qualified=true

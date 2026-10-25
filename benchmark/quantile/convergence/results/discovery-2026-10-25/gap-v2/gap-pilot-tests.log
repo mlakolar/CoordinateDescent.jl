@@ -1,0 +1,220 @@
+ERROR: LoadError: Some tests did not pass: 344 passed, 16 failed, 0 errored, 0 broken.
+in expression starting at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:1
+in expression starting at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/gap-pilot.jl:3
+Test Summary:                | Pass  Total  Time
+convolution check conjugates | 2232   2232  0.4s
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:38
+  Expression: all(r.converged)
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:38 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39
+  Expression: all((g->begin
+            #= /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39 =#
+            isfinite(g) && g <= target
+        end), r.gap)
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:47
+  Expression: maximum(abs.(grad) .- ls[k] .* w) <= target
+   Evaluated: 1.0088141625778924e-6 <= 1.0e-6
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:47 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:48
+  Expression: maximum((abs(b[j] - sign(b[j] - grad[j]) * max(abs(b[j] - grad[j]) - ls[k] * w[j], 0)) for j = 1:p)) <= target
+   Evaluated: 1.0088141625397284e-6 <= 1.0e-6
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:48 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:38
+  Expression: all(r.converged)
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:38 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39
+  Expression: all((g->begin
+            #= /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39 =#
+            isfinite(g) && g <= target
+        end), r.gap)
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:47
+  Expression: maximum(abs.(grad) .- ls[k] .* w) <= target
+   Evaluated: 1.0088141625015645e-6 <= 1.0e-6
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:47 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:48
+  Expression: maximum((abs(b[j] - sign(b[j] - grad[j]) * max(abs(b[j] - grad[j]) - ls[k] * w[j], 0)) for j = 1:p)) <= target
+   Evaluated: 1.0088141624287061e-6 <= 1.0e-6
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:48 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:38
+  Expression: all(r.converged)
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:38 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39
+  Expression: all((g->begin
+            #= /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39 =#
+            isfinite(g) && g <= target
+        end), r.gap)
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:38
+  Expression: all(r.converged)
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:38 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39
+  Expression: all((g->begin
+            #= /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39 =#
+            isfinite(g) && g <= target
+        end), r.gap)
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:38
+  Expression: all(r.converged)
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:38 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39
+  Expression: all((g->begin
+            #= /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39 =#
+            isfinite(g) && g <= target
+        end), r.gap)
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:39 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:46
+  Expression: abs(rawgap) <= target * (1 + abs(P))
+   Evaluated: 2.199533965629996e-6 <= 1.5269107786726505e-6
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:46 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Newton convolution paths certify raw scores: Test Failed at /home1/mkolar/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:48
+  Expression: maximum((abs(b[j] - sign(b[j] - grad[j]) * max(abs(b[j] - grad[j]) - ls[k] * w[j], 0)) for j = 1:p)) <= target
+   Evaluated: 1.5871672249812008e-6 <= 1.0e-6
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:673 [inlined]
+ [2] macro expansion
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:48 [inlined]
+ [3] macro expansion
+   @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+ [4] top-level scope
+   @ ~/juliaPkg/runs/20261025-cd78-api/gap-v2/ProximalOPT.jl/test/convolution_gap.jl:27
+Test Summary:                               | Pass  Fail  Total  Time
+Newton convolution paths certify raw scores |  344    16    360  8.7s

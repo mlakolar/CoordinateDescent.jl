@@ -1,0 +1,3 @@
+method,seconds,levels,max_kkt,max_abs_rawgap,max_certificate_gap,all_converged,all_native
+legacy,2.041264565,32,1.7310939800503893e-5,2.8986874626546477e-5,0.0011590349219827711,false,false
+certified,4.519094086,32,4.4547304800524046e-7,8.517231973037553e-7,1.7069011928327882e-6,true,false

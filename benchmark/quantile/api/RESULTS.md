@@ -1,5 +1,9 @@
 # Primal–dual quantile API: decision and measurements
 
+**Follow-up:** the [convolution stopping repair and new comparisons](../convergence/RESULTS.md)
+resolve the smoothed accuracy failures below on the tested inputs. This report
+retains the original measurements and stopping rule.
+
 **Use warm-started HiGHS dual simplex for exact fits and research duals.**
 The API keeps raw optimizer scores at every saved penalty, including at zero
 residuals. Feasible gap certificates are stored separately.
