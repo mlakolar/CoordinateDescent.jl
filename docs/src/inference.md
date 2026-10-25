@@ -67,6 +67,36 @@ Q = debiasing_matrix(X; method = :qp, mu = 0.15, rng)
 fit_qp = debiased_lasso(X, y, 0.1; projection = Q, rng)
 ```
 
+The experimental bias-aware rule is available explicitly:
+
+```julia
+P = nodewise_lasso(X, :ldpe; ldpe_kappa=0.25, rng)
+P.lambda                 # penalty chosen separately for each target
+P.bias_factor            # working-design bias factors
+P.noise_factor           # SD per unit noise on the original scale
+P.reference_noise        # reference SD from stage1
+P.bias_target_met        # feasibility of the original bias target
+P.path_boundary          # whether a finite-grid endpoint was selected
+fit = debiased_lasso(X, y; projection=P, rng)
+```
+
+This implements Zhang and Zhang's Table1 on a finite decreasing lasso grid.
+It chooses the largest penalty meeting the bias-factor bound, then the smallest
+penalty whose noise SD is within 25% of that reference. The default bound is
+`sqrt(2log(max(p,2)))`; an infeasible original bound is recorded even if the
+published adjustment produces a usable finite-grid score. A 25% SD increase
+permits a 56.25% variance increase. Expert controls are `ldpe_kappa`,
+`ldpe_bias_target`, `ldpe_relax`, `ldpe_nlambda`, `ldpe_minratio`, and an explicit
+`lambda_path` grid. Noise factors are on the original coefficient scale;
+bias factors use the working columns. `ldpe_unpenalized=m` removes the penalty
+from the m predictors most correlated with each target on the working design.
+This is Zhang and Zhang's restricted LDPE. It forces the score to be orthogonal
+to those columns up to solver accuracy. The path starts at the largest conditional
+correlation after regressing the target on those columns. The default m=0 retains
+ordinary LDPE; m=4 is a development candidate following their simulation choice.
+This rule is under development, and its GLM Hessian application needs separate
+empirical validation. No choice here establishes finite-sample coverage.
+
 For nodewise lasso, a row is the vector `(e_j - gamma_j) / tau_j²`, where
 `tau_j² = X_j' * (X_j - X_-j*gamma_j)/n`. The normalization includes the
 penalty contribution; using only the residual mean square is incorrect.

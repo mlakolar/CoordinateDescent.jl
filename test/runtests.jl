@@ -19,6 +19,7 @@ tests = [
   "inference",
   "inference_golden",
   "inference_tuning",
+  "inference_ldpe",
   "varying",
   "statsapi",
   "formula",

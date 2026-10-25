@@ -9,6 +9,12 @@ column per predictor. `scores = (X .- means') * theta'`. `converged`,
 Gram residual for nodewise regression, or the constraint residual for the QP.
 `lambda` is the penalty on the standardized design and `scales` its column
 scales. The matrix can be reused with another response on the **same design**.
+For nodewise rows, `bias_factor` is max_k!=j |A_k'z|/norm(z) on the working
+columns and `noise_factor` is the original-unit SD per unit Gaussian noise.
+`reference_noise` holds the LDPE stage1 noise; it is NaN for other rules.
+`bias_target_met` records whether the original LDPE bias bound was attained,
+`path_boundary` flags selection of a grid endpoint, and `tuning` identifies
+the rule. These diagnostics do not establish confidence coverage.
 """
 struct DebiasingMatrix{T}
   theta::SparseMatrixCSC{T, Int}
@@ -21,6 +27,12 @@ struct DebiasingMatrix{T}
   iterations::Vector{Int}
   error::Vector{T}
   method::Symbol
+  bias_factor::Vector{T}
+  noise_factor::Vector{T}
+  reference_noise::Vector{T}
+  bias_target_met::Vector{Bool}
+  path_boundary::Vector{Bool}
+  tuning::Symbol
 end
 
 function _inference_data(X::AbstractMatrix{<:Real}, y = nothing)
@@ -109,6 +121,56 @@ function _nodewise_cv(A::Matrix{T}, options, rng; nfolds=5, nlambda=20, nodes=20
   levels[argmin(errs)]
 end
 
+# Zhang and Zhang (2014), Table 1, evaluated on a finite decreasing grid.
+# The choice uses X only. kappa bounds the relative increase in the noise SD,
+# not its variance. Return the actual selected penalty and both diagnostics.
+function _ldpe_node!(x, model, box, options, rng, A::Matrix{T}, G, j;
+                     path=nothing, nlambda=60, minratio=0.001, kappa=0.25,
+                     bias_target=sqrt(2log(max(size(A,2),2))), relax=0.1, unpenalized=0) where {T}
+  n,p=size(A)
+  cross = G === nothing ? transpose(A)*A[:,j]/n : view(G,:,j)
+  weights = ones(T,p)
+  conditional = cross
+  if unpenalized > 0
+    others = sort!([k for k in 1:p if k!=j];by=k -> (-abs(cross[k]),k))
+    selected = others[1:unpenalized]
+    B = A[:,selected]
+    rank(B)==unpenalized || throw(ArgumentError("linearly dependent unpenalized predictors for target $j"))
+    residual = A[:,j] - B*(B\A[:,j])
+    conditional = transpose(A)*residual/n
+    weights[selected] .= 0
+  end
+  top = maximum((abs(conditional[k]) for k in 1:p if k!=j && weights[k]>0);init=zero(T))
+  levels = path === nothing ? (top <= eps(T) ? T[0] :
+    exp.(range(log(top),log(top*T(minratio));length=nlambda))) : collect(T,path)
+  vectors=SparseVector{T,Int}[]; penalties=T[]; eta=T[]; noise=T[]
+  passes=0; converged=true
+  for level in levels
+    result=coordinate_descent!(x,model,Constrained(NormL1(level,weights),box),options;rng)
+    passes+=result.passes;converged &= result.converged
+    v=-_sparsevec(x);v[j]=1
+    z=A*v; normz=norm(z); denom=dot(A[:,j],z)
+    denom > eps(T)*dot(A[:,j],A[:,j]) && normz>eps(T) || continue
+    gz=G===nothing ? transpose(A)*z/n : G*v
+    push!(vectors,v);push!(penalties,level)
+    push!(eta,n*maximum((abs(gz[k]) for k in 1:p if k!=j);init=zero(T))/normz)
+    push!(noise,normz/abs(denom))
+  end
+  isempty(vectors) && throw(ArgumentError("degenerate LDPE path for target $j"))
+  target=T(bias_target)
+  ref=findfirst(<=(target),eta)
+  if ref===nothing
+    target=(1+T(relax))*minimum(eta)
+    ref=findfirst(<=(target),eta)
+  end
+  chosen=findlast(i -> noise[i] <= (1+T(kappa))*noise[ref]*(1+10eps(T)),ref:length(noise))
+  # findlast over a range returns its positional index, not the value at it.
+  chosen=ref+chosen-1
+  vectors[chosen],penalties[chosen],eta[chosen],noise[chosen],noise[ref],
+    eta[chosen] <= bias_target*(1+10sqrt(eps(T))),
+    chosen==1 || chosen==length(vectors),converged,passes
+end
+
 """
     nodewise_lasso(X, lambda=nothing; kwargs...)
     debiasing_matrix(X; method=:nodewise, lambda, mu, kwargs...)
@@ -139,6 +201,22 @@ and scaling. `nodewise_cv_folds`, `nodewise_cv_nodes`, and
 the penalty and bypasses CV. Returned `lambda` records the selected penalty.
 CV optimizes prediction error and does not guarantee coverage.
 
+`lambda=:ldpe` follows Zhang and Zhang's Table1 on a finite node-specific grid.
+It first chooses the largest penalty meeting `ldpe_bias_target=sqrt(2log(p))`;
+if unattainable it uses `(1+ldpe_relax)*minimum(bias_factor)` and records the
+original bound as unmet. It then chooses the smallest grid penalty with noise
+SD at most `(1+ldpe_kappa)` times that reference. Defaults are
+`ldpe_kappa=0.25`, `ldpe_relax=0.1`, `ldpe_nlambda=60`, and
+`ldpe_minratio=0.001`. The grid starts at that node's maximum correlation.
+`lambda_path` may instead supply a common decreasing grid. `lambda` in the
+result stores each row's selected penalty. The noise budget applies to SD,
+not variance. `ldpe_unpenalized=m` implements the restricted weighted variant:
+the m largest absolute working correlations with each target receive zero
+penalty. The remaining path starts at the largest conditional correlation after
+regressing the target on those m columns. The default m=0 gives ordinary LDPE;
+m must be at most min(p-1,n-2). This experimental expert option uses the design
+only. Inspect the bias and boundary diagnostics before inference.
+
 With `method=:qp`, `mu` defaults to the universal level (no CV). Solve Javanmard and Montanari's (2014) program
 `min m'Gram*m/2` subject to `norm(Gram*m-e_j, Inf) <= mu`, with `0 < mu < 1`.
 The dual is `min u'Gram*u/2-u_j+mu*norm(u,1)`, solved by coordinate descent.
@@ -158,16 +236,26 @@ function debiasing_matrix(X::AbstractMatrix{<:Real}; method::Symbol = :nodewise,
     lambda_path = nothing, gram::Union{Bool, Symbol} = :auto,
     max_gram_bytes::Integer = 2^30, threads::Bool = true,
     nodewise_cv_folds::Integer = min(5, size(X,1)), nodewise_cv_nlambda::Integer = 20, nodewise_cv_nodes::Integer = 20,
+    ldpe_nlambda::Integer = 60, ldpe_minratio::Real = 0.001,
+    ldpe_kappa::Real = 0.25, ldpe_bias_target::Real = sqrt(2log(max(size(X,2),2))),
+    ldpe_relax::Real = 0.1, ldpe_unpenalized::Integer = 0,
     options::CDOptions = CDOptions(), rng::AbstractRNG = default_rng())
   method in (:nodewise, :qp) || throw(ArgumentError("method must be :nodewise or :qp"))
   lambda isa Real && _inference_level(lambda, "lambda")
-  lambda isa Symbol && !(lambda in (:cv, :universal)) && throw(ArgumentError("lambda must be :cv, :universal or a number"))
+  lambda isa Symbol && !(lambda in (:cv, :universal, :ldpe)) && throw(ArgumentError("lambda must be :cv, :universal, :ldpe or a number"))
+  method == :qp && lambda === :ldpe && throw(ArgumentError("LDPE tuning applies to nodewise projections"))
+  ldpe = method == :nodewise && lambda === :ldpe
+  ldpe && !(ldpe_nlambda >= 2 && 0 < ldpe_minratio < 1 && 0 <= ldpe_kappa <= 1 &&
+    isfinite(ldpe_bias_target) && ldpe_bias_target > 0 && 0 < ldpe_relax <= 1) &&
+      throw(ArgumentError("invalid LDPE grid, noise budget or bias target"))
   gram in (true, false, :auto) || throw(ArgumentError("gram must be true, false or :auto"))
   max_gram_bytes >= 0 || throw(ArgumentError("max_gram_bytes must be nonnegative"))
   A = _inference_data(X)
   T = eltype(A)
   n, p = size(A)
   ts = _inference_targets(targets, p)
+  0 <= ldpe_unpenalized <= min(p-1,n-2) || throw(ArgumentError("ldpe_unpenalized must be between 0 and min(p-1,n-2)"))
+  ldpe_unpenalized > 0 && !ldpe && throw(ArgumentError("ldpe_unpenalized requires lambda=:ldpe"))
   means = intercept ? vec(mean(A; dims = 1)) : zeros(T, p)
   A .-= transpose(means)
   scales = standardize_x ? vec(sqrt.(sum(abs2, A; dims = 1) ./ n)) : ones(T, p)
@@ -175,11 +263,12 @@ function debiasing_matrix(X::AbstractMatrix{<:Real}; method::Symbol = :nodewise,
   A ./= transpose(scales)
   usegram = gram === true || (gram === :auto && sizeof(T) * big(p)^2 <= max_gram_bytes)
   automatic = lambda === nothing || lambda === :cv
+  tuning = method == :qp ? :qp : ldpe ? :ldpe : automatic ? :cv : lambda === :universal ? :universal : :fixed
   universal = T(sqrt(2log(max(p,2))/n))
   if method == :nodewise
     lambda = automatic ? _nodewise_cv(A, options, rng; nfolds=nodewise_cv_folds,
       nlambda=nodewise_cv_nlambda, nodes=nodewise_cv_nodes, intercept, standardize_x, gram=usegram) :
-      lambda === :universal ? universal : T(lambda)
+      (lambda === :universal || ldpe) ? universal : T(lambda)
   else
     lambda = lambda isa Real ? T(lambda) : universal
   end
@@ -190,13 +279,16 @@ function debiasing_matrix(X::AbstractMatrix{<:Real}; method::Symbol = :nodewise,
   G = usegram ? _gram(A, zeros(T, p)) : nothing
   levels = lambda_path === nothing ? T[lambda] : collect(T, lambda_path)
   !isempty(levels) && all(x -> isfinite(x) && x >= 0, levels) &&
-    issorted(levels; rev = true) && last(levels) == T(lambda) ||
+    issorted(levels; rev = true) && (ldpe || last(levels) == T(lambda)) ||
     throw(ArgumentError("lambda_path must decrease to lambda"))
   method == :qp && lambda_path !== nothing && throw(ArgumentError("lambda_path is for nodewise regression"))
   cols = Vector{SparseVector{T, Int}}(undef, length(ts))
   ok = fill(false, length(ts))       # Bool vectors, not bit arrays: concurrent writes
   passes = zeros(Int, length(ts))
   errors = zeros(T, length(ts))
+  actual_lambda=fill(T(method == :qp ? mu : lambda),length(ts))
+  bias_factors=fill(T(NaN),length(ts));noise_factors=fill(T(NaN),length(ts))
+  reference_noise=fill(T(NaN),length(ts));bias_met=fill(false,length(ts));boundary=fill(false,length(ts))
   seeds = rand(rng, UInt64, length(ts))
   _inference_workers(length(ts), threads) do ids
     # Construct once: QuadModel checks G for finite entries at construction.
@@ -229,14 +321,22 @@ function debiasing_matrix(X::AbstractMatrix{<:Real}; method::Symbol = :nodewise,
         else
           m, _, _ = _lsmodel(A, Vector(view(A, :, j)), false, false)
         end
-        valid = true
-        for level in levels
-          r = coordinate_descent!(x, m, Constrained(NormL1(level), box), options; rng = gen)
-          valid &= r.converged
-          passes[a] += r.passes
+        if ldpe
+          v,actual_lambda[a],bias_factors[a],noise_factors[a],reference_noise[a],
+            bias_met[a],boundary[a],valid,passes[a] = _ldpe_node!(x,m,box,options,gen,A,G,j;
+              path=lambda_path,nlambda=ldpe_nlambda,minratio=ldpe_minratio,kappa=ldpe_kappa,
+              bias_target=ldpe_bias_target,relax=ldpe_relax,unpenalized=ldpe_unpenalized)
+          noise_factors[a] /= scales[j];reference_noise[a] /= scales[j]
+        else
+          valid = true
+          for level in levels
+            r = coordinate_descent!(x, m, Constrained(NormL1(level), box), options; rng = gen)
+            valid &= r.converged
+            passes[a] += r.passes
+          end
+          v = -_sparsevec(x)
+          v[j] = 1
         end
-        v = -_sparsevec(x)
-        v[j] = 1
         z = A * v
         tau = dot(view(A, :, j), z) / n
         tau > eps(T) * sum(abs2, view(A, :, j)) / n ||
@@ -245,6 +345,11 @@ function debiasing_matrix(X::AbstractMatrix{<:Real}; method::Symbol = :nodewise,
         # Off-diagonal error is computed without forming theta*G for all rows.
         gz = usegram ? G * v : transpose(A) * z ./ n
         errors[a] = maximum((abs(gz[k] / tau) for k in 1:p if k != j); init = zero(T))
+        if !ldpe
+          bias_factors[a] = n*maximum((abs(gz[k]) for k in 1:p if k!=j);init=zero(T))/norm(z)
+          noise_factors[a] = norm(z)/(n*tau*scales[j])
+          bias_met[a] = bias_factors[a] <= ldpe_bias_target
+        end
         ok[a] = valid
       end
     end
@@ -265,8 +370,11 @@ function debiasing_matrix(X::AbstractMatrix{<:Real}; method::Symbol = :nodewise,
   end
   theta = sparse(rowidx, colidx, values, length(ts), p)
   scores = Matrix((A .* transpose(scales)) * transpose(theta))
-  DebiasingMatrix(theta, scores, ts, means, scales, fill(T(method == :qp ? mu : lambda), length(ts)),
-                  ok, passes, errors, method)
+  if method == :qp
+    noise_factors .= vec(sqrt.(sum(abs2,scores;dims=1)))/n
+  end
+  DebiasingMatrix(theta, scores, ts, means, scales, actual_lambda,
+                  ok, passes, errors, method,bias_factors,noise_factors,reference_noise,bias_met,boundary,tuning)
 end
 
 @doc (@doc nodewise_lasso) debiasing_matrix

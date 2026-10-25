@@ -152,10 +152,11 @@ function _cvsummary(errs::Matrix{T}, wk::Vector{T}) where {T}
   for j in 1:L
     ok = findall(k -> !isnan(errs[k, j]), 1:K)
     w = wk[ok]
-    m = sum(w .* errs[ok, j]) / sum(w)
-    cvm[j] = m
-    cvse[j] = length(ok) > 1 ? sqrt(sum(w .* abs2.(errs[ok, j] .- m)) / sum(w) / (length(ok) - 1)) : T(NaN)
+    m = isempty(ok) ? T(Inf) : sum(w .* errs[ok, j]) / sum(w)
+    cvm[j] = isfinite(m) ? m : T(Inf)
+    cvse[j] = isfinite(m) && length(ok) > 1 ? sqrt(sum(w .* abs2.(errs[ok, j] .- m)) / sum(w) / (length(ok) - 1)) : T(NaN)
   end
+  any(isfinite,cvm) || throw(ArgumentError("no finite cross-validation errors; check the fold fits and path"))
   jmin = argmin(cvm)
   bound = cvm[jmin] + (isnan(cvse[jmin]) ? zero(T) : cvse[jmin])
   cvm, cvse, jmin, findfirst(j -> cvm[j] <= bound, 1:jmin)
