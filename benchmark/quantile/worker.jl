@@ -46,6 +46,7 @@ function main()
        "lp-dual-dual-cold","lp-dual-dual-warm","lp-primal-ipm-cold","lp-dual-ipm-cold","newton-0.2","newton-0.05","apg-0.2","admm"])
     phase=="main" && HAS_GUROBI && append!(methods,["gurobi-primal-dual-cold","gurobi-primal-dual-warm","gurobi-primal-primal-warm","gurobi-primal-ipm-cold"])
     phase=="scale" && (methods=["lp-primal-dual-warm","lp-primal-primal-warm","lp-dual-dual-warm","gurobi-primal-dual-warm","gurobi-primal-primal-warm","newton-0.2","apg-0.2","admm"])
+    !HAS_GUROBI && filter!(name -> !startswith(name,"gurobi"),methods)
     # Compile methods on the SAME data type before collecting measurements.
     tx,ty=data("small",100); tx=tx[1:50,1:12]; ty=ty[1:50]
     startswith(case,"sparse") && (tx=SparseArrays.sparse(tx))

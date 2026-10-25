@@ -18,8 +18,9 @@ for(tau in c(.2,.5,.8)) for(lambda in c(.03,.1)) {
  exact=scan(sprintf('golden/exact-%s-%s.csv',tau,lambda),quiet=TRUE)
  smooth=scan(sprintf('golden/smooth-%s-%s.csv',tau,lambda),quiet=TRUE)
  ref=check(exact,tau,lambda)
- # quantreg uses the SUM of check losses. Its lambda must be multiplied by n.
- q=quantreg::rq.fit.lasso(cbind(1,X),y,tau=tau,lambda=n*lambda,eps=1e-9)$coefficients
+ # quantreg adds pseudo-observations with median loss, so its supplied lambda
+ # contributes lambda/2 times the l1 norm to the SUM of check losses.
+ q=quantreg::rq.fit.lasso(cbind(1,X),y,tau=tau,lambda=2*n*lambda,eps=1e-9)$coefficients
  rp=rqPen::rq.pen(X,y,tau=tau,lambda=c(lambda,lambda*.999999),penalty='LASSO',alg='br',scalex=FALSE,lambda.discard=FALSE)
  rb=as.numeric(rp$models[[1]]$coefficients[,1])
  cq=conquer::conquer.reg(X,y,lambda=lambda,tau=tau,kernel='parabolic',h=.2,penalty='lasso',epsilon=1e-9,iteMax=20000)$coeff
@@ -29,3 +30,5 @@ z=do.call(rbind,rows);write.csv(z,'golden/R-comparison.csv',row.names=FALSE);pri
 stopifnot(max(abs(z$quantreg_objective_error))<1e-6,max(abs(z$rqPen_objective_error))<1e-6,max(z$conquer_kkt)<2e-5,max(z$julia_smooth_kkt)<2e-5,max(z$conquer_smooth_coef_error)<2e-4)
 writeLines(capture.output(sessionInfo()),'golden/R-session.txt')
 cat('R GOLDEN CHECKS PASSED\n')
+
+writeLines(capture.output(quantreg::rq.fit.lasso),'golden/quantreg-rq-fit-lasso-source.txt')

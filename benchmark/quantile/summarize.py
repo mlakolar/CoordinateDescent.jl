@@ -15,7 +15,7 @@ for p in paths: groups[(p['case'],p['method'])].append(p)
 summary=[]; failures=[]
 for (case,method),rs in sorted(groups.items()):
     valid=[]; maxgaps=[]; maxkkts=[]; statuses=defaultdict(int)
-    smooth=method.startswith(('apg','newton'))
+    smooth=method.startswith(('apg','newton','conquer'))
     for r in rs:
         statuses[r['status']]+=1
         ss=sol[tuple(r[k] for k in ('case','seed','rep','method'))]

@@ -10,12 +10,12 @@
 #SBATCH --time=00:50:00
 #SBATCH --output=evaluate-%j.out
 set -euo pipefail
-cd /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile
+export QUANTILE_RUN_ROOT="${QUANTILE_RUN_ROOT:-$SLURM_SUBMIT_DIR}"
+cd "${QUANTILE_RUN_ROOT:-$SLURM_SUBMIT_DIR}"
 module load parallel/20240522 gurobi/12.0.3
 export JULIA_DEPOT_PATH="$PWD/depot:/home1/mkolar/juliaPkg/depot:"
 export JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 BENCH_GUROBI=1
 export J=/home1/mkolar/juliaPkg/julia-1.13.2/bin/julia
-tar -xf harness-v3.tar
 "$J" --project=. validate.jl > validation-v3.log 2>&1
 mkdir -p main-results main-logs
 lscpu > main-results/cpu.txt
