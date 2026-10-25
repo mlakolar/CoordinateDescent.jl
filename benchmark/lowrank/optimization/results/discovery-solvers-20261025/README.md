@@ -240,7 +240,10 @@ so rewriting branch history does not remove the source needed for recreation.
 Before merge, the branch was also rebased onto master
 `7ff77eb0ca7b663bcc78a06d0ae1d2e915eed7f2` to integrate the structured-estimator
 exports, docs, tests and newer ProximalBase minimum. The measured environments
-remain frozen. Post-rebase correctness is checked separately by GitHub CI. A subsequent
+remain frozen. The final integration also includes master
+`100b7dcdc4a1a240cc78817db1559010d323897f` (selection estimators from PR #84),
+preserving both selection and low-rank test dependencies. Post-rebase
+correctness is checked separately by GitHub CI. A subsequent
 correctness review changed the optional exact Stein degrees-of-freedom tie
 check to use relative singular-value ratios, preserving response-scale
 invariance and avoiding squared-value underflow/overflow. This report retains
