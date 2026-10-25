@@ -55,6 +55,9 @@ export
   coordinate_descent!, solve!,
   LLA,                 # ProximalSolvers' local linear approximation, for lla
 
+  # primal–dual quantile regression
+  quantile_lasso, QuantileLassoSolution, QuantileLassoPath, dual_scores, qr_dual,
+
   # generalized linear models
   glm_lasso,
   GLMLassoPath,
@@ -85,6 +88,7 @@ include("coordinate_descent.jl")
 include("lasso.jl")
 include("penalties.jl")
 include("glm.jl")
+include("quantile.jl")
 include("group.jl")
 include("sparsegroup.jl")
 include("multiresponse.jl")

@@ -1,3 +1,9 @@
+## Quantile primal–dual API
+
+- Add exact HiGHS fit/path solvers and a convolution-smoothed proximal Newton route.
+- Preserve raw observation-level duals, QR.jl normalization, independent certificates and per-fit KKT diagnostics.
+- Support weighted slope penalties, offsets, explicit zero penalties, sparse designs and partial exact paths; do not interpolate between quantile levels.
+
 # Unreleased
 
 ## Paths stop on a certified duality gap

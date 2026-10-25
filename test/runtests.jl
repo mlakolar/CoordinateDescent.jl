@@ -11,6 +11,7 @@ tests = [
   "penalties",
   "bounds",
   "glm",
+  "quantile",
   "glm_penalties",
   "group",
   "sparsegroup",

@@ -15,9 +15,11 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 
 [weakdeps]
+HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
 StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 
 [extensions]
+CoordinateDescentHiGHSExt = "HiGHS"
 CoordinateDescentStatsModelsExt = "StatsModels"
 
 [sources]
@@ -26,6 +28,7 @@ ProximalBase = {url = "https://github.com/mlakolar/ProximalBase.jl", rev = "mast
 ProximalSolvers = {url = "https://github.com/mlakolar/ProximalSolvers.jl", rev = "master"}
 
 [compat]
+HiGHS = "1"
 Aqua = "0.8"
 KernelSmoothing = "0.1"
 LinearAlgebra = "1"
@@ -42,10 +45,11 @@ Test = "1"
 julia = "1.10"
 
 [extras]
+HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 KernelSmoothing = "724a8e84-0a16-41a9-ba90-78f60180b487"
 StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Aqua", "KernelSmoothing", "StatsModels", "Test"]
+test = ["HiGHS", "Aqua", "KernelSmoothing", "StatsModels", "Test"]
