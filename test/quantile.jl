@@ -110,10 +110,11 @@ end
     tol=1e-6,time_limit=Inf,initial_basis=:default,simplex=:dual,start=time_ns(),optimizer_factory=limited_optimizer)
   @test status==:ITERATION_LIMIT
   @test length(partial)==1 && !only(partial).converged
-  # Zero native time stops before any pair exists, unlike zero simplex steps.
+  # Solvers can retain a pair even at zero time. Use MOI's documented no-result
+  # contract to test this separate case without a machine-dependent deadline.
   empty_optimizer() = begin
-    opt=HiGHS.Optimizer()
-    QMOI.set(opt,QMOI.TimeLimitSec(),0.0)
+    opt=QMOI.Utilities.MockOptimizer(QMOI.Utilities.UniversalFallback(QMOI.Utilities.Model{Float64}()))
+    QMOI.Utilities.set_mock_optimize!(opt,mock -> QMOI.Utilities.mock_optimize!(mock,QMOI.TIME_LIMIT))
     opt
   end
   unavailable,status=HighDimensionalModels._quantile_exact_path(X,y,[.1],ones(5),.5,true;
