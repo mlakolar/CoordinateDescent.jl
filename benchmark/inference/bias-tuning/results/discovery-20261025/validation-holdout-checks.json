@@ -1,0 +1,608 @@
+{
+  "checks": {
+    "records": 3200,
+    "unique_records": 3200,
+    "expected_records": 3200,
+    "coefficients": 32000,
+    "unique_coefficients": 32000,
+    "expected_coefficients": 32000,
+    "error_files": 0,
+    "all_converged": true,
+    "positive_finite_se": true,
+    "finite_estimates": true,
+    "normal_pvalue_consistency": true,
+    "candidate_noise_budget": true,
+    "resources": {
+      "worker_processes": 64,
+      "maximum_rss_kib": 1096432.0,
+      "workers": [
+        {
+          "file": "resources/validation-v5-gaussian-moderate-2.txt",
+          "process_seconds": 173.05544277094305,
+          "max_rss_kib": 1076120.0,
+          "cpu_seconds": 171.94466599999998,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-moderate-5.txt",
+          "process_seconds": 164.68573457328603,
+          "max_rss_kib": 935908.0,
+          "cpu_seconds": 158.256121,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-moderate-2.txt",
+          "process_seconds": 152.87715027900413,
+          "max_rss_kib": 1030948.0,
+          "cpu_seconds": 151.864651,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-moderate-5.txt",
+          "process_seconds": 152.1754021300003,
+          "max_rss_kib": 1053428.0,
+          "cpu_seconds": 151.274979,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-random-7.txt",
+          "process_seconds": 167.35775350313634,
+          "max_rss_kib": 1017752.0,
+          "cpu_seconds": 166.275233,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-benign-6.txt",
+          "process_seconds": 35.576678078155965,
+          "max_rss_kib": 992400.0,
+          "cpu_seconds": 35.223234999999995,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-benign-1.txt",
+          "process_seconds": 41.34099498903379,
+          "max_rss_kib": 1029816.0,
+          "cpu_seconds": 40.93261,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-benign-1.txt",
+          "process_seconds": 33.98000060534105,
+          "max_rss_kib": 1035288.0,
+          "cpu_seconds": 33.610155,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-random-7.txt",
+          "process_seconds": 156.67870349623263,
+          "max_rss_kib": 1044828.0,
+          "cpu_seconds": 155.682412,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-benign-6.txt",
+          "process_seconds": 42.09349303506315,
+          "max_rss_kib": 1002432.0,
+          "cpu_seconds": 41.625142999999994,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-benign-8.txt",
+          "process_seconds": 41.39191339304671,
+          "max_rss_kib": 1027540.0,
+          "cpu_seconds": 40.964107,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-benign-8.txt",
+          "process_seconds": 35.830454036127776,
+          "max_rss_kib": 1003576.0,
+          "cpu_seconds": 35.471622,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-correlated-7.txt",
+          "process_seconds": 89.6123490119353,
+          "max_rss_kib": 1096432.0,
+          "cpu_seconds": 88.863638,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-correlated-2.txt",
+          "process_seconds": 85.84356885682791,
+          "max_rss_kib": 1074620.0,
+          "cpu_seconds": 85.244345,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-correlated-5.txt",
+          "process_seconds": 84.29008193779737,
+          "max_rss_kib": 1090168.0,
+          "cpu_seconds": 83.66460699999999,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-moderate-4.txt",
+          "process_seconds": 152.57131584594026,
+          "max_rss_kib": 1059156.0,
+          "cpu_seconds": 151.616724,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-moderate-3.txt",
+          "process_seconds": 152.76592323277146,
+          "max_rss_kib": 1042548.0,
+          "cpu_seconds": 151.81170799999998,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-moderate-4.txt",
+          "process_seconds": 157.14351673796773,
+          "max_rss_kib": 1085212.0,
+          "cpu_seconds": 156.082165,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-moderate-3.txt",
+          "process_seconds": 157.13490077201277,
+          "max_rss_kib": 917652.0,
+          "cpu_seconds": 156.095498,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-correlated-8.txt",
+          "process_seconds": 91.00150757422671,
+          "max_rss_kib": 935056.0,
+          "cpu_seconds": 90.294177,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-correlated-1.txt",
+          "process_seconds": 83.49381846096367,
+          "max_rss_kib": 1011656.0,
+          "cpu_seconds": 82.866394,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-correlated-4.txt",
+          "process_seconds": 84.22916998621076,
+          "max_rss_kib": 1070112.0,
+          "cpu_seconds": 83.636108,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-correlated-6.txt",
+          "process_seconds": 91.24986337311566,
+          "max_rss_kib": 1078532.0,
+          "cpu_seconds": 90.577802,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-correlated-3.txt",
+          "process_seconds": 84.09073784202337,
+          "max_rss_kib": 1085772.0,
+          "cpu_seconds": 83.48369100000001,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-random-8.txt",
+          "process_seconds": 168.8572054002434,
+          "max_rss_kib": 998964.0,
+          "cpu_seconds": 167.738937,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-random-8.txt",
+          "process_seconds": 161.82455005077645,
+          "max_rss_kib": 1056688.0,
+          "cpu_seconds": 160.801459,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-random-1.txt",
+          "process_seconds": 152.11868287995458,
+          "max_rss_kib": 1060700.0,
+          "cpu_seconds": 151.135585,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-random-6.txt",
+          "process_seconds": 159.58637260179967,
+          "max_rss_kib": 1067800.0,
+          "cpu_seconds": 158.595034,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-benign-7.txt",
+          "process_seconds": 41.78946717362851,
+          "max_rss_kib": 1027820.0,
+          "cpu_seconds": 41.408273,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-random-6.txt",
+          "process_seconds": 168.10139727033675,
+          "max_rss_kib": 986388.0,
+          "cpu_seconds": 167.02538199999998,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-benign-7.txt",
+          "process_seconds": 35.12801368813962,
+          "max_rss_kib": 983896.0,
+          "cpu_seconds": 34.743374,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-random-1.txt",
+          "process_seconds": 161.24341805418953,
+          "max_rss_kib": 911464.0,
+          "cpu_seconds": 160.11829,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-correlated-5.txt",
+          "process_seconds": 85.83779434813187,
+          "max_rss_kib": 1043564.0,
+          "cpu_seconds": 85.27248999999999,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-correlated-2.txt",
+          "process_seconds": 85.24731470271945,
+          "max_rss_kib": 1034908.0,
+          "cpu_seconds": 84.626563,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-correlated-7.txt",
+          "process_seconds": 91.05279999598861,
+          "max_rss_kib": 1046036.0,
+          "cpu_seconds": 90.39561,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-benign-4.txt",
+          "process_seconds": 33.68761971173808,
+          "max_rss_kib": 905096.0,
+          "cpu_seconds": 33.257127000000004,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-random-5.txt",
+          "process_seconds": 152.46505951927975,
+          "max_rss_kib": 1056356.0,
+          "cpu_seconds": 151.518662,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-benign-3.txt",
+          "process_seconds": 42.1355164819397,
+          "max_rss_kib": 906088.0,
+          "cpu_seconds": 41.703703,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-random-2.txt",
+          "process_seconds": 163.94450578000396,
+          "max_rss_kib": 1057528.0,
+          "cpu_seconds": 162.89596,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-benign-3.txt",
+          "process_seconds": 32.92880701366812,
+          "max_rss_kib": 1077040.0,
+          "cpu_seconds": 32.583491,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-random-2.txt",
+          "process_seconds": 151.3254609280266,
+          "max_rss_kib": 919312.0,
+          "cpu_seconds": 150.373712,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-benign-4.txt",
+          "process_seconds": 41.23778619803488,
+          "max_rss_kib": 1034208.0,
+          "cpu_seconds": 40.841074,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-random-5.txt",
+          "process_seconds": 169.46164014656097,
+          "max_rss_kib": 934264.0,
+          "cpu_seconds": 168.307812,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-moderate-7.txt",
+          "process_seconds": 168.55777095304802,
+          "max_rss_kib": 923844.0,
+          "cpu_seconds": 167.447106,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-moderate-7.txt",
+          "process_seconds": 172.96633686497808,
+          "max_rss_kib": 1083080.0,
+          "cpu_seconds": 171.850865,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-benign-2.txt",
+          "process_seconds": 33.4276415836066,
+          "max_rss_kib": 926408.0,
+          "cpu_seconds": 33.091293,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-random-3.txt",
+          "process_seconds": 155.78459969721735,
+          "max_rss_kib": 916092.0,
+          "cpu_seconds": 154.77054600000002,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-benign-5.txt",
+          "process_seconds": 41.58480357006192,
+          "max_rss_kib": 1026412.0,
+          "cpu_seconds": 40.997834,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-random-4.txt",
+          "process_seconds": 170.00513734668493,
+          "max_rss_kib": 936200.0,
+          "cpu_seconds": 168.931687,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-benign-5.txt",
+          "process_seconds": 33.78246202506125,
+          "max_rss_kib": 917800.0,
+          "cpu_seconds": 33.347139999999996,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-random-4.txt",
+          "process_seconds": 155.2126984698698,
+          "max_rss_kib": 1057288.0,
+          "cpu_seconds": 154.128474,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-benign-2.txt",
+          "process_seconds": 41.49455778580159,
+          "max_rss_kib": 1030656.0,
+          "cpu_seconds": 41.074999,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-random-3.txt",
+          "process_seconds": 169.3550264723599,
+          "max_rss_kib": 1088780.0,
+          "cpu_seconds": 168.176127,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-correlated-3.txt",
+          "process_seconds": 83.84096660930663,
+          "max_rss_kib": 1072816.0,
+          "cpu_seconds": 83.187228,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-correlated-6.txt",
+          "process_seconds": 92.20426293788478,
+          "max_rss_kib": 1027788.0,
+          "cpu_seconds": 91.52319800000001,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-correlated-4.txt",
+          "process_seconds": 83.5898510273546,
+          "max_rss_kib": 1025476.0,
+          "cpu_seconds": 82.91228400000001,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-correlated-1.txt",
+          "process_seconds": 83.19910936895758,
+          "max_rss_kib": 1064288.0,
+          "cpu_seconds": 82.579258,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-correlated-8.txt",
+          "process_seconds": 92.35205069417134,
+          "max_rss_kib": 1009840.0,
+          "cpu_seconds": 91.722146,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-moderate-6.txt",
+          "process_seconds": 161.88585041929036,
+          "max_rss_kib": 918624.0,
+          "cpu_seconds": 160.787453,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-moderate-1.txt",
+          "process_seconds": 160.52971724513918,
+          "max_rss_kib": 1090892.0,
+          "cpu_seconds": 159.512725,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-gaussian-moderate-8.txt",
+          "process_seconds": 173.01667943783104,
+          "max_rss_kib": 1055160.0,
+          "cpu_seconds": 171.88294299999998,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-moderate-6.txt",
+          "process_seconds": 169.85994753008708,
+          "max_rss_kib": 941412.0,
+          "cpu_seconds": 168.73596899999998,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-moderate-1.txt",
+          "process_seconds": 152.3098261510022,
+          "max_rss_kib": 1021640.0,
+          "cpu_seconds": 151.371579,
+          "process_exit": 0.0
+        },
+        {
+          "file": "resources/validation-v5-binomial-moderate-8.txt",
+          "process_seconds": 170.25503706140444,
+          "max_rss_kib": 1050552.0,
+          "cpu_seconds": 169.169668,
+          "process_exit": 0.0
+        }
+      ]
+    }
+  },
+  "paired": [
+    {
+      "case": "gaussian-moderate",
+      "coverage_active_difference": 0.22899999999999998,
+      "coverage_active_difference_mcse": 0.01637484895783652,
+      "coverage_null_difference": -0.006999999999999998,
+      "coverage_null_difference_mcse": 0.007684416129822837,
+      "type1_difference": 0.007000000000000002,
+      "type1_difference_mcse": 0.007684416129822839,
+      "power_difference": -0.016999999999999998,
+      "power_difference_mcse": 0.004433200461479075,
+      "length_active_difference": 0.1742678562194037,
+      "length_active_difference_mcse": 0.0013675728745540484,
+      "length_null_difference": 0.1761995263951693,
+      "length_null_difference_mcse": 0.001429018433770932,
+      "seconds_difference": 2.83606817681,
+      "seconds_difference_mcse": 0.02394503355550112
+    },
+    {
+      "case": "gaussian-correlated",
+      "coverage_active_difference": 0.20099999999999998,
+      "coverage_active_difference_mcse": 0.01674505852257982,
+      "coverage_null_difference": 0.010999999999999996,
+      "coverage_null_difference_mcse": 0.008290880138280655,
+      "type1_difference": -0.011000000000000001,
+      "type1_difference_mcse": 0.008290880138280658,
+      "power_difference": -0.12399999999999999,
+      "power_difference_mcse": 0.015695596796362024,
+      "length_active_difference": 1.1118953745195024,
+      "length_active_difference_mcse": 0.010026975701585252,
+      "length_null_difference": 1.200485314404725,
+      "length_null_difference_mcse": 0.011181987006393425,
+      "seconds_difference": 1.6143535426199997,
+      "seconds_difference_mcse": 0.01422885679126582
+    },
+    {
+      "case": "gaussian-benign",
+      "coverage_active_difference": 0.025,
+      "coverage_active_difference_mcse": 0.0077573113510407,
+      "coverage_null_difference": 5.551115123125783e-19,
+      "coverage_null_difference_mcse": 0.004911273054420347,
+      "type1_difference": -2.7755575615628914e-19,
+      "type1_difference_mcse": 0.004911273054420348,
+      "power_difference": 0.0,
+      "power_difference_mcse": 0.0,
+      "length_active_difference": 0.029025008969679078,
+      "length_active_difference_mcse": 0.0001490117085447452,
+      "length_null_difference": 0.0301418885561485,
+      "length_null_difference_mcse": 0.00015270249728062285,
+      "seconds_difference": -0.012632472930000003,
+      "seconds_difference_mcse": 0.004780349801090936
+    },
+    {
+      "case": "gaussian-random",
+      "coverage_active_difference": 0.047,
+      "coverage_active_difference_mcse": 0.01051225654597728,
+      "coverage_null_difference": 0.004,
+      "coverage_null_difference_mcse": 0.007760225868339026,
+      "type1_difference": -0.003999999999999999,
+      "type1_difference_mcse": 0.0077602258683390265,
+      "power_difference": -0.017999999999999995,
+      "power_difference_mcse": 0.004297948558213001,
+      "length_active_difference": 0.17690128760685653,
+      "length_active_difference_mcse": 0.001193637713310645,
+      "length_null_difference": 0.1753259649113869,
+      "length_null_difference_mcse": 0.0012011254230492384,
+      "seconds_difference": 2.8057127643,
+      "seconds_difference_mcse": 0.023069036723006486
+    },
+    {
+      "case": "binomial-moderate",
+      "coverage_active_difference": 0.37599999999999995,
+      "coverage_active_difference_mcse": 0.015695596796362024,
+      "coverage_null_difference": 0.006999999999999999,
+      "coverage_null_difference_mcse": 0.006706705562158475,
+      "type1_difference": -0.007000000000000001,
+      "type1_difference_mcse": 0.0067067055621584755,
+      "power_difference": -0.23200000000000004,
+      "power_difference_mcse": 0.014831719370912039,
+      "length_active_difference": 0.361847931033168,
+      "length_active_difference_mcse": 0.0017726623846772709,
+      "length_null_difference": 0.3649145678979249,
+      "length_null_difference_mcse": 0.0018655494285246383,
+      "seconds_difference": 2.8166901521749996,
+      "seconds_difference_mcse": 0.02323692817213677
+    },
+    {
+      "case": "binomial-correlated",
+      "coverage_active_difference": 0.11,
+      "coverage_active_difference_mcse": 0.013431381539151185,
+      "coverage_null_difference": 0.009999999999999998,
+      "coverage_null_difference_mcse": 0.007732980988911995,
+      "type1_difference": -0.01,
+      "type1_difference_mcse": 0.007732980988911997,
+      "power_difference": -0.061,
+      "power_difference_mcse": 0.011962882293319578,
+      "length_active_difference": 2.0858953621994276,
+      "length_active_difference_mcse": 0.016500866340895395,
+      "length_null_difference": 2.250572733273333,
+      "length_null_difference_mcse": 0.01689593089062501,
+      "seconds_difference": 1.67816522308,
+      "seconds_difference_mcse": 0.011466690064065456
+    },
+    {
+      "case": "binomial-benign",
+      "coverage_active_difference": 0.095,
+      "coverage_active_difference_mcse": 0.01337044667246033,
+      "coverage_null_difference": 0.003999999999999998,
+      "coverage_null_difference_mcse": 0.0058387029605304055,
+      "type1_difference": -0.004,
+      "type1_difference_mcse": 0.005838702960530407,
+      "power_difference": 0.0,
+      "power_difference_mcse": 0.0,
+      "length_active_difference": 0.06747772635749709,
+      "length_active_difference_mcse": 0.0003579091276872606,
+      "length_null_difference": 0.06630705662031644,
+      "length_null_difference_mcse": 0.00034381556929730036,
+      "seconds_difference": -0.018010722775,
+      "seconds_difference_mcse": 0.005404389617101969
+    },
+    {
+      "case": "binomial-random",
+      "coverage_active_difference": 0.13299999999999998,
+      "coverage_active_difference_mcse": 0.012860089795477272,
+      "coverage_null_difference": 0.004,
+      "coverage_null_difference_mcse": 0.006643847042007208,
+      "type1_difference": -0.004000000000000001,
+      "type1_difference_mcse": 0.006643847042007209,
+      "power_difference": -0.30900000000000005,
+      "power_difference_mcse": 0.014923422620617827,
+      "length_active_difference": 0.3917802265157313,
+      "length_active_difference_mcse": 0.002538949940816776,
+      "length_null_difference": 0.38795295177131955,
+      "length_null_difference_mcse": 0.0023437345000859194,
+      "seconds_difference": 3.0042098915400004,
+      "seconds_difference_mcse": 0.02162235134752683
+    }
+  ]
+}

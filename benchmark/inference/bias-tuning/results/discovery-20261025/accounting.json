@@ -1,0 +1,8 @@
+{
+  "source": "logs-receipt-v7/accounting-final.psv",
+  "cluster_timezone": "PDT UTC-07",
+  "run_running_union_seconds": 3223,
+  "run_allocated_cpu_hours": 6.038333333333333,
+  "prior_issue_work_running_union_seconds": 6998,
+  "note": "This run extends the earlier issue work. The task-wide two-hour cap was explicitly superseded; no budget reset is claimed."
+}

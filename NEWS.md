@@ -10,7 +10,8 @@ penalties and the original theoretical rules available for expert use.
 
 The expert nodewise rule `:ldpe` adds a finite-grid bias/noise search, including
 restricted projections with `ldpe_unpenalized`. Diagnostics report the original
-bias target, reference noise, and grid boundaries. It remains experimental.
+bias target, reference noise, and grid boundaries. It remains experimental: fresh validation improved Gaussian coverage, but logistic
+undercoverage and frequent grid-endpoint choices remain.
 Cross-validation excludes tuning levels with no finite fold errors from selection.
 
 ## Paths stop on a certified duality gap

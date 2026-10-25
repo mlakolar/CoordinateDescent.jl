@@ -23,7 +23,9 @@ lines=['# Bias-aware tuning: frozen fresh-data validation','',
  'After development, restricted LDPE with four unpenalized correlations and a 50% noise-SD budget '
  'was frozen before using the independent holdout namespace. Fresh validation used 200 datasets '
  'per design (1,600 datasets, 3,200 fits). Five active and five null targets belong to each dataset. '
- 'All Monte Carlo standard errors below use dataset-level summaries, retaining dependence between targets.','',
+ 'All Monte Carlo standard errors below use dataset-level summaries, retaining dependence between targets. '
+ 'Replications are independent within each case; corresponding Gaussian and binomial cases share their covariate draw. '
+ 'The count of1,600 datasets includes both response families and does not mean1,600 distinct covariate matrices.','',
  '| Case | Policy | Active coverage ± MCSE | Null coverage | Type I | Power | Length active/null | Median warm automatic seconds |',
  '|---|---|---:|---:|---:|---:|---:|---:|']
 for d in rows:

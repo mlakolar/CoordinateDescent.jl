@@ -14,6 +14,24 @@ design, so the observed problem is broader than the severe stress case.
 See `benchmark/inference/automatic-tuning/results/discovery-20261025/RESULTS.md`
 for settings, uncertainty, diagnostics and matched computational comparisons.
 
+A subsequent frozen restricted-LDPE candidate was validated on 200 new datasets
+per design. Active coverage ranged from 94.2% to 95.2% in the four Gaussian
+cases, and from 90.5% to 96.4% in the four logistic cases. It reduced remaining
+bias, with longer intervals and lower power. Logistic undercoverage persisted
+in the benign, moderate and random-support cases. Many selected penalties were
+finite-grid endpoints. This candidate remains an explicit expert option;
+it has not replaced the experimental CV defaults. See
+`benchmark/inference/bias-tuning/results/discovery-20261025/RESULTS.md` and
+`CURRENT_COMPARISON.md` there for uncertainty, grid diagnostics, the refreshed
+paired competitor pilot, and conditional resource estimates.
+
+The universal QP constraint is also an expert starting point, not a calibrated
+inference default. In the refreshed paired 20-dataset pilot, its Gaussian
+active coverage was 36% in the moderate design and 8% in the correlated design.
+The programs passed the numerical feasibility/gap checks. That does not
+control the remaining statistical bias. Keep this distinction when choosing
+between the projection methods.
+
 ```julia
 using HighDimensionalModels, Random
 rng = Xoshiro(77)

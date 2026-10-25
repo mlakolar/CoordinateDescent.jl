@@ -66,3 +66,27 @@ separately with the same CV seed and reports full warm fit time. These are paire
 statistical comparisons, not a new matched competitor-engine benchmark.
 Numerical fitting source is source-v4/env-v4 from the registry; only the standalone
 runner and analysis are new. A 24-dataset parity bridge checks master integration.
+
+## Completed follow-up
+
+The frozen holdout produced all 3,200 converged fits and 32,000 unique finite
+coefficient records. All 64 worker resource records, normal p-values and noise
+budgets passed checks. The report and compact per-dataset inputs are in
+[results/discovery-20261025](results/discovery-20261025/RESULTS.md).
+The new rule improves Gaussian coverage substantially, but logistic calibration
+still fails and grid-endpoint selections are common. It remains experimental.
+
+`refresh-defaults.jl` replaces the historical Julia default rows on the original
+20 paired competitor-pilot datasets per case, reusing validated competitor and
+explicit-matched fits. All 200 refresh fits succeeded. These legacy inputs are
+separate from the fresh holdout. No rule was selected or retuned from either
+post-freeze comparison. Numerical defaults remain untouched for the refresh.
+`analyze-refresh.py`, `diagnostics.py` and `final-receipts.py` build its reporting
+inputs and revised conditional cost projection on Discovery. The final generator
+adds the shared-covariate clarification and diagnostic interpretation from saved
+results; no numerical refitting is required to recreate the reports.
+
+The full 1,000-replication comparison was not launched. Raw coefficients, failures,
+accounting, source snapshots and pinned environments remain in the task run folder
+on Discovery and in the local project run registry. The report includes exact
+scope limits for the prior matched speed timings and the new automatic pipelines.
