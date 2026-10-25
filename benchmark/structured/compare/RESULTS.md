@@ -1,5 +1,10 @@
 # Competitiveness of PR #83
 
+The later [linear-stopping calibration](../stopping/RESULTS.md) changes the
+default stopping rule for double-precision linear signal fits and validates it
+on new datasets. The measurements below retain their original source and
+controls; the newer report gives the updated linear-fit evidence.
+
 Discovery campaign `20261025-cd80-competitive`, 2026-10-25. Final solver source:
 `646a82c3c7e9348a1de5dc0257daeacbd7d3904b`. The PR remains draft for review of
 these results and the implementation.
