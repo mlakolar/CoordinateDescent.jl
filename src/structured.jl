@@ -388,10 +388,10 @@ The stopping test is the proximal-gradient residual in coefficient units,
 function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::Real, λ2::Real;
                      intercept::Bool = false, max_iter::Integer = 20_000,
                      abstol::Real = 1e-7, reltol::Real = 1e-6, df_tol::Real = 1e-4,
-                     _start = nothing)
+                     _start = nothing, _data = nothing, _gram = nothing, _xy = nothing)
   _structured_lambda(λ1); _structured_lambda(λ2)
   _structured_options(max_iter, abstol, reltol, df_tol)
-  A, b, xm, ym = _structured_data(X, y, intercept)
+  A, b, xm, ym = _data === nothing ? _structured_data(X, y, intercept) : _data
   T, n, p = eltype(b), length(b), size(A, 2)
   g = FusedLasso(T(λ1), T(λ2))
   β = _start === nothing ? zeros(T, p) : Vector{T}(_start)
@@ -402,34 +402,49 @@ function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::
   else
     # Estimate the smooth curvature with a few power iterations; backtracking
     # checks every accepted step, including designs with a missed eigenspace.
-    L = sum(abs2, A) / n
+    use_gram = _gram !== nothing
+    L = use_gram ? sum(diag(_gram)) : sum(abs2, A) / n
     grad, candidate, v = zeros(T, p), zeros(T, p), fill(inv(sqrt(T(p))), p)
     r, rn = zeros(T, n), zeros(T, n)
     if L > 0
       for _ in 1:8
-        mul!(r, A, v)
-        mul!(grad, transpose(A), r)
+        if use_gram
+          mul!(grad, _gram, v)
+        else
+          mul!(r, A, v)
+          mul!(grad, transpose(A), r)
+        end
         magnitude = norm(grad)
         magnitude == 0 && break
-        L = dot(v, grad) / n
+        L = use_gram ? dot(v, grad) : dot(v, grad) / n
         @. v = grad / magnitude
       end
     end
     step = L <= 0 ? one(T) : inv(T(L))
     extrapolated, delta = copy(β), zeros(T, p)
     momentum = one(T)
-    threshold = sqrt(p) * abstol + reltol * max(norm(transpose(A) * b) / n, 1)
+    threshold = sqrt(p) * abstol + reltol * max(use_gram ? norm(_xy) : norm(transpose(A) * b) / n, 1)
     for iter in 1:max_iter
-      mul!(r, A, extrapolated); r .-= b
-      mul!(grad, transpose(A), r); grad ./= n
+      if use_gram
+        mul!(grad, _gram, extrapolated); grad .-= _xy
+      else
+        mul!(r, A, extrapolated); r .-= b
+        mul!(grad, transpose(A), r); grad ./= n
+      end
       for backtrack in 1:100
         @. v = extrapolated - step * grad
         prox!(candidate, g, v, step)
         @. v = candidate - extrapolated
         # For a quadratic loss this is the majorization test exactly, without
         # subtracting two almost equal objective values near convergence.
-        mul!(rn, A, v)
-        if sum(abs2, rn) / n <= sum(abs2, v) / step
+        curvature = if use_gram
+          mul!(delta, _gram, v)
+          dot(v, delta)
+        else
+          mul!(rn, A, v)
+          sum(abs2, rn) / n
+        end
+        if curvature <= sum(abs2, v) / step
           break
         end
         backtrack == 100 && error("proximal-gradient backtracking failed.")
@@ -447,6 +462,23 @@ function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::
       copyto!(β, candidate)
       it = iter
       if dr <= threshold
+        if use_gram
+          # A cached normal matrix can lose accuracy on ill-conditioned data.
+          # Verify the original-design gradient before accepting convergence;
+          # if necessary, finish with direct products and reset momentum.
+          mul!(r, A, β); r .-= b
+          mul!(grad, transpose(A), r); grad ./= n
+          @. v = β - step * grad
+          prox!(delta, g, v, step)
+          @. v = β - delta
+          dr = norm(v) / step
+          if dr > threshold
+            use_gram = false
+            momentum = one(T)
+            copyto!(extrapolated, β)
+            continue
+          end
+        end
         ok = true
         break
       end
@@ -625,10 +657,23 @@ function fused_lasso_path(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, 
   isfinite(l1_ratio) && 0 <= l1_ratio <= 1 || throw(ArgumentError("l1_ratio must be in [0, 1]."))
   T = float(promote_type(eltype(X), eltype(y)))
   λs = _structured_levels(levels, T)
+  data = _structured_data(X, y, get(kwargs, :intercept, false))
+  A, b = data[1], data[2]
+  n, p = size(A)
+  gram, xy = nothing, nothing
+  # Cap the extra normal-matrix storage at 32 MiB, and amortize its formation
+  # over a path only for tall double-precision dense designs.
+  if A isa StridedMatrix{Float64} && n >= 4p && p <= 2048
+    H = transpose(A) * A / n
+    if all(isfinite, H) && issuccess(cholesky(Symmetric(H); check=false))
+      gram, xy = H, transpose(A) * b / n
+    end
+  end
   fits = StructuredLassoSolution{T}[]
   start = nothing
   for λ in λs
-    s = fused_lasso(X, y, l1_ratio * λ, (1-l1_ratio) * λ; _start = start, kwargs...)
+    s = fused_lasso(X, y, l1_ratio * λ, (1-l1_ratio) * λ;
+      _start = start, _data = data, _gram = gram, _xy = xy, kwargs...)
     push!(fits, s)
     start = s.x
   end

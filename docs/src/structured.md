@@ -80,6 +80,10 @@ requires a fitted grid level. ADMM warm starts primal and dual variables and
 reuses the factorization whenever consecutive levels have the same `rho`,
 including the automatically selected value. Fused paths use
 `λ1 = l1_ratio*λ` and `λ2 = (1-l1_ratio)*λ`.
+Fused paths reuse centered data. Tall dense Float64 designs with at most 2,048
+coefficients can also cache the normal matrix, which uses at most 32 MiB.
+Convergence is checked against the original design; a failed check
+switches the fit back to direct matrix products.
 
 Degrees of freedom use the generalized-lasso formula
 `rank(X * null(D[inactive, :]))`, plus one for an intercept, following
@@ -100,6 +104,9 @@ location grid in each fold and fits a sparse observation-selection design,
 so held-out responses do not enter training. Training observations must still
 identify the penalty's unpenalized polynomial component. CV throws if a fit
 does not converge.
+Signal CV uses the generic-design degrees-of-freedom calculation, including its
+dense null-space step. The large-signal benchmarks cover direct fits, not CV;
+they do not establish scalable tuning on million-point location grids.
 
 ## Comparison with local polynomial regression
 

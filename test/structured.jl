@@ -100,6 +100,26 @@ end
   fast = fused_lasso(correlated, y, .03, .06; abstol=1e-10, reltol=1e-9)
   @test fast.converged
   @test fast.x ≈ exact atol=1e-7
+  # Paths reuse centered normal equations, but must retain the original
+  # objective and intercept. Check against exhaustive dual active sets.
+  levels = [.12, .03]
+  path = fused_lasso_path(X .+ 2, y .+ 5, levels; l1_ratio=.25, intercept=true,
+                         abstol=1e-10, reltol=1e-9)
+  Xc, yc = X .- mean(X;dims=1), y .- mean(y)
+  for (λ, fit) in zip(levels, path.solutions)
+    expected = dual_reference(Xc,yc,[.25Matrix{Float64}(I,4,4); .75Matrix(difference_matrix(4))],λ)
+    @test fit.converged
+    @test fit.x ≈ expected atol=1e-7
+    @test fit.intercept ≈ mean(y .+ 5) - dot(vec(mean(X .+ 2;dims=1)), expected) atol=1e-7
+  end
+  # Fusion identifies an equal split of the one identifiable coefficient sum
+  # even when the design has duplicate columns.
+  a = collect(range(-1,1;length=40)); yy = 1.5a .+ .1sin.(1:40)
+  duplicated = fused_lasso_path([a a], yy, levels; l1_ratio=.25, abstol=1e-10,reltol=1e-9)
+  for (λ, fit) in zip(levels, duplicated.solutions)
+    expected = max(0, (dot(a,yy)-length(a)*.25λ)/sum(abs2,a))/2
+    @test fit.x ≈ fill(expected,2) atol=1e-7
+  end
 end
 
 @testset "generalized lasso, graphs, paths and df" begin
