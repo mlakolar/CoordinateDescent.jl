@@ -188,6 +188,57 @@ end
   @test all(isnan, aic(trend_filter_path(y,[.1,.01];max_iter=0)))
 end
 
+@testset "linear signal objective certificates" begin
+  for seed in 1:3
+    rng = Xoshiro(8400 + seed)
+    for n in (3, 17), alpha in (.1, 10.), irregular in (false, true)
+      x = irregular ? cumsum(.8 .+ .4rand(rng,n)) : nothing
+      K = difference_matrix(n)
+      x === nothing || (K = Diagonal(1 ./ diff(x)) * K)
+      D1 = Matrix(difference_matrix(n-1))
+      beta, y, u = randn(rng,n), randn(rng,n), randn(rng,n-1)
+      rho = .7
+      gap, objective = CoordinateDescent._structured_signal_gap!(
+        zeros(n), zeros(n-1), K, beta, y, K*beta, u, rho, alpha)
+      q = clamp.(-cumsum(rho*u)[1:end-1], -alpha, alpha)
+      v = transpose(Matrix(K)) * transpose(D1) * q
+      primal = sum(abs2,beta-y)/2 + alpha*sum(abs,D1*Matrix(K)*beta)
+      dual = dot(y,v) - sum(abs2,v)/2
+      @test maximum(abs,q) <= alpha
+      @test objective ≈ primal rtol=2e-14
+      @test gap ≈ primal-dual rtol=2e-14
+      @test gap >= 0
+    end
+    y = 1 .+ sin.(1:5) .+ .2randn(rng,5)
+    for x in (nothing, cumsum(.8 .+ .4rand(rng,5))), alpha in (.1, 10.)
+      D = difference_matrix(5,2;x)
+      lambda = alpha/5
+      expected = dual_reference(Matrix{Float64}(I,5,5), y, Matrix(D), lambda)
+      optimum = sum(abs2,expected-y)/10 + lambda*sum(abs,D*expected)
+      fit = trend_filter(y,lambda;order=1,x)
+      @test fit.converged
+      @test norm(fit.x-expected)/norm(expected) <= 1e-4
+      @test abs(fit.objective-optimum)/optimum <= 1e-6
+      path = trend_filter_path(y,[2.,.02,0.];order=1,x)
+      @test all(s.converged for s in path.solutions)
+      @test coef(path,lambda) ≈ expected rtol=1e-4 atol=1e-6
+    end
+  end
+  for y in (zeros(20), fill(3.,20))
+    fit = trend_filter(y,.1;order=1)
+    @test fit.converged
+    @test fit.x ≈ y atol=1e-12
+    @test fit.iterations == 1
+  end
+  y = 1 .+ sin.(1:15)
+  absolute = trend_filter(y,.1;order=1,reltol=0,abstol=1e-8)
+  @test absolute.primal_residual <= sqrt(14)*1e-8
+  @test absolute.dual_residual <= sqrt(15)*1e-8
+  single = trend_filter(Float32.(y),.1;order=1)
+  @test single.x isa Vector{Float32}
+  @test single.converged
+end
+
 @testset "CV has a common grid and respects training folds" begin
   rng = Xoshiro(83)
   X, y = randn(rng,36,5), randn(rng,36)

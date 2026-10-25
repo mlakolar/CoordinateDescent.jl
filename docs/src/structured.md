@@ -85,6 +85,18 @@ coefficients can also cache the normal matrix, which uses at most 32 MiB.
 Convergence is checked against the original design; a failed check
 switches the fit back to direct matrix products.
 
+Double-precision linear signal fits (`order=1`) use a feasible primal-dual
+objective-gap check rather than relying only on residual sizes. The gap must
+be at most `0.3*reltol` times the objective, and primal/dual residuals must
+also be within five times their usual bounds. Checks occur every ten
+iterations, plus the first and final iteration. This can stop earlier on
+large signals and require more iterations on strongly penalized cases.
+Near a zero objective, where a relative gap is numerically uninformative,
+the original residual test is used. Other signal orders, general designs,
+Float32 fits and absolute-only tolerances (`reltol=0`) retain residual
+stopping. `primal_residual` and `dual_residual` always report their actual
+values at termination.
+
 Degrees of freedom use the generalized-lasso formula
 `rank(X * null(D[inactive, :]))`, plus one for an intercept, following
 [Tibshirani and Taylor](https://doi.org/10.1214/11-AOS878). Inactive rows

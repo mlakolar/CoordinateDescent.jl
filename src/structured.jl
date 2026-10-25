@@ -289,9 +289,38 @@ function _split_factor(gram, K, ρ; bandwidth = nothing)
   F
 end
 
+# A feasible dual for 1/2||beta-b||^2 + alpha TV(K*beta) is given by
+# q in [-alpha,alpha], with v = K'D1'q. Clipping cumulative ADMM multipliers
+# supplies q even before convergence. Evaluate the gap as stationarity plus
+# nonnegative Fenchel terms, without subtracting two nearly equal objectives.
+# The two work vectors are no longer needed by the current ADMM iteration.
+function _structured_signal_gap!(stationarity, w, K, beta, b, kb, u, rho, alpha)
+  T = eltype(beta)
+  cumulative, previous = zero(T), zero(T)
+  slack, penalty = zero(T), zero(T)
+  @inbounds for j in 1:length(w)-1
+    cumulative += rho * u[j]
+    q = clamp(-cumulative, -alpha, alpha)
+    w[j] = previous - q
+    delta = kb[j+1] - kb[j]
+    penalty += alpha * abs(delta)
+    slack += alpha * abs(delta) - q * delta
+    previous = q
+  end
+  w[end] = previous
+  mul!(stationarity, transpose(K), w)
+  residual_square, stationarity_square = zero(T), zero(T)
+  @inbounds for j in eachindex(beta)
+    residual = beta[j] - b[j]
+    residual_square += abs2(residual)
+    stationarity_square += abs2(residual + stationarity[j])
+  end
+  stationarity_square / 2 + slack, residual_square / 2 + penalty
+end
+
 function _split_fit(A, b, K, g, ρ; max_iter, abstol, reltol, start = nothing,
                     gram = _structured_gram(A), xy = _structured_tproduct(A, b), factor = nothing,
-                    bandwidth = nothing)
+                    bandwidth = nothing, relative_gap = nothing)
   T, p, m = eltype(b), size(A, 2), size(K, 1)
   F = factor === nothing ? _split_factor(gram, K, ρ; bandwidth) : factor
   β = start === nothing ? zeros(T, p) : copy(start.β)
@@ -299,6 +328,7 @@ function _split_fit(A, b, K, g, ρ; max_iter, abstol, reltol, start = nothing,
   u = start === nothing ? zeros(T, m) : (start.ρ / ρ) .* start.u
   kb, v, zold = zeros(T, m), zeros(T, m), zeros(T, m)
   rhs, dual, ktu = zeros(T, p), zeros(T, p), zeros(T, p)
+  energy = relative_gap === nothing ? zero(T) : sum(abs2, b)
   ok, it, pr, dr = false, 0, T(Inf), T(Inf)
   for iter in 1:max_iter
     @. v = z - u
@@ -317,10 +347,26 @@ function _split_fit(A, b, K, g, ρ; max_iter, abstol, reltol, start = nothing,
     dr = ρ * norm(dual)
     mul!(ktu, transpose(K), u)
     it = iter
-    if pr <= sqrt(m) * abstol + reltol * max(norm(kb), norm(z)) &&
-       dr <= sqrt(p) * abstol + reltol * ρ * norm(ktu)
-      ok = true
-      break
+    if relative_gap === nothing
+      if pr <= sqrt(m) * abstol + reltol * max(norm(kb), norm(z)) &&
+         dr <= sqrt(p) * abstol + reltol * ρ * norm(ktu)
+        ok = true
+        break
+      end
+    else
+      ep = sqrt(m) * abstol + reltol * max(norm(kb), norm(z))
+      ed = sqrt(p) * abstol + reltol * ρ * norm(ktu)
+      if pr <= 5ep && dr <= 5ed && (iter == 1 || iter % 10 == 0 || iter == max_iter)
+        gap, objective = _structured_signal_gap!(dual, v, K, β, b, kb, u, ρ, g.λ)
+        # Relative objective accuracy is not meaningful near a zero optimum.
+        # Preserve the original residual test below its arithmetic scale.
+        nearzero = objective <= 100eps(T) * energy && pr <= ep && dr <= ed
+        if isfinite(gap) && isfinite(objective) && isfinite(energy) &&
+           (gap <= relative_gap * objective || nearzero)
+          ok = true
+          break
+        end
+      end
     end
   end
   β, it, ok, pr, dr, (; β, z, u, ρ)
@@ -520,6 +566,13 @@ fits. Keywords and termination diagnostics follow [`generalized_lasso`](@ref).
 For a signal, default `rho = n*λ*spacing^order` follows the paper's spacing
 rule. With a design, it is at least the average column squared norm times
 `spacing^(2order)`. R's `glmgen::trendfilter` uses `lambda = n*λ`.
+
+Float64 linear signal fits (`order = 1`, positive `reltol`) stop using a
+feasible primal-dual gap at most `0.3reltol` times the primal objective,
+with primal and dual residuals at most five times their usual bounds. The
+gap is checked every ten iterations and at the first and final iteration.
+Near a zero objective the original residual test is used. Other fits and
+absolute-only tolerances retain residual stopping.
 """
 function trend_filter(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real;
                       order::Integer = 1, x = nothing, intercept::Bool = false,
@@ -547,8 +600,10 @@ function trend_filter(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::
   ρ = rho === nothing ? _trend_rho(A, _structured_curvature(A), length(b), λ, spacing, order, T) : T(rho)
   isfinite(ρ) && ρ > 0 || throw(ArgumentError("rho must be positive and finite."))
   K = convert(SparseMatrixCSC{T, Int}, K)
+  gap_tol = A isa _SignalDesign{Float64} && order == 1 && reltol > 0 ? T(3reltol / 10) : nothing
   β, it, ok, pr, dr, _ = _split_fit(A, b, K, TotalVariation1D(T(length(b) * λ)), ρ;
-                                    max_iter, abstol, reltol, bandwidth = A isa _SignalDesign ? order : nothing)
+                                    max_iter, abstol, reltol, bandwidth = A isa _SignalDesign ? order : nothing,
+                                    relative_gap = gap_tol)
   df = _structured_df(A, D, β, df_tol; trend_order = order)
   _structured_finish(A, b, xm, ym, β, intercept, λ * sum(abs, D * β), it, ok, pr, dr, df)
 end
@@ -610,6 +665,7 @@ function _admm_path(X, y, D, K, levels; family = :generalized, trend_order = not
   solutions = StructuredLassoSolution{T}[]
   state, fixed_factor, last_rho = nothing, nothing, nothing
   bandwidth = A isa _SignalDesign ? trend_order : nothing
+  gap_tol = A isa _SignalDesign{Float64} && trend_order == 1 && reltol > 0 ? T(3reltol / 10) : nothing
   if rho !== nothing
     isfinite(rho) && rho > 0 || throw(ArgumentError("rho must be positive and finite."))
     if any(>(0), λs) && size(K, 1) > 0
@@ -630,7 +686,7 @@ function _admm_path(X, y, D, K, levels; family = :generalized, trend_order = not
     end
     g = trend_order === nothing ? NormL1(T(n*λ)) : TotalVariation1D(T(n*λ))
     β, it, ok, pr, dr, state = _split_fit(A, b, K, g, ρ;
-      max_iter, abstol, reltol, start = state, gram, xy, factor = fixed_factor)
+      max_iter, abstol, reltol, start = state, gram, xy, factor = fixed_factor, relative_gap = gap_tol)
     df = _structured_df(A, M, β, df_tol; trend_order)
     push!(solutions, _structured_finish(A, b, xm, ym, β, intercept,
       λ * sum(abs, M * β), it, ok, pr, dr, df))
