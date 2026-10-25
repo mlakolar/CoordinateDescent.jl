@@ -1,0 +1,4 @@
+case	family	n	p	order	path	reference	reference_over_julia	min_ratio	max_ratio	accuracy_pass	coverage_and_convergence_pass	julia_setting	reference_candidates
+million-k0	signal	1000000	1000000	0	0	glmgen	3.359083138150123	3.282950415215952	3.598692801948147	True	True	optimized-matched	"[{""solver"":""glmgen"",""passes"":true,""seconds"":0.65}]"
+million-k1	signal	1000000	1000000	1	0	glmgen-1e8	0.8048791397977422	0.803123869079455	0.8902345820980929	True	True	optimized-default	"[{""solver"":""glmgen-1e8"",""passes"":true,""seconds"":24.18}]"
+million-k2	signal	1000000	1000000	2	0	glmgen	1.151845110536159	1.112180717448561	1.1776116082963406	True	True	optimized-default	"[{""solver"":""glmgen"",""passes"":true,""seconds"":185.893}]"

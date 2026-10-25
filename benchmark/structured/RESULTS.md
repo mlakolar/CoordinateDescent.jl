@@ -1,5 +1,10 @@
 # Discovery validation, 2026-10-25
 
+For the optimized implementation's replicated comparisons against glmgen and
+genlasso, see the newer [competitiveness report](compare/RESULTS.md). The tables
+below retain the original implementation measurements and their original
+controls; they are not the final cross-package comparison.
+
 Run: `20261025-cd80-structured`. Benchmarks used Julia 1.13.2, one CPU per worker on Discovery (`main`, `epyc-7513`), and one BLAS/OpenMP thread. Each cell contains three independently generated data sets (seeds 8101–8103), each measured three times after compilation on a separate short problem. Values below are median wall-clock seconds over the nine measurements.
 
 All 108 signal measurements and all 108 retained regression measurements converged. Signal tolerances were `abstol=1e-6`, `reltol=1e-5`, with `lambda=1/n` and at most 5,000 iterations. Regression tolerances were `abstol=1e-7`, `reltol=1e-6`.

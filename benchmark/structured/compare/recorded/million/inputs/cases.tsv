@@ -1,0 +1,4 @@
+id	family	n	p	order	grid	path	lo	hi	genlasso	r_setting	julia_setting
+million-k0	signal	1000000	1000000	0	unit	0	1	1	FALSE	glmgen	optimized-matched
+million-k1	signal	1000000	1000000	1	unit	0	1	1	FALSE	glmgen-1e8	optimized-default
+million-k2	signal	1000000	1000000	2	unit	0	1	1	FALSE	glmgen	optimized-default
