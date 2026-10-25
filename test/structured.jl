@@ -1,6 +1,41 @@
 module StructuredTest
 using HighDimensionalModels, Test, LinearAlgebra, SparseArrays, Random, Statistics
 
+@testset "trend stencil products and sparse fallback" begin
+  hdm = HighDimensionalModels
+  rng = MersenneTwister(98261026)
+  for T in (Float32, Float64), n in (3, 8, 37), order in 0:min(3,n-1), irregular in (false,true)
+    locations = irregular ? cumsum(T.(1 .+ rand(rng,n))) : T.(0:n-1)
+    K = T.(difference_matrix(n,order;x=locations))
+    P = hdm._trend_products(K,order)
+    @test order <= 2 ? P isa hdm._TrendProducts : P === K
+    a,b = randn(rng,T,n), randn(rng,T,n-order)
+    y,z = similar(b),similar(a)
+    @test hdm._split_product!(y,P,a) === y
+    @test hdm._split_tproduct!(z,P,b) === z
+    @test y ≈ Matrix(K)*a rtol=16eps(T) atol=16eps(T)
+    @test z ≈ Matrix(K)'*b rtol=16eps(T) atol=16eps(T)
+    @test dot(y,b) ≈ dot(a,z) rtol=32eps(T) atol=32eps(T)
+    if P isa hdm._TrendProducts
+      @test_throws DimensionMismatch hdm._split_product!(zeros(T,length(b)+1),P,a)
+      @test_throws DimensionMismatch hdm._split_tproduct!(z,P,zeros(T,length(b)+1))
+    end
+    # Nonfinite arithmetic must agree with the original sparse products.
+    a[1] = T(Inf); b[end] = T(NaN)
+    for (actual,expected) in ((hdm._split_product!(y,P,a),K*a),
+                              (hdm._split_tproduct!(z,P,b),K'*b))
+      @test all(isfinite(v) ? isapprox(u,v;rtol=16eps(T),atol=16eps(T)) : isequal(u,v)
+                for (u,v) in zip(actual,expected))
+    end
+  end
+  dense = [-1. 1. 0.;0. -1. 1.]
+  @test hdm._trend_products(dense,1) === dense
+  # Explicit malformed/bandwidth-mismatched operators stay with sparse mul!.
+  for K in (spzeros(2,3), sparse([1. 0. 1.;0. 1. 1.]), sparse([NaN 1. 0.;0. -1. 1.]))
+    @test hdm._trend_products(K,1) === K
+  end
+end
+
 # Exhaustive dual active sets give an independent exact reference for small
 # problems, including redundant rows of D. No optimizer is reused here.
 function dual_reference(X, y, D, λ)

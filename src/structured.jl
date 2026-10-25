@@ -58,6 +58,76 @@ function difference_matrix(n::Integer, order::Integer = 1; x = nothing)
   D
 end
 
+# Keep the sparse matrix for factorization and public use. Iterative trend
+# products only need its short row stencil. Read the actual matrix entries,
+# including divided-difference weights, rather than recomputing coefficients.
+struct _TrendProducts{T, W, C}
+  coefficients::C
+  n::Int
+  m::Int
+end
+
+function _trend_products(K::SparseMatrixCSC, order)
+  order isa Integer && order in 0:2 || return K
+  _trend_products(K, Val(order + 1))
+end
+
+function _trend_products(K::SparseMatrixCSC{T}, ::Val{W}) where {T, W}
+  m, n = size(K)
+  m > 0 && n == m + W - 1 && nnz(K) == m * W || return K
+  coefficients = ntuple(_ -> zero(T), Val(W))
+  regular = true
+  for j in axes(K, 2), k in nzrange(K, j)
+    i, value = rowvals(K)[k], nonzeros(K)[k]
+    offset = j - i + 1
+    1 <= offset <= W && isfinite(value) && !iszero(value) || return K
+    if iszero(coefficients[offset])
+      coefficients = Base.setindex(coefficients, value, offset)
+    elseif coefficients[offset] != value
+      regular = false
+    end
+  end
+  if regular
+    return _TrendProducts{T, W, typeof(coefficients)}(coefficients, n, m)
+  end
+  rows = ntuple(_ -> zeros(T, m), Val(W))
+  for j in axes(K, 2), k in nzrange(K, j)
+    i = rowvals(K)[k]
+    rows[j-i+1][i] = nonzeros(K)[k]
+  end
+  _TrendProducts{T, W, typeof(rows)}(rows, n, m)
+end
+_trend_products(K, order) = K
+
+@inline _trend_coefficient(c::Number, i) = c
+@inline _trend_coefficient(c::AbstractVector, i) = @inbounds c[i]
+_split_product!(y, K, x) = mul!(y, K, x)
+_split_tproduct!(y, K, x) = mul!(y, transpose(K), x)
+
+function _split_product!(y, K::_TrendProducts{T, W}, x) where {T, W}
+  length(y) == K.m && length(x) == K.n || throw(DimensionMismatch("trend product dimensions"))
+  @inbounds @simd for i in 1:K.m
+    value = zero(T)
+    for offset in 1:W
+      value += _trend_coefficient(K.coefficients[offset], i) * x[i+offset-1]
+    end
+    y[i] = value
+  end
+  y
+end
+
+function _split_tproduct!(y, K::_TrendProducts{T, W}, x) where {T, W}
+  length(y) == K.n && length(x) == K.m || throw(DimensionMismatch("trend transpose dimensions"))
+  @inbounds @simd for j in 1:K.n
+    value = zero(T)
+    for i in max(1, j-W+1):min(j, K.m)
+      value += _trend_coefficient(K.coefficients[j-i+1], i) * x[i]
+    end
+    y[j] = value
+  end
+  y
+end
+
 """
     graph_difference(p, edges; weights = nothing)
 
@@ -321,7 +391,7 @@ function _structured_signal_gap!(stationarity, w, K, beta, b, kb, u, rho, alpha)
     previous = q
   end
   w[end] = previous
-  mul!(stationarity, transpose(K), w)
+  _split_tproduct!(stationarity, K, w)
   residual_square, stationarity_square = zero(T), zero(T)
   @inbounds for j in eachindex(beta)
     residual = beta[j] - b[j]
@@ -333,11 +403,11 @@ end
 
 function _split_fit(A, b, K, g, ρ; max_iter, abstol, reltol, start = nothing,
                     gram = _structured_gram(A), xy = _structured_tproduct(A, b), factor = nothing,
-                    bandwidth = nothing, relative_gap = nothing)
+                    bandwidth = nothing, relative_gap = nothing, products = K)
   T, p, m = eltype(b), size(A, 2), size(K, 1)
   F = factor === nothing ? _split_factor(gram, K, ρ; bandwidth) : factor
   β = start === nothing ? zeros(T, p) : copy(start.β)
-  z = start === nothing ? K * β : copy(start.z)
+  z = start === nothing ? _split_product!(zeros(T, m), products, β) : copy(start.z)
   u = start === nothing ? zeros(T, m) : (start.ρ / ρ) .* start.u
   kb, v, zold = zeros(T, m), zeros(T, m), zeros(T, m)
   rhs, dual, ktu = zeros(T, p), zeros(T, p), zeros(T, p)
@@ -345,10 +415,10 @@ function _split_fit(A, b, K, g, ρ; max_iter, abstol, reltol, start = nothing,
   ok, it, pr, dr = false, 0, T(Inf), T(Inf)
   for iter in 1:max_iter
     @. v = z - u
-    mul!(rhs, transpose(K), v)
+    _split_tproduct!(rhs, products, v)
     @. rhs = xy + ρ * rhs
     _structured_solve!(β, F, rhs)
-    mul!(kb, K, β)
+    _split_product!(kb, products, β)
     copyto!(zold, z)
     @. v = kb + u
     prox!(z, g, v, inv(ρ))
@@ -356,9 +426,9 @@ function _split_fit(A, b, K, g, ρ; max_iter, abstol, reltol, start = nothing,
     @. v = kb - z
     pr = norm(v)
     @. v = z - zold
-    mul!(dual, transpose(K), v)
+    _split_tproduct!(dual, products, v)
     dr = ρ * norm(dual)
-    mul!(ktu, transpose(K), u)
+    _split_tproduct!(ktu, products, u)
     it = iter
     if relative_gap === nothing
       if pr <= sqrt(m) * abstol + reltol * max(norm(kb), norm(z)) &&
@@ -370,7 +440,7 @@ function _split_fit(A, b, K, g, ρ; max_iter, abstol, reltol, start = nothing,
       ep = sqrt(m) * abstol + reltol * max(norm(kb), norm(z))
       ed = sqrt(p) * abstol + reltol * ρ * norm(ktu)
       if pr <= 5ep && dr <= 5ed && (iter == 1 || iter % 10 == 0 || iter == max_iter)
-        gap, objective = _structured_signal_gap!(dual, v, K, β, b, kb, u, ρ, g.λ)
+        gap, objective = _structured_signal_gap!(dual, v, products, β, b, kb, u, ρ, g.λ)
         # Relative objective accuracy is not meaningful near a zero optimum.
         # Preserve the original residual test below its arithmetic scale.
         nearzero = objective <= 100eps(T) * energy && pr <= ep && dr <= ed
@@ -629,7 +699,7 @@ function trend_filter(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::
   gap_tol = A isa _SignalDesign{Float64} && order == 1 && reltol > 0 ? T(3reltol / 10) : nothing
   β, it, ok, pr, dr, _ = _split_fit(A, b, K, TotalVariation1D(T(length(b) * λ)), ρ;
                                     max_iter, abstol, reltol, bandwidth = A isa _SignalDesign ? order : nothing,
-                                    relative_gap = gap_tol)
+                                    relative_gap = gap_tol, products = _trend_products(K, order))
   df = _structured_df(A, D, β, df_tol; trend_order = order)
   _structured_finish(A, b, xm, ym, β, intercept, λ * sum(abs, D * β), it, ok, pr, dr, df)
 end
@@ -687,6 +757,7 @@ function _admm_path(X, y, D, K, levels; family = :generalized, trend_order = not
   T, n = eltype(b), length(b)
   M = _structured_penalty(D, size(A, 2), T)
   K = _structured_penalty(K, size(A, 2), T)
+  products = _trend_products(K, trend_order)
   λs = _structured_levels(levels, T)
   gram, xy = _structured_gram(A), _structured_tproduct(A, b)
   curvature = sum(diag(gram)) / size(A, 2)
@@ -714,7 +785,7 @@ function _admm_path(X, y, D, K, levels; family = :generalized, trend_order = not
     end
     g = trend_order === nothing ? NormL1(T(n*λ)) : TotalVariation1D(T(n*λ))
     β, it, ok, pr, dr, state = _split_fit(A, b, K, g, ρ;
-      max_iter, abstol, reltol, start = state, gram, xy, factor = fixed_factor, relative_gap = gap_tol)
+      max_iter, abstol, reltol, start = state, gram, xy, factor = fixed_factor, relative_gap = gap_tol, products)
     df = _structured_df(A, M, β, df_tol; trend_order)
     push!(solutions, _structured_finish(A, b, xm, ym, β, intercept,
       λ * sum(abs, M * β), it, ok, pr, dr, df))
