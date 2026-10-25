@@ -1,0 +1,3 @@
+Julia=1.10.12 node=a01-09.hpc.usc.edu threads=2 BLAS=LBTConfig([ILP64] libopenblas64_.so)
+SLOPE=1.3.1 Knockoffs=3.1.4 GLMNet=0.7.4
+Knockoffs source=/home1/mkolar/juliaPkg/runs/20261025-cd82-compare/depot/packages/Knockoffs/ROZEa/src/Knockoffs.jl

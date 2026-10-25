@@ -1,0 +1,9 @@
+{
+  "path_rows": 16,
+  "expected_rows": 16,
+  "groups": 4,
+  "expected_groups": 4,
+  "input_files": 4,
+  "expected_input_files": 4,
+  "complete": true
+}

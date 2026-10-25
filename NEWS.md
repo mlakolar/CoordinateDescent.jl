@@ -14,6 +14,31 @@ bias target, reference noise, and grid boundaries. It remains experimental: fres
 undercoverage and frequent grid-endpoint choices remain.
 Cross-validation excludes tuning levels with no finite fold errors from selection.
 
+Low-rank nuclear fits and paths accept `solver = :panoc` after loading the
+optional ProximalAlgorithms dependency. Row-sparse fits and paths accept
+`block_solver = :fista`; both options propagate through cross-validation.
+Fixed-rank fits reuse existing factorizations for diagnostics and compute
+residuals once, preserving numerical rank and degrees-of-freedom definitions.
+
+## Quantile primal–dual API
+
+- Add exact HiGHS fit/path solvers and a convolution-smoothed proximal Newton route.
+- Preserve raw observation-level duals through `dual_scores`, document QR.jl's sign/normalization conversion, and retain independent certificates and per-fit KKT diagnostics.
+- Support weighted slope penalties, offsets, explicit zero penalties, sparse designs and partial exact paths; do not interpolate between quantile levels.
+
+- Add `quantile_lambda` for fixed-quantile pivotal penalty simulation with explicit confidence, loading and RNG controls.
+- Add `CVQuantileLassoPath` for held-out check-loss tuning, minimum/one-standard-error selection, and raw dual access from the selected full-data fit. Inaccurate or missing fold fits exclude that penalty.
+- Enable certified smoothed stopping with the merged ProximalSolvers convolution backend; retain the documented older-release fallback. Active development and CI resolve workspace master sources, with migration version numbers unchanged.
+
+## Multivariate regression
+
+Add rank-constrained least squares with the Bunea–She–Wegkamp rank selection
+criterion, coefficient nuclear-norm regression with warm-started paths, and
+row-sparse reduced-rank regression. Sparse singular-vector regression also
+selects response loadings. `LowRankPath`, `CVLowRankPath` and `lowrank_ic`
+provide rank/penalty grids, fold-specific tuning, and information criteria.
+The methods support intercepts, rank-deficient designs, and StatsAPI.
+
 ## Paths stop on a certified duality gap
 
 With ProximalSolvers' gap stopping (ProximalSolvers #86), the paths (`LassoPath`, `CVLassoPath`,

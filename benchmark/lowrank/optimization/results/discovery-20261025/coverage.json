@@ -1,0 +1,16 @@
+{
+  "timing_rows": 5250,
+  "unique_timing_keys": 5250,
+  "expected_timing_rows": 5250,
+  "profile_reports": 255,
+  "expected_profiles": 255,
+  "memory_observations": 170,
+  "expected_memory_observations": 170,
+  "distinct_reps": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ]
+}

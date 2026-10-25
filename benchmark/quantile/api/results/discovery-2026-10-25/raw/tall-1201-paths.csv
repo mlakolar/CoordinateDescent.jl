@@ -1,0 +1,17 @@
+case,seed,rep,method,n,p,tau,requested_levels,levels,fit_s,diagnostics_s,total_s,julia_bytes,raw_dual_available,qualified,status,host
+tall,1201,1,rqpen-fn,10000,100,0.5,32,0,18.9881253242493,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tall,1201,1,gurobi-primal,10000,100,0.5,32,32,41.396826082,0.0,41.396826082,258466728,true,true,returned,a02-16.hpc.usc.edu
+tall,1201,1,api-exact,10000,100,0.5,32,32,2.830036483,0.0,2.830036483,86738008,true,true,returned,a02-16.hpc.usc.edu
+tall,1201,1,rqpen-br,10000,100,0.5,32,0,38.3575298786163,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tall,1201,1,conquer-dual,10000,100,0.5,32,32,0.849286556243896,0.044606592,0.8938931482438961,NaN,true,true,returned,a02-16.hpc.usc.edu
+tall,1201,1,quantreg-native-dual,10000,100,0.5,32,32,13.8530240058899,0.024528307,13.8775523128899,NaN,true,true,returned,a02-16.hpc.usc.edu
+tall,1201,1,api-smooth,10000,100,0.5,32,32,0.141427311,0.0,0.141427311,22078432,true,true,returned,a02-16.hpc.usc.edu
+tall,1201,1,rqpen-huber,10000,100,0.5,32,0,0.330624341964722,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tall,1201,2,conquer-dual,10000,100,0.5,32,32,0.831558227539062,0.04445088,0.8760091075390619,NaN,true,true,returned,a02-16.hpc.usc.edu
+tall,1201,2,rqpen-huber,10000,100,0.5,32,0,0.338832139968872,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tall,1201,2,quantreg-native-dual,10000,100,0.5,32,32,13.6456835269928,0.026863997,13.6725475239928,NaN,true,true,returned,a02-16.hpc.usc.edu
+tall,1201,2,rqpen-fn,10000,100,0.5,32,0,18.888827085495,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tall,1201,2,rqpen-br,10000,100,0.5,32,0,38.6870124340057,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tall,1201,2,gurobi-primal,10000,100,0.5,32,32,40.741218833,0.0,40.741218833,258345640,true,true,returned,a02-16.hpc.usc.edu
+tall,1201,2,api-exact,10000,100,0.5,32,32,2.830305807,0.0,2.830305807,86741016,true,true,returned,a02-16.hpc.usc.edu
+tall,1201,2,api-smooth,10000,100,0.5,32,32,0.143664112,0.0,0.143664112,22077888,true,true,returned,a02-16.hpc.usc.edu

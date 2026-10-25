@@ -1,0 +1,7 @@
+case,solver,median_ms,min_rep_ms,max_rep_ms,certified_replications
+small,cd_rank_core,0.772678,0.7404879999999999,0.7964530000000001,5
+medium,cd_rank_core,1.335865,1.318692,1.6343539999999999,5
+responses,cd_rank_core,4.204864,4.054241,5.396288,5
+wide,cd_rank_core,11.905412,11.855047,13.796206999999999,5
+ill,cd_rank_core,4.425908,4.409257,4.6055150000000005,5
+deficient,cd_rank_core,1.723812,1.716478,1.7592079999999999,5

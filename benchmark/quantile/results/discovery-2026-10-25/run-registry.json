@@ -1,0 +1,256 @@
+{
+  "actual_resources": {
+    "allocated_cpu_hours": 4.476388888888889,
+    "peak_allocated_cpus": 4,
+    "peak_allocated_memory_gib": 16.0,
+    "running_union_minutes": 97.11666666666666,
+    "running_union_s": 5827.0
+  },
+  "additional_scope": "Factorized two-block ADMM with normalized residual constraint and Woodbury for wide designs; at most2000factor dimension. Max future concurrent request3CPUs16GB with followup profiling job.",
+  "authorized_resources": {
+    "max_cpus": 8,
+    "max_memory_gb": 16,
+    "max_running_minutes": 120,
+    "planned_measurements": "4CPU16GB up to60min",
+    "planned_setup": "1CPU4GB20min",
+    "reference": "Explicit user request; slurm-workflow standing allowance"
+  },
+  "budget_plan": "Final actual running union97.12min,4.476allocated CPUhours,peak4CPU16GiB; no jobs remain running. Under standing120min allowance.",
+  "cluster": {
+    "account": "mkolar_1314",
+    "constraint": "epyc-7513",
+    "name": "Discovery",
+    "partition": "main",
+    "ssh_alias": "discovery"
+  },
+  "created_utc": "2026-10-25T09:02:09.288656Z",
+  "final_validation": {
+    "accuracy": "Common feasible-dual gap/KKT gates; original and shared bounds preserved; zero negative-gap failures. Recovery all9workers exit0; initial4GB OOM retained as failedallocation.",
+    "checks": "1650 main validation assertions;18factorizedADMM;30nullbasis;60splitbasis;1206Fenchel assertions;6correctedRgolden cells;28repeated CPUprofiles. Transfer671files SHA256verified locally;PythonAST/shellsyntaxchecked locally, no local Julia/R.",
+    "coverage": "552 main,46pilot,72ADMM,90R,12conditionalrho,54split,96basis;108density;144approximation; allplannedcountscomplete",
+    "remaining_issue_scope": "PublicAPI,weightedpenaltygeneralization,pivotallambda,checklossCV,postselectionrefit,debiasedinference,parametricbreakpointalgorithm; QRport deferred."
+  },
+  "jobs": [
+    {
+      "command": "sbatch --parsable setup.sbatch",
+      "elapsed_s": 128,
+      "end_utc": "2026-10-25T09:06:10",
+      "exit_code": "1:0",
+      "job_id": "13422781",
+      "outcome": "Environment and858 correctness checks passed; worker parsing failed before measurements;2m8s",
+      "resources": "1CPU8GB20min",
+      "stage": "Julia setup tests and pilot",
+      "start_utc": "2026-10-25T09:04:02",
+      "status": "FAILED"
+    },
+    {
+      "elapsed_s": 17,
+      "end_utc": "2026-10-25T09:04:19",
+      "exit_code": "1:0",
+      "job_id": "13422782",
+      "outcome": "FAILED after17s missing compiler headers inherited environment",
+      "resources": "1CPU4GB20min",
+      "stage": "R oracle environment",
+      "start_utc": "2026-10-25T09:04:02",
+      "status": "FAILED"
+    },
+    {
+      "command": "sbatch --parsable rsetup-v2.sbatch",
+      "elapsed": "3m15s",
+      "elapsed_s": 195,
+      "end_utc": "2026-10-25T09:10:56",
+      "exit_code": "0:0",
+      "job_id": "13423092",
+      "resources": "1CPU4GB20min",
+      "stage": "R oracle environment clean container retry",
+      "start_utc": "2026-10-25T09:07:41",
+      "status": "COMPLETED"
+    },
+    {
+      "command": "sbatch --parsable recover.sbatch",
+      "elapsed": "10m46s",
+      "elapsed_s": 646,
+      "end_utc": "2026-10-25T09:21:03",
+      "exit_code": "0:0",
+      "job_id": "13423103",
+      "outcome": "858checks and 46pilot timing paths plus CPUprofiles; Gurobi12.0.3 license works",
+      "resources": "1CPU8GB20min",
+      "stage": "Canary2 licensed Gurobi, corrected worker and standardized golden fixture",
+      "start_utc": "2026-10-25T09:10:17",
+      "status": "COMPLETED"
+    },
+    {
+      "command": "sbatch --parsable --dependency=afterok:13423103 oracle.sbatch",
+      "elapsed_s": 3,
+      "end_utc": "2026-10-25T09:21:12",
+      "exit_code": "1:0",
+      "job_id": "13423130",
+      "outcome": "rqPen exact objective agreement and conquer KKT/coefficient agreement; quantreg normalization discrepancy needs diagnosis",
+      "resources": "1CPU4GB5min",
+      "stage": "Independent R golden checks",
+      "start_utc": "2026-10-25T09:21:09",
+      "status": "FAILED"
+    },
+    {
+      "command": "sbatch --parsable --dependency=afterany:13423130 evaluate.sbatch",
+      "elapsed": "40m47s",
+      "elapsed_s": 2447,
+      "end_utc": "2026-10-25T10:02:27",
+      "exit_code": "0:0",
+      "job_id": "13423142",
+      "outcome": "552timing paths from24workers;108grid-density timings; allworkers exited0; output accuracy classified separately",
+      "resources": "2nodes,2CPUs8GB per node,total4CPUs16GB50min",
+      "stage": "Repeated benchmark and density study",
+      "start_utc": "2026-10-25T09:21:40",
+      "status": "COMPLETED"
+    },
+    {
+      "command": "sbatch --parsable --dependency=afterany:13423142 finalize.sbatch",
+      "elapsed": "0s",
+      "elapsed_s": 0,
+      "end_utc": "2026-10-25T09:27:26",
+      "exit_code": "0:0",
+      "job_id": "13423151",
+      "reason": "Replace pending followup with repeated CPU profiles so fast Newton methods have meaningful sample counts",
+      "resources": "1CPU8GB15min",
+      "stage": "Corrected R oracle and numerical summaries",
+      "start_utc": "None",
+      "status": "CANCELLED by 605182"
+    },
+    {
+      "command": "sbatch --parsable --dependency=afterany:13423142 finalize-v2.sbatch",
+      "elapsed": "1m23s",
+      "elapsed_s": 83,
+      "end_utc": "2026-10-25T10:03:59",
+      "exit_code": "0:0",
+      "job_id": "13423157",
+      "outcome": "Corrected6Rgolden cells passed;46pilot and552main observations summarized;28repeated CPUprofile files",
+      "resources": "1CPU8GB15min",
+      "stage": "Corrected R oracle, numerical summaries, repeated profiles",
+      "start_utc": "2026-10-25T10:02:36",
+      "status": "COMPLETED"
+    },
+    {
+      "command": "sbatch --parsable --dependency=afterany:13423142 admm.sbatch",
+      "elapsed_s": 779,
+      "end_utc": "2026-10-25T10:15:35",
+      "exit_code": "0:0",
+      "job_id": "13423180",
+      "resources": "2CPU8GB20min",
+      "scope": "4dense shapes x3fresh seeds x2timing blocks x3methods, certificates before ranking; two workers through GNUParallel/srun",
+      "stage": "Balanced factorized ADMM, linearized ADMM and exact LP on fresh seeds",
+      "start_utc": "2026-10-25T10:02:36",
+      "status": "COMPLETED"
+    },
+    {
+      "command": "sbatch --parsable --dependency=afterany:13423157:13423180 rbench.sbatch",
+      "elapsed_s": 605,
+      "end_utc": "2026-10-25T10:26:11",
+      "exit_code": "0:0",
+      "job_id": "13423207",
+      "resources": "2CPU8GB20min",
+      "scope": "n1000,10000,100000,p100;3seeds,2timing blocks; binary I/O and process startup excluded; recover feasible duals from quantreg solutions and certify before ranking",
+      "stage": "Matched R FrischNewton/conquer and Julia timings on fresh inputs",
+      "start_utc": "2026-10-25T10:16:06",
+      "status": "COMPLETED"
+    },
+    {
+      "command": "sbatch --parsable --dependency=afterany:13423207 report.sbatch; pending dependency updated via scontrol to afterany:13423207:13423468:13423518",
+      "elapsed_s": 28,
+      "end_utc": "2026-10-25T10:29:31",
+      "exit_code": "0:0",
+      "job_id": "13423432",
+      "resources": "1CPU4GB5min",
+      "scope": "No refits; reuse accepted summaries, check expected observations, summarize path density and exact-versus-smoothed training predictions from saved coefficients",
+      "stage": "Final saved-output coverage and approximation summaries",
+      "start_utc": "2026-10-25T10:29:03",
+      "status": "COMPLETED"
+    },
+    {
+      "command": "sbatch --parsable --dependency=afterany:13423157:13423180 rho.sbatch",
+      "elapsed_s": 186,
+      "end_utc": "2026-10-25T10:19:12",
+      "exit_code": "0:0",
+      "job_id": "13423468",
+      "resources": "1CPU4GB12min",
+      "scope": "Tuning seed901: rho0.01,0.1,1,10 plus residual balancing; confirm best eligible choice on fresh seeds902-904,2replicates, against exact LP. Runs beside Rbench, total3CPUs12GB.",
+      "stage": "ADMM rho sensitivity and fresh-seed confirmation",
+      "start_utc": "2026-10-25T10:16:06",
+      "status": "COMPLETED"
+    },
+    {
+      "command": "sbatch --parsable --dependency=afterany:13423157:13423180 split.sbatch",
+      "elapsed_s": 219,
+      "end_utc": "2026-10-25T10:28:33",
+      "exit_code": "0:0",
+      "job_id": "13423518",
+      "resources": "1CPU4GB6min",
+      "scope": "3n1000 shapes p100/1000/10000,3seeds,2timing blocks; primal/dual simplex on splitcoefficients versus explicit dual LP;4sec full-path cap. Beside R8GB+rho4GB keeps total16GB4CPUs.",
+      "stage": "Standard positive-negative coefficient LP formulation check",
+      "start_utc": "2026-10-25T10:24:54",
+      "status": "COMPLETED"
+    },
+    {
+      "command": "sbatch --parsable --dependency=afterany:13423432 basis.sbatch",
+      "elapsed": "4m28s",
+      "elapsed_s": 268,
+      "end_utc": "2026-10-25T10:53:42",
+      "exit_code": "1:0",
+      "job_id": "13423596",
+      "outcome": "Analytic dual basis30checks passed, allsmall/wide/100000x100 timings complete; split formulation OOM at4GB inwidest cells. Valid observations retained; shared-bound reconciliation completed. Recovery plans only missing/validation-interrupted cells plus matched analytic split starts.",
+      "resources": "3CPU12GB10min",
+      "scope": "Analytic null basis and default dual LP on4shapes, including the exact saved Rbenchmark100000x100 inputs and lambda grid;3inputs2reps; common30sec cap,plus widest split formulations.60timing observations. Shared-bound reconciliation reuses original problem bounds without refitting other studies.",
+      "stage": "Analytic null basis, common-cap widest LP cells and shared-bound reconciliation",
+      "start_utc": "2026-10-25T10:49:14",
+      "status": "FAILED"
+    },
+    {
+      "command": "sbatch --parsable --dependency=afterany:13423596 basis_recovery.sbatch",
+      "elapsed_s": 625,
+      "end_utc": "2026-10-25T11:20:51",
+      "exit_code": "0:0",
+      "job_id": "13423694",
+      "outcome": "60 split-basis assertions passed; all9 recovery workers exit0; combined96 observations/16groups/12inputs complete;54 full paths accuracy-qualified,42 scientific incomplete/budget paths retained.",
+      "resources": "2CPU16GB15min",
+      "scope": "Only missing or validation-interrupted cells after4GBOOM, plus matched analytic split starts on small/wide/ultrawide inputs. Original capped observations are retained. Combined target96timing observations with explicit per-row memory/attempt metadata.",
+      "stage": "Bounded8GB-worker recovery and matched split null starts",
+      "start_utc": "2026-10-25T11:10:26",
+      "status": "COMPLETED"
+    }
+  ],
+  "kind": "development",
+  "main_coverage": "552timing paths,3133returned solutions,92case/method groups,24input workers;330paths passed accuracy+coverage,222failed/incomplete. Density stage complete; scheduler accounting pending confirmation.",
+  "matched_R_native_tolerances": "Before job13423207 starts, staged rbench-tolerance-v3.tar sets quantreg eps1e-7 and conquer coefficient-step tolerance1e-6. Common feasible-dual/KKT gates still qualify timings; golden comparisons retain tighter tolerances. R wall clock uses high-resolution Sys.time. Snapshot hashes retained.",
+  "measurement_source": "harness-v3.tar; LP tests expanded to Gurobi; APG trial objective avoids an unused gradient, and dual-IPM plus Gurobi scale baselines added after pilot",
+  "outputs": {
+    "local": "/Users/mladen.kolar/projects/juliaPkg/.slurm/runs/20261025-cd78-quantile",
+    "publication": "/Users/mladen.kolar/projects/juliaPkg/cd-quantile-20261025/benchmark/quantile/results/discovery-2026-10-25",
+    "remote": "/home1/mkolar/juliaPkg/runs/20261025-cd78-quantile",
+    "report": "/Users/mladen.kolar/projects/juliaPkg/cd-quantile-20261025/benchmark/quantile/results/discovery-2026-10-25/REPORT.md"
+  },
+  "purpose": "Issue78 solver selection: exact primal and dual LPs, cold and reused simplex/IPM, linearized ADMM, convolution smoothing APG and production proximal Newton",
+  "recreation": {
+    "command": "Use benchmark/quantile/REPRODUCE.md in a fresh run; original immutable executed-source layers and exact accounting saved with results.",
+    "cwd": "/home1/mkolar/juliaPkg/runs/20261025-cd78-quantile",
+    "snapshot": "three commit archives plus harness-v1.tar",
+    "source": {
+      "CoordinateDescent": "c408831e2b011e83fa427248bf074dc0fc91d870",
+      "ProximalBase": "0111d1bb4ca51b40c28d8ea5dab0f63be4d76e6a",
+      "ProximalSolvers": "9041e236f3de8ffdc02103e5a505993463e00bb1"
+    }
+  },
+  "revision": 29,
+  "rho_scope_note": "rho-scripts-v2.tar uses feasible-dual-gap stopping on the original objective, plus fixedrho and residual-balancing candidates. Coefficients always define a feasible original regression fit; auxiliary split residuals are recorded in the baseline but are not extra feasibility conditions for this candidate. Selection on seed901, confirmation902-904.",
+  "run_id": "20261025-cd78-quantile",
+  "saved_output_analysis": "report-inputs-v4.tar and accuracy-summaries-v3.tar staged before report starts. Added paired input contrasts, bounded profile self-count summaries, and smoothed Fenchel-dual gaps of saved R fits.",
+  "schema_version": 1,
+  "source_snapshots": "snapshot-hashes.json in run directory; immutable archives retain measured versions",
+  "staged_followup_correction": "pre-run-metadata-v2.tar before jobs13423180/13423207 begin: high-resolution R Sys.time wall clock; ADMM setup accounting includes all preparation. No measurements yet from either queued job.",
+  "status": "completed_solver_selection_stage",
+  "transport": "First upload failed before delivery; following tar failed with missing source, so sbatch was not reached. Reconnected explicitly.",
+  "updated_utc": "2026-10-25T11:31:04.087685Z",
+  "validation": {
+    "completed": "858HiGHS checks in both canaries;1650HiGHS/Gurobi checks before main; rqPen exact objectives and conquer KKT passed sixgolden fits",
+    "repair": "quantreg pseudo-observation objective has lambda/2 timesl1norm, so correcting supplied lambda from n*lambda to2*n*lambda; original discrepancy retained"
+  }
+}

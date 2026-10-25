@@ -1,0 +1,4 @@
+RECOVER wide 1003 2 lp-split-nullbasis-primal complete 2.588963947s first_pivots=0
+RECOVER wide 1003 2 lp-split-nullbasis-dual complete 4.923240811s first_pivots=0
+RECOVER wide 1003 1 lp-split-nullbasis-dual complete 4.920764023s first_pivots=0
+RECOVER wide 1003 1 lp-split-nullbasis-primal complete 2.381833046s first_pivots=0

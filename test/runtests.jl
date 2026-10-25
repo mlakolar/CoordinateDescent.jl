@@ -4,6 +4,9 @@ using Aqua
 
 tests = [
   "coordinate_descent",
+  "selection",
+  "slope_sparse",
+  "selection_golden",
   "naming",
   "lasso",
   "cv",
@@ -13,10 +16,13 @@ tests = [
   "penalties",
   "bounds",
   "glm",
+  "quantile",
+  "quantile_tuning",
   "glm_penalties",
   "group",
   "sparsegroup",
   "multiresponse",
+  "lowrank",
   "hdm",
   "inference",
   "inference_golden",

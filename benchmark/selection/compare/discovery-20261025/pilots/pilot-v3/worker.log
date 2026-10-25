@@ -1,0 +1,7 @@
+DONE generate 1
+DONE benchmark 1
+Loading required package: parallel
+Loading required package: Matrix
+Loaded glmnet 5.1
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+[2026-10-25T03:31:51.233] error: *** STEP 13423533.0 ON a01-09 CANCELLED AT 2026-10-25T03:31:51 DUE to SIGNAL Terminated ***

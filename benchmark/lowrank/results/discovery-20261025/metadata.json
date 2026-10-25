@@ -1,0 +1,50 @@
+{
+  "run_id": "20261025T0910Z-cd81",
+  "implementation_commit": "70951d9544cacb7c7421c061a595bc067a07cd17",
+  "cluster": "USC CARC Discovery",
+  "constraint": "epyc-7513",
+  "julia_benchmarks": "1.13.2",
+  "julia_tests": [
+    "1.10.12",
+    "1.13.2"
+  ],
+  "r": "4.5.2",
+  "rrpack": "0.1-14",
+  "blas_threads": 1,
+  "julia_threads": 1,
+  "replications": 5,
+  "timing_rounds": 3,
+  "responses": [
+    10,
+    100,
+    1000
+  ],
+  "n": 300,
+  "p": 50,
+  "signal_rank": 3,
+  "active_predictors": 10,
+  "profile_calls_per_replication": 10,
+  "source_sha256": {
+    "src/lowrank.jl": "b9f3d3b899797b59aa21ba693d20242c3a1398d1f7ee72872dd2e44ab24e6368",
+    "src/sparse_svd.jl": "fe357e38eb0659e397943447a48c9b98120e76f62f9cdd011f7e5fbf9d551149",
+    "benchmark/lowrank/bench.jl": "65c803c5eb5d9a747bd8a9f94ca80fe3d357ee005dd4339c1610ab98c1c67b08"
+  },
+  "dependencies": {
+    "ProximalBase": "0111d1bb4ca51b40c28d8ea5dab0f63be4d76e6a",
+    "ProximalSolvers": "9041e236f3de8ffdc02103e5a505993463e00bb1",
+    "KernelSmoothing": "357e26152026a3e1fb427acd221f5981c968722e"
+  },
+  "jobs": {
+    "measurements_and_full_validation": "13423209",
+    "final_api_both_versions": "13423194",
+    "golden_oracle": "13423170",
+    "component_diagnostic": "13423154",
+    "measurements": "13423245",
+    "documentation": "13423277"
+  },
+  "raw_artifacts_local": "/Users/mladen.kolar/projects/juliaPkg/.slurm/runs/20261025T0910Z-cd81",
+  "raw_artifacts_remote": "/home1/mkolar/juliaPkg/runs/20261025T0910Z-cd81",
+  "registry": "/Users/mladen.kolar/projects/juliaPkg/.slurm/runs/20261025T0910Z-cd81.json",
+  "profiles": 75,
+  "timing_rows": 225
+}

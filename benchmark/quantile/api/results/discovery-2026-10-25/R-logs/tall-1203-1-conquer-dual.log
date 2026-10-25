@@ -1,0 +1,5 @@
+Loading required package: SparseM
+          used  (Mb) gc trigger  (Mb) max used  (Mb)
+Ncells 1939751 103.6    2990550 159.8  2990550 159.8
+Vcells 4346454  33.2   10146329  77.5  6907119  52.7
+DONE conquer-dual 0.8584325 seconds

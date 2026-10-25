@@ -1,0 +1,4 @@
+RECOVER small 1001 1 lp-split-nullbasis-primal complete 0.196437022s first_pivots=0
+RECOVER small 1001 2 lp-split-nullbasis-dual complete 0.262748661s first_pivots=0
+RECOVER small 1001 2 lp-split-nullbasis-primal complete 0.180227091s first_pivots=0
+RECOVER small 1001 1 lp-split-nullbasis-dual complete 0.263149374s first_pivots=0

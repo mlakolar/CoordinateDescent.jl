@@ -1,0 +1,19 @@
+scenario,method,n,selection_mismatches
+iid,gaussian-SLOPE.jl,140,0
+iid,gaussian-R-common,140,0
+iid,gaussian-R-native,140,2
+AR(.4),gaussian-SLOPE.jl,140,0
+AR(.4),gaussian-R-common,140,0
+AR(.4),gaussian-R-native,140,2
+AR(.8),gaussian-SLOPE.jl,140,0
+AR(.8),gaussian-R-common,140,0
+AR(.8),gaussian-R-native,140,0
+weak AR(.4),gaussian-SLOPE.jl,140,0
+weak AR(.4),gaussian-R-common,140,0
+weak AR(.4),gaussian-R-native,140,0
+null AR(.4),gaussian-SLOPE.jl,140,0
+null AR(.4),gaussian-R-common,140,0
+null AR(.4),gaussian-R-native,140,0
+wide AR(.4),gaussian-SLOPE.jl,140,0
+wide AR(.4),gaussian-R-common,140,0
+wide AR(.4),gaussian-R-native,140,0

@@ -1,0 +1,46 @@
+[
+  {
+    "case": "small",
+    "method": "lp-primal-ipm-cold",
+    "seed": "101",
+    "rep": "1",
+    "status": "TIME_LIMIT",
+    "levels": "6",
+    "numeric": true,
+    "max_gap": 1.042055330913172e-12,
+    "max_kkt": null
+  },
+  {
+    "case": "small",
+    "method": "lp-primal-ipm-cold",
+    "seed": "101",
+    "rep": "2",
+    "status": "TIME_LIMIT",
+    "levels": "6",
+    "numeric": true,
+    "max_gap": 1.042055330913172e-12,
+    "max_kkt": null
+  },
+  {
+    "case": "small",
+    "method": "lp-primal-ipm-warm",
+    "seed": "101",
+    "rep": "1",
+    "status": "TIME_LIMIT",
+    "levels": "6",
+    "numeric": true,
+    "max_gap": 1.042055330913172e-12,
+    "max_kkt": null
+  },
+  {
+    "case": "small",
+    "method": "lp-primal-ipm-warm",
+    "seed": "101",
+    "rep": "2",
+    "status": "TIME_LIMIT",
+    "levels": "6",
+    "numeric": true,
+    "max_gap": 1.042055330913172e-12,
+    "max_kkt": null
+  }
+]

@@ -1,0 +1,2 @@
+Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
+1	:	1792926132.540	    14.605	0	0	0	0	srun --exclusive --exact -N1 -n1 -c2 --mem=6G bash '/home1/mkolar/juliaPkg/runs/20261025-cd82-compare/source/benchmark/selection/compare/gaussian_worker.sh' 1 > '/home1/mkolar/juliaPkg/runs/20261025-cd82-compare/gaussian-1.log' 2>&1

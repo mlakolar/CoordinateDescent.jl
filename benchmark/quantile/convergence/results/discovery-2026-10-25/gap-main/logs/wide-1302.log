@@ -1,0 +1,14 @@
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 2.13 > tolerance 3.99e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-api/gap-main/ProximalOPT.jl/src/cd/solver.jl:580
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 0.539 > tolerance 3.92e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-api/gap-main/ProximalOPT.jl/src/cd/solver.jl:580
+DONE wide 1302 1 legacy 1.729230624 qualified=false
+DONE wide 1302 1 conquer-1e-6 16.0280554294586 qualified=false
+DONE wide 1302 1 certified-tight 4.590062923 qualified=true
+DONE wide 1302 1 certified 4.808032509 qualified=true
+DONE wide 1302 1 conquer-1e-7 25.976104259491 qualified=true
+DONE wide 1302 2 certified-tight 4.664478856 qualified=true
+DONE wide 1302 2 conquer-1e-7 26.1998581886292 qualified=true
+DONE wide 1302 2 conquer-1e-6 15.8673889636993 qualified=false
+DONE wide 1302 2 legacy 1.740912622 qualified=false
+DONE wide 1302 2 certified 4.605522682 qualified=true

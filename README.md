@@ -21,6 +21,8 @@ Estimators:
 * Lasso, with an intercept, standardization and penalty loadings
 * Elastic net, MCP and SCAD, bounds on the coefficients, and the adaptive lasso
 * Penalized logistic and Poisson regression, by proximal Newton
+* SLOPE with BH weights and screened paths; Gaussian and fixed-X knockoff+;
+  complementary-pairs stability selection ([guarantees and examples](https://mlakolar.github.io/CoordinateDescent.jl/dev/selection/))
 * Group lasso, and the multi-response lasso
 * Fused lasso regression, trend filtering and the graph/generalized lasso,
   with paths, cross-validation and generalized-lasso degrees of freedom
@@ -109,6 +111,17 @@ the mathematics of each estimator and its conventions, the options of
 coordinate descent and when each pays off, the group lasso, varying-coefficient
 models, how to write a loss or a penalty of your own, and the API reference.
 
+## Low-rank multivariate regression
+
+For a response matrix `Y`, `reduced_rank(X, Y, r)` fits rank-constrained
+least squares and `select_rank(X, Y)` chooses its rank by the criterion of
+Bunea, She and Wegkamp. `nuclear_regression(X, Y, λ)` penalizes the nuclear
+norm of the coefficient matrix. `sparse_reduced_rank(X, Y, r, λ)` selects
+predictors as well as reducing rank, and `sparse_svd_regression(X, Y, r)`
+selects sparse predictor and response loadings. `LowRankPath` and
+`CVLowRankPath` provide paths and cross-validation; see the
+[low-rank regression guide](docs/src/lowrank.md) for objectives and conventions.
+
 ## Examples
 
 The scripts in [examples](examples) go through the package and its options;
@@ -134,6 +147,22 @@ The previous spellings warn and forward for this release.
 `coordinate_descent!` returns `CDResults`; its `minimizer` is the supplied
 iterate. See [the migration table](NEWS.md#breaking-changes) for all renames.
 
+
+### Quantile regression with dual variables
+
+```julia
+using HighDimensionalModels, HiGHS  # optional exact backend
+path = QuantileLassoPath(X, y, [0.2, 0.1, 0.05]; tau=0.5)
+beta = coef(path)
+u = dual_scores(path)          # observations × penalty levels, raw solver scores
+xi = -u / nobs(path)           # QR.jl sign and mean-loss normalization
+```
+
+Both exact and convolution-smoothed fits retain raw dual scores, separate
+feasible certificates and KKT diagnostics. Check each fit's `converged` flag;
+a time limit can return a partial exact path. See the
+[primal–dual interface](docs/src/quantile.md) for scaling, weighted penalties,
+zero-penalty refits and the distinction between exact and smoothed scores.
 ## Development tests
 
 From the repository root, run:

@@ -1,0 +1,169 @@
+name=admm n=1000 p=1000 seed=501 fits=1 elapsed=2.0082859992980957 host=b09-15.hpc.usc.edu
+ Count  Overhead File                                                                Line Function
+ =====  ======== ====                                                                ==== ========
+     1         1 @juliasrc/gc-stock.c                                                864 gc_sweep_page
+     1         0 @juliasrc/gc-stock.c                                               1399 gc_sweep_pool
+     1         0 @juliasrc/gc-stock.c                                               1294 gc_sweep_pool_parallel
+     1         1 @juliasrc/gc-stock.c                                                926 gc_sweep_page
+     1         1 /lib64/libc.so.6                                                      ? __strcmp_avx2
+     1         0 @Base/broadcast.jl                                                  996 copyto!
+     1         0 @Base/broadcast.jl                                                  979 preprocess
+     1         0 @Base/broadcast.jl                                                  982 preprocess_args
+     1         0 @Base/broadcast.jl                                                  980 preprocess
+     1         0 @Base/broadcast.jl                                                  973 broadcast_unalias
+     1         0 @Base/abstractarray.jl                                             1551 unalias
+     1         0 @Base/abstractarray.jl                                             1588 mightalias
+     1         0 @Base/abstractarray.jl                                             1595 _isdisjoint
+     1         0 @Base/operators.jl                                                  320 !=
+     1         1 @Base/promotion.jl                                                  641 ==
+     1         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl        29 certificate(X::Matrix{Float64}, y::Vector{Float64}, b::Vector{Float64}, a::Float64, lambda::Float64, tau::Float64, w::Vector{Float64}, u::Vector{Float64})
+     1         1 @juliasrc/gc-stock.c                                                999 gc_sweep_pool_page
+     1         0 @Base/broadcast.jl                                                  312 instantiate
+     1         0 @Base/broadcast.jl                                                  503 combine_axes
+     1         0 @Base/abstractarray.jl                                              102 axes
+     1         1 @Base/essentials.jl                                                  10 size
+     1         0 @Base/broadcast.jl                                                  701 _getindex
+     1         1 @Base/int.jl                                                         83 <
+     1         0 @julialib/julia/libopenblas64_.so                                     ? dscal_k_ZEN
+     1         1 @julialib/julia/libopenblas64_.so                                     ? dscal_kernel_8_zero
+     1         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl        15 soft
+     1         0 @Base/promotion.jl                                                  501 max
+     1         1 @Base/math.jl                                                       857 max
+     1         1 @juliasrc/genericmemory.c                                            31 jl_alloc_genericmemory_unchecked
+     1         1 @juliasrc/gc-stock.c                                               1423 gc_sweep_pool
+     2         0 @juliasrc/gc-stock.c                                               1187 gc_sweep_prescan
+     2         2 @juliasrc/gc-stock.h                                                152 pop_lf_back_nosync
+     2         0 @Base/array.jl                                                      384 copy
+     2         0 @juliasrc/gc-stock.c                                               1209 gc_sweep_prescan
+     2         0 @juliasrc/gc-stock.c                                               1002 gc_sweep_pool_page
+     2         2 @juliasrc/gc-stock.c                                               1428 gc_sweep_pool
+     2         0 @Base/broadcast.jl                                                  677 _broadcast_getindex
+     2         0 @Base/broadcast.jl                                                  704 _broadcast_getindex_evalf
+     2         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl       212 ladmmpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}; limit::Float64, tol::Float64, rho::Float64)
+     2         0 @Base/simdloop.jl                                                    76 macro expansion
+     2         0 @Base/simdloop.jl                                                    54 simd_index
+     2         2 @Base/int.jl                                                         87 +
+     3         2 @Base/simdloop.jl                                                    75 macro expansion
+     4         0 @juliasrc/gc-stock.c                                               1398 gc_sweep_pool
+     4         0 @juliasrc/gc-stock.c                                               1230 gc_sweep_wake_all_pages
+     4         0 @Base/reduce.jl                                                     264 macro expansion
+     4         0 @Base/reduce.jl                                                      19 add_sum
+     4         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl       213 ladmmpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}; limit::Float64, tol::Float64, rho::Float64)
+     4         4 @julialib/julia/libopenblas64_.so                                     ? add_y
+     5         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl       211 ladmmpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}; limit::Float64, tol::Float64, rho::Float64)
+     5         0 @Base/reduce.jl                                                     262 mapreduce_impl(f::typeof(identity), op::typeof(Base.add_sum), A::Vector{Float64}, ifirst::Int64, ilast::Int64, blksize::Int64)
+     5         5 @Base/float.jl                                                      492 +
+     5         0 @Base/array.jl                                                      385 copy
+     5         0 @Base/genericmemory.jl                                              139 unsafe_copyto!
+     5         0 @Base/cmem.jl                                                        28 memmove
+     5         5 /lib64/libc.so.6                                                      ? __memmove_avx_unaligned_erms
+     5         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl       214 ladmmpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}; limit::Float64, tol::Float64, rho::Float64)
+     5         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl       200 ladmmpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}; limit::Float64, tol::Float64, rho::Float64)
+     6         0 @Base/reducedim.jl                                                  998 sum
+     6         0 @Base/reducedim.jl                                                  998 #sum#746
+     6         0 @Base/reducedim.jl                                                 1002 _sum
+     6         0 @Base/reducedim.jl                                                 1002 #_sum#748
+     6         0 @Base/reducedim.jl                                                 1003 _sum
+     6         0 @Base/reducedim.jl                                                 1003 #_sum#749
+     6         0 @Base/reducedim.jl                                                  330 mapreduce
+     6         0 @Base/reducedim.jl                                                  330 #mapreduce#739
+     6         0 @Base/reducedim.jl                                                  347 _mapreduce_dim
+     6         0 @Base/reduce.jl                                                     447 _mapreduce
+     6         1 @Base/reduce.jl                                                     276 mapreduce_impl
+     6         0 @juliasrc/gc-stock.c                                               3252 _jl_gc_collect
+     6         0 @juliasrc/gc-stock.c                                               1010 gc_sweep_other
+     6         0 @juliasrc/gc-stock.c                                                670 sweep_malloced_memory
+     6         0 @juliasrc/gc-stock.c                                                645 jl_gc_free_memory
+     7         0 @Base/broadcast.jl                                                  907 materialize!
+     7         0 @Base/broadcast.jl                                                  910 materialize!
+     7         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl       199 ladmmpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}; limit::Float64, tol::Float64, rho::Float64)
+     8         0 @juliasrc/gc-stock.c                                               3255 _jl_gc_collect
+     8         8 /lib64/libc.so.6                                                      ? unlink_chunk.isra.2
+     8         3 /lib64/libc.so.6                                                      ? _int_free
+     9         6 /lib64/libc.so.6                                                      ? _int_malloc
+     9         0 @Base/broadcast.jl                                                  676 _broadcast_getindex
+     9         0 @Base/broadcast.jl                                                  700 _getindex
+     9         0 @Base/broadcast.jl                                                  670 _broadcast_getindex
+     9         9 @Base/essentials.jl                                                 975 getindex
+    10         0 @Base/abstractarray.jl                                              827 similar
+    10         0 @Base/array.jl                                                      407 similar
+    11         0 @Base/broadcast.jl                                                  617 getindex
+    11         0 @Base/broadcast.jl                                                  621 _getindex
+    12         0 @juliasrc/genericmemory.c                                            38 jl_alloc_genericmemory_unchecked
+    12         0 @juliasrc/gc-stock.c                                               3928 ijl_gc_managed_malloc
+    12         0 @juliasrc/gc-common.h                                               112 jl_malloc_aligned
+    12         0 /lib64/libc.so.6                                                      ? posix_memalign
+    12         0 /lib64/libc.so.6                                                      ? _mid_memalign
+    12         1 /lib64/libc.so.6                                                      ? _int_memalign
+    12         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl        25 certificate(X::Matrix{Float64}, y::Vector{Float64}, b::Vector{Float64}, a::Float64, lambda::Float64, tau::Float64, w::Vector{Float64}, u::Vector{Float64})
+    13         0 @Base/array.jl                                                     1020 setindex!
+    13        13 @Base/array.jl                                                     1025 _setindex!
+    14         0 @juliasrc/genericmemory.c                                            41 jl_alloc_genericmemory_unchecked
+    14         0 @juliasrc/gc-stock.c                                                806 jl_gc_alloc_
+    14         0 @juliasrc/gc-stock.c                                                792 jl_gc_small_alloc_noinline
+    14         0 @juliasrc/gc-stock.c                                                734 jl_gc_small_alloc_inner
+    14         0 @juliasrc/gc-stock.c                                                355 maybe_collect
+    14         0 @juliasrc/gc-stock.c                                               3563 ijl_gc_collect
+    16         0 @Base/broadcast.jl                                                  229 similar
+    16         0 @Base/broadcast.jl                                                  230 similar
+    16         0 @Base/abstractarray.jl                                              876 similar
+    16         0 @Base/array.jl                                                      409 similar
+    16         0 @Base/abstractarray.jl                                              877 similar
+    16         0 @Base/boot.jl                                                       671 Array
+    24         0 @Base/broadcast.jl                                                 1000 macro expansion
+    26         0 @Base/boot.jl                                                       661 Array
+    26         0 @Base/boot.jl                                                       648 Array
+    28         1 @Base/boot.jl                                                       588 GenericMemory
+    28         0 @Base/simdloop.jl                                                    77 macro expansion
+    28         0 @Base/broadcast.jl                                                  999 copyto!
+    29         0 @Base/broadcast.jl                                                  952 copyto!
+    32         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl        28 certificate(X::Matrix{Float64}, y::Vector{Float64}, b::Vector{Float64}, a::Float64, lambda::Float64, tau::Float64, w::Vector{Float64}, u::Vector{Float64})
+    32         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl        31 certificate(X::Matrix{Float64}, y::Vector{Float64}, b::Vector{Float64}, a::Float64, lambda::Float64, tau::Float64, w::Vector{Float64}, u::Vector{Float64})
+    32         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl        17 objective(X::Matrix{Float64}, y::Vector{Float64}, b::Vector{Float64}, a::Float64, lambda::Float64, tau::Float64, w::Vector{Float64})
+    38         0 @Base/broadcast.jl                                                  924 copy
+    39         0 @Base/broadcast.jl                                                  899 materialize
+    78         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl       217 ladmmpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}; limit::Float64, tol::Float64, rho::Float64)
+   598         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl       209 ladmmpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}; limit::Float64, tol::Float64, rho::Float64)
+   613         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl       210 ladmmpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}; limit::Float64, tol::Float64, rho::Float64)
+   618         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl       208 ladmmpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}; limit::Float64, tol::Float64, rho::Float64)
+   621         2 @julialib/julia/libopenblas64_.so                                     ? dgemv_t_ZEN
+  1242         5 @julialib/julia/libopenblas64_.so                                     ? dgemv_n_ZEN
+  1852      1851 @julialib/julia/libopenblas64_.so                                     ? dgemv_kernel_4x4
+  1866         0 @LinearAlgebra/src/matmul.jl                                        270 mul!
+  1866         0 @LinearAlgebra/src/matmul.jl                                         73 mul!
+  1866         0 @LinearAlgebra/src/matmul.jl                                         76 _mul!
+  1866         0 @LinearAlgebra/src/matmul.jl                                         81 mul!
+  1866         0 @LinearAlgebra/src/matmul.jl                                        726 gemv!
+  1866         0 @LinearAlgebra/src/blas.jl                                          680 gemv!(trans::Char, alpha::Float64, A::Matrix{Float64}, X::Vector{Float64}, beta::Float64, Y::Vector{Float64})
+  1866         1 @julialib/julia/libopenblas64_.so                                     ? dgemv_64_
+  1876         0 @LinearAlgebra/src/matmul.jl                                         57 *
+  1935         0 /workspace/srcdir/glibc-2.17/csu/../sysdeps/x86_64/start.S          123 [unknown function]
+  1935         0 /lib64/libc.so.6                                                      ? __libc_start_main
+  1935         0 /cache/build/builder-amdci4-4/julialang/julia-ci/cli/loader_exe.c    58 main
+  1935         0 @juliasrc/jlapi.c                                                  1152 jl_repl_entrypoint
+  1935         0 @juliasrc/jlapi.c                                                   985 true_main
+  1935         0 @juliasrc/julia.h                                                  2319 jl_apply
+  1935         0 @julialib/julia/sys.so                                                ? jfptr__start_60477.1
+  1935         0 @Base/client.jl                                                     577 _start()
+  1935         0 @Base/client.jl                                                     344 exec_options(opts::Base.JLOptions)
+  1935         0 @Base/Base.jl                                                       309 include(mod::Module, _path::String)
+  1935         0 @Base/loading.jl                                                   3105 _include(mapexpr::Function, mod::Module, _path::String)
+  1935         0 @Base/loading.jl                                                   3045 include_string(mapexpr::typeof(identity), mod::Module, code::String, filename::String)
+  1935         0 @Base/boot.jl                                                       489 eval(m::Module, e::Any)
+  1935         0 @juliasrc/toplevel.c                                                799 ijl_toplevel_eval_in
+  1935         0 @juliasrc/toplevel.c                                                754 ijl_toplevel_eval
+  1935         0 @juliasrc/toplevel.c                                                683 jl_toplevel_eval_flex
+  1935         0 @juliasrc/toplevel.c                                                585 jl_eval_toplevel_stmts
+  1935         0 @juliasrc/toplevel.c                                                742 jl_toplevel_eval_flex
+  1935         0 @juliasrc/interpreter.c                                             884 jl_interpret_toplevel_thunk
+  1935         0 @juliasrc/interpreter.c                                             679 eval_body
+  1935         0 @juliasrc/interpreter.c                                             194 eval_stmt_value
+  1935         0 @juliasrc/interpreter.c                                             243 eval_value
+  1935         0 @juliasrc/interpreter.c                                             123 do_call
+  1935         0 [any unknown stackframes]
+  1935         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl        32 main()
+  1935         0 @Profile/src/Profile.jl                                              60 macro expansion
+  1935         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl        33 macro expansion
+  1935         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl        18 runprofile(name::String, X::Matrix{Float64}, y::Vector{Float64}, ls::Vector{Float64})
+  1935         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl       195 ladmmpath
+Total snapshots: 1935. Utilization: 100% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.

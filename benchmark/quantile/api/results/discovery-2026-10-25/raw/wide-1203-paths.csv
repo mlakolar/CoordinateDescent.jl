@@ -1,0 +1,17 @@
+case,seed,rep,method,n,p,tau,requested_levels,levels,fit_s,diagnostics_s,total_s,julia_bytes,raw_dual_available,qualified,status,host
+wide,1203,1,rqpen-fn,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1203,1,quantreg-native-dual,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1203,1,conquer-dual,1000,1000,0.5,32,32,27.6179955005646,0.020077882,27.6380733825646,NaN,true,true,returned,a02-16.hpc.usc.edu
+wide,1203,1,api-smooth,1000,1000,0.5,32,32,1.826174404,0.0,1.826174404,5584104,true,true,returned,a02-16.hpc.usc.edu
+wide,1203,1,api-exact,1000,1000,0.5,32,32,14.412567911,0.0,14.412567911,66585752,true,true,returned,a02-16.hpc.usc.edu
+wide,1203,1,rqpen-huber,1000,1000,0.5,32,0,54.4636118412018,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+wide,1203,1,gurobi-primal,1000,1000,0.5,32,32,15.149972498,0.0,15.149972498,202023488,true,true,returned,a02-16.hpc.usc.edu
+wide,1203,1,rqpen-br,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1203,2,rqpen-fn,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1203,2,api-smooth,1000,1000,0.5,32,32,1.765787709,0.0,1.765787709,5584616,true,true,returned,a02-16.hpc.usc.edu
+wide,1203,2,gurobi-primal,1000,1000,0.5,32,32,15.107686279,0.0,15.107686279,202036864,true,true,returned,a02-16.hpc.usc.edu
+wide,1203,2,conquer-dual,1000,1000,0.5,32,32,28.8854238986969,0.01953253,28.9049564286969,NaN,true,true,returned,a02-16.hpc.usc.edu
+wide,1203,2,quantreg-native-dual,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1203,2,api-exact,1000,1000,0.5,32,32,14.90097449,0.0,14.90097449,66531864,true,true,returned,a02-16.hpc.usc.edu
+wide,1203,2,rqpen-br,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1203,2,rqpen-huber,1000,1000,0.5,32,0,56.4147880077362,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu

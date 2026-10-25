@@ -1,0 +1,7 @@
+{
+  "processes": 77,
+  "replications": 7,
+  "max_relative_residual": 4.118860523483203e-08,
+  "max_relative_objective_difference": 8.881784197001252e-16,
+  "certificate_scope": "All backends externally checked after measured process exit; SLOPE.jl process does not import HDM/CD."
+}

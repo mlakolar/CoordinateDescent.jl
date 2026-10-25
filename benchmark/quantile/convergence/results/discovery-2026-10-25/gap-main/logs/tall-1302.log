@@ -1,0 +1,16 @@
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 0.543 > tolerance 3.96e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-api/gap-main/ProximalOPT.jl/src/cd/solver.jl:580
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 0.514 > tolerance 3.85e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-api/gap-main/ProximalOPT.jl/src/cd/solver.jl:580
+┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 0.00146 > tolerance 3.74e-5); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-api/gap-main/ProximalOPT.jl/src/cd/solver.jl:580
+DONE tall 1302 1 legacy 0.192686864 qualified=false
+DONE tall 1302 1 conquer-1e-6 0.582739591598511 qualified=true
+DONE tall 1302 1 certified-tight 0.680865433 qualified=true
+DONE tall 1302 1 certified 0.603133894 qualified=true
+DONE tall 1302 1 conquer-1e-7 0.756992816925049 qualified=true
+DONE tall 1302 2 certified-tight 0.661763934 qualified=true
+DONE tall 1302 2 conquer-1e-7 0.742978811264038 qualified=true
+DONE tall 1302 2 conquer-1e-6 0.604179382324219 qualified=true
+DONE tall 1302 2 legacy 0.202811008 qualified=false
+DONE tall 1302 2 certified 0.601408864 qualified=true

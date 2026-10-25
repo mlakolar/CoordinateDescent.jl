@@ -1,0 +1,6 @@
+Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
+4	:	1792935681.571	    12.051	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=2G "$JULIA" --startup-file=no --project=env-1.13.2 code/adaptive-v2.jl 4 > results/core-v2/rep-4.log 2>&1
+1	:	1792935681.560	    12.062	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=2G "$JULIA" --startup-file=no --project=env-1.13.2 code/adaptive-v2.jl 1 > results/core-v2/rep-1.log 2>&1
+3	:	1792935681.567	    12.057	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=2G "$JULIA" --startup-file=no --project=env-1.13.2 code/adaptive-v2.jl 3 > results/core-v2/rep-3.log 2>&1
+5	:	1792935681.575	    12.049	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=2G "$JULIA" --startup-file=no --project=env-1.13.2 code/adaptive-v2.jl 5 > results/core-v2/rep-5.log 2>&1
+2	:	1792935681.564	    12.216	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=2G "$JULIA" --startup-file=no --project=env-1.13.2 code/adaptive-v2.jl 2 > results/core-v2/rep-2.log 2>&1

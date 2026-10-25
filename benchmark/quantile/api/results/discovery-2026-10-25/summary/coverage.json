@@ -1,0 +1,11 @@
+{
+  "path_rows": 240,
+  "expected_path_rows": 240,
+  "groups": 40,
+  "expected_groups": 40,
+  "input_files": 15,
+  "expected_input_files": 15,
+  "solution_rows": 3930,
+  "coefficient_rows": 1920,
+  "complete": true
+}

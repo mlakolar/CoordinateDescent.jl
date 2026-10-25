@@ -1,0 +1,200 @@
+[
+  {
+    "case": "tall",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "701",
+    "rep": "1",
+    "status": "TIME_LIMIT",
+    "levels": "5",
+    "numeric": true,
+    "max_gap": 1.3669065879184927e-12,
+    "max_kkt": null
+  },
+  {
+    "case": "tall",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "701",
+    "rep": "2",
+    "status": "TIME_LIMIT",
+    "levels": "3",
+    "numeric": true,
+    "max_gap": 1.3669065879184927e-12,
+    "max_kkt": null
+  },
+  {
+    "case": "tall",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "702",
+    "rep": "1",
+    "status": "TIME_LIMIT",
+    "levels": "2",
+    "numeric": true,
+    "max_gap": 1.3713474800169934e-12,
+    "max_kkt": null
+  },
+  {
+    "case": "tall",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "702",
+    "rep": "2",
+    "status": "TIME_LIMIT",
+    "levels": "1",
+    "numeric": true,
+    "max_gap": 2.220446049250313e-16,
+    "max_kkt": null
+  },
+  {
+    "case": "tall",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "703",
+    "rep": "1",
+    "status": "TIME_LIMIT",
+    "levels": "2",
+    "numeric": true,
+    "max_gap": 1.3766765505351941e-12,
+    "max_kkt": null
+  },
+  {
+    "case": "tall",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "703",
+    "rep": "2",
+    "status": "TIME_LIMIT",
+    "levels": "2",
+    "numeric": true,
+    "max_gap": 1.3766765505351941e-12,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "701",
+    "rep": "1",
+    "status": "TIME_LIMIT",
+    "levels": "0",
+    "numeric": false,
+    "max_gap": null,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "701",
+    "rep": "2",
+    "status": "TIME_LIMIT",
+    "levels": "0",
+    "numeric": false,
+    "max_gap": null,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "702",
+    "rep": "1",
+    "status": "TIME_LIMIT",
+    "levels": "0",
+    "numeric": false,
+    "max_gap": null,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "702",
+    "rep": "2",
+    "status": "TIME_LIMIT",
+    "levels": "0",
+    "numeric": false,
+    "max_gap": null,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "703",
+    "rep": "1",
+    "status": "TIME_LIMIT",
+    "levels": "0",
+    "numeric": false,
+    "max_gap": null,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "gurobi-primal-primal-warm",
+    "seed": "703",
+    "rep": "2",
+    "status": "TIME_LIMIT",
+    "levels": "0",
+    "numeric": false,
+    "max_gap": null,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "lp-dual-dual-warm",
+    "seed": "701",
+    "rep": "1",
+    "status": "TIME_LIMIT",
+    "levels": "5",
+    "numeric": true,
+    "max_gap": 2.2604362825973112e-11,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "lp-dual-dual-warm",
+    "seed": "701",
+    "rep": "2",
+    "status": "TIME_LIMIT",
+    "levels": "5",
+    "numeric": true,
+    "max_gap": 2.2604362825973112e-11,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "lp-dual-dual-warm",
+    "seed": "702",
+    "rep": "1",
+    "status": "TIME_LIMIT",
+    "levels": "5",
+    "numeric": true,
+    "max_gap": 1.0852874154920755e-11,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "lp-dual-dual-warm",
+    "seed": "702",
+    "rep": "2",
+    "status": "budget",
+    "levels": "6",
+    "numeric": true,
+    "max_gap": 1.0852874154920755e-11,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "lp-dual-dual-warm",
+    "seed": "703",
+    "rep": "1",
+    "status": "TIME_LIMIT",
+    "levels": "5",
+    "numeric": true,
+    "max_gap": 1.3771206397450442e-12,
+    "max_kkt": null
+  },
+  {
+    "case": "tall100k",
+    "method": "lp-dual-dual-warm",
+    "seed": "703",
+    "rep": "2",
+    "status": "TIME_LIMIT",
+    "levels": "5",
+    "numeric": true,
+    "max_gap": 1.3771206397450442e-12,
+    "max_kkt": null
+  }
+]
