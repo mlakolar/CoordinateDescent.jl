@@ -60,7 +60,9 @@ when a limit stops the path. There is no coefficient or dual interpolation:
 basis and reuses that basis/model along the path. Load `HiGHS` to activate the
 optional extension. `initial_basis=:default` disables the analytic start;
 `simplex=:primal` selects primal simplex. `time_limit` limits the entire exact
-path, including preparation and diagnostics. A stopped path retains available
+path between levels and passes the remaining time to HiGHS. Preparation and
+diagnostics can overrun that limit, and automatic-grid preparation precedes
+the path timer. A stopped path retains available
 primal–dual results and the termination status; it never fills missing levels.
 
 `method=:smooth` uses the existing proximal Newton path with the Epanechnikov
@@ -186,8 +188,11 @@ function _qsolution(X, y, β, a, u, λ, w, τ, intercept, method, h,
   feasible = max(maximum(max.(τ-1 .- u, u .- τ); init=0.0),
                  intercept ? abs(sum(u))/n : 0.0,
                  maximum(abs.(g) .- λ.*w; init=0.0))
-  stationarity = maximum((β[j] == 0 ? max(0.0, abs(g[j])-λ*w[j]) :
-                         abs(g[j]-λ*w[j]*sign(β[j])) for j in eachindex(β)); init=0.0)
+  # A continuous proximal KKT residual: interior-point solvers return tiny
+  # nonzero coefficients for inactive slopes. Do not round those coefficients
+  # or test their sign as though they were materially active.
+  stationarity = maximum((abs(β[j] - sign(β[j]+g[j])*max(abs(β[j]+g[j])-λ*w[j],0.0))
+                         for j in eachindex(β)); init=0.0)
   comp = maximum((abs((h == 0 ? _qcheck(r[i], τ) : loss(0.0, r[i])) +
                      _qconjugate(u[i], τ, h)-r[i]*u[i]) for i in 1:n); init=0.0)
   rawdual = dot(y, u)/n - sum(x -> _qconjugate(x, τ, h), u)/n

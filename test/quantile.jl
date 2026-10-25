@@ -56,6 +56,14 @@ end
     @test direct.objective ≈ path[2].objective atol=1e-7
     @test_throws ArgumentError coef(path,.07)
   end
+  # Interior-point representations of inactive slopes must not trigger a
+  # discontinuous sign-based KKT failure; preserve their unrounded values.
+  nullfit=quantile_lasso(X,y,10.;standardize_x=false)
+  perturbed=copy(nullfit.β);perturbed[5]=1e-14
+  nearzero=CoordinateDescent._qsolution(X,y,perturbed,nullfit.intercept,dual_scores(nullfit),10.,ones(5),.5,true,:exact,0.,:OPTIMAL,0,true,1e-6)
+  @test nearzero.converged
+  @test nearzero.β[5]==1e-14
+  @test coef(fit(QuantileLassoSolution,X,y,.1;standardize_x=false)) ≈ coef(quantile_lasso(X,y,.1;standardize_x=false))
   # Zero penalty factors, λ=0, fixed offsets and rescaling are meaningful for refits.
   for w in ([0.,1,1,1,1],ones(5)), λ in (.1,0.)
     s=quantile_lasso(X,y,λ;penalty_factors=w,standardize_x=false,offset=fill(.2,61))

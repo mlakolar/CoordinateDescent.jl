@@ -5,7 +5,7 @@ This is the second stage of issue78, after the initial solver study. It measures
 to0.02lambda_max. Shapes are1000x100 Gaussian,1000x100 tail tau0.1 with
 heteroscedastic t3 errors,10000x100,1000x1000 correlated, and1000x3000. R generates
 centered sample-SD1 columns for all methods. Three fresh seeds1201–1203 and two
-shuffled blocks give six observations per method/shape. Input-level means, SDs,
+shuffled blocks across Julia and R methods give six observations per method/shape. Input-level means, SDs,
 t intervals and paired contrasts use three inputs, never six independent inputs.
 
 The public API returns coefficients, raw observation scores and independent
@@ -37,6 +37,11 @@ method solves a different approximation from both exact QR and Epanechnikov
 smoothing. rqPen BR/FN are wrappers around quantreg, rather than independent
 underlying LP solvers. Bounds for coefficient-only checks reuse feasible
 certificates on identical inputs; they do not create inference dual vectors.
+
+Eight separate post-timing CPU profiles repeat the public exact/smoothed paths
+for at least1.5seconds on small/wide inputs at seeds1201/1202, with native
+frames enabled. Slow calls can exceed that target; profiles are not timing
+observations.
 
 The external gate is2e-5 KKT and2e-5 relative raw gap at every requested level.
 API/Gurobi LP feasibility/optimality tolerances are1e-8, quantreg eps1e-8,

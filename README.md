@@ -119,3 +119,20 @@ and `CDOptions(; max_iter=10_000, opt_tol=1e-8, warm_start=true)`.
 The previous spellings warn and forward for this release.
 `coordinate_descent!` returns `CDResults`; its `minimizer` is the supplied
 iterate. See [the migration table](NEWS.md#breaking-changes) for all renames.
+
+
+### Quantile regression with dual variables
+
+```julia
+using CoordinateDescent, HiGHS  # optional exact backend
+path = QuantileLassoPath(X, y, [0.2, 0.1, 0.05]; tau=0.5)
+beta = coef(path)
+u = dual_scores(path)          # observations × penalty levels, raw solver scores
+xi = qr_dual(path)             # QR.jl sign and mean-loss normalization
+```
+
+Both exact and convolution-smoothed fits retain raw dual scores, separate
+feasible certificates and KKT diagnostics. Check each fit's `converged` flag;
+a time limit can return a partial exact path. See the
+[primal–dual interface](docs/src/quantile.md) for scaling, weighted penalties,
+zero-penalty refits and the distinction between exact and smoothed scores.

@@ -1,4 +1,4 @@
-using CoordinateDescent, HiGHS, JuMP, Gurobi, Random, LinearAlgebra, Statistics, DelimitedFiles
+using CoordinateDescent, HiGHS, JuMP, Gurobi, Random, LinearAlgebra, Statistics, DelimitedFiles, Profile
 const CD=CoordinateDescent
 BLAS.set_num_threads(1)
 const GRB=Gurobi.Env(output_flag=0)
@@ -43,30 +43,39 @@ function main()
   end
   saved[(method,rep)]=ss
  end
- for rep in 1:2, method in ["quantreg-native-dual","rqpen-br","rqpen-fn","rqpen-huber","conquer-dual"]
-  file="results/$case-$seed-$rep-$method"
-  if !isfile(file*"-seconds.txt")
-   record(method,rep,QuantileLassoSolution[],NaN,NaN,NaN,false,"R_failed_or_timeout");continue
-  end
-  B=reshape(loadbin(file*"-B.bin"),p+1,L);fit_s=parse(Float64,strip(read(file*"-seconds.txt",String)))
-  if isfile(file*"-U.bin")
-   U=reshape(loadbin(file*"-U.bin"),n,L);h=method=="conquer-dual" ? .2 : 0.
-   t=@timed [CD._qsolution(X,y,B[2:end,k],B[1,k],U[:,k],ls[k],w,τ,true,h==0 ? :exact : :smooth,h,:R_returned,0,true,2e-5) for k in 1:L]
-   record(method,rep,t.value,fit_s,t.time,NaN,true,"returned")
-  else
-   # No invented rank scores for coefficient-only interfaces.
-   record(method,rep,QuantileLassoSolution[],fit_s,NaN,NaN,false,"coefficients_only")
-  end
- end
- for rep in 1:2, method in shuffle(Xoshiro(seed+rep+90000),["api-exact","api-smooth","gurobi-primal"])
+ methods=["api-exact","api-smooth","gurobi-primal","quantreg-native-dual","rqpen-br","rqpen-fn","rqpen-huber","conquer-dual"]
+ for rep in 1:2,method in shuffle(Xoshiro(seed+rep+90000),methods)
   GC.gc()
-  try
-   t=@timed runmethod(method,X,y,ls,τ)
-   record(method,rep,t.value,t.time,0.,t.bytes,true,"returned")
-   println("DONE $case $seed $rep $method $(t.time)s levels=$(length(t.value))");flush(stdout)
-  catch e
-   showerror(stderr,e,catch_backtrace());println(stderr)
-   record(method,rep,QuantileLassoSolution[],NaN,NaN,NaN,true,"ERROR")
+  if method in ["api-exact","api-smooth","gurobi-primal"]
+   try
+    t=@timed runmethod(method,X,y,ls,τ)
+    record(method,rep,t.value,t.time,0.,t.bytes,true,"returned")
+    println("DONE $case $seed $rep $method $(t.time)s levels=$(length(t.value))");flush(stdout)
+   catch e
+    showerror(stderr,e,catch_backtrace());println(stderr)
+    record(method,rep,QuantileLassoSolution[],NaN,NaN,NaN,true,"ERROR")
+   end
+  else
+   logfile="logs/$case-$seed-$rep-$method.log"
+   envarg="R_LIBS_USER=$(ENV["R_LIBS_USER"]),OPENBLAS_NUM_THREADS=1,OMP_NUM_THREADS=1"
+   cmd=`timeout 75 apptainer exec --cleanenv --env $envarg /apps/containers/r/4.5/r-4.5.3.sif Rscript competitors.R fit $case $seed $method $rep`
+   exitcode=0
+   open(logfile,"w") do io
+    proc=run(pipeline(ignorestatus(cmd),stdout=io,stderr=io));exitcode=proc.exitcode
+   end
+   open("results/$case-$seed-R-exits.tsv","a") do io;println(io,"$rep\t$method\t$exitcode");end
+   file="results/$case-$seed-$rep-$method"
+   if !isfile(file*"-seconds.txt")
+    record(method,rep,QuantileLassoSolution[],NaN,NaN,NaN,false,"R_failed_or_timeout");continue
+   end
+   B=reshape(loadbin(file*"-B.bin"),p+1,L);fit_s=parse(Float64,strip(read(file*"-seconds.txt",String)))
+   if isfile(file*"-U.bin")
+    U=reshape(loadbin(file*"-U.bin"),n,L);h=method=="conquer-dual" ? .2 : 0.
+    t=@timed [CD._qsolution(X,y,B[2:end,k],B[1,k],U[:,k],ls[k],w,τ,true,h==0 ? :exact : :smooth,h,:R_returned,0,true,2e-5) for k in 1:L]
+    record(method,rep,t.value,fit_s,t.time,NaN,true,"returned")
+   else
+    record(method,rep,QuantileLassoSolution[],fit_s,NaN,NaN,false,"coefficients_only")
+   end
   end
  end
  # Coefficient-only fits get an exact-objective comparison from an independent
@@ -94,6 +103,19 @@ function main()
                             ("solutions","case,seed,rep,method,k,lambda,objective,check_objective,dual_objective,raw_gap,certificate_gap,kkt,dual_feasibility,complementarity,converged,native_converged,status",solrows)]
   open("results/$case-$seed-$kind.csv","w") do io
    println(io,header);for row in rows;println(io,join(row,','));end
+  end
+ end
+ if case in ("small","wide") && seed in (1201,1202)
+  for method in ["api-exact","api-smooth"]
+   Profile.clear();start=time();fits=0
+   while time()-start<1.5
+    @profile runmethod(method,X,y,ls,τ)
+    fits+=1
+   end
+   open("results/$case-$seed-$method-profile.txt","w") do io
+    println(io,"method=$method fits=$fits elapsed=$(time()-start) host=$(gethostname())")
+    Profile.print(io;C=true,format=:flat,sortedby=:count)
+   end
   end
  end
 end
