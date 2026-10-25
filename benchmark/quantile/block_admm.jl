@@ -5,7 +5,7 @@ function blockadmmpath(X,y,lambdas,tau,w;limit=30.0,tol=1e-5,rho=1.0)
     min(n,p+1)<=2000 || error("factor dimension above the study's2000 limit")
     scale=sqrt(n); B=hcat(X,ones(n))/scale; yy=y/scale; d=p+1; z=zeros(d);z[end]=quantile(y,tau)
     theta=copy(z); r=yy.-B*z; v=zeros(n); u=zeros(d)
-    setupstart=time()
+    setupstart=start
     small=d<=n
     gram=small ? B'*B : B*B'
     for j in axes(gram,1);gram[j,j]+=1.;end

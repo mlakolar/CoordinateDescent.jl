@@ -15,14 +15,14 @@ invisible(rq.fit.lasso(cbind(1,X[1:50,1:12]),y[1:50],lambda=2*50*.1))
 invisible(conquer.reg(X[1:50,1:12],y[1:50],lambda=.1,kernel='parabolic',h=.2))
 rows=list()
 for(rep in 1:2) for(method in sample(c('quantreg-fn','conquer'),2)) {
- gc();start=proc.time()[3]
+ gc();start=as.numeric(Sys.time())
  if(method=='quantreg-fn') {
-  b=vapply(ls,function(lambda) as.numeric(rq.fit.lasso(cbind(1,X),y,tau=.5,lambda=2*n*lambda,eps=1e-9)$coefficients),numeric(p+1))
+  b=vapply(ls,function(lambda) as.numeric(rq.fit.lasso(cbind(1,X),y,tau=.5,lambda=2*n*lambda,eps=1e-7)$coefficients),numeric(p+1))
  } else {
-  fit=conquer.reg(X,y,lambda=ls,tau=.5,kernel='parabolic',h=.2,penalty='lasso',epsilon=1e-8,iteMax=20000)
+  fit=conquer.reg(X,y,lambda=ls,tau=.5,kernel='parabolic',h=.2,penalty='lasso',epsilon=1e-6,iteMax=20000)
   b=as.matrix(fit$coeff)[,match(ls,fit$lambda),drop=FALSE]
  }
- elapsed=proc.time()[3]-start
+ elapsed=as.numeric(Sys.time())-start
  writeBin(as.double(b),paste0(base,'-',method,'-',rep,'.bin'),size=8,endian='little')
  rows[[length(rows)+1]]=data.frame(case=case,seed=seed,rep=rep,method=method,total_s=elapsed)
  write.csv(do.call(rbind,rows),paste0(base,'-Rtimes.csv'),row.names=FALSE)
