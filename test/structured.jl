@@ -314,4 +314,65 @@ end
   @test_throws ArgumentError CVGeneralizedLassoPath(X,y,D,levels;folds=zeros(Int,36))
   @test_throws ErrorException CVGeneralizedLassoPath(X,y,D,levels;max_iter=0,threads=false)
 end
+
+@testset "structured signal interfaces and safeguards" begin
+  identity_design = HighDimensionalModels._SignalDesign{Float64}(6)
+  @test Matrix(identity_design) == Matrix{Float64}(I,6,6)
+  @test_throws BoundsError identity_design[0,1]
+  @test_throws BoundsError identity_design[1,7]
+
+  y = [1.,1.2,-.5,-.3,.8,.6]
+  D, levels = difference_matrix(6), [.1,.03]
+  path = GeneralizedLassoPath(y,D,levels)
+  @test all(s -> s.converged,path.solutions)
+  @test fitted(path) ≈ coef(path)
+  @test fitted(path) + residuals(path) ≈ repeat(y,1,2)
+  @test coef(fit(GeneralizedLassoPath,y,D,levels)) ≈ coef(path)
+  fused_path = fused_lasso_path(y,levels;l1_ratio=.25)
+  for (j,lambda) in enumerate(levels)
+    exact = fused_lasso(y,.25lambda,.75lambda)
+    @test fused_path.solutions[j].x ≈ exact.x
+  end
+  unpenalized = trend_filter(y,0.;order=2)
+  @test unpenalized.converged
+  @test unpenalized.x ≈ y
+  @test dof(unpenalized) == length(y)
+
+  # Unequal row weights are not graph incidence constraints. Degrees of
+  # freedom must fall back to the actual nullspace instead of union-find.
+  weighted = reshape([1.,2.],1,2)
+  signal = [1.,2.]
+  solution = generalized_lasso(signal,weighted,1.;abstol=1e-10,reltol=1e-10)
+  @test solution.converged
+  @test solution.x ≈ dual_reference(Matrix{Float64}(I,2,2),signal,weighted,1.) atol=1e-8
+  @test norm(weighted*solution.x) <= 1e-8
+  @test dof(solution) == 1
+
+  # A deliberately perturbed normal-equation cache gives a false stationary
+  # point. The original-design residual must reject it and resume iteration.
+  X = Matrix{Float64}(I,3,3)
+  response = [2.,-1.,.5]
+  gram = X'X/3
+  cached = fused_lasso(X,response,.03,.04;_gram=gram,_xy=zeros(3),
+    abstol=1e-10,reltol=0)
+  penalty = [.03Matrix{Float64}(I,3,3); .04Matrix(difference_matrix(3))]
+  @test cached.converged
+  @test cached.iterations > 1
+  @test cached.dual_residual <= sqrt(3)*1e-10
+  @test cached.x ≈ dual_reference(X,response,penalty,1.) atol=1e-8
+
+  folds = repeat(1:3,2)
+  cv = CVGeneralizedLassoPath(y,D,levels;folds,threads=false)
+  explicit = CVGeneralizedLassoPath(Matrix(identity_design),y,D,levels;folds,threads=false)
+  via_fit = fit(CVGeneralizedLassoPath,y,D,levels;folds,threads=false)
+  @test cv.cvm ≈ explicit.cvm
+  @test cv.cvse ≈ explicit.cvse
+  @test via_fit.cvm ≈ cv.cvm
+  @test coef(via_fit) ≈ coef(cv)
+  fused_cv = cv_fused_lasso(y,levels;folds,threads=false)
+  explicit_fused = cv_fused_lasso(Matrix(identity_design),y,levels;folds,threads=false)
+  @test fused_cv.cvm ≈ explicit_fused.cvm
+  @test fused_cv.cvse ≈ explicit_fused.cvse
+end
+
 end
