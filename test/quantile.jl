@@ -105,6 +105,31 @@ end
       @test s.dual !== s.certificate_dual
     end
   end
+  @testset "smoothed score accuracy during solving" begin
+    loss=HighDimensionalModels.ProximalBase.ConvolutionCheck(.5,.2)
+    if HighDimensionalModels.ProximalSolvers._hasconjugate(loss)
+      for τ in (.2,.5,.8), screening in (false,true)
+        p=QuantileLassoPath(X,y,[.3,.1,.03];method=:smooth,tau=τ,bandwidth=.2,
+          standardize_x=false,tol=1e-6,screening,rng=Xoshiro(19))
+        @test p.complete && all(s.converged for s in p.solutions)
+        @test all(s.certificate_gap <= 1e-6*(1+abs(s.objective)) for s in p.solutions)
+        for s in p.solutions
+          expected=[-last(HighDimensionalModels.ProximalBase.value_and_deriv(loss,predict(s,X)[i],y[i])) for i in eachindex(y)]
+          τ==.5 && @test dual_scores(s) ≈ expected
+        end
+      end
+      p=QuantileLassoPath(X,y,[.1,0.];method=:smooth,penalty_factors=[0.,1,1,1,1],
+        standardize_x=false,tol=1e-6,rng=Xoshiro(19))
+      @test all(s.converged for s in p.solutions)
+      @test all(all(iszero,s.certificate_dual) for s in p.solutions)
+      stopped=QuantileLassoPath(X,y,[.03];method=:smooth,tol=1e-10,newton_max_iter=1,
+        options=CDOptions(max_iter=1),standardize_x=false,rng=Xoshiro(19))
+      @test !stopped[1].converged
+    else
+      # Compatibility with solver releases predating convolution certificates.
+      @test !HighDimensionalModels.ProximalSolvers._hasconjugate(loss)
+    end
+  end
   for kw in ((tau=0.,),(tau=1.,),(tol=NaN,),(time_limit=0.,),(method=:bad,),
              (penalty_factors=[1.,-1.,1,1,1],),(method=:smooth,bandwidth=0.),
              (method=:smooth,time_limit=1.),(initial_basis=:bad,),(simplex=:bad,))

@@ -247,9 +247,13 @@ function QuantileLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real},
     # Use the requested observation-score accuracy for Newton's certified
     # stopping too. The backend's feasible certificate and its raw-score guard
     # are distinct; the saved scores always remain the loss gradient.
+    loss = ProximalBase.ConvolutionCheck(Float64(tau), Float64(bandwidth))
+    # Older solver releases keep their original stopping behavior and still
+    # receive the independent post-fit checks below.
+    supported = isdefined(ProximalSolvers, :_hasconjugate) && ProximalSolvers._hasconjugate(loss)
     gt = options.gaptol === nothing ? Float64(tol) : min(options.gaptol, Float64(tol))
-    smooth_options = CDOptions(options; gaptol=gt)
-    path = GLMLassoPath(Xf, yf, ls, ProximalBase.ConvolutionCheck(Float64(tau), Float64(bandwidth)), smooth_options;
+    smooth_options = supported ? CDOptions(options; gaptol=gt) : options
+    path = GLMLassoPath(Xf, yf, ls, loss, smooth_options;
                        intercept, standardize_x=false, penalty=NormL1(1.0, w), devmax=1,
                        newton_tol, newton_max_iter, screening, rng)
     ss = QuantileLassoSolution[]
