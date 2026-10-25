@@ -9,7 +9,7 @@ converted to dense matrices. The methods return `LowRankSolution`s with
 `coef`, `predict`, `residuals`, `nobs`, `deviance`, and `dof`.
 
 ```julia
-using CoordinateDescent
+using HighDimensionalModels
 s = reduced_rank(X, Y, 3)
 r = select_rank(X, Y)          # estimates the noise variance by least squares
 predict(r.solution, Xnew)
@@ -39,8 +39,10 @@ coefficients. This is a penalty on `B`; thresholding the singular values of
 
 ```julia
 s = nuclear_regression(X, Y, 0.1)
+using ProximalAlgorithms       # optional dependency; activates the PANOC backend
+s = nuclear_regression(X, Y, 0.1; solver = :panoc)
 p = LowRankPath(X, Y; method = :nuclear, nλ = 30, λminratio = 0.01)
-cv = CVLowRankPath(X, Y; method = :nuclear, nλ = 30, nfolds = 5)
+cv = CVLowRankPath(X, Y; method = :nuclear, solver = :panoc, nλ = 30, nfolds = 5)
 coef(cv)                     # the minimum CV error solution
 predict(cv, Xnew)
 ```
@@ -49,6 +51,10 @@ The path reuses its gradient setup and warm starts each penalty from the
 previous fit. For a wide design it computes gradients from `X` rather than
 forming a `p × p` Gram matrix. `λmax = ‖Xc'Yc/n‖₂` is the zero-solution
 threshold. The default automatic grid starts just above it.
+`solver = :apg` remains the default. With ProximalAlgorithms installed and
+loaded, `solver = :panoc` uses its limited-memory quasi-Newton acceleration
+and line search. Both backends use ProximalBase's nuclear proximal operator
+and certify the same normalized gradient mapping at the returned coefficients.
 
 ## Row-sparse reduced-rank regression
 
@@ -67,10 +73,14 @@ The initialization is reduced-rank least squares. With `adaptive = true`,
 a `sqrt(eps(T))` floor. Explicit positive weights override this choice.
 The problem is nonconvex: `converged` means the blocks have stabilized, not
 that a global optimum was found.
+`block_solver = :fista` uses restarted block FISTA for the weighted group-lasso
+block, retaining the same response update and KKT stopping conditions.
+`block_solver = :cd` remains the default. Either choice applies to paths
+and cross-validation.
 
 ```julia
 s = sparse_reduced_rank(X, Y, 3, 0.1; adaptive = true)
-p = LowRankPath(X, Y; method = :sparse, rank = 3, nλ = 30)
+p = LowRankPath(X, Y; method = :sparse, rank = 3, block_solver = :fista, nλ = 30)
 best = p.solutions[argmin(lowrank_ic(p; criterion = :bic))]
 cv = CVLowRankPath(X, Y; method = :sparse, rank = 3, adaptive = true)
 ```
@@ -104,7 +114,11 @@ centering, initial fit, and adaptive weights. Convergence is local.
 ## Tuning and information criteria
 
 `LowRankPath(...; method = :rank, ranks = 0:5)` shares the design and fitted
-SVDs across rank constraints. `lowrank_ic` returns scores on the normalized
+SVDs across rank constraints. Fixed-rank results reuse those decompositions
+and use a small QR/SVD core for coefficient rank; residuals are computed once.
+Selected-design rank, numerical coefficient rank, and exact degrees of freedom
+retain their definitions, including custom fitting cutoffs and zero fits.
+`lowrank_ic` returns scores on the normalized
 scale `log(RSS) + penalty * df/(n*q)`. AIC uses 2 and BIC uses `log(n*q)`;
 BICP uses `2log(n*q)` for row-sparse regression and `2log(p*q)` for RSSVD.
 These are the scales in rrpack. Additive constants do not affect selection.
@@ -127,7 +141,7 @@ rrpack 0.1-14 interchanges its BIC/BICP selection labels inside `rssvd.eea`.
 The oracle harness aligns the actual BIC column explicitly; the methods here
 use the criterion names according to the formulas above.
 
-The [Discovery harness](https://github.com/mlakolar/CoordinateDescent.jl/tree/master/benchmark/lowrank) records replicated
+The [Discovery harness](https://github.com/mlakolar/HighDimensionalModels.jl/tree/master/benchmark/lowrank) records replicated
 timing, profiles and independent rrpack comparisons. rrpack uses unscaled
 squared losses: its penalty is `n * λ` for the objectives here. Its adaptive
 nuclear-norm estimator shrinks the fitted-value singular values, so it is

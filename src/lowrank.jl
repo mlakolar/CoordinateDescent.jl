@@ -52,7 +52,10 @@ function _lr_svd(d; rtol = nothing)
   k = count(>(τ * first(F.S)), F.S)
   U, V, s = F.U[:, 1:k], F.V[:, 1:k], F.S[1:k]
   H = svd(U' * d.Y; full = false)
-  (; U, V, s, H, xrank = k)
+  # rank(X) uses its default tolerance, independently of the user's fitting
+  # cutoff. Reuse these singular values for fixed-rank result diagnostics.
+  diagnostic_xrank = count(>(min(size(d.X)...) * eps(T) * first(F.S)), F.S)
+  (; U, V, s, H, xrank = k, diagnostic_xrank)
 end
 
 # Stein degrees of freedom of rank-constrained fitted values. A truncation
@@ -75,19 +78,50 @@ end
 
 function _lr_rrcoef(d, f, r)
   r == 0 && return zeros(eltype(d.X), size(d.X, 2), size(d.Y, 2))
-  (f.V * (f.H.U[:, 1:r] ./ f.s)) * (f.H.S[1:r] .* f.H.Vt[1:r, :])
+  L, R = _lr_rrfactors(f, r)
+  L * R
 end
+_lr_rrfactors(f, r) = (f.V * (f.H.U[:, 1:r] ./ f.s), f.H.S[1:r] .* f.H.Vt[1:r, :])
 
-function _lr_solution(d, B, λ, iterations, converged, objective, method; df = nothing, df_exact = NaN)
-  rows = _activerows(B)
-  r = LinearAlgebra.rank(B)
+function _lr_solution(d, B, λ, iterations, converged, objective, method;
+                      df = nothing, df_exact = NaN, rows = _activerows(B),
+                      coefficient_rank = nothing, residual = nothing)
+  r = coefficient_rank === nothing ? LinearAlgebra.rank(B) : coefficient_rank
   q = size(B, 2)
   if df === nothing
     k = isempty(rows) ? 0 : LinearAlgebra.rank(d.X[:, rows])
     df = r * (k + q - r) + q * d.intercept
   end
+  E = residual === nothing ? d.Y - d.X * B : residual
   LowRankSolution(B, d.my - B' * d.mx, r, rows, iterations, converged,
-                  eltype(B)(objective), d.Y - d.X * B, d.intercept, df, method, eltype(B)(df_exact), eltype(B)(λ))
+                  eltype(B)(objective), E, d.intercept, df, method, eltype(B)(df_exact), eltype(B)(λ))
+end
+
+function _lr_rrsolution(d, f, bound)
+  T = eltype(d.X)
+  p, q = size(d.X, 2), size(d.Y, 2)
+  if bound == 0
+    B, r = zeros(T, p, q), 0
+  else
+    L, R = _lr_rrfactors(f, bound)
+    B = L * R
+    # The singular values of B equal those of this bound-by-bound core.
+    # Apply rank(B)'s original dimension-dependent cutoff, including when
+    # the fitted coefficient rank is smaller than the requested bound.
+    core = Matrix(qr(L).R) * Matrix(qr(R').R)'
+    σ = svdvals!(core)
+    cutoff = min(p, q) * eps(T) * first(σ)
+    # Near the numerical cutoff, roundoff in L*R itself can affect rank.
+    # Retain the original dense-matrix diagnostic for these ambiguous cases.
+    ambiguous = any(<=(8cutoff), σ) || 8bound*eps(T)*norm(L)*norm(R) > cutoff
+    r = ambiguous ? LinearAlgebra.rank(B) : count(>(cutoff), σ)
+  end
+  rows = _activerows(B)
+  k = isempty(rows) ? 0 : length(rows) == p ? f.diagnostic_xrank : LinearAlgebra.rank(d.X[:, rows])
+  df = r * (k + q - r) + q * d.intercept
+  E = d.Y - d.X * B
+  _lr_solution(d, B, 0, 0, true, sum(abs2, E)/(2size(d.X, 1)), :rank;
+    df, df_exact = _lr_exact_df(f, bound, q, d.intercept), rows, coefficient_rank = r, residual = E)
 end
 
 """
@@ -105,8 +139,7 @@ function reduced_rank(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real}, r::I
   d = _lr_data(X, Y, intercept)
   f = _lr_svd(d; rtol)
   _lr_rank(r, min(f.xrank, size(Y, 2)))
-  B = _lr_rrcoef(d, f, r)
-  _lr_solution(d, B, 0, 0, true, sum(abs2, d.Y - d.X * B) / (2size(X, 1)), :rank; df_exact = _lr_exact_df(f, r, size(Y, 2), intercept))
+  _lr_rrsolution(d, f, r)
 end
 
 """
@@ -138,8 +171,7 @@ function select_rank(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real};
     isfinite(μ) && μ >= 0 || throw(ArgumentError("μ must be finite and nonnegative"))
   end
   r = count(s -> s^2 > μ, f.H.S)
-  B = _lr_rrcoef(d, f, r)
-  sol = _lr_solution(d, B, 0, 0, true, sum(abs2, d.Y - d.X * B) / (2size(X, 1)), :rank; df_exact = _lr_exact_df(f, r, size(Y, 2), intercept))
+  sol = _lr_rrsolution(d, f, r)
   (; solution = sol, rank = r, μ, sigma2, singularvalues = copy(f.H.S))
 end
 
@@ -160,7 +192,12 @@ function _lr_gradient(d)
 end
 _lr_grad(d, g, B) = g.A === nothing ? d.X' * (d.X * B) / size(d.X, 1) - g.C : g.A * B - g.C
 
-function _lr_nuclear(d, g, λ, start; max_iter, tol)
+function _lr_nuclear(d, g, λ, start; max_iter, tol, solver = :apg)
+  if solver == :panoc
+    ext = Base.get_extension(@__MODULE__, :HighDimensionalModelsProximalAlgorithmsExt)
+    ext === nothing && throw(ArgumentError("solver = :panoc requires ProximalAlgorithms; install and load it with `using ProximalAlgorithms`"))
+    return ext.nuclear_panoc(d, g, λ, start; max_iter, tol)
+  end
   T = eltype(d.X)
   B, Z = copy(start), copy(start)
   g.L == 0 && return _lr_solution(d, zero(B), λ, 0, true, sum(abs2, d.Y) / (2size(d.X, 1)), :nuclear)
@@ -203,19 +240,23 @@ function _lr_nuclear(d, g, λ, start; max_iter, tol)
 end
 
 """
-    nuclear_regression(X, Y, λ; intercept = true, max_iter = 10_000, tol = 1e-7)
+    nuclear_regression(X, Y, λ; solver = :apg, intercept = true, max_iter = 10_000, tol = 1e-7)
 
 Minimize `‖Y - 1β₀' - XB‖²_F / (2n) + λ ‖B‖_*` by accelerated proximal
 gradient, using `ProximalBase.NuclearNorm` for singular-value thresholding.
 Columns remain on their original scales. `tol` bounds the Frobenius norm of
 the proximal gradient mapping relative to `max(1, ‖Xc'Yc/n‖_F)`.
 See [`LowRankPath`](@ref) for warm starts over several penalties.
+`solver = :panoc` uses ProximalAlgorithms' PANOC with the same loss, nuclear
+proximal operator, and stopping certificate; first load `ProximalAlgorithms`.
 """
 function nuclear_regression(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real}, λ::Real;
-                            intercept::Bool = true, max_iter::Integer = 10_000, tol::Real = 1e-7)
+                            solver::Symbol = :apg, intercept::Bool = true,
+                            max_iter::Integer = 10_000, tol::Real = 1e-7)
+  solver in (:apg, :panoc) || throw(ArgumentError("solver must be :apg or :panoc"))
   _lr_options(λ, max_iter, tol)
   d = _lr_data(X, Y, intercept)
-  _lr_nuclear(d, _lr_gradient(d), λ, zeros(eltype(d.X), size(X, 2), size(Y, 2)); max_iter, tol)
+  _lr_nuclear(d, _lr_gradient(d), λ, zeros(eltype(d.X), size(X, 2), size(Y, 2)); max_iter, tol, solver)
 end
 
 function _lr_group_kkt(A, G, λ, w)
@@ -249,7 +290,45 @@ function _lr_group!(A, XX, C, λ, w; max_iter, tol)
   false
 end
 
-function _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol)
+function _lr_group_fista!(A, XX, C, λ, w; max_iter, tol, L)
+  T = eltype(A)
+  scale = max(one(T), norm(C))
+  if iszero(L)
+    fill!(A, zero(T))
+    return _lr_group_kkt(A, -C, λ, w) <= tol * scale
+  end
+  Z, W, G = copy(A), similar(A), similar(A)
+  t = one(T)
+  for k in 1:max_iter
+    mul!(G, XX, Z)
+    @. W = Z - (G - C) / L
+    for j in axes(W, 1)
+      row = view(W, j, :)
+      nr = norm(row)
+      row .*= nr == 0 ? zero(T) : max(zero(T), 1 - λ*w[j]/(L*nr))
+    end
+    if k % 10 == 0 || k == max_iter
+      mul!(G, XX, W)
+      G .-= C
+      if _lr_group_kkt(W, G, λ, w) <= tol * scale
+        A .= W
+        return true
+      end
+    end
+    restart = zero(T)
+    @inbounds for j in eachindex(A)
+      restart += (Z[j] - W[j]) * (W[j] - A[j])
+    end
+    tn = restart > 0 ? one(T) : (one(T) + sqrt(one(T) + 4t^2))/2
+    β = restart > 0 ? zero(T) : (t - 1)/tn
+    @. Z = W + β * (W - A)
+    A .= W
+    t = tn
+  end
+  false
+end
+
+function _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol, block_solver = :cd)
   T = eltype(d.X)
   n, p = size(d.X)
   r == 0 && return _lr_solution(d, zeros(T, p, size(d.Y, 2)), λ, 0, true, sum(abs2, d.Y)/(2n), :sparse)
@@ -257,12 +336,16 @@ function _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_t
   V = F.V[:, 1:r]
   A = initial * V
   XX, XY = d.X' * d.X / n, d.X' * d.Y / n
+  L = block_solver == :fista ? eigmax(Symmetric(XX)) : zero(T)
   B = A * V'
   iteration, converged = 0, false
   for k in 1:max_iter
     iteration = k
     old = B
-    inner = _lr_group!(A, XX, XY * V, λ, w; max_iter = inner_max_iter, tol = inner_tol)
+    C = XY * V
+    inner = block_solver == :fista ?
+      _lr_group_fista!(A, XX, C, λ, w; max_iter = inner_max_iter, tol = inner_tol, L) :
+      _lr_group!(A, XX, C, λ, w; max_iter = inner_max_iter, tol = inner_tol)
     S = svd(XY' * A; full = false)
     V = S.U * S.Vt
     B = A * V'
@@ -293,7 +376,7 @@ end
 """
     sparse_reduced_rank(X, Y, rank, λ; intercept = true, weights = nothing,
                         adaptive = false, gamma = 2, max_iter = 1000, tol = 1e-7,
-                        inner_max_iter = 10_000, inner_tol = 1e-9)
+                        inner_max_iter = 10_000, inner_tol = 1e-9, block_solver = :cd)
 
 The row-sparse reduced-rank regression of Chen and Huang (2012): minimize
 `‖Y - 1β₀' - XB‖²_F/(2n) + λ ∑ⱼ weights[j] ‖B[j,:]‖₂`, with rank at most
@@ -303,18 +386,22 @@ is nonconvex; convergence is local. `adaptive = true` uses inverse row norms
 of the initial RRR fit to power `gamma`, with a `sqrt(eps(T))` floor.
 Explicit positive `weights` override adaptive weights. No column rescaling is
 performed. For rrpack's unscaled loss use `λ_rrpack = n * λ`.
+`block_solver = :fista` replaces row coordinate descent with restarted block
+FISTA, using the same weighted group proximal map and KKT stopping rule.
 """
 function sparse_reduced_rank(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real}, r::Integer, λ::Real;
                              intercept::Bool = true, weights = nothing, adaptive::Bool = false,
                              gamma::Real = 2, max_iter::Integer = 1000, tol::Real = 1e-7,
-                             inner_max_iter::Integer = 10_000, inner_tol::Real = 1e-9)
+                             inner_max_iter::Integer = 10_000, inner_tol::Real = 1e-9,
+                             block_solver::Symbol = :cd)
+  block_solver in (:cd, :fista) || throw(ArgumentError("block_solver must be :cd or :fista"))
   _lr_options(λ, max_iter, tol); _lr_options(λ, inner_max_iter, inner_tol)
   d = _lr_data(X, Y, intercept)
   f = _lr_svd(d)
   _lr_rank(r, min(f.xrank, size(Y, 2)))
   initial = _lr_rrcoef(d, f, r)
   w = _lr_weights(d, initial, weights, adaptive, gamma)
-  _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol)
+  _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol, block_solver)
 end
 
 """
@@ -349,6 +436,9 @@ fixed. `:rank` fits the supplied `ranks`, by default zero through the maximum
 estimable rank. `:sparse_svd` fits the supplied rank bounds with component
 penalties chosen by BIC. `solutions` contains independent [`LowRankSolution`](@ref)s.
 Nuclear paths reuse the gradient setup and warm start the coefficient matrix.
+`solver = :panoc` selects the optional ProximalAlgorithms backend for nuclear
+paths. `block_solver = :fista` selects block FISTA for sparse paths; defaults
+are `solver = :apg` and `block_solver = :cd`.
 Sparse paths warm start nonzero fits, restarting at the RRR initialization
 after a zero fit to avoid an absorbing zero block. Adaptive weights are fixed
 from the training-data RRR fit over the whole path. Select using
@@ -366,8 +456,13 @@ function LowRankPath(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real};
                      nλ::Integer = 50, λminratio::Real = 0.01, intercept::Bool = true,
                      max_iter::Integer = 10_000, tol::Real = 1e-7, weights = nothing,
                      adaptive::Union{Nothing, Bool} = nothing, gamma::Real = 2, criterion::Symbol = :bic,
-                     inner_max_iter::Integer = 10_000, inner_tol::Real = 1e-9)
+                     inner_max_iter::Integer = 10_000, inner_tol::Real = 1e-9,
+                     solver::Symbol = :apg, block_solver::Symbol = :cd)
   method in (:nuclear, :sparse, :rank, :sparse_svd) || throw(ArgumentError("method must be :nuclear, :sparse, :rank or :sparse_svd"))
+  solver in (:apg, :panoc) || throw(ArgumentError("solver must be :apg or :panoc"))
+  block_solver in (:cd, :fista) || throw(ArgumentError("block_solver must be :cd or :fista"))
+  method == :nuclear || solver == :apg || throw(ArgumentError("solver applies only to method = :nuclear"))
+  method == :sparse || block_solver == :cd || throw(ArgumentError("block_solver applies only to method = :sparse"))
   adaptive = adaptive === nothing ? method == :sparse_svd : adaptive
   _lr_options(0, max_iter, tol); _lr_options(0, inner_max_iter, inner_tol)
   d = _lr_data(X, Y, intercept)
@@ -384,9 +479,7 @@ function LowRankPath(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real};
         push!(sols, sparse_svd_regression(X, Y, r; intercept, nλ, λminratio,
           adaptive, gamma, criterion, max_iter, tol, inner_max_iter, inner_tol).solution)
       else
-        B = _lr_rrcoef(d, f, r)
-        push!(sols, _lr_solution(d, B, 0, 0, true, sum(abs2, d.Y - d.X * B)/(2size(X, 1)), :rank;
-          df_exact = _lr_exact_df(f, r, size(Y, 2), intercept)))
+        push!(sols, _lr_rrsolution(d, f, r))
       end
     end
     return LowRankPath(sols, zeros(T, length(rs)), Int.(rs), method)
@@ -418,8 +511,8 @@ function LowRankPath(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real};
   end
   start = copy(initial)
   for λ in λs
-    s = method == :nuclear ? _lr_nuclear(d, g, λ, start; max_iter, tol) :
-      _lr_sparse(d, rank, λ, w, start; max_iter, tol, inner_max_iter, inner_tol)
+    s = method == :nuclear ? _lr_nuclear(d, g, λ, start; max_iter, tol, solver) :
+      _lr_sparse(d, rank, λ, w, start; max_iter, tol, inner_max_iter, inner_tol, block_solver)
     push!(sols, s)
     start = s.rank == 0 ? copy(initial) : copy(s.B)
   end

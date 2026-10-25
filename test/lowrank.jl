@@ -148,3 +148,4 @@ using LinearAlgebra, Random, Statistics, SparseArrays
 end
 
 include("lowrank_golden.jl")
+include("lowrank_solvers.jl")

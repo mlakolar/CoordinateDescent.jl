@@ -1,5 +1,11 @@
 # Unreleased
 
+Low-rank nuclear fits and paths accept `solver = :panoc` after loading the
+optional ProximalAlgorithms dependency. Row-sparse fits and paths accept
+`block_solver = :fista`; both options propagate through cross-validation.
+Fixed-rank fits reuse existing factorizations for diagnostics and compute
+residuals once, preserving numerical rank and degrees-of-freedom definitions.
+
 ## Multivariate regression
 
 Add rank-constrained least squares with the Bunea–She–Wegkamp rank selection
