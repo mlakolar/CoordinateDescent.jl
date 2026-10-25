@@ -1,0 +1,17 @@
+case,seed,rep,method,n,p,tau,requested_levels,levels,fit_s,diagnostics_s,total_s,julia_bytes,raw_dual_available,qualified,status,host
+deepwide,1202,1,conquer-dual,1000,3000,0.5,16,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+deepwide,1202,1,rqpen-huber,1000,3000,0.5,16,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+deepwide,1202,1,quantreg-native-dual,1000,3000,0.5,16,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+deepwide,1202,1,rqpen-fn,1000,3000,0.5,16,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+deepwide,1202,1,rqpen-br,1000,3000,0.5,16,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+deepwide,1202,1,gurobi-primal,1000,3000,0.5,16,12,60.017228933,0.0,60.017228933,546801960,true,false,incomplete,a02-16.hpc.usc.edu
+deepwide,1202,1,api-exact,1000,3000,0.5,16,13,60.130030212,0.0,60.130030212,190291512,true,false,incomplete,a02-16.hpc.usc.edu
+deepwide,1202,1,api-smooth,1000,3000,0.5,16,16,15.189782462,0.0,15.189782462,6330152,true,true,returned,a02-16.hpc.usc.edu
+deepwide,1202,2,rqpen-fn,1000,3000,0.5,16,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+deepwide,1202,2,quantreg-native-dual,1000,3000,0.5,16,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+deepwide,1202,2,conquer-dual,1000,3000,0.5,16,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+deepwide,1202,2,api-smooth,1000,3000,0.5,16,16,14.944595896,0.0,14.944595896,6330472,true,true,returned,a02-16.hpc.usc.edu
+deepwide,1202,2,api-exact,1000,3000,0.5,16,13,60.053825635,0.0,60.053825635,190344312,true,false,incomplete,a02-16.hpc.usc.edu
+deepwide,1202,2,rqpen-huber,1000,3000,0.5,16,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+deepwide,1202,2,gurobi-primal,1000,3000,0.5,16,12,60.008521356,0.0,60.008521356,546881768,true,false,incomplete,a02-16.hpc.usc.edu
+deepwide,1202,2,rqpen-br,1000,3000,0.5,16,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu

@@ -1,0 +1,6 @@
+Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
+1	:	1792950866.035	    56.869	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=8G --cpu-bind=cores timeout 600 bash tight-wrapper.sh compatibility 0 > logs/compatibility-0.log 2>&1
+2	:	1792950866.037	   111.956	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=8G --cpu-bind=cores timeout 600 bash tight-wrapper.sh wide 1301 > logs/wide-1301.log 2>&1
+3	:	1792950922.909	    90.460	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=8G --cpu-bind=cores timeout 600 bash tight-wrapper.sh wide 1302 > logs/wide-1302.log 2>&1
+4	:	1792950977.996	    91.613	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=8G --cpu-bind=cores timeout 600 bash tight-wrapper.sh wide 1303 > logs/wide-1303.log 2>&1
+5	:	1792951013.373	   100.946	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=8G --cpu-bind=cores timeout 600 bash tight-wrapper.sh wide 1202 > logs/wide-1202.log 2>&1

@@ -1,0 +1,207 @@
+{
+  "run_id": "20261025-cd78-api-tuning",
+  "parent_run_id": "20261025-cd78-api",
+  "status": "completed_calibration_cv_and_master_integration",
+  "inference_issue": "https://github.com/mlakolar/HighDimensionalModels.jl/issues/104",
+  "model_pull_request": "https://github.com/mlakolar/HighDimensionalModels.jl/pull/94",
+  "solver_pull_request": "https://github.com/mlakolar/ProximalSolvers.jl/pull/96",
+  "source": {
+    "model_core": "2fe145ee3fd850fd175cbc78aa94ed80a132faf2",
+    "final_tests": "e7a81e332f443af0f59ffffc1c28ec73ad54d822",
+    "first_harness": "ca5149c",
+    "corrected_container_harness": "12d9c8f",
+    "diagnostic_harness": "ad80eb0",
+    "solver_core": "216ba6f3dc3b3cbd9dc975614847f665644fea01",
+    "legacy_solver": "73a1c8e927d8917e4f16483271b053fcdb25b488",
+    "ProximalBase": "0111d1bb4ca51b40c28d8ea5dab0f63be4d76e6a",
+    "KernelFunctions": "5d93dff52873d85c60849dd56dd6cadb0391dd59",
+    "merged_master_integration": "a486a00623baafe51acda4f0ba0d696c59bc6bbc"
+  },
+  "environment": {
+    "Julia": "1.10.12",
+    "R": "4.5.3",
+    "quantreg": "6.1",
+    "blas_threads": 1
+  },
+  "cluster": {
+    "account": "mkolar_1314",
+    "constraint": "epyc-7513",
+    "name": "Discovery",
+    "partition": "main",
+    "ssh_alias": "discovery"
+  },
+  "jobs": [
+    {
+      "allocated_cpus": 2,
+      "command": "cd tuning-v1 && sbatch --parsable run.sbatch",
+      "elapsed_s": 56,
+      "end_cluster_time": "2026-10-25T11:36:50",
+      "exit_code": "1:0",
+      "job_id": "13439401",
+      "node": "a02-18",
+      "outcome": "615 API + 54 pivotal + 106 CV assertions passed. R worker failed before computation because clean container cleared R_LIBS_USER; explicit --env fixes launcher. Preserve all initial outputs.",
+      "requested_memory": "16G",
+      "resources": "2CPU16GB8min",
+      "scope": "615 prior API assertions plus new tuning assertions; 24 independent R reference assertions;18 repeated calibration/CV measurements",
+      "source": "ca5149c;tuning-source-v1.tar;tuning-harness-v1.tar",
+      "stage": "Pivotal calibration and check-loss CV validation",
+      "start_cluster_time": "2026-10-25T11:35:54",
+      "status": "FAILED"
+    },
+    {
+      "allocated_cpus": 1,
+      "command": "cd tuning-reference-v2 && sbatch --parsable reference.sbatch",
+      "elapsed_s": 22,
+      "end_cluster_time": "2026-10-25T11:38:21",
+      "exit_code": "1:0",
+      "job_id": "13439733",
+      "node": "a03-03",
+      "outcome": "22/24 reference assertions pass; two held-out curves differ while all full-data coefficients and calibration quantiles match. Preserve outputs; diagnose possible tied LP optima before concluding.",
+      "requested_memory": "8G",
+      "resources": "1CPU8GB5min",
+      "scope": "Independent R score quantiles and fold curves;18 repeated calibration/CV measurements",
+      "source": "model2fe145e;harness12d9c8f;tuning-harness-v2.tar",
+      "stage": "Independent R calibration/CV reference retry",
+      "start_cluster_time": "2026-10-25T11:37:59",
+      "status": "FAILED"
+    },
+    {
+      "allocated_cpus": 1,
+      "command": "cd tuning-reference-v3 && sbatch --parsable diagnostic.sbatch",
+      "elapsed_s": 32,
+      "end_cluster_time": "2026-10-25T11:41:40",
+      "exit_code": "0:0",
+      "job_id": "13440297",
+      "node": "a03-03",
+      "outcome": "24/24 independent R assertions pass on noninteger-rank fixture;18 repeated measurements complete; tied-solution CSV retained for objective/dual diagnosis.",
+      "requested_memory": "8G",
+      "resources": "1CPU8GB5min",
+      "source": "model2fe145e;harnessad80eb0;tuning-harness-v3.tar",
+      "stage": "Tied-solution diagnosis and separate regular reference",
+      "start_cluster_time": "2026-10-25T11:41:08",
+      "status": "COMPLETED"
+    },
+    {
+      "allocated_cpus": 2,
+      "command": "cd tuning-reference-v3 && sbatch --parsable compatibility.sbatch",
+      "elapsed_s": 44,
+      "end_cluster_time": "2026-10-25T11:43:27",
+      "exit_code": "1:0",
+      "job_id": "13440581",
+      "node": "a03-09",
+      "outcome": "54 calibration checks pass;99/106 CV checks pass. Legacy solver fails some smooth fold accuracy, correctly producingNaN/Inf exclusions. Replace unconditional certified-agreement expectations with explicit legacy eligibility checks; preserve failed logs. All54tied reference pairs match training objectives<=2.1e-12 and valid rawKKT/gaps.",
+      "requested_memory": "8G",
+      "resources": "2CPU8GB4min",
+      "scope": "160 tuning assertions; saved-tie optimality summary",
+      "source": "model2fe145e;testca5149c;compatibility.sbatch",
+      "stage": "Older solver and two-thread tuning compatibility",
+      "start_cluster_time": "2026-10-25T11:42:43",
+      "status": "FAILED"
+    },
+    {
+      "allocated_cpus": 2,
+      "command": "cd tuning-final-tests && sbatch --parsable tuning-final-tests.sbatch",
+      "elapsed_s": 86,
+      "end_cluster_time": "2026-10-25T11:47:18",
+      "exit_code": "0:0",
+      "job_id": "13441126",
+      "node": "a02-16",
+      "outcome": "New backend:54pivotal+106CV assertions pass. Old backend:54pivotal+82CV assertions pass, with explicit legacy eligibility checks. Both2Julia threads; original warnings retained.",
+      "requested_memory": "8G",
+      "resources": "2CPU8GB4min",
+      "scope": "New certified and old legacy eligibility contracts in two separate Julia processes, each2threads",
+      "source": "e7a81e3;tuning-final-source.tar;tuning-final-tests.sbatch",
+      "stage": "Final two-thread new/old backend tuning checks",
+      "start_cluster_time": "2026-10-25T11:45:52",
+      "status": "COMPLETED"
+    },
+    {
+      "command": "cd tuning-integrated && sbatch --parsable tuning-integration.sbatch",
+      "job_id": "13442376",
+      "resources": "1CPU8GB4min",
+      "scope": "Module loads both structured and quantile APIs;615API+160tuning assertions",
+      "source": "a486a00623baafe51acda4f0ba0d696c59bc6bbc;tuning-integrated-source.tar",
+      "stage": "Merged-master quantile integration regression",
+      "status": "COMPLETED",
+      "elapsed_s": 65,
+      "exit_code": "0:0",
+      "node": "b01-03",
+      "allocated_cpus": 1,
+      "requested_memory": "8G",
+      "start_cluster_time": "2026-10-25T11:53:44",
+      "end_cluster_time": "2026-10-25T11:54:49",
+      "outcome": "Merged master loads structured and quantile APIs;615 API+54pivotal+106CV assertions passed. No quantile numerical source changes."
+    }
+  ],
+  "actual_resources": {
+    "cpu_seconds": 491,
+    "peak_cpus": 2,
+    "peak_memory_gib": 16,
+    "running_union_seconds": 305
+  },
+  "combined_campaign_resources": {
+    "cpu_hours": 3.3,
+    "peak_allocated_cpus": 2,
+    "peak_allocated_memory_gib": 16,
+    "running_union_seconds": 6445,
+    "standing_budget_cpus": 8,
+    "standing_budget_memory_gib": 16,
+    "standing_budget_minutes": 120
+  },
+  "validation": {
+    "existing_API_assertions": 615,
+    "certified_pivotal_assertions": 54,
+    "certified_CV_assertions": 106,
+    "legacy_pivotal_assertions": 54,
+    "legacy_CV_assertions": 82,
+    "independent_R_reference_assertions": 24,
+    "tied_optimum_diagnostic_pairs": 54,
+    "repeated_operation_measurements": 18,
+    "new_and_old_final_Julia_threads": 2,
+    "post_merge_assertions": 775
+  },
+  "design": {
+    "R_seed": 419,
+    "R_n": 83,
+    "R_p": 5,
+    "shared_uniform_draws": 128,
+    "original_quantiles": [
+      0.2,
+      0.5,
+      0.8
+    ],
+    "regular_quantiles": [
+      0.23,
+      0.51,
+      0.79
+    ],
+    "R_references": "Three penalties, both standardization settings, offsets, unbalanced3folds; coefficients, losses and pivotal maxima independently implemented inR.",
+    "timing_seeds": [
+      1501,
+      1502,
+      1503
+    ],
+    "timing_repetitions": 2,
+    "timing_n": 1000,
+    "timing_p": 40,
+    "timing_folds": 5,
+    "timing_levels": 12,
+    "pivotal_simulations": 1000
+  },
+  "recreation": {
+    "command": "Stage the recorded source/environment and benchmark/quantile/tuning scripts on Discovery. Submit run.sbatch for the regular references and assertions, or diagnostic.sbatch for the exact tied/regular diagnostic cohort. Use the saved compatibility/final-test recipes for old/new2thread checks.",
+    "guide": "../../README.md",
+    "source": "model core2fe145ee3fd850fd175cbc78aa94ed80a132faf2; final tests e7a81e332f443af0f59ffffc1c28ec73ad54d822; measured diagnostic harnessad80eb0",
+    "environment": "tuning-reference-v3/ltsenv and compat-env",
+    "remote_root": "/home1/mkolar/juliaPkg/runs/20261025-cd78-api"
+  },
+  "limitations": [
+    "Fixed-quantile calibration; no simultaneous quantile process or smoothing-bias calibration.",
+    "Zero effective slope loadings require separately justified calibration or explicitlambda.",
+    "No hdm rq reference was available in inspected CRAN hdm source; no hdm agreement claimed.",
+    "Nonunique exact estimates can have identical training objective and valid rawduals but different heldoutpredictions. Original equality failures retained.",
+    "Legacy smooth solver can fail requested foldaccuracy; affectedlevels excluded. Final tests verify fallback instead of assuming certification.",
+    "Inference implementation and full large-dimension issue78acceptance campaign remain separate."
+  ],
+  "ssh_session_closed": true
+}

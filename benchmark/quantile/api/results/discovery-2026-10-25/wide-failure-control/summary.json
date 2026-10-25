@@ -1,0 +1,16 @@
+[
+  {
+    "method": "api-default",
+    "mean_total_s": 1.771325404,
+    "max_kkt": 1.8546790031941703e-05,
+    "qualified_2e5": 0,
+    "qualified_2e6": 0
+  },
+  {
+    "method": "api-tight",
+    "mean_total_s": 4.4810572099999995,
+    "max_kkt": 5.333624684022986e-06,
+    "qualified_2e5": 2,
+    "qualified_2e6": 0
+  }
+]

@@ -1,0 +1,13 @@
+case,method,valid_paths,total_paths,independent_inputs,mean_s,sd_input_mean_s,t95_lo,t95_hi,median_sample_s,max_gap,max_smooth_kkt,mean_setup_s,mean_optimize_s,mean_bytes,statuses,hosts
+small,block-admm,6,6,3,3.9287253233333335,0.11741102203276267,3.637036635219092,4.220414011447574,3.9661433219999997,2.1961091126287968e-05,nan,0.0012506643931070964,3.9274612267812095,5588584341.333333,{'complete': 6},['a03-05.hpc.usc.edu']
+small,linear-admm,2,6,1,5.436434577,nan,nan,nan,5.436434577,6.855321864263075e-05,nan,0.0,5.436415433883667,8718916144.0,{'not_converged': 6},['a03-05.hpc.usc.edu']
+small,lp-dual-dual-warm,6,6,3,0.21110261,0.0007717070944547163,0.20918542857961225,0.21301979142038774,0.211462639,1.368238855548043e-12,nan,0.028726895650227863,0.17972628275553384,34606445.333333336,{'complete': 6},['a03-05.hpc.usc.edu']
+tall,block-admm,6,6,3,27.756293465166667,1.5235763531608462,23.97121451771182,31.541372412621513,28.1698921835,2.260036828594103e-05,nan,0.00745383898417155,27.748824795087177,42553532410.666664,{'complete': 6},['a03-05.hpc.usc.edu']
+tall,linear-admm,0,6,0,nan,nan,nan,nan,nan,0.0004920299085588997,nan,nan,nan,nan,{'not_converged': 6},['a03-05.hpc.usc.edu']
+tall,lp-dual-dual-warm,6,6,3,2.581539107,0.05900556175978224,2.434949335416613,2.7281288785833873,2.5593197485,1.368460900152968e-12,nan,0.36418477694193524,2.1974340279897056,331997338.6666667,{'complete': 6},['a03-05.hpc.usc.edu']
+ultrawide,block-admm,0,6,0,nan,nan,nan,nan,nan,0.00200110229421524,nan,nan,nan,nan,{'not_converged': 6},['a03-05.hpc.usc.edu']
+ultrawide,linear-admm,0,6,0,nan,nan,nan,nan,nan,0.04285629021440851,nan,nan,nan,nan,{'not_converged': 6},['a03-05.hpc.usc.edu']
+ultrawide,lp-dual-dual-warm,0,6,0,nan,nan,nan,nan,nan,1.3380407892782387e-12,nan,nan,nan,nan,{'TIME_LIMIT': 6},['a03-05.hpc.usc.edu']
+wide,block-admm,0,6,0,nan,nan,nan,nan,nan,0.0005556910366342205,nan,nan,nan,nan,{'not_converged': 6},['a03-05.hpc.usc.edu']
+wide,linear-admm,0,6,0,nan,nan,nan,nan,nan,0.0002552538628655121,nan,nan,nan,nan,{'not_converged': 6},['a03-05.hpc.usc.edu']
+wide,lp-dual-dual-warm,6,6,3,2.651983243333333,0.14773123465518698,2.2849688925167273,3.0189975941499387,2.614163188,1.556421658222007e-12,nan,0.3689219156901042,2.276612877845764,327898666.6666667,{'complete': 6},['a03-05.hpc.usc.edu']

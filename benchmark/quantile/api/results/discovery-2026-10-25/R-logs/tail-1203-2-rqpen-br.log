@@ -1,0 +1,9 @@
+Loading required package: SparseM
+Warning message:
+In rq.fit.br(x, y, tau = tau, ...) : Solution may be nonunique
+          used  (Mb) gc trigger  (Mb) max used  (Mb)
+Ncells 1951499 104.3    2990550 159.8  2990550 159.8
+Vcells 3463328  26.5    8388608  64.0  5998119  45.8
+Warning message:
+In rq.fit.br(x, y, tau = tau, ...) : Solution may be nonunique
+DONE rqpen-br 1.919363 seconds

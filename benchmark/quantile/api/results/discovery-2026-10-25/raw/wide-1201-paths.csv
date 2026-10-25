@@ -1,0 +1,17 @@
+case,seed,rep,method,n,p,tau,requested_levels,levels,fit_s,diagnostics_s,total_s,julia_bytes,raw_dual_available,qualified,status,host
+wide,1201,1,rqpen-fn,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1201,1,gurobi-primal,1000,1000,0.5,32,32,16.206138141,0.0,16.206138141,201990432,true,true,returned,a02-16.hpc.usc.edu
+wide,1201,1,api-exact,1000,1000,0.5,32,32,14.099276852,0.0,14.099276852,66524840,true,true,returned,a02-16.hpc.usc.edu
+wide,1201,1,rqpen-br,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1201,1,conquer-dual,1000,1000,0.5,32,32,28.0661377906799,0.019391737,28.0855295276799,NaN,true,true,returned,a02-16.hpc.usc.edu
+wide,1201,1,quantreg-native-dual,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1201,1,api-smooth,1000,1000,0.5,32,32,1.660428024,0.0,1.660428024,5607888,true,true,returned,a02-16.hpc.usc.edu
+wide,1201,1,rqpen-huber,1000,1000,0.5,32,0,59.8121318817139,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+wide,1201,2,conquer-dual,1000,1000,0.5,32,32,29.7832357883453,0.019784082,29.803019870345302,NaN,true,true,returned,a02-16.hpc.usc.edu
+wide,1201,2,rqpen-huber,1000,1000,0.5,32,0,59.8327910900116,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+wide,1201,2,quantreg-native-dual,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1201,2,rqpen-fn,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1201,2,rqpen-br,1000,1000,0.5,32,0,NaN,NaN,NaN,NaN,false,false,R_failed_or_timeout,a02-16.hpc.usc.edu
+wide,1201,2,gurobi-primal,1000,1000,0.5,32,32,16.168775842,0.0,16.168775842,202032160,true,true,returned,a02-16.hpc.usc.edu
+wide,1201,2,api-exact,1000,1000,0.5,32,32,16.524560563,0.0,16.524560563,66532456,true,true,returned,a02-16.hpc.usc.edu
+wide,1201,2,api-smooth,1000,1000,0.5,32,32,1.618750133,0.0,1.618750133,5608912,true,true,returned,a02-16.hpc.usc.edu

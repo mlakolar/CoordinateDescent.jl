@@ -1,0 +1,17 @@
+case,seed,rep,method,n,p,tau,requested_levels,levels,fit_s,diagnostics_s,total_s,julia_bytes,raw_dual_available,qualified,status,host
+tall,1202,1,conquer-dual,10000,100,0.5,32,32,0.995425224304199,0.054538444,1.049963668304199,NaN,true,true,returned,a02-16.hpc.usc.edu
+tall,1202,1,rqpen-huber,10000,100,0.5,32,0,0.339949607849121,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tall,1202,1,quantreg-native-dual,10000,100,0.5,32,32,13.7101318836212,0.030719145,13.7408510286212,NaN,true,true,returned,a02-16.hpc.usc.edu
+tall,1202,1,rqpen-fn,10000,100,0.5,32,0,18.9553010463715,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tall,1202,1,rqpen-br,10000,100,0.5,32,0,34.6400682926178,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tall,1202,1,gurobi-primal,10000,100,0.5,32,32,41.21694218,0.0,41.21694218,258309528,true,true,returned,a02-16.hpc.usc.edu
+tall,1202,1,api-exact,10000,100,0.5,32,32,2.699849396,0.0,2.699849396,86742712,true,true,returned,a02-16.hpc.usc.edu
+tall,1202,1,api-smooth,10000,100,0.5,32,32,0.132833078,0.0,0.132833078,22080752,true,true,returned,a02-16.hpc.usc.edu
+tall,1202,2,rqpen-fn,10000,100,0.5,32,0,19.0041863918304,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tall,1202,2,quantreg-native-dual,10000,100,0.5,32,32,13.5822176933289,0.027710444,13.6099281373289,NaN,true,true,returned,a02-16.hpc.usc.edu
+tall,1202,2,conquer-dual,10000,100,0.5,32,32,1.01577687263489,0.046518567,1.0622954396348898,NaN,true,true,returned,a02-16.hpc.usc.edu
+tall,1202,2,api-smooth,10000,100,0.5,32,32,0.140570302,0.0,0.140570302,22080304,true,true,returned,a02-16.hpc.usc.edu
+tall,1202,2,api-exact,10000,100,0.5,32,32,2.688668556,0.0,2.688668556,86739416,true,true,returned,a02-16.hpc.usc.edu
+tall,1202,2,rqpen-huber,10000,100,0.5,32,0,0.339133977890015,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tall,1202,2,gurobi-primal,10000,100,0.5,32,32,39.434642587,0.0,39.434642587,258308184,true,true,returned,a02-16.hpc.usc.edu
+tall,1202,2,rqpen-br,10000,100,0.5,32,0,40.9863529205322,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu

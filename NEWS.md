@@ -6,6 +6,16 @@ optional ProximalAlgorithms dependency. Row-sparse fits and paths accept
 Fixed-rank fits reuse existing factorizations for diagnostics and compute
 residuals once, preserving numerical rank and degrees-of-freedom definitions.
 
+## Quantile primal–dual API
+
+- Add exact HiGHS fit/path solvers and a convolution-smoothed proximal Newton route.
+- Preserve raw observation-level duals through `dual_scores`, document QR.jl's sign/normalization conversion, and retain independent certificates and per-fit KKT diagnostics.
+- Support weighted slope penalties, offsets, explicit zero penalties, sparse designs and partial exact paths; do not interpolate between quantile levels.
+
+- Add `quantile_lambda` for fixed-quantile pivotal penalty simulation with explicit confidence, loading and RNG controls.
+- Add `CVQuantileLassoPath` for held-out check-loss tuning, minimum/one-standard-error selection, and raw dual access from the selected full-data fit. Inaccurate or missing fold fits exclude that penalty.
+- Enable certified smoothed stopping with the merged ProximalSolvers convolution backend; retain the documented older-release fallback. Active development and CI resolve workspace master sources, with migration version numbers unchanged.
+
 ## Multivariate regression
 
 Add rank-constrained least squares with the Bunea–She–Wegkamp rank selection

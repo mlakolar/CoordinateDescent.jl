@@ -1,0 +1,5 @@
+DONE ultrawide 1003 1 lp-split-dual-warm TIME_LIMIT 30.262394255s first_pivots=NaN
+DONE ultrawide 1003 1 lp-dual-dual-warm TIME_LIMIT 30.219878572s first_pivots=NaN
+DONE ultrawide 1003 1 lp-dual-nullbasis-warm TIME_LIMIT 30.214501338s first_pivots=0
+[2026-10-25T03:51:45.646] error: Detected 1 oom_kill event in StepId=13423596.8. Some of the step tasks have been OOM Killed.
+srun: error: a01-09: task 0: Out Of Memory

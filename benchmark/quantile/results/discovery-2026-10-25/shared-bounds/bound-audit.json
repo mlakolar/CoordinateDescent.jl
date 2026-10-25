@@ -1,0 +1,51 @@
+{
+  "main-results": {
+    "solution_rows": 3133,
+    "distinct_problems": 192,
+    "bounds_improved": 1067,
+    "max_gap_reduction": 0.10401675605803656,
+    "negative_gap_failures": 0
+  },
+  "pilot-v2": {
+    "solution_rows": 360,
+    "distinct_problems": 8,
+    "bounds_improved": 78,
+    "max_gap_reduction": 0.0015374757569306396,
+    "negative_gap_failures": 0
+  },
+  "admm-results": {
+    "solution_rows": 402,
+    "distinct_problems": 90,
+    "bounds_improved": 198,
+    "max_gap_reduction": 0.04202481571102856,
+    "negative_gap_failures": 0
+  },
+  "rbench-results": {
+    "solution_rows": 622,
+    "distinct_problems": 72,
+    "bounds_improved": 306,
+    "max_gap_reduction": 0.001694953579561842,
+    "negative_gap_failures": 0
+  },
+  "rho-results": {
+    "solution_rows": 96,
+    "distinct_problems": 24,
+    "bounds_improved": 48,
+    "max_gap_reduction": 1.9212887337083373e-05,
+    "negative_gap_failures": 0
+  },
+  "split-results": {
+    "solution_rows": 232,
+    "distinct_problems": 48,
+    "bounds_improved": 0,
+    "max_gap_reduction": 0.0,
+    "negative_gap_failures": 0
+  },
+  "basis-results": {
+    "solution_rows": 649,
+    "distinct_problems": 92,
+    "bounds_improved": 2,
+    "max_gap_reduction": 1.1836243096752241e-10,
+    "negative_gap_failures": 0
+  }
+}

@@ -1,0 +1,17 @@
+case,seed,rep,method,n,p,tau,requested_levels,levels,fit_s,diagnostics_s,total_s,julia_bytes,raw_dual_available,qualified,status,host
+tail,1201,1,rqpen-fn,1000,100,0.1,32,0,1.37916731834412,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tail,1201,1,gurobi-primal,1000,100,0.1,32,32,0.525773015,0.0,0.525773015,27077024,true,true,returned,a02-16.hpc.usc.edu
+tail,1201,1,api-exact,1000,100,0.1,32,32,0.175932134,0.0,0.175932134,8355912,true,true,returned,a02-16.hpc.usc.edu
+tail,1201,1,rqpen-br,1000,100,0.1,32,0,1.88296103477478,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tail,1201,1,conquer-dual,1000,100,0.1,32,32,2.15628457069397,0.00472554,2.16101011069397,NaN,true,true,returned,a02-16.hpc.usc.edu
+tail,1201,1,quantreg-native-dual,1000,100,0.1,32,32,1.06046795845032,0.00310936,1.06357731845032,NaN,true,true,returned,a02-16.hpc.usc.edu
+tail,1201,1,api-smooth,1000,100,0.1,32,32,0.056611651,0.0,0.056611651,2682160,true,true,returned,a02-16.hpc.usc.edu
+tail,1201,1,rqpen-huber,1000,100,0.1,32,0,0.200724363327026,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tail,1201,2,conquer-dual,1000,100,0.1,32,32,2.13352251052856,0.004397725,2.13792023552856,NaN,true,true,returned,a02-16.hpc.usc.edu
+tail,1201,2,rqpen-huber,1000,100,0.1,32,0,0.198124647140503,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tail,1201,2,quantreg-native-dual,1000,100,0.1,32,32,1.00738143920898,0.002981129,1.0103625682089798,NaN,true,true,returned,a02-16.hpc.usc.edu
+tail,1201,2,rqpen-fn,1000,100,0.1,32,0,1.2546718120575,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tail,1201,2,rqpen-br,1000,100,0.1,32,0,1.75951313972473,NaN,NaN,NaN,false,false,coefficients_only,a02-16.hpc.usc.edu
+tail,1201,2,gurobi-primal,1000,100,0.1,32,32,0.482482971,0.0,0.482482971,27077056,true,true,returned,a02-16.hpc.usc.edu
+tail,1201,2,api-exact,1000,100,0.1,32,32,0.171451623,0.0,0.171451623,8355592,true,true,returned,a02-16.hpc.usc.edu
+tail,1201,2,api-smooth,1000,100,0.1,32,32,0.057287026,0.0,0.057287026,2682096,true,true,returned,a02-16.hpc.usc.edu

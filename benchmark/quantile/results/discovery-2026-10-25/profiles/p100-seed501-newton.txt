@@ -1,0 +1,566 @@
+name=newton n=1000 p=100 seed=501 fits=395 elapsed=1.502715826034546 host=b09-15.hpc.usc.edu
+ Count  Overhead File                                                                                                     Line Function
+ =====  ======== ====                                                                                                     ==== ========
+     1         0 @ProximalSolvers/src/cd/solver.jl                                                                        229 _shuffle!(order::Vector{Int64}, n::Int64, rng::Xoshiro)
+     1         1 @Base/int.jl                                                                                              86 -
+     1         1 @ProximalSolvers/src/cd/leastsquares.jl                                                                  205 _column_dot
+     1         0 @Base/array.jl                                                                                          1356 push!
+     1         0 @Base/array.jl                                                                                          1042 __safe_setindex!
+     1         1 @juliasrc/gc-stock.c                                                                                     752 jl_gc_small_alloc_inner
+     1         0 @ProximalBase/src/sparseIterate.jl                                                                       169 dropzeros!
+     1         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  153 _initialize!(m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, x::ProximalBase.SparseIterate{Float64, 1}, curvat…
+     1         0 @juliasrc/builtins.c                                                                                     350 hash_svec
+     1         0 @juliasrc/support/hashing.h                                                                               31 bitmix
+     1         1 @juliasrc/support/hashing.c                                                                               31 int64hash
+     1         0 @juliasrc/gf.c                                                                                          4312 jl_lookup_generic_
+     1         1 @juliasrc/gf.c                                                                                          4222 sig_match_fast
+     1         0 @ProximalSolvers/src/cd/solver.jl                                                                        441 _momentum_step!(s::ProximalSolvers._Momentum{Float64}, x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{F…
+     1         1 @Base/array.jl                                                                                           294 _copyto_impl!
+     1         0 @ProximalSolvers/src/cd/solver.jl                                                                        386 _cd_momentum!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pr…
+     1         0 @ProximalBase/src/utils.jl                                                                                74 _entry
+     1         0 @Base/essentials.jl                                                                                       11 length
+     1         0 @juliasrc/builtins.c                                                                                    1659 jl_f_apply_type
+     1         1 @juliasrc/builtins.c                                                                                    1612 jl_valid_type_param
+     1         0 @juliasrc/gf.c                                                                                          4326 jl_lookup_generic_
+     1         0 @juliasrc/iddict.c                                                                                       128 jl_table_peek_bp
+     1         0 @juliasrc/julia.h                                                                                       1829 jl_egal_
+     1         0 @juliasrc/julia.h                                                                                       1819 jl_egal__unboxed_
+     1         0 @juliasrc/builtins.c                                                                                      95 compare_svec
+     1         1 @juliasrc/julia.h                                                                                       1826 jl_egal_
+     1         0 @ProximalSolvers/src/cd/glm.jl                                                                           363 _interpolate!(x::ProximalBase.SparseIterate{Float64, 1}, x0::ProximalBase.SparseIterate{Float64, 1}, x1::ProximalBase.SparseIterate{Float64, 1}, t::Float64)
+     1         0 @ProximalBase/src/sparseIterate.jl                                                                       117 isactive
+     1         1 @Base/math.jl                                                                                            857 max
+     1         0 @Base/promotion.jl                                                                                       435 -
+     1         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/depot/compiled/v1.13/ProximalSolvers/uDWxJ_yYoa0.so     ? jfptr_PathResults_5204
+     1         1 @juliasrc/jltypes.c                                                                                      980 typekey_eq
+     1         1 @ProximalSolvers/src/cd/leastsquares.jl                                                                    ? _initialize!(m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, x::ProximalBase.SparseIterate{Float64, 1}, curvat…
+     1         1 @juliasrc/gc-stock.c                                                                                     354 maybe_collect
+     1         1 @ProximalSolvers/src/cd/leastsquares.jl                                                                  422 response_scale
+     1         1 @Base/array.jl                                                                                          1158 _growend_internal!(a::Vector{Any}, delta::Int64, len::Int64)
+     1         0 @juliasrc/gc-stock.c                                                                                     772 jl_gc_small_alloc_inner
+     1         0 @juliasrc/gc-stock.c                                                                                     715 gc_add_page
+     1         1 @juliasrc/gc-stock.h                                                                                     159 push_lf_back
+     1         0 @Base/broadcast.jl                                                                                       983 preprocess_args
+     1         0 @Base/abstractarray.jl                                                                                  1595 _isdisjoint
+     1         1 @ProximalSolvers/src/cd/models.jl                                                                          ? _visit!
+     1         0 @juliasrc/builtins.c                                                                                     390 type_object_id_
+     1         0 @juliasrc/builtins.c                                                                                     389 type_object_id_
+     1         0 @ProximalSolvers/src/cd/glm.jl                                                                           408 _center!(ws::ProximalSolvers._NewtonWorkspace{Float64, ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, ProximalSo…
+     1         1 @Base/abstractarray.jl                                                                                     ? _iterate_abstractarray
+     1         0 @ProximalSolvers/src/cd/path.jl                                                                          280 _sparsevec(x::ProximalBase.SparseIterate{Float64, 1})
+     1         0 @SparseArrays/src/sparsevector.jl                                                                        357 sparsevec
+     1         0 @SparseArrays/src/sparsevector.jl                                                                        348 sparsevec(I::Vector{Int64}, V::Vector{Float64}, len::Int64, combine::typeof(+))
+     1         0 @Base/boot.jl                                                                                            675 Array
+     1         0 @Base/array.jl                                                                                           652 Array
+     1         0 @Base/sort.jl                                                                                           2444 partition!(v::Vector{Float64}, lo::Int64, hi::Int64, o::Base.Order.ForwardOrdering)
+     1         0 @Base/float.jl                                                                                           708 isnan
+     1         1 @ProximalSolvers/src/cd/solver.jl                                                                        377 _cd_momentum!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pr…
+     1         0 @ProximalBase/src/sparseIterate.jl                                                                       174 dropzeros!
+     1         0 @juliasrc/jltypes.c                                                                                      989 typekey_eq
+     1         0 @juliasrc/subtype.c                                                                                     2359 ijl_types_equal
+     1         0 @juliasrc/builtins.c                                                                                     230 jl_types_egal
+     1         0 @juliasrc/builtins.c                                                                                     225 egal_types
+     1         0 @juliasrc/builtins.c                                                                                      58 bits_equal
+     1         0 @juliasrc/builtins.c                                                                                      66 bits_equal
+     1         1 /lib64/libc.so.6                                                                                           ? __memcmp_avx2_movbe
+     1         0 @ProximalBase/src/sparseIterate.jl                                                                       121 _getstored
+     1         0 @ProximalSolvers/src/cd/glm.jl                                                                           358 _interpolate!(x::ProximalBase.SparseIterate{Float64, 1}, x0::ProximalBase.SparseIterate{Float64, 1}, x1::ProximalBase.SparseIterate{Float64, 1}, t::Float64)
+     1         0 @ProximalBase/src/sparseIterate.jl                                                                       335 copyto!
+     1         0 @ProximalBase/src/sparseIterate.jl                                                                       258 size
+     1         0 @Base/math.jl                                                                                             57 two_mul
+     1         1 @Base/floatfuncs.jl                                                                                      374 fma
+     1         0 @ProximalSolvers/src/cd/groupcurvature.jl                                                                 27 _GroupEig
+     1         0 @Base/array.jl                                                                                           436 getindex
+     1         1 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/depot/compiled/v1.13/ProximalSolvers/uDWxJ_yYoa0.so     ? __truncdfbf2
+     1         0 @ProximalBase/src/functions/separable.jl                                                                  62 SeparableFunction
+     1         0 @ProximalBase/src/functions/separable.jl                                                                  84 _value_sep
+     1         0 @ProximalBase/src/functions/separable.jl                                                                 220 value_entry
+     1         1 /workspace/srcdir/libblastrampoline/src/trampolines/ilp64_doubling.h                                      11 [unknown function]
+     1         0 @juliasrc/gc-stock.c                                                                                    1399 gc_sweep_pool
+     1         0 @juliasrc/gc-stock.c                                                                                    1294 gc_sweep_pool_parallel
+     1         0 @juliasrc/gc-stock.c                                                                                    1002 gc_sweep_pool_page
+     1         1 @juliasrc/gc-stock.c                                                                                     926 gc_sweep_page
+     1         1 @julialib/julia/libopenblas64_.so                                                                          ? dot_compute
+     1         1 @ProximalSolvers/src/cd/solver.jl                                                                        286 _activepass!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pro…
+     1         0 @Random/src/Xoshiro.jl                                                                                   252 rand
+     1         1 @juliasrc/jltypes.c                                                                                     1456 ijl_apply_type
+     1         0 @Base/bitarray.jl                                                                                       1678 findall(B::BitVector)
+     1         0 @CoordinateDescent/src/utils.jl                                                                          117 CoordinateDescent.CDOptions(; kwargs::Base.Pairs{Symbol, Real, Nothing, @NamedTuple{opt_tol::Float64, max_iter::Int64}})
+     1         0 @juliasrc/subtype.c                                                                                     2303 ijl_subtype_env
+     1         1 @juliasrc/subtype.c                                                                                     2064 obvious_subtype
+     1         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  163 _initialize!(m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, x::ProximalBase.SparseIterate{Float64, 1}, curvat…
+     1         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            170 smoothpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, method::Symbol; h::Float64, limit::Float64, warm…
+     1         0 @SparseArrays/src/sparsevector.jl                                                                       1107 (Vector)(x::SparseVector{Float64, Int64})
+     1         0 @ProximalSolvers/src/cd/glm.jl                                                                           663 _screened_newton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix…
+     1         0 @ProximalSolvers/src/cd/models.jl                                                                        300 _kktviolated
+     1         0 @ProximalSolvers/src/cd/models.jl                                                                        285 _screengrad
+     1         0 @ProximalSolvers/src/cd/models.jl                                                                        190 _gradnorm
+     1         0 @ProximalSolvers/src/cd/glm.jl                                                                           470 _proxnewton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Floa…
+     1         0 @ProximalSolvers/src/cd/glm.jl                                                                           452 _centered_columns
+     1         0 @juliasrc/builtins.c                                                                                    1051 jl_f_getfield
+     1         0 @juliasrc/builtins.c                                                                                    1017 get_checked_fieldindex
+     1         1 @juliasrc/datatype.c                                                                                    1813 ijl_field_index
+     1         0 @juliasrc/gc-stock.c                                                                                    1375 gc_sweep_pool
+     1         1 @juliasrc/gc-stock.c                                                                                    1163 gc_pool_sync_nfree
+     1         0 @juliasrc/gc-stock.c                                                                                    3083 _jl_gc_collect
+     1         0 /workspace/srcdir/libuv/src/unix/core.c                                                                  134 uv_hrtime
+     1         0 /workspace/srcdir/libuv/src/unix/linux.c                                                                1591 uv__hrtime
+     1         0 /lib64/libc.so.6                                                                                           ? __clock_gettime
+     1         1 linux-vdso.so.1                                                                                            ? clock_gettime
+     1         0 @Base/abstractarray.jl                                                                                  1613 dataids
+     1         0 @Base/abstractarray.jl                                                                                  1612 dataids
+     1         1 @Base/boot.jl                                                                                           1021 UInt64
+     1         0 @Random/src/Xoshiro.jl                                                                                    68 setstate!
+     1         0 @Base/sort.jl                                                                                           2443 partition!(v::Vector{Float64}, lo::Int64, hi::Int64, o::Base.Order.ForwardOrdering)
+     1         1 @juliasrc/gc-stock.c                                                                                     729 jl_gc_small_alloc_inner
+     1         0 @ProximalBase/src/sparseIterate.jl                                                                       130 _setstored!
+     1         0 @ProximalSolvers/src/cd/glm.jl                                                                           390 ProximalSolvers._NewtonWorkspace(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, …
+     1         0 @Base/bitarray.jl                                                                                        568 BitArray
+     1         0 @Base/bitarray.jl                                                                                        598 gen_bitarrayN
+     1         0 @Base/bitarray.jl                                                                                        588 gen_bitarray
+     1         0 @Base/bitarray.jl                                                                                        644 fill_bitarray_from_itr!(B::BitVector, itr::Base.Generator{UnitRange{Int64}, ProximalSolvers.var"#_NewtonWorkspace##0#_NewtonWorkspace##1"{ProximalSolvers.GLMMo…
+     1         0 @Base/special/pow.jl                                                                                     131 pow_body(x::Float64, n::Int64)
+     1         0 @Base/operators.jl                                                                                       425 >
+     1         1 @Base/int.jl                                                                                              83 <
+     1         0 @Base/intfuncs.jl                                                                                        468 literal_pow
+     1         1 @ProximalSolvers/src/cd/solver.jl                                                                        238 _pass!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::ProximalB…
+     1         0 @CoordinateDescent/src/glm.jl                                                                             77 _glm_model(X::Matrix{Float64}, y::Vector{Float64}, loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, weights::Nothing, offset::Nothing, intercept::B…
+     1         0 @ProximalBase/src/functions/glm.jl                                                                       161 GLMLoss
+     1         0 @ProximalBase/src/functions/glm.jl                                                                       169 ProximalBase.GLMLoss(loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, y::Vector{Float64}, X::Matrix{Float64}; weights::Nothing, offset::Nothing)
+     1         0 @ProximalBase/src/utils.jl                                                                                87 _zeros_like
+     1         1 @Base/float.jl                                                                                           490 -
+     1         0 @Base/special/pow.jl                                                                                     141 pow_body(x::Float64, n::Int64)
+     1         0 @Random/src/Xoshiro.jl                                                                                    66 setstate!
+     1         0 @juliasrc/jltypes.c                                                                                     1128 lookup_type
+     1         0 @juliasrc/jltypes.c                                                                                     1812 typekey_hash
+     1         0 @juliasrc/jltypes.c                                                                                     1782 type_hash
+     1         0 @juliasrc/builtins.c                                                                                     437 immut_id_
+     1         1 @juliasrc/julia.h                                                                                       1527 jl_field_offset
+     1         1 @juliasrc/genericmemory.c                                                                                 31 jl_alloc_genericmemory_unchecked
+     1         0 @ProximalSolvers/src/cd/glm.jl                                                                           477 _proxnewton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Floa…
+     1         0 @ProximalSolvers/src/cd/glm.jl                                                                           399 _center!(ws::ProximalSolvers._NewtonWorkspace{Float64, ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, ProximalSo…
+     1         0 @Base/reducedim.jl                                                                                       998 sum
+     1         0 @Base/reducedim.jl                                                                                       998 #sum#746
+     1         0 @Base/reducedim.jl                                                                                      1002 _sum
+     1         0 @Base/reducedim.jl                                                                                      1002 #_sum#748
+     1         1 @ProximalSolvers/src/cd/glm.jl                                                                           130 _fit_intercept(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing},…
+     1         1 @ProximalSolvers/src/cd/leastsquares.jl                                                                    ? _sqnorm!(m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, k::Int64)
+     1         1 @LinearAlgebra/src/blas.jl                                                                               656 gemv!(trans::Char, alpha::Float64, A::Matrix{Float64}, X::Vector{Float64}, beta::Float64, Y::Vector{Float64})
+     1         1 @ProximalSolvers/src/cd/solver.jl                                                                          ? _pass!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::ProximalB…
+     1         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  386 coordinate_step!
+     1         1 @ProximalBase/src/sparseIterate.jl                                                                       131 _setstored!
+     1         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  159 _initialize!(m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, x::ProximalBase.SparseIterate{Float64, 1}, curvat…
+     1         0 @ProximalSolvers/src/cd/solver.jl                                                                        232 _shuffle!(order::Vector{Int64}, n::Int64, rng::Xoshiro)
+     1         1 @ProximalSolvers/src/cd/solver.jl                                                                        439 _momentum_step!(s::ProximalSolvers._Momentum{Float64}, x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{F…
+     1         1 @juliasrc/jltypes.c                                                                                     1122 lookup_type
+     1         0 @juliasrc/gf.c                                                                                          4309 jl_lookup_generic_
+     1         0 @juliasrc/gf.c                                                                                          4219 sig_match_fast
+     1         0 @juliasrc/gf.c                                                                                          4228 sig_match_fast
+     1         1 @juliasrc/julia.h                                                                                       1021 jl_to_typeof
+     1         0 @Base/special/pow.jl                                                                                     136 pow_body(x::Float64, n::Int64)
+     2         0 @ProximalSolvers/src/cd/glm.jl                                                                           320 _glmvalue(loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, y::Vector{Float64}, w::Nothing, s::Float64, η::Vector{Float64}, c::Float64)
+     2         2 @Base/range.jl                                                                                           924 iterate
+     2         0 @juliasrc/gc-stock.c                                                                                    1398 gc_sweep_pool
+     2         0 @juliasrc/gc-stock.c                                                                                    1230 gc_sweep_wake_all_pages
+     2         0 @juliasrc/gc-stock.c                                                                                    1187 gc_sweep_prescan
+     2         2 @juliasrc/gc-stock.h                                                                                     152 pop_lf_back_nosync
+     2         0 @ProximalSolvers/src/cd/solver.jl                                                                        231 _shuffle!(order::Vector{Int64}, n::Int64, rng::Xoshiro)
+     2         0 @juliasrc/gf.c                                                                                          4398 ijl_apply_generic
+     2         0 @juliasrc/gf.c                                                                                          4179 _jl_invoke
+     2         2 @juliasrc/gf.c                                                                                          3372 jl_method_compiled_callptr
+     2         0 @ProximalSolvers/src/cd/glm.jl                                                                           511 _proxnewton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Floa…
+     2         0 @Base/sort.jl                                                                                           2445 partition!(v::Vector{Float64}, lo::Int64, hi::Int64, o::Base.Order.ForwardOrdering)
+     2         2 @Base/int.jl                                                                                             560 <=
+     2         0 @ProximalSolvers/src/cd/glm.jl                                                                           623 solve_path(f::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, g::…
+     2         0 @ProximalSolvers/src/cd/models.jl                                                                        237 _with_level
+     2         0 @ProximalBase/src/functions/separable.jl                                                                 214 NormL1
+     2         0 @ProximalBase/src/functions/separable.jl                                                                 210 NormL1
+     2         0 @ProximalBase/src/utils.jl                                                                                67 _checknonneg
+     2         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            163 smoothpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, method::Symbol; h::Float64, limit::Float64, warm…
+     2         0 @ProximalBase/src/functions/losses.jl                                                                    265 ConvolutionCheck
+     2         0 @ProximalBase/src/functions/losses.jl                                                                    266 ProximalBase.ConvolutionCheck(τ::Float64, h::Float64; kernel::Symbol)
+     2         1 @ProximalSolvers/src/cd/solver.jl                                                                        458 _momentum_update!(s::ProximalSolvers._Momentum{Float64}, x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector…
+     2         0 @ProximalSolvers/src/cd/solver.jl                                                                        426 _momentum_reset!(s::ProximalSolvers._Momentum{Float64}, x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{…
+     2         0 @Base/boot.jl                                                                                            649 Array
+     2         0 @Base/broadcast.jl                                                                                       670 _broadcast_getindex
+     2         0 @ProximalSolvers/src/cd/glm.jl                                                                           638 solve_path(f::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, g::…
+     2         0 @CoordinateDescent/src/utils.jl                                                                          116 CoordinateDescent.CDOptions(; kwargs::Base.Pairs{Symbol, Real, Nothing, @NamedTuple{opt_tol::Float64, max_iter::Int64}})
+     2         0 @juliasrc/jltypes.c                                                                                     1131 lookup_type
+     2         0 @juliasrc/jltypes.c                                                                                     1051 lookup_type_set
+     2         0 @Base/array.jl                                                                                          1185 _growend_internal!(a::Vector{Any}, delta::Int64, len::Int64)
+     2         2 @Base/genericmemory.jl                                                                                   143 unsafe_copyto!
+     2         0 @juliasrc/builtins.c                                                                                     349 hash_svec
+     2         0 @juliasrc/builtins.c                                                                                     392 type_object_id_
+     2         2 @juliasrc/builtins.c                                                                                     418 type_object_id_
+     2         0 @Base/simdloop.jl                                                                                         69 macro expansion
+     2         0 @Base/abstractarray.jl                                                                                   325 eachindex
+     2         0 @Base/abstractarray.jl                                                                                   141 axes1
+     2         0 @Base/abstractarray.jl                                                                                   102 axes
+     2         0 @ProximalSolvers/src/cd/glm.jl                                                                           391 ProximalSolvers._NewtonWorkspace(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, …
+     2         2 @Base/special/pow.jl                                                                                     130 pow_body(x::Float64, n::Int64)
+     2         0 @ProximalBase/src/sparseIterate.jl                                                                       251 ProximalBase.SparseIterate(::Type{Float64}, n::Int64)
+     2         0 @Base/broadcast.jl                                                                                       996 copyto!
+     2         0 @Base/broadcast.jl                                                                                       979 preprocess
+     2         0 @Base/broadcast.jl                                                                                       982 preprocess_args
+     2         0 @Base/broadcast.jl                                                                                       980 preprocess
+     2         0 @Base/broadcast.jl                                                                                       973 broadcast_unalias
+     2         0 @Base/abstractarray.jl                                                                                  1551 unalias
+     2         0 @Base/abstractarray.jl                                                                                  1588 mightalias
+     2         0 @Base/operators.jl                                                                                       320 !=
+     2         0 @Base/ordering.jl                                                                                        118 lt
+     2         1 @Base/float.jl                                                                                           637 isless
+     2         0 @Base/special/pow.jl                                                                                     139 pow_body(x::Float64, n::Int64)
+     2         0 @Base/int.jl                                                                                             584 >>>
+     2         2 @Base/int.jl                                                                                             576 >>>
+     2         0 @ProximalSolvers/src/cd/glm.jl                                                                           360 _interpolate!(x::ProximalBase.SparseIterate{Float64, 1}, x0::ProximalBase.SparseIterate{Float64, 1}, x1::ProximalBase.SparseIterate{Float64, 1}, t::Float64)
+     2         0 @Random/src/Random.jl                                                                                    143 Sampler
+     2         0 @Random/src/generation.jl                                                                                221 Sampler
+     2         2 @Random/src/generation.jl                                                                                368 SamplerRangeNDL
+     2         0 @ProximalSolvers/src/cd/glm.jl                                                                           542 _newton_step!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Flo…
+     2         0 @ProximalSolvers/src/cd/glm.jl                                                                           412 _center!(ws::ProximalSolvers._NewtonWorkspace{Float64, ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, ProximalSo…
+     2         0 @LinearAlgebra/src/matmul.jl                                                                              18 dot
+     2         0 @LinearAlgebra/src/blas.jl                                                                               408 dot
+     2         0 @LinearAlgebra/src/blas.jl                                                                               358 dot
+     2         2 @Base/special/pow.jl                                                                                     122 pow_body(x::Float64, n::Int64)
+     2         0 @ProximalBase/src/functions/losses.jl                                                                    276 value_and_deriv
+     2         2 @Base/array.jl                                                                                          1202 _growend!
+     2         0 @Random/src/Xoshiro.jl                                                                                   261 rand
+     2         0 @ProximalBase/src/sparseIterate.jl                                                                       262 setindex!
+     2         2 @juliasrc/gf.c                                                                                          4310 jl_lookup_generic_
+     2         0 @Base/reduce.jl                                                                                          264 macro expansion
+     2         0 @Base/reduce.jl                                                                                           19 add_sum
+     3         0 @ProximalSolvers/src/cd/glm.jl                                                                           482 _proxnewton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Floa…
+     3         0 @ProximalSolvers/src/cd/solver.jl                                                                        244 _pass!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::ProximalB…
+     3         0 @ProximalBase/src/sparseIterate.jl                                                                       178 dropzeros!
+     3         0 @juliasrc/gf.c                                                                                          4339 jl_lookup_generic_
+     3         0 @juliasrc/iddict.c                                                                                       118 jl_table_peek_bp
+     3         0 @juliasrc/builtins.c                                                                                     510 ijl_object_id_
+     3         0 @juliasrc/builtins.c                                                                                     483 jl_object_id__cold
+     3         3 @Base/Base_compiler.jl                                                                                    61 setproperty!
+     3         0 @ProximalSolvers/src/cd/solver.jl                                                                        462 _momentum_update!(s::ProximalSolvers._Momentum{Float64}, x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector…
+     3         0 @juliasrc/gc-stock.c                                                                                    3252 _jl_gc_collect
+     3         0 @juliasrc/gc-stock.c                                                                                    1010 gc_sweep_other
+     3         0 @juliasrc/gc-stock.c                                                                                     670 sweep_malloced_memory
+     3         0 @juliasrc/gc-stock.c                                                                                     645 jl_gc_free_memory
+     3         3 /lib64/libc.so.6                                                                                           ? unlink_chunk.isra.2
+     3         0 @ProximalBase/src/utils.jl                                                                                14 shrink
+     3         0 @ProximalSolvers/src/cd/glm.jl                                                                           476 _proxnewton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Floa…
+     3         0 @CoordinateDescent/src/utils.jl                                                                          114 CDOptions
+     3         0 @Base/array.jl                                                                                          1355 push!
+     3         3 @ProximalSolvers/src/cd/solver.jl                                                                        228 _shuffle!(order::Vector{Int64}, n::Int64, rng::Xoshiro)
+     3         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            130 smoothkkt(X::Matrix{Float64}, y::Vector{Float64}, b::Vector{Float64}, a::Float64, lambda::Float64, w::Vector{Float64}, loss::ProximalBase.ConvolutionCheck{Floa…
+     3         0 @ProximalSolvers/src/cd/glm.jl                                                                           135 _fit_intercept(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing},…
+     3         0 @ProximalSolvers/src/cd/solver.jl                                                                        427 _momentum_reset!(s::ProximalSolvers._Momentum{Float64}, x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{…
+     3         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            125 smoothfg(X::Matrix{Float64}, y::Vector{Float64}, b::Vector{Float64}, a::Float64, loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov})
+     3         3 @Base/simdloop.jl                                                                                          ? macro expansion
+     3         0 @julialib/julia/libopenblas64_.so                                                                          ? dscal_k_ZEN
+     3         3 @julialib/julia/libopenblas64_.so                                                                          ? dscal_kernel_8_zero
+     3         0 @Random/src/generation.jl                                                                                379 rand
+     3         0 @Random/src/Random.jl                                                                                    265 rand
+     3         0 @Statistics/src/Statistics.jl                                                                            179 mean
+     3         0 @Statistics/src/Statistics.jl                                                                            179 #mean#2
+     3         0 @Statistics/src/Statistics.jl                                                                            192 _mean(f::typeof(identity), A::Vector{Float64}, dims::Colon)
+     3         0 @Base/reducedim.jl                                                                                       999 sum
+     3         0 @Base/reducedim.jl                                                                                       999 #sum#747
+     4         0 @juliasrc/gc-stock.c                                                                                    3255 _jl_gc_collect
+     4         0 @juliasrc/gf.c                                                                                          1619 lookup_leafcache
+     4         0 @juliasrc/iddict.c                                                                                       157 ijl_eqtable_get
+     4         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            162 smoothpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, method::Symbol; h::Float64, limit::Float64, warm…
+     4         0 @Statistics/src/Statistics.jl                                                                           1164 quantile
+     4         0 @Statistics/src/Statistics.jl                                                                           1164 #quantile#56
+     4         0 @Statistics/src/Statistics.jl                                                                           1022 quantile!
+     4         0 @Statistics/src/Statistics.jl                                                                           1022 quantile!(v::Vector{Float64}, p::Float64; sorted::Bool, alpha::Float64, beta::Float64)
+     4         0 @Statistics/src/Statistics.jl                                                                           1036 _quantilesort!(v::Vector{Float64}, sorted::Bool, minp::Float64, maxp::Float64)
+     4         0 @Base/sort.jl                                                                                           2538 sort!
+     4         0 @Base/sort.jl                                                                                           2548 _partialquicksort!(v::Vector{Float64}, lo::Int64, hi::Int64, a::PartialQuickSort{UnitRange{Int64}}, o::Base.Order.ForwardOrdering)
+     4         4 @Base/essentials.jl                                                                                       10 size
+     4         4 @Base/anyall.jl                                                                                          215 _all
+     4         0 @ProximalSolvers/src/cd/glm.jl                                                                           475 _proxnewton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Floa…
+     4         0 @ProximalSolvers/src/cd/glm.jl                                                                           556 _newton_step!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Flo…
+     4         0 @ProximalSolvers/src/cd/path.jl                                                                          278 _sparsevec(x::ProximalBase.SparseIterate{Float64, 1})
+     4         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            172 smoothpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, method::Symbol; h::Float64, limit::Float64, warm…
+     4         0 @Base/boot.jl                                                                                            845 NamedTuple
+     4         0 @juliasrc/jltypes.c                                                                                     1432 ijl_apply_type
+     4         0 @juliasrc/jltypes.c                                                                                     1416 inst_datatype_env
+     4         0 @juliasrc/jltypes.c                                                                                     1412 inst_datatype_env
+     4         0 @juliasrc/jltypes.c                                                                                     2145 inst_datatype_inner
+     4         0 @Base/math.jl                                                                                             56 two_mul
+     4         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                    ? _column_dot
+     4         0 @ProximalSolvers/src/cd/solver.jl                                                                        393 _cd_momentum!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pr…
+     4         0 @ProximalSolvers/src/cd/glm.jl                                                                           129 _fit_intercept(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing},…
+     4         0 @ProximalSolvers/src/cd/solver.jl                                                                        291 _activepass!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pro…
+     4         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  384 coordinate_step!
+     4         0 @Base/reducedim.jl                                                                                      1003 _sum
+     4         0 @Base/reducedim.jl                                                                                      1003 #_sum#749
+     4         0 @Base/reducedim.jl                                                                                       330 mapreduce
+     4         0 @Base/reducedim.jl                                                                                       330 #mapreduce#739
+     4         0 @Base/reducedim.jl                                                                                       347 _mapreduce_dim
+     4         0 @Base/reduce.jl                                                                                          447 _mapreduce
+     4         0 @Base/reduce.jl                                                                                          276 mapreduce_impl
+     4         0 @Base/reduce.jl                                                                                          262 mapreduce_impl(f::Statistics.var"#_mean##2#_mean##3"{typeof(identity), Float64}, op::typeof(Base.add_sum), A::Vector{Float64}, ifirst::Int64, ilast::Int64, blk…
+     5         0 @ProximalSolvers/src/cd/solver.jl                                                                        446 _momentum_step!(s::ProximalSolvers._Momentum{Float64}, x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{F…
+     5         0 @ProximalSolvers/src/cd/solver.jl                                                                        447 macro expansion
+     5         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  368 _sqnorm!(m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, k::Int64)
+     5         0 @ProximalSolvers/src/cd/glm.jl                                                                           557 _newton_step!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Flo…
+     5         0 @Base/broadcast.jl                                                                                       700 _getindex
+     5         0 @Base/broadcast.jl                                                                                       701 _getindex
+     5         0 @juliasrc/gc-stock.c                                                                                     783 ijl_gc_small_alloc
+     5         4 @Base/Base_compiler.jl                                                                                    57 getproperty
+     5         0 @Base/array.jl                                                                                           627 zeros
+     5         5 /lib64/libc.so.6                                                                                           ? __memset_avx2_unaligned_erms
+     5         0 @ProximalBase/src/functions/separable.jl                                                                 221 prox_entry
+     5         0 @ProximalSolvers/src/cd/solver.jl                                                                        380 _cd_momentum!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pr…
+     5         0 @ProximalSolvers/src/cd/solver.jl                                                                        412 _momentum_start!(s::ProximalSolvers._Momentum{Float64}, x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{…
+     5         0 @Base/array.jl                                                                                          1545 resize!(a::Vector{Float64}, nl_::Int64)
+     5         2 /lib64/libc.so.6                                                                                           ? _int_free
+     5         0 @Base/promotion.jl                                                                                       434 *
+     5         5 @Base/float.jl                                                                                           497 muladd
+     5         0 @ProximalSolvers/src/cd/path.jl                                                                          252 _snapshot
+     5         0 @Base/array.jl                                                                                          1345 push!
+     5         0 @Base/array.jl                                                                                          1348 _push!
+     5         0 @juliasrc/gc-stock.c                                                                                     746 jl_gc_small_alloc_inner
+     5         5 @juliasrc/gc-stock.h                                                                                     332 gc_page_data
+     5         0 @Base/anyall.jl                                                                                          211 _all
+     5         0 @Base/float.jl                                                                                           711 isfinite
+     5         0 @Base/special/pow.jl                                                                                     137 pow_body(x::Float64, n::Int64)
+     5         0 @ProximalSolvers/src/cd/glm.jl                                                                           226 gradient!(G::Vector{Float64}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Not…
+     5         0 @ProximalSolvers/src/cd/solver.jl                                                                        230 _shuffle!(order::Vector{Int64}, n::Int64, rng::Xoshiro)
+     5         0 @Random/src/Random.jl                                                                                    262 rand
+     6         6 @Base/math.jl                                                                                            646 sqrt
+     6         0 @Base/broadcast.jl                                                                                       907 materialize!
+     6         0 @Base/broadcast.jl                                                                                       910 materialize!
+     6         0 @Base/broadcast.jl                                                                                       676 _broadcast_getindex
+     6         0 @ProximalSolvers/src/cd/glm.jl                                                                           123 _fit_intercept(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing},…
+     6         0 @Base/number.jl                                                                                           42 iszero
+     6         0 @Base/array.jl                                                                                           359 fill!
+     6         0 @Base/array.jl                                                                                           363 _fill!
+     6         0 @Base/abstractarray.jl                                                                                   827 similar
+     6         0 @Base/array.jl                                                                                           407 similar
+     6         6 @Base/float.jl                                                                                           698 abs
+     7         0 @ProximalSolvers/src/cd/solver.jl                                                                        384 _cd_momentum!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pr…
+     7         3 @ProximalSolvers/src/cd/leastsquares.jl                                                                  385 coordinate_step!
+     7         7 @Base/float.jl                                                                                           621 ==
+     7         1 @ProximalBase/src/functions/losses.jl                                                                    288 deriv2
+     7         0 @ProximalSolvers/src/cd/glm.jl                                                                           351 _null_deviance(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing})
+     8         0 @ProximalSolvers/src/cd/solver.jl                                                                        470 _momentum_update!(s::ProximalSolvers._Momentum{Float64}, x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector…
+     8         0 @ProximalSolvers/src/cd/solver.jl                                                                        270 _candidatepass!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::…
+     8         0 @juliasrc/gc-stock.c                                                                                     355 maybe_collect
+     8         0 @juliasrc/gc-stock.c                                                                                    3563 ijl_gc_collect
+     8         0 @ProximalSolvers/src/cd/glm.jl                                                                           128 _fit_intercept(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing},…
+     8         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                   51 ProximalSolvers.LSModel(y::Vector{Float64}, X::Matrix{Float64}, w::Vector{Float64}, offset::Nothing, s::Float64; intercept::Bool)
+     8         0 @juliasrc/gf.c                                                                                          4394 ijl_apply_generic
+     8         0 @Base/array.jl                                                                                          1181 _growend_internal!(a::Vector{Float64}, delta::Int64, len::Int64)
+     8         0 @Base/array.jl                                                                                          1101 array_new_memory
+     8         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  382 coordinate_step!
+     8         0 @Base/array.jl                                                                                           626 zeros
+     9         0 @ProximalSolvers/src/cd/glm.jl                                                                           122 φ
+     9         0 @juliasrc/gc-stock.c                                                                                     734 jl_gc_small_alloc_inner
+     9         0 @ProximalSolvers/src/cd/glm.jl                                                                           468 _proxnewton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Floa…
+     9         0 @Base/operators.jl                                                                                       481 >=
+     9         0 @ProximalSolvers/src/cd/glm.jl                                                                           619 solve_path(f::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, g::…
+     9         0 @ProximalSolvers/src/cd/path.jl                                                                          301 _screening_state(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{…
+     9         2 @ProximalBase/src/sparseIterate.jl                                                                       123 _getstored
+     9         9 @Base/special/pow.jl                                                                                       ? pow_body(x::Float64, n::Int64)
+     9         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                   46 ProximalSolvers.LSModel(y::Vector{Float64}, X::Matrix{Float64}, w::Vector{Float64}, offset::Nothing, s::Float64; intercept::Bool)
+    10         0 @Base/essentials.jl                                                                                      974 getindex
+    10         0 @Base/abstractarraymath.jl                                                                               289 -(A::Vector{Float64})
+    10         0 @Base/broadcast.jl                                                                                       888 broadcast_preserving_zero_d
+    10         0 @ProximalSolvers/src/cd/glm.jl                                                                           631 solve_path(f::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, g::…
+    10         0 @ProximalSolvers/src/cd/glm.jl                                                                           478 _proxnewton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Floa…
+    10         0 @ProximalBase/src/sparseIterate.jl                                                                       261 getindex
+    10         0 @ProximalSolvers/src/cd/glm.jl                                                                           616 solve_path(f::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, g::…
+    10         0 @ProximalSolvers/src/cd/glm.jl                                                                           110 initialize!(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, x:…
+    11         4 @Base/essentials.jl                                                                                      389 checkbounds
+    11         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  383 coordinate_step!
+    11         0 @Base/array.jl                                                                                          1205 _growend!
+    12         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  414 coordinate_scale
+    12         0 @ProximalSolvers/src/cd/glm.jl                                                                           349 _null_deviance(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing})
+    12         0 @juliasrc/genericmemory.c                                                                                 41 jl_alloc_genericmemory_unchecked
+    12         0 @juliasrc/gc-stock.c                                                                                     806 jl_gc_alloc_
+    12         0 @juliasrc/gc-stock.c                                                                                     792 jl_gc_small_alloc_noinline
+    12         0 @CoordinateDescent/src/glm.jl                                                                             69 _glm_model(X::Matrix{Float64}, y::Vector{Float64}, loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, weights::Nothing, offset::Nothing, intercept::B…
+    12         0 @CoordinateDescent/src/utils.jl                                                                          339 _check_finite
+    12         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  420 response_scale
+    13         0 @ProximalSolvers/src/cd/solver.jl                                                                        397 _cd_momentum!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pr…
+    13         0 @ProximalSolvers/src/cd/glm.jl                                                                           340 _deviance(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, η::V…
+    13         0 @Base/array.jl                                                                                           622 zeros
+    13        13 @Base/essentials.jl                                                                                      854 ifelse
+    13         0 @ProximalSolvers/src/cd/solver.jl                                                                        378 _cd_momentum!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pr…
+    13         0 @ProximalSolvers/src/cd/solver.jl                                                                        328 _tolerances(m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, x::ProximalBase.SparseIterate{Float64, 1}, s::Prox…
+    14         0 @ProximalBase/src/functions/losses.jl                                                                    284 deriv
+    14        14 @Base/float.jl                                                                                           623 <=
+    15         0 @ProximalSolvers/src/cd/glm.jl                                                                            47 cdmodel
+    15         0 @ProximalSolvers/src/cd/glm.jl                                                                            47 #cdmodel#57
+    15         0 @ProximalSolvers/src/cd/glm.jl                                                                            31 GLMModel
+    15         0 @ProximalSolvers/src/cd/glm.jl                                                                            37 ProximalSolvers.GLMModel(loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, y::Vector{Float64}, X::Matrix{Float64}, w::Nothing, offset::Nothing, s::F…
+    16         1 @ProximalSolvers/src/cd/models.jl                                                                        173 _visit!
+    16         0 @Base/array.jl                                                                                           318 copyto!
+    16         0 @Base/array.jl                                                                                           311 _copyto2arg!
+    16         0 @Base/array.jl                                                                                           300 _copyto_impl!
+    16         0 @Base/genericmemory.jl                                                                                   139 unsafe_copyto!
+    16         0 @Base/cmem.jl                                                                                             28 memmove
+    16        16 /lib64/libc.so.6                                                                                           ? __memmove_avx_unaligned_erms
+    16         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  215 macro expansion
+    16         0 @Base/broadcast.jl                                                                                       229 similar
+    16         0 @Base/broadcast.jl                                                                                       230 similar
+    16         0 @Base/abstractarray.jl                                                                                   876 similar
+    16         0 @Base/array.jl                                                                                           409 similar
+    16         0 @Base/abstractarray.jl                                                                                   877 similar
+    16         0 @Base/boot.jl                                                                                            671 Array
+    17         0 @CoordinateDescent/src/glm.jl                                                                             78 _glm_model(X::Matrix{Float64}, y::Vector{Float64}, loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, weights::Nothing, offset::Nothing, intercept::B…
+    17         0 @Base/array.jl                                                                                           291 copyto!
+    17         0 @ProximalSolvers/src/cd/glm.jl                                                                           389 ProximalSolvers._NewtonWorkspace(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, …
+    17         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                   39 LSModel
+    18        18 /lib64/libc.so.6                                                                                           ? _int_malloc
+    18         0 @Base/promotion.jl                                                                                       436 /
+    18         0 @Base/special/pow.jl                                                                                     143 pow_body(x::Float64, n::Int64)
+    19         0 @CoordinateDescent/src/glm.jl                                                                            300 _glmlassopath(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, …
+    19         0 @ProximalSolvers/src/cd/glm.jl                                                                            89 nulldeviance
+    20         0 @ProximalBase/src/functions/losses.jl                                                                    281 value_and_deriv
+    20        20 @Base/simdloop.jl                                                                                         75 macro expansion
+    20         0 @ProximalSolvers/src/cd/glm.jl                                                                           401 _center!(ws::ProximalSolvers._NewtonWorkspace{Float64, ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, ProximalSo…
+    21         0 @ProximalSolvers/src/cd/glm.jl                                                                           422 macro expansion
+    23         0 @ProximalSolvers/src/cd/solver.jl                                                                        395 _cd_momentum!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pr…
+    23         1 @ProximalSolvers/src/cd/solver.jl                                                                        477 _momentum_refresh!
+    23         0 @juliasrc/genericmemory.c                                                                                 38 jl_alloc_genericmemory_unchecked
+    23         0 @juliasrc/gc-stock.c                                                                                    3928 ijl_gc_managed_malloc
+    23         0 @juliasrc/gc-common.h                                                                                    112 jl_malloc_aligned
+    23         0 /lib64/libc.so.6                                                                                           ? posix_memalign
+    23         0 /lib64/libc.so.6                                                                                           ? _mid_memalign
+    23         3 /lib64/libc.so.6                                                                                           ? _int_memalign
+    23         0 @ProximalSolvers/src/cd/glm.jl                                                                           617 solve_path(f::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, g::…
+    24         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                   98 _check_finite
+    26         0 @Base/operators.jl                                                                                       653 *
+    26        15 @ProximalBase/src/functions/losses.jl                                                                    279 value_and_deriv
+    27         0 @ProximalSolvers/src/cd/glm.jl                                                                           339 _deviance(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, η::V…
+    27         0 @ProximalSolvers/src/cd/glm.jl                                                                           407 _center!(ws::ProximalSolvers._NewtonWorkspace{Float64, ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, ProximalSo…
+    27         0 @ProximalSolvers/src/cd/glm.jl                                                                           421 _column_means!(xbar::Vector{Float64}, X::Matrix{Float64}, v::Vector{Float64}, sv::Float64, cols::Vector{Int64})
+    29         0 @Base/anyall.jl                                                                                          217 _all
+    29         7 @Base/abstractarray.jl                                                                                  1254 _iterate_abstractarray
+    29        28 @Base/essentials.jl                                                                                      385 checkbounds
+    30         0 @CoordinateDescent/src/glm.jl                                                                            282 CoordinateDescent.GLMLassoPath(X::Matrix{Float64}, y::Vector{Float64}, λpath::Vector{Float64}, loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, opt…
+    30         0 @CoordinateDescent/src/glm.jl                                                                             94 _glm_problem
+    30         0 @Base/abstractarray.jl                                                                                  1247 iterate
+    31         0 @Base/boot.jl                                                                                            661 Array
+    31         0 @Base/boot.jl                                                                                            648 Array
+    31         0 @ProximalSolvers/src/cd/glm.jl                                                                           322 _glmvalue(loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, y::Vector{Float64}, w::Nothing, s::Float64, η::Vector{Float64}, c::Float64)
+    32         0 @ProximalSolvers/src/cd/glm.jl                                                                           533 _newton_step!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Flo…
+    33         0 @ProximalSolvers/src/cd/glm.jl                                                                           633 solve_path(f::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, g::…
+    33         0 @CoordinateDescent/src/glm.jl                                                                            303 (::CoordinateDescent.var"#record#72"{Vector{Float64}, Vector{Float64}, Float64})(k::Int64, λ::Float64, x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSo…
+    33         0 @ProximalSolvers/src/cd/glm.jl                                                                            81 deviance
+    34         0 @Base/array.jl                                                                                           963 getindex
+    34         0 @Base/broadcast.jl                                                                                       677 _broadcast_getindex
+    34         0 @Base/broadcast.jl                                                                                       704 _broadcast_getindex_evalf
+    36         0 @Base/broadcast.jl                                                                                       617 getindex
+    36         0 @Base/broadcast.jl                                                                                       621 _getindex
+    36        36 @Base/float.jl                                                                                           495 /
+    38         0 @Base/reducedim.jl                                                                                      1013 all
+    38         0 @Base/reducedim.jl                                                                                      1013 #all#769
+    38         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            124 smoothfg(X::Matrix{Float64}, y::Vector{Float64}, b::Vector{Float64}, a::Float64, loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov})
+    39         3 @Base/boot.jl                                                                                            588 GenericMemory
+    40         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  214 macro expansion
+    42        26 @ProximalBase/src/functions/losses.jl                                                                    278 value_and_deriv
+    43         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  216 macro expansion
+    45         0 @Base/range.jl                                                                                           928 iterate
+    47         0 @julialib/julia/libopenblas64_.so                                                                          ? dgemv_n_ZEN
+    49         0 @Base/broadcast.jl                                                                                      1000 macro expansion
+    50         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  161 _initialize!(m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, x::ProximalBase.SparseIterate{Float64, 1}, curvat…
+    50         0 @ProximalSolvers/src/cd/glm.jl                                                                           659 _screened_newton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix…
+    51         0 @Base/broadcast.jl                                                                                       999 copyto!
+    51        51 @Base/promotion.jl                                                                                       641 ==
+    51         0 @ProximalSolvers/src/cd/glm.jl                                                                           480 _proxnewton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Floa…
+    53         0 @Base/broadcast.jl                                                                                       952 copyto!
+    53         0 @Base/intfuncs.jl                                                                                        473 literal_pow
+    53        12 @Base/special/pow.jl                                                                                      62 ^
+    54         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  147 initialize!
+    54         0 @ProximalSolvers/src/cd/glm.jl                                                                           228 gradient!(G::Vector{Float64}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Not…
+    57         0 @ProximalSolvers/src/cd/glm.jl                                                                           549 _newton_step!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Flo…
+    59         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            126 smoothfg(X::Matrix{Float64}, y::Vector{Float64}, b::Vector{Float64}, a::Float64, loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov})
+    59         0 @Base/array.jl                                                                                          1020 setindex!
+    59        54 @Base/array.jl                                                                                          1025 _setindex!
+    61         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            123 smoothfg(X::Matrix{Float64}, y::Vector{Float64}, b::Vector{Float64}, a::Float64, loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov})
+    63         0 @Base/broadcast.jl                                                                                       899 materialize
+    63         0 @Base/broadcast.jl                                                                                       924 copy
+    74         0 @ProximalBase/src/functions/losses.jl                                                                    272 _kernel_abs
+    81         0 @ProximalSolvers/src/cd/glm.jl                                                                           559 _newton_step!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Flo…
+    86         0 @ProximalBase/src/functions/losses.jl                                                                    280 value_and_deriv
+    98         0 @LinearAlgebra/src/matmul.jl                                                                              57 *
+   101       101 @Base/essentials.jl                                                                                      975 getindex
+   114       114 @Base/float.jl                                                                                           493 -
+   114         0 @julialib/julia/libopenblas64_.so                                                                          ? dgemv_t_ZEN
+   121         0 @ProximalSolvers/src/cd/glm.jl                                                                           321 _glmvalue(loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, y::Vector{Float64}, w::Nothing, s::Float64, η::Vector{Float64}, c::Float64)
+   129         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  213 _column_dot
+   135         0 @ProximalBase/src/functions/losses.jl                                                                    283 ConvolutionCheck
+   141         0 @Base/simdloop.jl                                                                                         76 macro expansion
+   141         0 @Base/simdloop.jl                                                                                         54 simd_index
+   145       145 @Base/int.jl                                                                                              87 +
+   146         1 @ProximalSolvers/src/cd/glm.jl                                                                           319 _glmvalue
+   149         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  225 macro expansion
+   160       159 @Base/float.jl                                                                                           494 *
+   161         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            129 smoothkkt(X::Matrix{Float64}, y::Vector{Float64}, b::Vector{Float64}, a::Float64, lambda::Float64, w::Vector{Float64}, loss::ProximalBase.ConvolutionCheck{Floa…
+   161       161 @julialib/julia/libopenblas64_.so                                                                          ? dgemv_kernel_4x4
+   165         0 @LinearAlgebra/src/blas.jl                                                                               680 gemv!(trans::Char, alpha::Float64, A::Matrix{Float64}, X::Vector{Float64}, beta::Float64, Y::Vector{Float64})
+   165         1 @julialib/julia/libopenblas64_.so                                                                          ? dgemv_64_
+   166         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            171 smoothpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, method::Symbol; h::Float64, limit::Float64, warm…
+   166         0 @LinearAlgebra/src/matmul.jl                                                                             270 mul!
+   166         0 @LinearAlgebra/src/matmul.jl                                                                              73 mul!
+   166         0 @LinearAlgebra/src/matmul.jl                                                                              76 _mul!
+   166         0 @LinearAlgebra/src/matmul.jl                                                                              81 mul!
+   166         0 @LinearAlgebra/src/matmul.jl                                                                             726 gemv!
+   204         0 @ProximalSolvers/src/cd/solver.jl                                                                        272 _candidatepass!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::…
+   212         0 @ProximalSolvers/src/cd/solver.jl                                                                        240 _pass!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::ProximalB…
+   213         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  387 coordinate_step!
+   216       216 @Base/float.jl                                                                                           492 +
+   233         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  239 macro expansion
+   246         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  224 _column_dot
+   260         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  238 _column_axpy!
+   263         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  359 _residual_axpy!
+   385         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  380 coordinate_step!
+   385         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  349 _column_dot
+   385         0 @ProximalSolvers/src/cd/leastsquares.jl                                                                  353 _column_dot
+   442         0 @ProximalSolvers/src/cd/solver.jl                                                                        293 _activepass!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pro…
+   447         0 @ProximalSolvers/src/cd/solver.jl                                                                        242 _pass!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::ProximalB…
+   558         0 @Base/simdloop.jl                                                                                         77 macro expansion
+   629         0 @ProximalSolvers/src/cd/models.jl                                                                        172 _visit!
+   664         0 @ProximalSolvers/src/cd/solver.jl                                                                        385 _cd_momentum!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::Pr…
+   731         0 @ProximalSolvers/src/cd/solver.jl                                                                        315 _cd!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.LSModel{Float64, Matrix{Float64}, Vector{Float64}, Vector{Float64}, Nothing}, g::ProximalBas…
+   734         0 @ProximalSolvers/src/cd/glm.jl                                                                           534 _newton_step!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Flo…
+   915         0 @ProximalSolvers/src/cd/glm.jl                                                                           485 _proxnewton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Floa…
+  1000         0 @ProximalSolvers/src/cd/glm.jl                                                                           657 _screened_newton!(x::ProximalBase.SparseIterate{Float64, 1}, m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix…
+  1052         0 @ProximalSolvers/src/cd/glm.jl                                                                           625 solve_path(f::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, g::…
+  1141         0 @CoordinateDescent/src/glm.jl                                                                            304 _glmlassopath(m::ProximalSolvers.GLMModel{Float64, ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, Matrix{Float64}, Vector{Float64}, Nothing, Nothing}, …
+  1141         0 @ProximalSolvers/src/cd/glm.jl                                                                           606 solve_path
+  1160         0 @CoordinateDescent/src/glm.jl                                                                            284 CoordinateDescent.GLMLassoPath(X::Matrix{Float64}, y::Vector{Float64}, λpath::Vector{Float64}, loss::ProximalBase.ConvolutionCheck{Float64, :epanechnikov}, opt…
+  1160         0 @CoordinateDescent/src/glm.jl                                                                            290 kwcall(::@NamedTuple{screening::Bool, max_hat_s::Float64, devmax::Int64, newton_tol::Float64, newton_max_iter::Int64, rng::Xoshiro}, ::typeof(CoordinateDescent…
+  1190         0 @CoordinateDescent/src/glm.jl                                                                            268 kwcall(::@NamedTuple{intercept::Bool, standardize_x::Bool, screening::Bool, devmax::Int64, newton_tol::Float64, newton_max_iter::Int64, rng::Xoshiro}, ::Type{C…
+  1193         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            166 smoothpath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, method::Symbol; h::Float64, limit::Float64, warm…
+  1370         0 /workspace/srcdir/glibc-2.17/csu/../sysdeps/x86_64/start.S                                               123 [unknown function]
+  1370         0 /lib64/libc.so.6                                                                                           ? __libc_start_main
+  1370         0 /cache/build/builder-amdci4-4/julialang/julia-ci/cli/loader_exe.c                                         58 main
+  1370         0 @juliasrc/jlapi.c                                                                                       1152 jl_repl_entrypoint
+  1370         0 @juliasrc/jlapi.c                                                                                        985 true_main
+  1370         0 @juliasrc/julia.h                                                                                       2319 jl_apply
+  1370         0 @julialib/julia/sys.so                                                                                     ? jfptr__start_60477.1
+  1370         0 @Base/client.jl                                                                                          577 _start()
+  1370         0 @Base/client.jl                                                                                          344 exec_options(opts::Base.JLOptions)
+  1370         0 @Base/Base.jl                                                                                            309 include(mod::Module, _path::String)
+  1370         0 @Base/loading.jl                                                                                        3105 _include(mapexpr::Function, mod::Module, _path::String)
+  1370         0 @Base/loading.jl                                                                                        3045 include_string(mapexpr::typeof(identity), mod::Module, code::String, filename::String)
+  1370         0 @Base/boot.jl                                                                                            489 eval(m::Module, e::Any)
+  1370         0 @juliasrc/toplevel.c                                                                                     799 ijl_toplevel_eval_in
+  1370         0 @juliasrc/toplevel.c                                                                                     754 ijl_toplevel_eval
+  1370         0 @juliasrc/toplevel.c                                                                                     683 jl_toplevel_eval_flex
+  1370         0 @juliasrc/toplevel.c                                                                                     585 jl_eval_toplevel_stmts
+  1370         0 @juliasrc/toplevel.c                                                                                     742 jl_toplevel_eval_flex
+  1370         0 @juliasrc/interpreter.c                                                                                  884 jl_interpret_toplevel_thunk
+  1370         0 @juliasrc/interpreter.c                                                                                  679 eval_body
+  1370         0 @juliasrc/interpreter.c                                                                                  194 eval_stmt_value
+  1370         0 @juliasrc/interpreter.c                                                                                  243 eval_value
+  1370         0 @juliasrc/interpreter.c                                                                                  123 do_call
+  1370         0 [any unknown stackframes]
+  1370         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl                                             32 main()
+  1370         0 @Profile/src/Profile.jl                                                                                   60 macro expansion
+  1370         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl                                             33 macro expansion
+  1370         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl                                             14 runprofile(name::String, X::Matrix{Float64}, y::Vector{Float64}, ls::Vector{Float64})
+  1370         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                                            161 smoothpath
+Total snapshots: 1370. Utilization: 100% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.

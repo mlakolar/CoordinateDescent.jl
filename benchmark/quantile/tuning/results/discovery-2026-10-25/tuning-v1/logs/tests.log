@@ -1,0 +1,8 @@
+┌ Warning: coordinate descent did not converge in maxpasses = 1 passes (largest change of a coordinate in the last pass 1.57 > tolerance 1.0e-7); the solution may be inaccurate.
+└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-api/gap-main/ProximalOPT.jl/src/cd/solver.jl:580
+Test Summary:            | Pass  Total   Time
+Quantile primal–dual API |  615    615  14.9s
+Test Summary:                      | Pass  Total  Time
+fixed-quantile pivotal calibration |   54     54  3.3s
+Test Summary:                        | Pass  Total  Time
+quantile check-loss cross-validation |  106    106  4.1s

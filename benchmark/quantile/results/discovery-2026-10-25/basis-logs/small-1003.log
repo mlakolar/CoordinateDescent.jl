@@ -1,0 +1,4 @@
+DONE small 1003 1 lp-dual-nullbasis-warm complete 0.133327061s first_pivots=0
+DONE small 1003 1 lp-dual-dual-warm complete 0.207899513s first_pivots=NaN
+DONE small 1003 2 lp-dual-dual-warm complete 0.197897667s first_pivots=NaN
+DONE small 1003 2 lp-dual-nullbasis-warm complete 0.113778313s first_pivots=0

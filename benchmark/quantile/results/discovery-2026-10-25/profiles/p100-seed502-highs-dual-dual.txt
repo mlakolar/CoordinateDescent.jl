@@ -1,0 +1,611 @@
+name=highs-dual-dual n=1000 p=100 seed=502 fits=6 elapsed=1.6049749851226807 host=b09-15.hpc.usc.edu
+ Count  Overhead File                                                                                    Line Function
+ =====  ======== ====                                                                                    ==== ========
+     1         1 @juliasrc/jltypes.c                                                                    1072 lookup_type_setvalue
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN20HighsSimplexAnalysis16userInvertReportEb
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HFactor11buildFinishEv
+     1         1 @juliasrc/gf.c                                                                         4312 jl_lookup_generic_
+     1         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                           115 lppath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, form::Symbol, strategy…
+     1         0 @HiGHS/src/MOI_wrapper.jl                                                              2587 get(model::HiGHS.Optimizer, ::MathOptInterface.SimplexIterations)
+     1         0 @HiGHS/src/gen/libhighs.jl                                                              895 Highs_getIntInfoValue
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? Highs_getIntInfoValue
+     1         0 @HiGHS/src/MOI_wrapper.jl                                                              2326 optimize!(model::HiGHS.Optimizer)
+     1         1 @HiGHS/src/MOI_wrapper.jl                                                              2805 _set_basis(model::HiGHS.Optimizer)
+     1         0 @MathOptInterface/src/Utilities/CleverDicts.jl                                          153 get(c::MathOptInterface.Utilities.CleverDicts.CleverDict{MathOptInterface.VariableIndex, HiGHS._VariableInfo, HiGHS.var"#_variabl…
+     1         1 @MathOptInterface/src/Utilities/CleverDicts.jl                                          146 haskey
+     1         0 @OrderedCollections/src/ordered_dict.jl                                                 305 _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+     1         0 @Base/genericmemory.jl                                                                  133 unsafe_copyto!
+     1         1 @Base/boot.jl                                                                           596 memoryref
+     1         1 @juliasrc/builtins.c                                                                    499 ijl_object_id_
+     1         1 @OrderedCollections/src/ordered_dict.jl                                                 272 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+     1         0 @juliasrc/gc-common.c                                                                   272 jl_gc_run_finalizers_in_list
+     1         0 @juliasrc/gc-stock.c                                                                   1399 gc_sweep_pool
+     1         0 @juliasrc/gc-stock.c                                                                   1294 gc_sweep_pool_parallel
+     1         0 @juliasrc/gc-stock.c                                                                   1002 gc_sweep_pool_page
+     1         1 @juliasrc/gc-stock.c                                                                    926 gc_sweep_page
+     1         0 @juliasrc/gc-stock.c                                                                   3123 _jl_gc_collect
+     1         0 @juliasrc/gc-stock.c                                                                   2753 gc_mark_loop
+     1         0 @juliasrc/gc-stock.c                                                                   2565 gc_mark_loop_serial
+     1         0 @juliasrc/gc-stock.c                                                                   2542 gc_mark_loop_serial_
+     1         1 @juliasrc/gc-stock.c                                                                   2263 gc_mark_outrefs
+     1         0 @Base/hashing.jl                                                                         58 hash_finalizer
+     1         1 @Base/int.jl                                                                             88 *
+     1         0 @JuMP/src/macros/@constraint.jl                                                         204 macro expansion
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN10HighsBasis5clearEv
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN10HighsBasis10invalidateEv
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk28clearBadBasisChangeTabooFlagEv
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs23returnFromOptimizeModelE11HighsStatusb
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z18debugHighsSolutionNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERK12HighsOptionsRK10HighsModelRK13HighsSolutionRK10High…
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN16InfoRecordDoubleC2ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES5_bPdd
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN14pdqsort_detail12pdqsort_loopIN9__gnu_cxx17__normal_iteratorIPSt4pairIidESt6vectorIS4_SaIS4_EEEESt4lessIS4_ELb0EEEvT_SC_T0_ib…
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk25computeDualObjectiveValueEi
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual10updateDualEv
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HEkkDualRow10updateDualEd
+     1         0 @juliasrc/gf.c                                                                         4398 ijl_apply_generic
+     1         0 @juliasrc/gf.c                                                                         4179 _jl_invoke
+     1         1 @juliasrc/gf.c                                                                         3369 jl_method_compiled_callptr
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN12HighsOptionsD1Ev
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEC2EPKcRKS3_.constprop.0
+     1         0 /workspace/srcdir/gcc-15.2.0/libstdc++-v3/src/c++98/tree.cc                              60 local_Rb_tree_increment
+     1         1 /workspace/srcdir/gcc-15.2.0/libstdc++-v3/src/c++98/tree.cc                              71 local_Rb_tree_increment
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt6vectorIiSaIiEE7reserveEm
+     1         1 /workspace/srcdir/gcc-15.2.0/libstdc++-v3/src/c++98/tree.cc                             370 _Rb_tree_rebalance_for_erase
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt6vectorIiSaIiEE12emplace_backIJiEEEvDpOT_
+     1         0 @OrderedCollections/src/ordered_dict.jl                                                 182 rehash!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, newsz::Int64)
+     1         0 @Base/operators.jl                                                                      320 !=
+     1         0 @Base/promotion.jl                                                                      491 ==
+     1         1 @Base/promotion.jl                                                                      641 ==
+     1         1 @Base/array.jl                                                                         1202 _growend!
+     1         0 @Base/genericmemory.jl                                                                  143 unsafe_copyto!
+     1         0 @juliasrc/genericmemory.c                                                               248 jl_genericmemory_copyto
+     1         1 @juliasrc/julia_internal.h                                                              388 memmove_refs
+     1         0 @JuMP/src/macros/@constraint.jl                                                         202 macro expansion
+     1         1 @juliasrc/gf.c                                                                         4399 ijl_apply_generic
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HVectorBaseIdE12clearScalarsEv
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK7HFactor6btranUER11HVectorBaseIdEdP15HighsTimerClock
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK7HFactor7btranFTER11HVectorBaseIdE
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z28reportSimplexPhaseIterationsRK15HighsLogOptionsiR16HighsSimplexInfob
+     1         1 /workspace/srcdir/gcc_build/x86_64-linux-gnu/libstdc++-v3/include/bits/basic_ios.tcc    155 init
+     1         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            83 lpupdate!(s::@NamedTuple{m::Model, u::Vector{VariableRef}, eq::ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInter…
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17HighsSparseMatrix5clearEv
+     1         1 @juliasrc/jltypes.c                                                                    1074 lookup_type_setvalue
+     1         1 @juliasrc/jltypes.c                                                                    1826 typekeyvalue_hash
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z18debugHighsSolutionNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERK12HighsOptionsRK10HighsModelRK13HighsSolutionRK10High…
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN13InfoRecordIntC1ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES5_bPii
+     1         0 …orkspace/srcdir/gcc_build/x86_64-linux-gnu/libstdc++-v3/include/bits/basic_string.tcc  319 _M_assign
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HighsLp27moveBackLpAndUnapplyScalingERS_
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt10_HashtableINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt4pairIKS5_iESaIS8_ENSt8__detail10_Select1stESt8equal_toIS…
+     1         1 /workspace/srcdir/gcc-15.2.0/libstdc++-v3/src/c++98/tree.cc                              65 local_Rb_tree_increment
+     1         1 /workspace/srcdir/gcc-15.2.0/libstdc++-v3/src/c++98/tree.cc                             233 _Rb_tree_insert_and_rebalance
+     1         0 @OrderedCollections/src/ordered_dict.jl                                                 307 _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+     1         0 @Base/array.jl                                                                         1019 setindex!
+     1         0 @Base/number.jl                                                                           7 convert
+     1         0 @Base/boot.jl                                                                          1009 Int32
+     1         0 @Base/boot.jl                                                                           919 toInt32
+     1         1 @Base/boot.jl                                                                           882 checked_trunc_sint
+     1         1 @juliasrc/support/hashing.c                                                              32 int64hash
+     1         1 @JuMP/src/aff_expr.jl                                                                     ? _add_or_set!
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk12clearEkkDataEv
+     1         0 @Base/hashing.jl                                                                         55 hash_mix_linear
+     1         1 @Base/int.jl                                                                             86 -
+     1         1 @juliasrc/builtins.c                                                                    510 ijl_object_id_
+     1         0 @JuMP/src/variables.jl                                                                  315 owner_model
+     1         0 @HiGHS/src/MOI_wrapper.jl                                                              1020 set(model::HiGHS.Optimizer, ::MathOptInterface.VariableName, v::MathOptInterface.VariableIndex, name::String)
+     1         0 @HiGHS/src/gen/libhighs.jl                                                              563 Highs_passColName
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? Highs_passColName
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs11passColNameEiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN13HighsNameHash6updateEiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES7_
+     1         1 …orkspace/srcdir/gcc_build/x86_64-linux-gnu/libstdc++-v3/include/bits/basic_string.tcc  555 _M_replace
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual12updateVerifyEv
+     1         0 @juliasrc/jltypes.c                                                                    1837 typekeyvalue_hash
+     1         0 @juliasrc/support/hashing.h                                                              31 bitmix
+     1         0 @juliasrc/builtins.c                                                                    771 jl_f__apply_iterate
+     1         1 @juliasrc/builtins.c                                                                    650 _grow_to
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt6vectorIiSaIiEE14_M_fill_assignEmRKi
+     1         1 @juliasrc/typemap.c                                                                    1130 jl_typemap_entry_assoc_exact
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk12updatePivotsEiii
+     1         0 @HiGHS/src/MOI_wrapper.jl                                                              2616 get(model::HiGHS.Optimizer, attr::MathOptInterface.VariablePrimal, x::MathOptInterface.VariableIndex)
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt17_Function_handlerIFbibbEZN8presolve9HPresolve10dualFixingERNS1_19HighsPostsolveStackEiEUlibbE5_E9_M_invokeERKSt9_Any_dataO…
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve35resetColImpliedBoundsDerivedFromRowEi
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17PresolveComponent4initERK7HighsLpR10HighsTimerb
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt6vectorIdSaIdEEaSERKS1_.isra.0
+     1         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            75 lpmodel(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol…
+     1         0 @JuMP/src/macros.jl                                                                     442 macro expansion
+     1         0 @JuMP/src/macros/@objective.jl                                                          103 macro expansion
+     1         0 @JuMP/src/macros.jl                                                                     265 macro expansion
+     1         0 @OrderedCollections/src/ordered_dict.jl                                                 480 iterate
+     1         1 @Base/int.jl                                                                            560 <=
+     1         0 @juliasrc/gc-common.c                                                                   270 jl_gc_run_finalizers_in_list
+     1         0 @juliasrc/gc-stock.c                                                                   1398 gc_sweep_pool
+     1         0 @juliasrc/gc-stock.c                                                                   1230 gc_sweep_wake_all_pages
+     1         0 @juliasrc/gc-stock.c                                                                   1187 gc_sweep_prescan
+     1         1 @juliasrc/gc-stock.h                                                                    152 pop_lf_back_nosync
+     1         1 @OrderedCollections/src/ordered_dict.jl                                                 256 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+     1         0 @OrderedCollections/src/ordered_dict.jl                                                 283 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+     1         1 @OrderedCollections/src/ordered_dict.jl                                                 268 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+     1         1 @OrderedCollections/src/ordered_dict.jl                                                 301 _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+     1         0 …orkspace/srcdir/gcc_build/x86_64-linux-gnu/libstdc++-v3/include/bits/basic_string.tcc  546 _M_replace
+     1         1 /workspace/srcdir/gcc_build/x86_64-linux-gnu/libstdc++-v3/include/bits/basic_string.h   422 _M_check_length
+     1         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            48 lpmodel(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol…
+     1         0 @JuMP/src/optimizer_interface.jl                                                         77 set_optimizer_attribute
+     1         0 @JuMP/src/optimizer_interface.jl                                                       1584 set_attribute
+     1         0 @JuMP/src/optimizer_interface.jl                                                       1575 set_attribute
+     1         0 @JuMP/src/optimizer_interface.jl                                                       1322 set(m::Model, attr::MathOptInterface.RawOptimizerAttribute, value::String)
+     1         0 /home1/mkolar/juliaPkg/depot/compiled/v1.13/HiGHS/WFic5_KcyjS.so                          ? jfptr_set_5061
+     1         0 @HiGHS/src/MOI_wrapper.jl                                                               613 set(model::HiGHS.Optimizer, param::MathOptInterface.RawOptimizerAttribute, value::String)
+     1         0 @HiGHS/src/MOI_wrapper.jl                                                               583 _set_option
+     1         0 @HiGHS/src/gen/libhighs.jl                                                              657 Highs_setStringOptionValue
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? Highs_setStringOptionValue
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs14setOptionValueERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES7_
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z19setLocalOptionValueRK15HighsLogOptionsRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERS_RSt6vectorIP12OptionRecordSaIS…
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z4trimRNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKS4_
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z5rtrimRNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKS4_
+     1         0 …orkspace/srcdir/gcc_build/x86_64-linux-gnu/libstdc++-v3/include/bits/basic_string.tcc  832 find_last_not_of
+     1         0 /workspace/srcdir/gcc_build/x86_64-linux-gnu/libstdc++-v3/include/bits/char_traits.h    405 find
+     1         1 /lib64/libc.so.6                                                                          ? __memchr_avx2
+     1         1 @juliasrc/builtins.c                                                                    956 jl_f_tuple
+     1         0 @juliasrc/gc-stock.c                                                                    783 ijl_gc_small_alloc
+     1         0 @juliasrc/gc-stock.c                                                                    746 jl_gc_small_alloc_inner
+     1         1 @juliasrc/gc-stock.h                                                                    332 gc_page_data
+     1         0 @juliasrc/gf.c                                                                         4270 jl_lookup_generic_
+     1         1 @juliasrc/julia.h                                                                      1021 jl_to_typeof
+     1         0 /lib64/libm.so.6                                                                          ? pow
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt8_Rb_treeIiiSt9_IdentityIiESt4lessIiESaIiEE8_M_eraseEPSt13_Rb_tree_nodeIiE.isra.0
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt6vectorIiSaIiEE17_M_realloc_insertIJRKiEEEvN9__gnu_cxx17__normal_iteratorIPiS1_EEDpOT_
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt6vectorIiSaIiEE14_M_fill_insertEN9__gnu_cxx17__normal_iteratorIPiS1_EEmRKi
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17HighsSparseMatrix7addRowsES_PKa
+     1         0 @JuMP/src/jump_moi_function.jl                                                           59 moi_function
+     1         0 @JuMP/src/jump_moi_function.jl                                                          171 check_belongs_to_model(a::AffExpr, model::Model)
+     1         0 @Base/abstractdict.jl                                                                    66 iterate
+     1         0 @HiGHS/src/MOI_wrapper.jl                                                              1810 _indices_and_coefficients(model::HiGHS.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64})
+     1         0 @MathOptInterface/src/Utilities/functions.jl                                           1082 canonical(f::MathOptInterface.ScalarAffineFunction{Float64})
+     1         0 @MathOptInterface/src/functions.jl                                                      147 copy
+     1         0 @Base/array.jl                                                                          385 copy
+     1         0 @Base/genericmemory.jl                                                                  139 unsafe_copyto!
+     1         0 @Base/cmem.jl                                                                            28 memmove
+     1         1 @juliasrc/support/hashing.c                                                              34 int64hash
+     1         1 @juliasrc/support/hashing.c                                                              36 int64hash
+     1         0 @HiGHS/src/MOI_wrapper.jl                                                              1009 set(model::HiGHS.Optimizer, ::MathOptInterface.VariableName, v::MathOptInterface.VariableIndex, name::String)
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN20HighsSimplexAnalysis16userInvertReportEbb
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN20HighsSimplexAnalysis24reportIterationObjectiveEb
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z19highsFormatToStringB5cxx11PKcz
+     1         0 /lib64/libc.so.6                                                                          ? vsnprintf
+     1         0 /lib64/libc.so.6                                                                          ? _IO_vfprintf
+     1         0 /lib64/libc.so.6                                                                          ? printf_positional
+     1         0 /lib64/libc.so.6                                                                          ? __GI___printf_fp_l
+     1         1 /lib64/libc.so.6                                                                          ? __mpn_lshift
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk6moveLpER19HighsLpSolverObject
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk29updateDualSteepestEdgeWeightsEiiPK11HVectorBaseIdEddPKd
+     1         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HEkkDualRow5clearEv
+     1         0 @juliasrc/typemap.c                                                                    1148 jl_typemap_entry_assoc_exact
+     1         1 @juliasrc/typemap.c                                                                     210 sig_match_simple
+     1         0 @JuMP/src/optimizer_interface.jl                                                       1245 _moi_get_result(::HiGHS.Optimizer, ::MathOptInterface.VariablePrimal, ::Vararg{Any})
+     1         0 @HiGHS/src/MOI_wrapper.jl                                                              2403 get
+     1         0 @Base/dict.jl                                                                           478 getindex
+     1         1 @Base/dict.jl                                                                           243 ht_keyindex
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17PresolveComponent5clearEv
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN13HighsNameHash5clearEv
+     1         0 @JuMP/src/constraints.jl                                                               1041 add_constraint(model::Model, con::ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}, name::String)
+     1         0 @juliasrc/gf.c                                                                         4339 jl_lookup_generic_
+     1         0 @juliasrc/gf.c                                                                         1619 lookup_leafcache
+     1         0 @juliasrc/iddict.c                                                                      157 ijl_eqtable_get
+     1         1 @juliasrc/iddict.c                                                                      126 jl_table_peek_bp
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs16addColsInterfaceEiPKdS1_S1_iPKiS3_S1_
+     1         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HSimplexNla5clearEv
+     2         0 @juliasrc/jltypes.c                                                                    1146 lookup_typevalue
+     2         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk15returnFromSolveE11HighsStatus
+     2         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HVectorBaseIdE5clearEv
+     2         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HEkkDualRHS12updatePrimalEP11HVectorBaseIdEd
+     2         0 @HiGHS/src/MOI_wrapper.jl                                                              2723 get(model::HiGHS.Optimizer, attr::MathOptInterface.ConstraintDual, c::MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAff…
+     2         2 /lib64/libc.so.6                                                                          ? __strlen_avx2
+     2         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK20HighsLinearSumBounds15getImplVarLowerEii
+     2         0 @HiGHS/src/MOI_wrapper.jl                                                               848 _info
+     2         2 @OrderedCollections/src/ordered_dict.jl                                                   ? _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+     2         0 @JuMP/src/aff_expr.jl                                                                    21 _add_or_set!
+     2         0 @Base/number.jl                                                                          42 iszero
+     2         2 @Base/float.jl                                                                          621 ==
+     2         0 @Base/array.jl                                                                         1185 _growend_internal!(a::Vector{Bool}, delta::Int64, len::Int64)
+     2         2 @juliasrc/support/hashing.c                                                              35 int64hash
+     2         0 @juliasrc/builtins.c                                                                    516 ijl_object_id
+     2         0 @juliasrc/gc-stock.c                                                                   3587 ijl_gc_collect
+     2         0 @juliasrc/gc-common.c                                                                   316 run_finalizers
+     2         0 @juliasrc/gc-common.c                                                                   180 run_finalizer
+     2         0 /home1/mkolar/juliaPkg/depot/compiled/v1.13/HiGHS/WFic5_KcyjS.so                          ? jfptr_Highs_destroy_5504
+     2         0 @HiGHS/src/gen/libhighs.jl                                                              149 Highs_destroy(highs::HiGHS.Optimizer)
+     2         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? Highs_destroy
+     2         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5HighsD1Ev
+     2         0 @juliasrc/gc-stock.c                                                                   3255 _jl_gc_collect
+     2         0 @juliasrc/gc-stock.c                                                                   3252 _jl_gc_collect
+     2         0 @juliasrc/gc-stock.c                                                                   1010 gc_sweep_other
+     2         0 @juliasrc/gc-stock.c                                                                    670 sweep_malloced_memory
+     2         0 @juliasrc/gc-stock.c                                                                    645 jl_gc_free_memory
+     2         2 @Base/int.jl                                                                            393 &
+     2         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            72 lpmodel(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol…
+     2         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z16solverValidForLpRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+     2         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            84 lpupdate!(s::@NamedTuple{m::Model, u::Vector{VariableRef}, eq::ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInter…
+     2         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk32initialiseSimplexLpRandomVectorsEv
+     2         2 /lib64/libc.so.6                                                                          ? malloc_consolidate
+     2         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual11solvePhase1Ev
+     2         0 /workspace/srcdir/gcc-15.2.0/libstdc++-v3/src/c++98/tree.cc                              91 _Rb_tree_increment
+     2         0 @Base/int.jl                                                                            580 >>
+     2         2 @Base/int.jl                                                                            574 >>
+     2         2 @HiGHS/src/MOI_wrapper.jl                                                               849 _info
+     2         2 @Base/int.jl                                                                             83 <
+     2         0 @juliasrc/jltypes.c                                                                    1143 lookup_typevalue
+     2         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk25allocateWorkAndBaseArraysEv
+     2         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK8presolve9HPresolve12computeLocksEibSt8functionIFbibbEE
+     2         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN20HighsLinearSumBounds18handleImplVarLowerEiddi
+     2         0 @Base/array.jl                                                                          627 zeros
+     2         0 @Base/array.jl                                                                          359 fill!
+     2         0 @Base/array.jl                                                                          363 _fill!
+     2         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk5clearEv
+     2         2 @juliasrc/builtins.c                                                                    471 jl_object_id__cold
+     2         0 @OrderedCollections/src/ordered_dict.jl                                                 258 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+     2         0 @Base/essentials.jl                                                                      11 length
+     2         2 @Base/essentials.jl                                                                      10 size
+     2         0 @JuMP/src/variables.jl                                                                 2278 _moi_add_variable(moi_backend::HiGHS.Optimizer, model::Model, v::ScalarVariable{Float64, Float64, Float64, Float64}, name::String)
+     2         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HVectorBaseIdE7reIndexEv
+     2         2 /lib64/libc.so.6                                                                          ? cfree
+     2         2 @juliasrc/support/hashing.c                                                              33 int64hash
+     2         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HEkkDualRHS16updateInfeasListEP11HVectorBaseIdE
+     2         0 @juliasrc/gf.c                                                                         4330 jl_lookup_generic_
+     2         0 @juliasrc/julia_internal.h                                                             1875 jl_typemap_assoc_exact
+     2         0 @juliasrc/typemap.c                                                                    1196 jl_typemap_level_assoc_exact
+     2         0 @juliasrc/julia_internal.h                                                             1871 jl_typemap_assoc_exact
+     2         0 @JuMP/src/jump_moi_function.jl                                                           60 moi_function
+     2         0 @JuMP/src/jump_moi_function.jl                                                          166 moi_function
+     2         0 @JuMP/src/aff_expr.jl                                                                   757 MathOptInterface.ScalarAffineFunction(a::AffExpr)
+     2         0 @OrderedCollections/src/ordered_dict.jl                                                 257 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+     2         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK17HighsSparseMatrix9isColwiseEv
+     2         2 /workspace/srcdir/gcc-15.2.0/libstdc++-v3/src/c++98/tree.cc                             240 _Rb_tree_insert_and_rebalance
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z16getLpKktFailuresRK12HighsOptionsRK7HighsLpRK13HighsSolutionRK10HighsBasisR9HighsInfoR21HighsPrimalDualErrorsb
+     3         3 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z14getKktFailuresRK12HighsOptionsbRK7HighsLpRKSt6vectorIdSaIdEERK13HighsSolutionR9HighsInfob
+     3         3 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HFactor11buildKernelEv
+     3         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt6vectorIdSaIdEE14_M_fill_assignEmRKd
+     3         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt6vectorIiSaIiEE17_M_default_appendEm
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt10_HashtableImSt4pairIKmiESaIS2_ENSt8__detail10_Select1stESt8equal_toImESt4hashImENS4_18_Mod_range_hashingENS4_20_Default_ra…
+     3         3 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK8presolve9HPresolve24isImpliedEquationAtLowerEi
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual9chooseRowEv
+     3         3 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK7HFactor6btranLER11HVectorBaseIdEdP15HighsTimerClock
+     3         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                           106 lppath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, form::Symbol, strategy…
+     3         0 @JuMP/src/constraints.jl                                                               1085 set_normalized_rhs
+     3         0 @JuMP/src/optimizer_interface.jl                                                       1352 set(model::Model, attr::MathOptInterface.ConstraintSet, cr::ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterfac…
+     3         0 @HiGHS/src/MOI_wrapper.jl                                                              1900 set(model::HiGHS.Optimizer, ::MathOptInterface.ConstraintSet, c::MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFu…
+     3         0 @HiGHS/src/gen/libhighs.jl                                                             1755 Highs_changeRowBounds
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs15changeRowBoundsEidd
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs16changeRowsBoundsEiPKiPKdS3_
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN9HighsInfo11initRecordsEv
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HVectorBaseIdE5setupEi
+     3         3 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN20HighsLinearSumBounds18handleImplVarUpperEiddi
+     3         0 @HiGHS/src/MOI_wrapper.jl                                                              1812 _indices_and_coefficients(model::HiGHS.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64})
+     3         0 @Base/hashing.jl                                                                         76 hash
+     3         3 @HiGHS/src/MOI_wrapper.jl                                                               852 _info
+     3         2 @Base/array.jl                                                                         1204 _growend!
+     3         0 @JuMP/src/aff_expr.jl                                                                   402 _map_aff(f::typeof(MutableArithmetics.copy_if_mutable), constant::Float64, a::AffExpr)
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk15rebuildRefactorEi
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk16factorSolveErrorEv
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs13clearPresolveEv
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN10HighsModel5clearEv
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk7bailoutEv
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN13HighsCallback14callbackActionEiNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt17_Function_handlerIFviRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEPK19HighsCallbackOutputP18HighsCallbackInputPvE…
+     3         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN18HighsCallbackInputaSERK19HighsCallbackDataIn
+     3         0 @Base/abstractarray.jl                                                                 1366 getindex
+     3         0 @JuMP/src/constraints.jl                                                               1026 add_constraint(model::Model, con::ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}, name::String)
+     3         0 @JuMP/src/jump_moi_function.jl                                                          543 moi_function
+     3         3 @juliasrc/builtins.c                                                                    490 jl_object_id__cold
+     3         3 @Base/int.jl                                                                            419 xor
+     4         0 @juliasrc/builtins.c                                                                    943 arg_tuple
+     4         0 @juliasrc/jltypes.c                                                                    2489 jl_inst_arg_tuple_type
+     4         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HEkkDualRow10updateFlipEP11HVectorBaseIdE
+     4         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HighsLp10applyScaleEv
+     4         4 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17HighsSparseMatrix10applyScaleERK10HighsScale
+     4         4 /lib64/libc.so.6                                                                          ? unlink_chunk.isra.2
+     4         4 /lib64/libm.so.6                                                                          ? frexp
+     4         4 @Base/int.jl                                                                             87 +
+     4         4 @juliasrc/builtins.c                                                                    470 jl_object_id__cold
+     4         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HighsLpD1Ev
+     4         0 @JuMP/src/variables.jl                                                                 2247 _moi_add_variable(moi_backend::HiGHS.Optimizer, model::Model, v::ScalarVariable{Float64, Float64, Float64, Float64}, name::String)
+     4         0 @JuMP/src/variables.jl                                                                 2228 _moi_add_constrained_variable
+     4         0 @HiGHS/src/MOI_wrapper.jl                                                               942 add_constrained_variable(model::HiGHS.Optimizer, set::Tuple{MathOptInterface.GreaterThan{Float64}, MathOptInterface.LessThan{Floa…
+     4         0 @HiGHS/src/gen/libhighs.jl                                                             1369 Highs_addCol
+     4         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs6addColEdddiPKiPKd
+     4         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs7addColsEiPKdS1_S1_iPKiS3_S1_
+     4         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK11HSimplexNla5btranER11HVectorBaseIdEdP15HighsTimerClock
+     4         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK7HFactor9btranCallER11HVectorBaseIdEdP15HighsTimerClock
+     4         1 @OrderedCollections/src/ordered_dict.jl                                                 274 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+     4         0 @JuMP/src/aff_expr.jl                                                                   473 iterate
+     4         2 @OrderedCollections/src/ordered_dict.jl                                                 481 iterate
+     4         0 @OrderedCollections/src/ordered_dict.jl                                                 304 _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+     4         3 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HFactor11buildSimpleEv
+     4         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HighsLp5clearEv
+     5         0 @JuMP/src/optimizer_interface.jl                                                       1244 _moi_get_result(::HiGHS.Optimizer, ::MathOptInterface.ConstraintDual, ::Vararg{Any})
+     5         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual12updatePrimalEP11HVectorBaseIdE
+     5         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt10_HashtableINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt4pairIKS5_iESaIS8_ENSt8__detail10_Select1stESt8equal_toIS…
+     5         0 @juliasrc/gf.c                                                                         4394 ijl_apply_generic
+     5         0 @juliasrc/builtins.c                                                                    876 jl_f__apply_iterate
+     5         5 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HEkkDualRow14chooseMakepackEPK11HVectorBaseIdEi
+     5         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs12runPostsolveEv
+     5         5 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z22calculateRowValuesQuadRK7HighsLpRKSt6vectorIdSaIdEERS4_i
+     5         5 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve5toCSCERSt6vectorIdSaIdEERS1_IiSaIiEES7_
+     5         5 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN20HighsLinearSumBounds14handleVarLowerEiddi
+     5         0 @juliasrc/gc-stock.c                                                                   3563 ijl_gc_collect
+     5         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs27clearDerivedModelPropertiesEv
+     5         5 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK7HFactor7ftranFTER11HVectorBaseIdE
+     5         4 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HEkkDualRow11chooseFinalEv
+     5         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve18changeImplColUpperEidi
+     5         0 @Base/hashing.jl                                                                         59 hash_finalizer
+     5         5 @Base/Base_compiler.jl                                                                    ? ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+     5         5 /lib64/libm.so.6                                                                          ? [unknown function]
+     6         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual7cleanupEv
+     6         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            94 lpget(s::@NamedTuple{m::Model, u::Vector{VariableRef}, eq::ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface…
+     6         0 @JuMP/src/variables.jl                                                                 2143 value
+     6         0 @JuMP/src/variables.jl                                                                 2144 value(v::VariableRef; result::Int64)
+     6         0 @JuMP/src/optimizer_interface.jl                                                       1297 get(model::Model, attr::MathOptInterface.VariablePrimal, v::VariableRef)
+     6         0 @JuMP/src/optimizer_interface.jl                                                       1248 _moi_get_result(::HiGHS.Optimizer, ::MathOptInterface.ConstraintDual, ::Vararg{Any})
+     6         3 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK20HighsLinearSumBounds19getResidualSumLowerEiididd
+     6         2 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt8_Rb_treeIiiSt9_IdentityIiESt4lessIiESaIiEE17_M_emplace_uniqueIJRiEEESt4pairISt17_Rb_tree_iteratorIiEbEDpOT_
+     6         5 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17HighsSparseMatrix13ensureColwiseEv
+     6         0 @HiGHS/src/MOI_wrapper.jl                                                               860 column
+     6         5 /lib64/libc.so.6                                                                          ? _int_free
+     6         0 @juliasrc/genericmemory.c                                                                38 jl_alloc_genericmemory_unchecked
+     6         0 @juliasrc/gc-stock.c                                                                   3928 ijl_gc_managed_malloc
+     6         0 @juliasrc/gc-common.h                                                                   112 jl_malloc_aligned
+     6         0 /lib64/libc.so.6                                                                          ? posix_memalign
+     6         0 /lib64/libc.so.6                                                                          ? _mid_memalign
+     6         2 /lib64/libc.so.6                                                                          ? _int_memalign
+     6         0 @Base/hashing.jl                                                                         63 hash_64_64
+     6         6 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk28computeSimplexDualInfeasibleEv
+     7         7 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z36assessExcessiveObjectiveBoundScaling15HighsLogOptionsRK10HighsModelR18HighsUserScaleData
+     7         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk33initialiseSimplexLpBasisAndFactorEb
+     7         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HSimplexNla5setupEPK7HighsLpPiPK12HighsOptionsP10HighsTimerP20HighsSimplexAnalysisPK17HighsSparseMatrixd
+     7         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HFactor12setupGeneralEiiiPKiS1_PKdPiddiPK15HighsLogOptionsbi
+     7         7 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK7HFactor6ftranLER11HVectorBaseIdEdP15HighsTimerClock
+     7         7 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z11highs_splayIiRZN8presolve9HPresolve6unlinkEiEUliE_RZNS1_6unlinkEiEUliE0_RZNS1_6unlinkEiEUliE1_EiRKT_iOT0_OT1_OT2_
+     7         6 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt8_Rb_treeIiiSt9_IdentityIiESt4lessIiESaIiEE5eraseERKi.isra.0
+     7         0 @Base/array.jl                                                                         1020 setindex!
+     7         4 @Base/array.jl                                                                         1025 _setindex!
+     7         0 @OrderedCollections/src/ordered_dict.jl                                                 316 _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+     7         0 @juliasrc/genericmemory.c                                                                41 jl_alloc_genericmemory_unchecked
+     7         0 @juliasrc/gc-stock.c                                                                    806 jl_gc_alloc_
+     7         0 @juliasrc/gc-stock.c                                                                    792 jl_gc_small_alloc_noinline
+     7         0 @juliasrc/gc-stock.c                                                                    734 jl_gc_small_alloc_inner
+     7         0 @juliasrc/gc-stock.c                                                                    355 maybe_collect
+     7         0 @Base/hashing.jl                                                                         75 hash
+     7         4 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve13shrinkProblemERNS_19HighsPostsolveStackE
+     8         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk21getNonsingularInverseEi
+     8         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk13computeFactorEv
+     8         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HSimplexNla6invertEv
+     8         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HFactor5buildEP15HighsTimerClock
+     8         8 @Base/Base_compiler.jl                                                                   57 getproperty
+     8         8 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve18detectDominatedColERNS_19HighsPostsolveStackEib
+     8         0 @HiGHS/src/MOI_wrapper.jl                                                              1813 _indices_and_coefficients(model::HiGHS.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64})
+     8         0 @HiGHS/src/MOI_wrapper.jl                                                              1799 _indices_and_coefficients
+     8         0 @OrderedCollections/src/ordered_dict.jl                                                 141 rehash!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, newsz::Int64)
+     8         0 @Base/array.jl                                                                         1181 _growend_internal!(a::Vector{VariableRef}, delta::Int64, len::Int64)
+     8         0 @Base/array.jl                                                                         1101 array_new_memory
+     8         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            71 lpmodel(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol…
+     8         0 @JuMP/src/Containers/container.jl                                                        75 container
+     8         0 @JuMP/src/Containers/container.jl                                                        71 container
+     8         0 @JuMP/src/Containers/container.jl                                                        85 container
+     8         0 @Base/abstractarray.jl                                                                 3426 map
+     8         0 @Base/array.jl                                                                          838 collect(itr::Base.Generator{JuMP.Containers.VectorizedProductIterator{Tuple{Base.OneTo{Int64}}}, JuMP.Containers.var"#container##…
+     8         0 @Base/array.jl                                                                          864 collect_to_with_first!
+     8         0 @Base/array.jl                                                                          886 collect_to!(dest::Vector{VariableRef}, itr::Base.Generator{JuMP.Containers.VectorizedProductIterator{Tuple{Base.OneTo{Int64}}}, J…
+     8         0 @Base/generator.jl                                                                       48 iterate
+     8         0 @JuMP/src/Containers/container.jl                                                        85 #container##0
+     8         0 @JuMP/src/Containers/macro.jl                                                           604 #15
+     8         0 @JuMP/src/macros/@variable.jl                                                           337 macro expansion
+     8         0 @JuMP/src/variables.jl                                                                 2203 add_variable(model::Model, v::ScalarVariable{Float64, Float64, Float64, Float64}, name::String)
+     9         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk12updateFactorEP11HVectorBaseIdES2_PiS3_
+     9         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HFactor6updateEP11HVectorBaseIdES2_PiS3_
+     9         9 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HFactor8updateFTEP11HVectorBaseIdES2_i
+     9         9 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? [unknown function]
+     9         3 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK17HighsSparseMatrix5rangeERdS0_
+     9         6 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK8presolve9HPresolve27checkUpdateColImpliedBoundsEiPdS1_
+     9         0 @Base/array.jl                                                                          626 zeros
+     9         0 @Base/boot.jl                                                                           661 Array
+     9         0 @Base/boot.jl                                                                           648 Array
+     9         0 @OrderedCollections/src/ordered_dict.jl                                                 303 _setindex!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, v::Float64, key::VariableRef, index::Int64)
+    10         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            92 lpget(s::@NamedTuple{m::Model, u::Vector{VariableRef}, eq::ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface…
+    10         0 @Base/broadcast.jl                                                                      676 _broadcast_getindex
+    10         0 @Base/broadcast.jl                                                                      700 _getindex
+    10         0 @Base/broadcast.jl                                                                      701 _getindex
+    10         0 @JuMP/src/constraints.jl                                                               1394 dual
+    10         0 @JuMP/src/constraints.jl                                                               1398 #dual#17
+    10         0 @JuMP/src/constraints.jl                                                               1409 _constraint_dual(con_ref::ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, M…
+    10         0 @JuMP/src/optimizer_interface.jl                                                       1317 get(model::Model, attr::MathOptInterface.ConstraintDual, cr::ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterfa…
+    10         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual11updateFtranEv
+    10        10 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve11findNonzeroEii
+    10         4 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK20HighsLinearSumBounds19getResidualSumUpperEiididd
+    10         0 @Base/array.jl                                                                         1205 _growend!
+    10         0 @OrderedCollections/src/ordered_dict.jl                                                 266 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+    10        10 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK8presolve9HPresolve23yieldsImpliedLowerBoundEid
+    11         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve18changeImplColLowerEidi
+    11         0 @Base/array.jl                                                                          622 zeros
+    11         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt6vectorIdSaIdEE17_M_default_appendEm
+    12        12 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN20HighsLinearSumBounds14handleVarUpperEiddi
+    12         0 @HiGHS/src/MOI_wrapper.jl                                                              1832 add_constraint(model::HiGHS.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64}, s::MathOptInterface.LessThan{Float64})
+    13        13 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN14HighsHashTableIivE9growTableEv
+    14         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HighsLpC1ERKS_
+    14         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual14updateFtranDSEEP11HVectorBaseIdE
+    14         0 @Base/array.jl                                                                         1345 push!
+    14         0 @Base/array.jl                                                                         1348 _push!
+    14         0 @OrderedCollections/src/ordered_dict.jl                                                 181 rehash!(h::OrderedCollections.OrderedDict{VariableRef, Float64}, newsz::Int64)
+    14        14 /lib64/libc.so.6                                                                          ? __memset_avx2_unaligned_erms
+    15        10 /lib64/libc.so.6                                                                          ? _int_malloc
+    15         3 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK20HighsLinearSumBounds23getResidualSumLowerOrigEiididd
+    16         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                           116 lppath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, form::Symbol, strategy…
+    16        16 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNSt6vectorIZN8presolve9HPresolve16computeColBoundsEiidiPdS2_S2_S2_E8nonZerosSaIS3_EE12emplace_backIJS3_EEEvDpOT_
+    16         0 @OrderedCollections/src/ordered_dict.jl                                                 296 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+    17        10 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK17HighsSparseMatrix5numNzEv
+    17        17 @Base/essentials.jl                                                                     975 getindex
+    17         0 @OrderedCollections/src/ordered_dict.jl                                                 261 ht_keyindex2(h::OrderedCollections.OrderedDict{VariableRef, Float64}, key::VariableRef)
+    17         0 @Base/runtime_internals.jl                                                              901 objectid
+    17         0 @Base/boot.jl                                                                           588 GenericMemory
+    18         0 /workspace/srcdir/gcc-15.2.0/libstdc++-v3/libsupc++/new_op.cc                            50 operator new
+    18         6 /lib64/libc.so.6                                                                          ? __libc_malloc
+    19         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual15updateFtranBFRTEv
+    20        20 /lib64/libc.so.6                                                                          ? __memmove_avx_unaligned_erms
+    20        19 /lib64/libm.so.6                                                                          ? scalbn
+    20         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK20HighsLinearSumBounds8residualERiR12HighsCDoubleddiddd
+    21         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN7HighsLp12unapplyScaleEv
+    21        21 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17HighsSparseMatrix12unapplyScaleERK10HighsScale
+    23         0 @JuMP/src/aff_expr.jl                                                                   401 _map_aff(f::typeof(MutableArithmetics.copy_if_mutable), constant::Float64, a::AffExpr)
+    24        22 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK8presolve9HPresolve15getRowPositionsEiRSt6vectorIiSaIiEE
+    24         0 @MutableArithmetics/src/implementations/LinearAlgebra.jl                                 12 mutable_copy(A::Vector{AffExpr})
+    25        21 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z24equilibrationScaleMatrixRK12HighsOptionsR7HighsLpi
+    25         0 @Base/hashing.jl                                                                         40 hash
+    25         0 @JuMP/src/variables.jl                                                                  562 hash
+    26         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK11HSimplexNla5ftranER11HVectorBaseIdEdP15HighsTimerClock
+    26         1 @OrderedCollections/src/ordered_dict.jl                                                 337 setindex!
+    26         0 @MutableArithmetics/src/interface.jl                                                    378 copy_if_mutable
+    26         0 @MutableArithmetics/src/interface.jl                                                    367 copy_if_mutable_fallback
+    26         0 @JuMP/src/mutable_arithmetics.jl                                                        184 mutable_copy
+    26         0 @JuMP/src/aff_expr.jl                                                                   395 map_coefficients
+    27         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve26computeWorstCaseLowerBoundEiidi
+    27        27 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN12HighsCDoubledVEd.isra.0
+    28         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17HighsSparseMatrix6assessERK15HighsLogOptionsNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEdd
+    28        14 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z12assessMatrixRK15HighsLogOptionsRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiibRSt6vectorIiSaIiEESD_SD_RSA_IdSaIdEEd…
+    29        13 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK11HSimplexNla14debugCheckDataENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+    29         3 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN20HighsLinearSumBounds6removeEiid
+    29         0 @JuMP/src/aff_expr.jl                                                                    24 _add_or_set!
+    31        26 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK7HFactor6ftranUER11HVectorBaseIdEdP15HighsTimerClock
+    31        31 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN11HEkkDualRow14choosePossibleEv
+    31         0 @OrderedCollections/src/dict_support.jl                                                   6 hashindex
+    32         0 @HiGHS/src/MOI_wrapper.jl                                                              1834 add_constraint(model::HiGHS.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64}, s::MathOptInterface.LessThan{Float64})
+    32         0 @HiGHS/src/gen/libhighs.jl                                                             1443 Highs_addRow
+    32         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs6addRowEddiPKiPKd
+    32         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs7addRowsEiPKdS1_iPKiS3_S1_
+    32         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs16addRowsInterfaceEiPKdS1_iPKiS3_S1_
+    32         1 @OrderedCollections/src/ordered_dict.jl                                                 331 setindex!
+    33         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk34initialisePartitionedRowwiseMatrixEv
+    33        31 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17HighsSparseMatrix24createRowwisePartitionedERKS_PKa
+    34         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z7scaleLpRK12HighsOptionsR7HighsLpb
+    35         0 @JuMP/src/aff_expr.jl                                                                    26 _add_or_set!
+    36        25 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17HighsSparseMatrix13hasLargeValueEd
+    37         0 @MutableArithmetics/src/interface.jl                                                    647 operate!!
+    37         0 @MutableArithmetics/src/interface.jl                                                    655 operate_fallback!!
+    38         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK7HFactor9ftranCallER11HVectorBaseIdEdP15HighsTimerClock
+    38         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z15considerScalingRK12HighsOptionsR7HighsLp
+    42         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve16fastPresolveLoopERNS_19HighsPostsolveStackE
+    42         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve19presolveChangedColsERNS_19HighsPostsolveStackE
+    42        25 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZZN8presolve9HPresolve16computeColBoundsEiidiPdS1_S1_S1_ENKUlRKZNS0_16computeColBoundsEiidiS1_S1_S1_S1_E8nonZerosdibE1_clES4_dib
+    44         0 @JuMP/src/constraints.jl                                                               1030 add_constraint(model::Model, con::ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}, name::String)
+    44         0 @JuMP/src/constraints.jl                                                               1007 _moi_add_constraint(model::HiGHS.Optimizer, f::MathOptInterface.ScalarAffineFunction{Float64}, s::MathOptInterface.LessThan{Float…
+    45         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk13computePrimalEv
+    45        45 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK17HighsSparseMatrix9collectAjER11HVectorBaseIdEid
+    46        46 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK17HighsSparseMatrix21priceByRowDenseResultERSt6vectorIdSaIdEERK11HVectorBaseIdEii
+    47         0 @JuMP/src/macros/@constraint.jl                                                         194 macro expansion
+    49         5 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve6unlinkEi
+    50         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve26computeWorstCaseUpperBoundEiidi
+    52         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk15tableauRowPriceEbRK11HVectorBaseIdERS1_i
+    52         6 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK17HighsSparseMatrix20priceByRowWithSwitchEbR11HVectorBaseIdERKS1_didi
+    53         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk9fullPriceERK11HVectorBaseIdERS1_
+    53        53 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK17HighsSparseMatrix13priceByColumnEbR11HVectorBaseIdERKS1_i
+    55         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk11computeDualEv
+    60         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            74 lpmodel(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol…
+    67         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk18initialiseForSolveEv
+    67         0 @MutableArithmetics/src/interface.jl                                                    716 buffered_operate!!
+    67         0 @MutableArithmetics/src/interface.jl                                                    739 buffered_operate_fallback!!
+    67         0 @MutableArithmetics/src/interface.jl                                                    606 buffered_operate!
+    67         0 @MutableArithmetics/src/interface.jl                                                    589 buffered_operate_fallback!
+    67         0 @JuMP/src/mutable_arithmetics.jl                                                        242 operate!
+    67         0 @JuMP/src/aff_expr.jl                                                                   590 add_to_expression!
+    70         0 @MutableArithmetics/src/implementations/LinearAlgebra.jl                                453 operate
+    70         0 @MutableArithmetics/src/implementations/LinearAlgebra.jl                                415 operate_to!
+    70         0 @MutableArithmetics/src/implementations/LinearAlgebra.jl                                383 operate!
+    70         0 @MutableArithmetics/src/implementations/LinearAlgebra.jl                                337 buffered_operate!(buffer::Nothing, ::typeof(MutableArithmetics.add_mul), C::Vector{AffExpr}, A::Matrix{Float64}, B::Vector{Variab…
+    75         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual7rebuildEv
+    77         9 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve16computeColBoundsEiidiPdS1_S1_S1_
+    79         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve10dualFixingERNS_19HighsPostsolveStackEi
+    80        80 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z25getPrimalDualGlpsolErrorsRK12HighsOptionsRK7HighsLpRKSt6vectorIdSaIdEERK13HighsSolutionR21HighsPrimalDualErrors
+    81         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            73 lpmodel(X::Matrix{Float64}, y::Vector{Float64}, lambda::Float64, tau::Float64, w::Vector{Float64}, form::Symbol, strategy::Symbol…
+    83         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z10lpKktCheckR16HighsModelStatusR9HighsInfoRK7HighsLpRK13HighsSolutionRK10HighsBasisRK12HighsOptionsRKNSt7__cxx1112basic_stringI…
+    84         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs14callLpKktCheckERK7HighsLpRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+    88         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve11colPresolveERNS_19HighsPostsolveStackEi
+    90         0 @Base/broadcast.jl                                                                      899 materialize
+    90         0 @Base/broadcast.jl                                                                      924 copy
+    90         0 @Base/broadcast.jl                                                                      952 copyto!
+    90         0 @Base/broadcast.jl                                                                      999 copyto!
+    90         0 @Base/simdloop.jl                                                                        77 macro expansion
+    90         0 @Base/broadcast.jl                                                                     1000 macro expansion
+    90         0 @Base/broadcast.jl                                                                      617 getindex
+    90         0 @Base/broadcast.jl                                                                      621 _getindex
+    90         0 @Base/broadcast.jl                                                                      677 _broadcast_getindex
+    90         0 @Base/broadcast.jl                                                                      704 _broadcast_getindex_evalf
+    91        24 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve22updateColImpliedBoundsEiid
+    93         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve22updateColImpliedBoundsEi
+    94         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual12chooseColumnEP11HVectorBaseIdE
+    94         0 @JuMP/src/macros/@constraint.jl                                                         190 macro expansion
+    95         0 @JuMP/src/macros.jl                                                                     264 macro expansion
+    95         0 @MutableArithmetics/src/rewrite.jl                                                      384 macro expansion
+   100         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk12updateMatrixEii
+   100       100 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17HighsSparseMatrix6updateEiiRKS_
+   109         1 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve11rowPresolveERNS_19HighsPostsolveStackEi
+   110         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual12updatePivotsEv
+   114         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve10okSetInputER7HighsLpRK12HighsOptionsiP10HighsTimer
+   117         5 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN20HighsLinearSumBounds3addEiid
+   151        56 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve25detectParallelRowsAndColsERNS_19HighsPostsolveStackE
+   151         0 @JuMP/src/macros.jl                                                                     425 macro expansion
+   153         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                           104 lppath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, form::Symbol, strategy…
+   153         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            36 lpmodel
+   156         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve24initialRowAndColPresolveERNS_19HighsPostsolveStackE
+   160        20 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve4linkEi
+   161         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve9okFromCSCERKSt6vectorIdSaIdEERKS1_IiSaIiEES9_
+   163       163 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZNK20HighsLinearSumBounds6updateERiR12HighsCDoubleidd
+   257         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual7iterateEv
+   341         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual11solvePhase2Ev
+   356         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8HEkkDual5solveEb
+   402         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve8presolveERNS_19HighsPostsolveStackE
+   408         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN8presolve9HPresolve3runERNS_19HighsPostsolveStackE
+   455         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN4HEkk5solveEb
+   516         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZZN5Highs19calledOptimizeModelEvENKUlR7HighsLpRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERdE_clES1_S9_SA_
+   516         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs11callSolveLpER7HighsLpRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+   516         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z7solveLpR19HighsLpSolverObjectNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+   516         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _Z14solveLpSimplexR19HighsLpSolverObject
+   522         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN17PresolveComponent3runEv
+   523         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs11runPresolveEbb
+  1176         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs13optimizeModelEv
+  1176         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs19calledOptimizeModelEv
+  1183         0 @HiGHS/src/MOI_wrapper.jl                                                              2345 optimize!(model::HiGHS.Optimizer)
+  1183         0 @Base/c.jl                                                                              167 disable_sigint(f::HiGHS.var"#46#47"{HiGHS.Optimizer})
+  1183         0 @HiGHS/src/MOI_wrapper.jl                                                              2345 #46
+  1183         0 @HiGHS/src/MOI_wrapper.jl                                                              2307 _Highs_run_workaround_issue_316
+  1183         0 @HiGHS/src/MOI_wrapper.jl                                                              2283 _gc_safe_Highs_run(model::HiGHS.Optimizer)
+  1183         0 @HiGHS/src/gen/libhighs.jl                                                              344 Highs_run
+  1183         0 …lar/juliaPkg/depot/artifacts/e1540b7b116ba1f77d0f11be614fcddf9060464e/lib/libhighs.so    ? _ZN5Highs3runEv
+  1184         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                           110 lppath(X::Matrix{Float64}, y::Vector{Float64}, lambdas::Vector{Float64}, tau::Float64, w::Vector{Float64}, form::Symbol, strategy…
+  1184         0 @JuMP/src/optimizer_interface.jl                                                        569 optimize!
+  1184         0 @JuMP/src/optimizer_interface.jl                                                        633 optimize!(model::Model; ignore_optimize_hook::Bool, _differentiation_backend::MathOptInterface.Nonlinear.SparseReverseMode, kwarg…
+  1184         0 /home1/mkolar/juliaPkg/depot/compiled/v1.13/HiGHS/WFic5_KcyjS.so                          ? jfptr_optimizeNOT._5372
+  1357         0 /workspace/srcdir/glibc-2.17/csu/../sysdeps/x86_64/start.S                              123 [unknown function]
+  1357         0 /lib64/libc.so.6                                                                          ? __libc_start_main
+  1357         0 /cache/build/builder-amdci4-4/julialang/julia-ci/cli/loader_exe.c                        58 main
+  1357         0 @juliasrc/jlapi.c                                                                      1152 jl_repl_entrypoint
+  1357         0 @juliasrc/jlapi.c                                                                       985 true_main
+  1357         0 @juliasrc/julia.h                                                                      2319 jl_apply
+  1357         0 @julialib/julia/sys.so                                                                    ? jfptr__start_60477.1
+  1357         0 @Base/client.jl                                                                         577 _start()
+  1357         0 @Base/client.jl                                                                         344 exec_options(opts::Base.JLOptions)
+  1357         0 @Base/Base.jl                                                                           309 include(mod::Module, _path::String)
+  1357         0 @Base/loading.jl                                                                       3105 _include(mapexpr::Function, mod::Module, _path::String)
+  1357         0 @Base/loading.jl                                                                       3045 include_string(mapexpr::typeof(identity), mod::Module, code::String, filename::String)
+  1357         0 @Base/boot.jl                                                                           489 eval(m::Module, e::Any)
+  1357         0 @juliasrc/toplevel.c                                                                    799 ijl_toplevel_eval_in
+  1357         0 @juliasrc/toplevel.c                                                                    754 ijl_toplevel_eval
+  1357         0 @juliasrc/toplevel.c                                                                    683 jl_toplevel_eval_flex
+  1357         0 @juliasrc/toplevel.c                                                                    585 jl_eval_toplevel_stmts
+  1357         0 @juliasrc/toplevel.c                                                                    742 jl_toplevel_eval_flex
+  1357         0 @juliasrc/interpreter.c                                                                 884 jl_interpret_toplevel_thunk
+  1357         0 @juliasrc/interpreter.c                                                                 679 eval_body
+  1357         0 @juliasrc/interpreter.c                                                                 194 eval_stmt_value
+  1357         0 @juliasrc/interpreter.c                                                                 243 eval_value
+  1357         0 @juliasrc/interpreter.c                                                                 123 do_call
+  1357         1 [any unknown stackframes]
+  1357         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl                            32 main()
+  1357         0 @Profile/src/Profile.jl                                                                  60 macro expansion
+  1357         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl                            33 macro expansion
+  1357         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/profile.jl                             6 runprofile(name::String, X::Matrix{Float64}, y::Vector{Float64}, ls::Vector{Float64})
+  1357         0 /home1/mkolar/juliaPkg/runs/20261025-cd78-quantile/solvers.jl                            97 lppath
+Total snapshots: 1357. Utilization: 100% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.
