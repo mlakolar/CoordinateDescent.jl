@@ -60,7 +60,7 @@ end
   # discontinuous sign-based KKT failure; preserve their unrounded values.
   nullfit=quantile_lasso(X,y,10.;standardize_x=false)
   perturbed=copy(nullfit.β);perturbed[5]=1e-14
-  nearzero=CoordinateDescent._qsolution(X,y,perturbed,nullfit.intercept,dual_scores(nullfit),10.,ones(5),.5,true,:exact,0.,:OPTIMAL,0,true,1e-6)
+  nearzero=HighDimensionalModels._qsolution(X,y,perturbed,nullfit.intercept,dual_scores(nullfit),10.,ones(5),.5,true,:exact,0.,:OPTIMAL,0,true,1e-6)
   @test nearzero.converged
   @test nearzero.β[5]==1e-14
   @test coef(fit(QuantileLassoSolution,X,y,.1;standardize_x=false)) ≈ coef(quantile_lasso(X,y,.1;standardize_x=false))
@@ -96,8 +96,8 @@ end
     p=QuantileLassoPath(X,y,[.3,.1];method=:smooth,tau=τ,bandwidth=.2,standardize_x=false,tol=3e-5)
     @test p.complete && all(s.converged for s in p.solutions)
     for s in p.solutions
-      loss=CoordinateDescent.ProximalBase.ConvolutionCheck(τ,.2)
-      expected=[-last(CoordinateDescent.ProximalBase.value_and_deriv(loss,predict(s,X)[i],y[i])) for i in eachindex(y)]
+      loss=HighDimensionalModels.ProximalBase.ConvolutionCheck(τ,.2)
+      expected=[-last(HighDimensionalModels.ProximalBase.value_and_deriv(loss,predict(s,X)[i],y[i])) for i in eachindex(y)]
       @test dual_scores(s) ≈ expected
       @test s.objective >= s.check_objective-1e-12
       @test abs(s.duality_gap)<1e-4

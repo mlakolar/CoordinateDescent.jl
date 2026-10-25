@@ -1,5 +1,5 @@
-using CoordinateDescent, HiGHS, JuMP, Gurobi, Random, LinearAlgebra, Statistics, DelimitedFiles, Profile
-const CD=CoordinateDescent
+using HighDimensionalModels, HiGHS, JuMP, Gurobi, Random, LinearAlgebra, Statistics, DelimitedFiles, Profile
+const CD=HighDimensionalModels
 BLAS.set_num_threads(1)
 const GRB=Gurobi.Env(output_flag=0)
 function loadbin(file)

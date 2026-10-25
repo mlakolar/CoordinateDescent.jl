@@ -1,6 +1,6 @@
 module SparseGroupTest
 
-using CoordinateDescent, ProximalBase, StatsModels
+using HighDimensionalModels, ProximalBase, StatsModels
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 soft(v, t) = sign.(v) .* max.(abs.(v) .- t, 0)

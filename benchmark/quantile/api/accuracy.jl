@@ -1,5 +1,5 @@
-using CoordinateDescent,HiGHS,LinearAlgebra,Random,DelimitedFiles
-const CD=CoordinateDescent
+using HighDimensionalModels,HiGHS,LinearAlgebra,Random,DelimitedFiles
+const CD=HighDimensionalModels
 BLAS.set_num_threads(1)
 loadbin(f)=open(io->read!(io,Vector{Float64}(undef,filesize(f)÷8)),f)
 function diagnostics(X,y,B,U,ls,τ,h=.2)

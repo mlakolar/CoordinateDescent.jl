@@ -1,7 +1,7 @@
-module CoordinateDescentHiGHSExt
+module HighDimensionalModelsHiGHSExt
 
-using CoordinateDescent, HiGHS, SparseArrays
-const CD = CoordinateDescent
+using HighDimensionalModels, HiGHS, SparseArrays
+const CD = HighDimensionalModels
 const MOI = HiGHS.MOI
 
 function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},

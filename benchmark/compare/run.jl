@@ -10,7 +10,13 @@
 #     julia --project=benchmark/compare/old benchmark/compare/run.jl old
 #     julia --project=benchmark/compare/new benchmark/compare/run.jl new
 
-using CoordinateDescent, ProximalBase, LinearAlgebra, Printf, Random, Serialization, SparseArrays, Statistics
+if Base.find_package("HighDimensionalModels") !== nothing
+  @eval using HighDimensionalModels
+  const CoordinateDescent = HighDimensionalModels
+else
+  @eval using CoordinateDescent
+end
+using ProximalBase, LinearAlgebra, Printf, Random, Serialization, SparseArrays, Statistics
 BLAS.set_num_threads(1)
 
 const SIDE = ARGS[1]

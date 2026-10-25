@@ -5,7 +5,7 @@ procedures. Install and load the optional HiGHS backend, then fit one penalty or
 a decreasing grid:
 
 ```julia
-using CoordinateDescent, HiGHS
+using HighDimensionalModels, HiGHS
 sol = quantile_lasso(X, y, 0.05; tau=0.5)
 path = QuantileLassoPath(X, y, [0.2, 0.1, 0.05]; tau=0.5)
 B = coef(path)                  # coefficient columns, intercept first

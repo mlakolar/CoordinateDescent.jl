@@ -1,8 +1,11 @@
-# CoordinateDescent.jl
+# HighDimensionalModels.jl
 
-[![Docs: dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://mlakolar.github.io/CoordinateDescent.jl/dev/)
-[![CI](https://github.com/mlakolar/CoordinateDescent.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/mlakolar/CoordinateDescent.jl/actions/workflows/CI.yml?query=branch%3Amaster)
-[![codecov](https://codecov.io/gh/mlakolar/CoordinateDescent.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/mlakolar/CoordinateDescent.jl)
+Previously CoordinateDescent.jl. Load the package with `using HighDimensionalModels`;
+the package UUID and version are unchanged by this rename.
+
+[![Docs: dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://mlakolar.github.io/HighDimensionalModels.jl/dev/)
+[![CI](https://github.com/mlakolar/HighDimensionalModels.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/mlakolar/HighDimensionalModels.jl/actions/workflows/CI.yml?query=branch%3Amaster)
+[![codecov](https://codecov.io/gh/mlakolar/HighDimensionalModels.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/mlakolar/HighDimensionalModels.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 Lasso estimators computed by coordinate descent. The coordinate descent
@@ -11,7 +14,7 @@ with screening, the reweighting of the scaled and feasible lasso) is that of
 [ProximalSolvers.jl](https://github.com/mlakolar/ProximalSolvers.jl), on the losses and
 penalties of [ProximalBase.jl](https://github.com/mlakolar/ProximalBase.jl). It
 works for the ℓ1 and weighted ℓ1 penalty and for other penalties that separate
-across coordinates (see [Writing a loss or a penalty](https://mlakolar.github.io/CoordinateDescent.jl/dev/extending/)),
+across coordinates (see [Writing a loss or a penalty](https://mlakolar.github.io/HighDimensionalModels.jl/dev/extending/)),
 and by blocks for the group lasso, whose coordinates are groups.
 
 Estimators:
@@ -29,12 +32,12 @@ Estimators:
   and refitting
 * Varying-coefficient models by local polynomial regression with an ℓ1 penalty
 
-CoordinateDescent is one of five Julia packages for high-dimensional statistics,
+HighDimensionalModels is one of five Julia packages for high-dimensional statistics,
 three for estimation and inference and two for the optimization beneath them:
 
 | Package | |
 |---|---|
-| **CoordinateDescent.jl** (this package) | the lasso and its paths; the group, square-root, scaled and heteroscedastic lasso; varying-coefficient models |
+| **HighDimensionalModels.jl** (this package) | the lasso and its paths; the group, square-root, scaled and heteroscedastic lasso; varying-coefficient models |
 | [CovarianceSelection.jl](https://github.com/mlakolar/CovarianceSelection.jl) | Gaussian graphical models: the graphical lasso, CLIME and ACLIME, precision matrices by the scaled lasso, the fused graphical lasso, and the difference of two precision matrices |
 | [DiffPrecTest.jl](https://github.com/mlakolar/DiffPrecTest.jl) | confidence intervals and tests for the difference of two precision matrices |
 | [ProximalSolvers.jl](https://github.com/mlakolar/ProximalSolvers.jl) | the solvers: coordinate descent with penalty paths, screening and active sets; proximal gradient methods, proximal Newton and ADMM |
@@ -45,17 +48,21 @@ ProximalSolvers; to write your own algorithm, ProximalBase.
 
 ## Installation
 
-```julia
-using Pkg
-Pkg.add("CoordinateDescent")
+Use the master checkout and prepare its dependency master checkouts:
+
+```sh
+git clone --branch master https://github.com/mlakolar/HighDimensionalModels.jl.git
+cd HighDimensionalModels.jl
+julia scripts/instantiate.jl
+julia --project=.
 ```
 
-CoordinateDescent requires Julia 1.10 or later.
+HighDimensionalModels requires Julia 1.10 or later.
 
 ## Usage
 
 ```julia
-using CoordinateDescent
+using HighDimensionalModels
 
 n, p = 200, 50
 X = randn(n, p)
@@ -88,7 +95,7 @@ m = fit(LassoPath, @formula(y ~ x1 + log(x2) + region), df)
 coef(m, 0.1), coefnames(m), predict(m, newdf)
 ```
 
-The [documentation](https://mlakolar.github.io/CoordinateDescent.jl/dev/) has
+The [documentation](https://mlakolar.github.io/HighDimensionalModels.jl/dev/) has
 the mathematics of each estimator and its conventions, the options of
 coordinate descent and when each pays off, the group lasso, varying-coefficient
 models, how to write a loss or a penalty of your own, and the API reference.
@@ -96,20 +103,18 @@ models, how to write a loss or a penalty of your own, and the API reference.
 ## Examples
 
 The scripts in [examples](examples) go through the package and its options;
-the [documentation](https://mlakolar.github.io/CoordinateDescent.jl/dev/) shows
+the [documentation](https://mlakolar.github.io/HighDimensionalModels.jl/dev/) shows
 them with their output. Run them from the root of the repository:
 
 ```
-julia --project=examples -e 'using Pkg; Pkg.instantiate()'
+julia scripts/instantiate.jl examples
 julia --project=examples examples/01_lasso.jl
 julia --project=examples examples/run_all.jl      # all of them, about 20 seconds
 ```
 
-The environment loads the package from this checkout, and ProximalSolvers from
-GitHub until its version 0.1.1 is registered, through `[sources]` in
-[examples/Project.toml](examples/Project.toml), which Julia 1.11 and later
-read. On Julia 1.10, develop the checkout and add ProximalSolvers by URL in that
-environment first.
+The environment loads this package and its workspace dependencies from local
+master checkouts. The bootstrap prepares transitive dependencies on Julia 1.10
+and newer.
 
 ## Naming and the 0.8 transition
 
@@ -124,7 +129,7 @@ iterate. See [the migration table](NEWS.md#breaking-changes) for all renames.
 ### Quantile regression with dual variables
 
 ```julia
-using CoordinateDescent, HiGHS  # optional exact backend
+using HighDimensionalModels, HiGHS  # optional exact backend
 path = QuantileLassoPath(X, y, [0.2, 0.1, 0.05]; tau=0.5)
 beta = coef(path)
 u = dual_scores(path)          # observations × penalty levels, raw solver scores
@@ -136,3 +141,14 @@ feasible certificates and KKT diagnostics. Check each fit's `converged` flag;
 a time limit can return a partial exact path. See the
 [primal–dual interface](docs/src/quantile.md) for scaling, weighted penalties,
 zero-penalty refits and the distinction between exact and smoothed scores.
+## Development tests
+
+From the repository root, run:
+
+```sh
+julia scripts/test_master.jl
+```
+
+The script prepares an isolated test environment using dependency master
+checkouts and test extras on Julia 1.10 and newer. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the naming policy and environment setup.

@@ -10,7 +10,7 @@
 #
 #     julia --project=examples examples/02_solver_options.jl
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Printf, Random
 
 Random.seed!(2)

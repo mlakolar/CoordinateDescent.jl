@@ -1,8 +1,8 @@
-module CoordinateDescentTest
+module HighDimensionalModelsTest
 
 const  NUMBER_REPEAT = 1
 
-using CoordinateDescent
+using HighDimensionalModels
 using Test
 using ProximalBase
 using ProximalSolvers
@@ -261,10 +261,10 @@ end
 struct SeparableLoss <: CoordinateDifferentiableFunction
   c::Vector{Float64}
 end
-CoordinateDescent.initialize!(::SeparableLoss, x) = nothing
-CoordinateDescent.num_coordinates(f::SeparableLoss) = length(f.c)
-CoordinateDescent.gradient(f::SeparableLoss, x, k) = coordinates(x)[k] - f.c[k]
-function CoordinateDescent.descend_coordinate!(f::SeparableLoss, g::NormL1, x, k)
+HighDimensionalModels.initialize!(::SeparableLoss, x) = nothing
+HighDimensionalModels.num_coordinates(f::SeparableLoss) = length(f.c)
+HighDimensionalModels.gradient(f::SeparableLoss, x, k) = coordinates(x)[k] - f.c[k]
+function HighDimensionalModels.descend_coordinate!(f::SeparableLoss, g::NormL1, x, k)
   cx = coordinates(x)
   oldVal = cx[k]
   cx[k] = f.c[k]
@@ -297,7 +297,7 @@ end
     W[r, c2] = W[c2, r] = w[k]
   end
   x = SymmetricSparseIterate(3)
-  @test lambda_max(CoordinateDescent._LossModel(SeparableLoss(c), x), NormL1(1., W), x) == 4.
+  @test lambda_max(HighDimensionalModels._LossModel(SeparableLoss(c), x), NormL1(1., W), x) == 4.
   for warm_start in (true, false)
     x = SymmetricSparseIterate(3)
     coordinate_descent!(x, SeparableLoss(c), NormL1(1., W), CDOptions(;warm_start=warm_start))
@@ -310,10 +310,10 @@ end
   # a missing function of the interface is a MethodError, which lists the
   # methods that exist
   struct IncompleteLoss <: CoordinateDifferentiableFunction end
-  @test_throws MethodError CoordinateDescent.initialize!(IncompleteLoss(), SparseIterate(2))
-  @test_throws MethodError CoordinateDescent.gradient(IncompleteLoss(), SparseIterate(2), 1)
-  @test_throws MethodError CoordinateDescent.num_coordinates(IncompleteLoss())
-  @test_throws MethodError CoordinateDescent.descend_coordinate!(IncompleteLoss(), ZeroFunction(), SparseIterate(2), 1)
+  @test_throws MethodError HighDimensionalModels.initialize!(IncompleteLoss(), SparseIterate(2))
+  @test_throws MethodError HighDimensionalModels.gradient(IncompleteLoss(), SparseIterate(2), 1)
+  @test_throws MethodError HighDimensionalModels.num_coordinates(IncompleteLoss())
+  @test_throws MethodError HighDimensionalModels.descend_coordinate!(IncompleteLoss(), ZeroFunction(), SparseIterate(2), 1)
   @test_throws MethodError coordinate_descent!(SparseIterate(2), IncompleteLoss(), NormL1(1.))
 end
 
@@ -760,15 +760,15 @@ struct UserLS <: CoordinateDifferentiableFunction
   r::Vector{Float64}
 end
 UserLS(y, X) = UserLS(y, X, copy(y))
-CoordinateDescent.initialize!(f::UserLS, x) = (f.r .= f.y .- f.X * Vector(x); nothing)
-CoordinateDescent.num_coordinates(f::UserLS) = size(f.X, 2)
-CoordinateDescent.gradient(f::UserLS, x, k) = -dot(view(f.X, :, k), f.r) / length(f.y)
-CoordinateDescent.coordinate_scale(f::UserLS, k) = norm(view(f.X, :, k)) / sqrt(length(f.y))
-CoordinateDescent.response_scale(f::UserLS) = norm(f.y) / sqrt(length(f.y))
-function CoordinateDescent.descend_coordinate!(f::UserLS, g, x, k)
+HighDimensionalModels.initialize!(f::UserLS, x) = (f.r .= f.y .- f.X * Vector(x); nothing)
+HighDimensionalModels.num_coordinates(f::UserLS) = size(f.X, 2)
+HighDimensionalModels.gradient(f::UserLS, x, k) = -dot(view(f.X, :, k), f.r) / length(f.y)
+HighDimensionalModels.coordinate_scale(f::UserLS, k) = norm(view(f.X, :, k)) / sqrt(length(f.y))
+HighDimensionalModels.response_scale(f::UserLS) = norm(f.y) / sqrt(length(f.y))
+function HighDimensionalModels.descend_coordinate!(f::UserLS, g, x, k)
   a = sum(abs2, view(f.X, :, k)) / length(f.y)
   old = x[k]
-  new = prox_entry(g, old - CoordinateDescent.gradient(f, x, k) / a, k, 1 / a)
+  new = prox_entry(g, old - HighDimensionalModels.gradient(f, x, k) / a, k, 1 / a)
   h = new - old
   iszero(h) && return h
   x[k] = new

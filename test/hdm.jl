@@ -1,6 +1,6 @@
 module HDMTest
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 using SpecialFunctions: erfcinv
 

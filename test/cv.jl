@@ -1,6 +1,6 @@
 module CVTest
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 @testset "CVLassoPath and information criteria" begin

@@ -1,4 +1,4 @@
-using CoordinateDescent
+using HighDimensionalModels
 using Test
 using Aqua
 
@@ -22,7 +22,7 @@ tests = [
   "formula",
 ]
 
-@testset "CoordinateDescent" begin
+@testset "HighDimensionalModels" begin
   for t in tests
     f = "$t.jl"
     println("* running $f ...")
@@ -36,6 +36,6 @@ tests = [
   @testset "Aqua" begin
     # KernelSmoothing is a test dependency; on Julia 1.10, which ignores
     # [sources], CI adds it by URL, which also lists it in [deps]
-    Aqua.test_all(CoordinateDescent; stale_deps = (ignore = [:KernelSmoothing],))
+    Aqua.test_all(HighDimensionalModels; stale_deps = (ignore = [:KernelSmoothing],))
   end
 end

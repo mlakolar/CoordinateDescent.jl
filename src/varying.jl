@@ -144,7 +144,7 @@ when the bandwidth is small enough for the bias to be negligible
 (undersmoothing).
 
 ```julia
-using CoordinateDescent, KernelSmoothing
+using HighDimensionalModels, KernelSmoothing
 fit = varying_coefficient(X, z, y, range(0, 1; length = 50); kernel = EpanechnikovKernel(), bandwidth = 0.2,
                          se = true)
 coef(fit)                      # p × 50: the estimates of βⱼ at the points
