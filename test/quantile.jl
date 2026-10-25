@@ -63,7 +63,11 @@ end
     @test s.converged
     @test s.objective ≈ oracle.objective atol=1e-7
     @test residuals(s) ≈ y-predict(s,X;offset=fill(.2,61))
-    @test all(iszero,s.certificate_dual)
+    if λ == 0 || any(iszero,w)
+      @test all(iszero,s.certificate_dual)
+    else
+      @test s.certificate_gap < 1e-6
+    end
   end
   scaled=quantile_lasso(X.*[1. 2 3 4 5],y,.1)
   original=quantile_lasso(X,y,.1)
