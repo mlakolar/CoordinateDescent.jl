@@ -66,7 +66,7 @@ open(path,"w") do io
       Profile.@profile while calls<1 || time()-started<0.25;fit(c);calls+=1;end
       open(joinpath(OUT,"profile-$rep-$id.txt"),"w") do pi
         println(pi,"rep=$rep case=$id calls=$calls")
-        Profile.print(pi;format=:flat,sortedby=:count,mincount=2)
+        Profile.print(IOContext(pi,:displaysize=>(10000,240));format=:flat,sortedby=:count,mincount=2)
       end
     end
     println("DONE $engine $mode rep=$rep case=$id");flush(stdout)

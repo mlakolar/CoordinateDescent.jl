@@ -9,7 +9,7 @@ for p in root.glob('profile-*.txt'):
  for line in p.read_text().splitlines():
   m=re.match(r'^\s*(\d+)\s+(\d+)\s+(\S+)\s+([?\d]+)\s+(.*)$',line)
   if m and int(m[2])>0:
-   key=(m[3],m[4],m[5]);groups[(case,key)][rep]=int(m[2]);leaves.append((int(m[2]),key))
+   key=(m[3],m[4],m[5]);groups[(case,key)][rep]=groups[(case,key)].get(rep,0)+int(m[2]);leaves.append((int(m[2]),key))
  for rank,(count,key) in enumerate(sorted(leaves,reverse=True)[:10],1):
   rows.append(dict(rep=rep,case=case,rank=rank,exclusive_samples=count,file=key[0],line=key[1],function=key[2]))
 with (root/'profile-top-leaves.csv').open('w') as f:

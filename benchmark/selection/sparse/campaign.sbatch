@@ -16,8 +16,7 @@ export ENV_DIR=env335
 mkdir -p "$RUN/results" "$RUN/memory" "$RUN/metadata"
 cp "$RUN/$ENV_DIR/Project.toml" "$RUN/$ENV_DIR/Manifest.toml" "$RUN/metadata/"
 export RESULTS_DIR=results CASES=1,2,3,4,5,6,7,8,9,10,11
-# Coordinated PS engine LTS tests, outside all benchmark timings.
-/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/$ENV_DIR" /home1/mkolar/juliaPkg/runs/20261025T1210Z-ps-slope-extract/source335/test/slope.jl > "$RUN/engine-tests-110.log" 2>&1
+# PS335 guard suites run once in coordinated job13424116, a dependency.
 cd "$RUN/source"
 /home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/$ENV_DIR" -e 'using CoordinateDescent,Test; include("test/selection.jl"); include("test/slope_sparse.jl"); include("test/selection_golden.jl")' > "$RUN/final335-tests-110.log" 2>&1
 # Serialize timing processes; rotate backend order between replications.
