@@ -24,7 +24,7 @@ for (case,method),rs in sorted(groups.items()):
   d[key+'_mcse']=float(valid.std(ddof=1)/np.sqrt(len(valid))) if len(valid)>1 else None
  summary.append(d)
 Path('restricted-'+stage+'-summary.json').write_text(json.dumps(dict(expected_per_case=expected,summary=summary,errors=errors),indent=2)+'\n')
-with open(stage+'-records.csv','w',newline='') as f:
+with open('restricted-'+stage+'-records.csv','w',newline='') as f:
  w=csv.DictWriter(f,fieldnames=rows[0],lineterminator='\n');w.writeheader();w.writerows(rows)
 lines=['# Bias-aware projection development','',f'{expected} planned datasets per case; summaries condition on converged output. Failures and fallbacks are retained in the JSON/raw files.','', '| Case | Method | Converged / expected | Active/null coverage | Type I | Power | Length active/null | Signed bias / SE |','|---|---|---:|---:|---:|---:|---:|---:|']
 for d in summary:

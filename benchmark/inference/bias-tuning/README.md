@@ -44,3 +44,25 @@ CoordinateDescent to HighDimensionalModels. Current scripts use the new module
 name; reproduce a historical measurement with its recorded snapshot/environment.
 A current-source parity bridge is required before calling the renamed source
 validated by these measurements. Raw data and historical lockfiles remain frozen.
+
+## Frozen fresh-data validation (2026-10-25 18:12 UTC)
+
+Development finished with 800 datasets and 4,000 converged fits and no fit errors.
+The independent residualized-glmnet reference passed. No candidate reached 95%
+coverage in every case. Freeze one candidate for honest independent validation:
+CV initializer (5 folds, 40 levels, opt_tol=1e-8 and inference gaptol=0), ordinary
+model-based standard errors, LDPE with m=4 unpenalized working correlations,
+60 levels to .001 of the conditional maximum, SD budget kappa=.5, original
+bias bound sqrt(2log(p)), and fallback relaxation .1. All ten targets, dataset
+construction and signals remain as in development. The choice balances smaller
+remaining active bias against longer intervals and lower power; it is not
+certified as calibrated and is not promoted to the production default.
+
+Validate this candidate and the unchanged CV default on 200 new datasets in
+each of eight cases (1,600 datasets, 3,200 fits). The previously untouched seed
+namespace91600000 is now allocated to this frozen study. There will be no
+retuning from these results. `validate.jl` fits each full automatic pipeline
+separately with the same CV seed and reports full warm fit time. These are paired
+statistical comparisons, not a new matched competitor-engine benchmark.
+Numerical fitting source is source-v4/env-v4 from the registry; only the standalone
+runner and analysis are new. A 24-dataset parity bridge checks master integration.
