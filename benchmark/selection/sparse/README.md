@@ -3,7 +3,7 @@
 This follow-up preserves CSC storage for `slope` and `SLOPEPath`, including
 implicit centering and standardization. The estimator calls the screened SLOPE
 APG engine from ProximalSolvers commit
-`ffdc26c1a20703da7afe8c0e7755e1768c07f2b5`. Statistical penalties and defaults
+`335ea905da207a6cc1cd3bd945bb7bbbf9f4eba4`. Statistical penalties and defaults
 are unchanged. The old comparator is the exact `src/slope.jl` at HDM commit
 `95993030f5fa34b01364dcdf9eebf42a4eab15ba`, retained as `baseline_slope.jl`.
 

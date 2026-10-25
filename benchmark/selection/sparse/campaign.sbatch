@@ -12,11 +12,14 @@ export JULIA_DEPOT_PATH="$RUN/depot:/home1/mkolar/juliaPkg/runs/20261025-cd82-co
 export JULIA_NUM_THREADS=1 JULIA_NUM_PRECOMPILE_TASKS=2 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 module load gcc/13.3.0 apptainer parallel/20240522
 source_dir="$RUN/source/benchmark/selection/sparse"
+export ENV_DIR=env335
 mkdir -p "$RUN/results" "$RUN/memory" "$RUN/metadata"
-cp "$RUN/env/Project.toml" "$RUN/env/Manifest.toml" "$RUN/metadata/"
+cp "$RUN/$ENV_DIR/Project.toml" "$RUN/$ENV_DIR/Manifest.toml" "$RUN/metadata/"
 export RESULTS_DIR=results CASES=1,2,3,4,5,6,7,8,9,10,11
 # Coordinated PS engine LTS tests, outside all benchmark timings.
-/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/env" /home1/mkolar/juliaPkg/runs/20261025T1210Z-ps-slope-extract/slope-tests-fixed.jl > "$RUN/engine-tests-110.log" 2>&1
+/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/$ENV_DIR" /home1/mkolar/juliaPkg/runs/20261025T1210Z-ps-slope-extract/source335/test/slope.jl > "$RUN/engine-tests-110.log" 2>&1
+cd "$RUN/source"
+/home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$RUN/$ENV_DIR" -e 'using CoordinateDescent,Test; include("test/selection.jl"); include("test/slope_sparse.jl"); include("test/selection_golden.jl")' > "$RUN/final335-tests-110.log" 2>&1
 # Serialize timing processes; rotate backend order between replications.
 python3 - <<'PY' > "$RUN/tasks.tsv"
 engines=['native','baseline','SLOPE.jl','R']
@@ -43,4 +46,5 @@ export RESULTS_DIR=results
 seq 1 7 | parallel --jobs 1 --halt soon,fail=1 --joblog "$RUN/audit-joblog.tsv" \
  "srun --exclusive --exact -N1 -n1 -c2 --mem=4G bash '$source_dir/audit_worker.sh' {} > '$RUN/results/audit-{}.log' 2>&1"
 python3 "$source_dir/summarize.py"
+python3 "$source_dir/profile_summary.py"
 echo CAMPAIGN_DONE
