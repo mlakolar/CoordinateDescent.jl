@@ -9,7 +9,13 @@
 #     julia --project=benchmark/varying/old benchmark/varying/bench.jl old OUT
 #     julia --project=benchmark/varying/new benchmark/varying/bench.jl new OUT
 
-using CoordinateDescent, Printf, Random, Serialization
+if Base.find_package("HighDimensionalModels") !== nothing
+  @eval using HighDimensionalModels
+  const CoordinateDescent = HighDimensionalModels
+else
+  @eval using CoordinateDescent
+end
+using Printf, Random, Serialization
 const NEW = ARGS[1] == "new"
 NEW && @eval using KernelSmoothing: EpanechnikovKernel as KSEpa
 

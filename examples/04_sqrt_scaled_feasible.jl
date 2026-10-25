@@ -14,7 +14,7 @@
 #
 #     julia --project=examples examples/04_sqrt_scaled_feasible.jl
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Printf, Random, Statistics
 
 Random.seed!(4)

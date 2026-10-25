@@ -16,7 +16,7 @@
 # accuracy is the largest difference of the coefficients from a solution at
 # opt_tol = 1e-12 (relative to the largest coefficient), and of σ̂.
 
-using CoordinateDescent, ProximalBase, ProximalSolvers
+using HighDimensionalModels, ProximalBase, ProximalSolvers
 using LinearAlgebra, Printf, Random, SparseArrays, Statistics
 
 const QUICK = "quick" in ARGS
@@ -34,14 +34,14 @@ function best_time(f; runs=5, budget=2.0, warmup=true)
   v, best
 end
 
-# the scaled_lasso! of CoordinateDescent 0.6.0: lasso fits at the penalty λσ̂,
+# the scaled_lasso! of HighDimensionalModels 0.6.0: lasso fits at the penalty λσ̂,
 # alternated with σ̂ = ‖y - Xβ̂‖/√n until the relative change of σ̂ is below
 # opt_tol, starting from the residual standard deviation of least squares on the
 # 5 columns most correlated with y
 function alternating!(x, X, y, λ, ω, opt_tol; max_iter=100, options_cd=CDOptions())
   n = size(X, 1)
   f = CDLeastSquaresLoss(y, X)
-  σ = std(CoordinateDescent._find_init_residuals!(X, y, 5, copy(y)))
+  σ = std(HighDimensionalModels._find_init_residuals!(X, y, 5, copy(y)))
   info = CDInfo()
   passes = 0
   for _ in 1:max_iter
@@ -166,6 +166,6 @@ function part2()
   end
 end
 
-println("Julia $VERSION, CoordinateDescent $(pkgversion(CoordinateDescent)), one thread\n")
+println("Julia $VERSION, HighDimensionalModels $(pkgversion(HighDimensionalModels)), one thread\n")
 part1()
 part2()

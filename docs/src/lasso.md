@@ -32,7 +32,7 @@ standardized columns. That needs ``\sigma``. The variants below do not, and a
 [`LassoPath`](@ref) with cross-validation chooses ``\lambda`` from the data (see
 [Paths, screening and solver options](paths.md)).
 
-[`lasso`](@ref) returns a [`CoordinateDescent.LassoSolution`](@ref): the
+[`lasso`](@ref) returns a [`HighDimensionalModels.LassoSolution`](@ref): the
 coefficients `x` (a `SparseIterate`), the `intercept`, the `residuals`,
 ``\hat\sigma`` (the standard deviation of the residuals), the passes of
 coordinate descent and whether it converged. The functions of StatsAPI apply to
@@ -50,7 +50,7 @@ DataFrame, a NamedTuple of vectors or any other Tables.jl table) in place of
 [`group_lasso`](@ref) and [`rlasso`](@ref).
 
 ```julia
-using CoordinateDescent, StatsModels
+using HighDimensionalModels, StatsModels
 m = fit(LassoPath, @formula(y ~ x1 + log(x2) + region), df; nλ = 50)
 coef(m, 0.1), coefnames(m), predict(m, newdf)
 g = group_lasso(@formula(y ~ x1 + region + x2 & region), df, 0.05)   # a group per term

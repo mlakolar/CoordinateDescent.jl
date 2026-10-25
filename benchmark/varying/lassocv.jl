@@ -8,7 +8,13 @@
 #     julia --project=benchmark/varying/old benchmark/varying/lassocv.jl old
 #     julia --project=benchmark/varying/new benchmark/varying/lassocv.jl new
 
-using CoordinateDescent, Printf, Random
+if Base.find_package("HighDimensionalModels") !== nothing
+  @eval using HighDimensionalModels
+  const CoordinateDescent = HighDimensionalModels
+else
+  @eval using CoordinateDescent
+end
+using Printf, Random
 const NEW = ARGS[1] == "new"
 NEW && @eval using KernelSmoothing: EpanechnikovKernel as KSEpa
 
