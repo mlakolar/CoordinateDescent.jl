@@ -78,3 +78,7 @@ root; remote outputs are under
 `/home1/mkolar/juliaPkg/runs/20261025-cd82-selection`. Final reports and raw
 measurements are retained under `discovery-20261025/` here. No routine archive
 or cleanup is part of this campaign.
+
+## Direct package comparisons
+
+The [comparative assessment](compare/RECOMMENDATION.md) reports matched Discovery benchmarks against SLOPE.jl, Knockoffs.jl and R packages, shared-design simulations, a Gaussian-weight calibration follow-up, and recommendations on which components to keep, optimize or replace. The [comparison protocol](compare/README.md) documents the exact settings and recreation commands.

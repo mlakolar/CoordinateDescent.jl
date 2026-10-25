@@ -1,0 +1,595 @@
+rep,case,engine,leaf_samples,file,line,function
+1,cpss,CD-threaded,51,@Base/float.jl,409,+
+1,cpss,CD-threaded,26,@Base/int.jl,87,+
+1,cpss,CD-threaded,26,@Base/essentials.jl,13,getindex
+1,cpss,CD-threaded,26,@Base/array.jl,1021,setindex!
+1,cpss,CD-threaded,24,@Base/float.jl,410,-
+1,cpss,CD,25,@Base/float.jl,409,+
+1,cpss,CD,19,@Base/promotion.jl,521,==
+1,cpss,CD,17,@Base/int.jl,87,+
+1,cpss,CD,15,@Base/float.jl,410,-
+1,cpss,CD,11,@Base/simdloop.jl,75,macro expansion
+1,cpss,GLMNet.jl,262,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+1,cpss,GLMNet.jl,9,@Base/array.jl,411,copy
+1,cpss,GLMNet.jl,3,@Base/promotion.jl,521,==
+1,cpss,GLMNet.jl,3,@Base/array.jl,1021,setindex!
+1,cpss,GLMNet.jl,2,@Base/int.jl,519,<
+1,fixed,CD,49,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+1,fixed,CD,9,…Algebra/src/lapack.jl,3082,"gemqrt!(side::Char, trans::Char, …"
+1,fixed,CD,7,…Algebra/src/lapack.jl,456,"geqrt!(A::Matrix{Float64}, T::Mat…"
+1,fixed,CD,5,…Algebra/src/lapack.jl,3226,"potrf!(uplo::Char, A::Matrix{Floa…"
+1,fixed,CD,4,@Base/cmem.jl,26,memmove
+1,fixed,Knockoffs.jl,79,…Algebra/src/lapack.jl,1660,"gesdd!(job::Char, A::Matrix{Float…"
+1,fixed,Knockoffs.jl,40,…Algebra/src/lapack.jl,2093,"geevx!(balanc::Char, jobvl::Char,…"
+1,fixed,Knockoffs.jl,7,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+1,fixed,Knockoffs.jl,3,@Base/boot.jl,479,Array
+1,fixed,Knockoffs.jl,2,@Base/boot.jl,477,Array
+1,gaussian-1,CD,79,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+1,gaussian-1,CD,9,@Base/array.jl,1024,setindex!
+1,gaussian-1,CD,7,@Base/boot.jl,479,Array
+1,gaussian-1,CD,4,…e/multidimensional.jl,403,iterate
+1,gaussian-1,CD,4,@Base/array.jl,1021,setindex!
+1,gaussian-1,Knockoffs.jl,42,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+1,gaussian-1,Knockoffs.jl,28,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+1,gaussian-1,Knockoffs.jl,13,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+1,gaussian-1,Knockoffs.jl,9,@Base/array.jl,1024,setindex!
+1,gaussian-1,Knockoffs.jl,5,@Base/boot.jl,479,Array
+1,gaussian-1-maxent,Knockoffs.jl,80,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+1,gaussian-1-maxent,Knockoffs.jl,17,…intrin/memory_addr.jl,1184,macro expansion
+1,gaussian-1-maxent,Knockoffs.jl,11,@Base/array.jl,1024,setindex!
+1,gaussian-1-maxent,Knockoffs.jl,9,…intrin/memory_addr.jl,1720,macro expansion
+1,gaussian-1-maxent,Knockoffs.jl,6,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+1,gaussian-1-mvr,Knockoffs.jl,111,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+1,gaussian-1-mvr,Knockoffs.jl,17,…intrin/memory_addr.jl,1184,macro expansion
+1,gaussian-1-mvr,Knockoffs.jl,6,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+1,gaussian-1-mvr,Knockoffs.jl,6,@Base/array.jl,1024,setindex!
+1,gaussian-1-mvr,Knockoffs.jl,5,…intrin/memory_addr.jl,1720,macro expansion
+1,gaussian-2,CD,161,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+1,gaussian-2,CD,7,…Algebra/src/lapack.jl,3276,"potrs!(uplo::Char, A::Matrix{Floa…"
+1,gaussian-2,CD,7,…Algebra/src/lapack.jl,3226,"potrf!(uplo::Char, A::Matrix{Floa…"
+1,gaussian-2,CD,4,…e/multidimensional.jl,403,iterate
+1,gaussian-2,CD,3,@Base/cmem.jl,26,memmove
+1,gaussian-2,Knockoffs.jl,106,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+1,gaussian-2,Knockoffs.jl,29,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+1,gaussian-2,Knockoffs.jl,10,…Algebra/src/lapack.jl,565,getrf!(A::Matrix{Float64}; check:…
+1,gaussian-2,Knockoffs.jl,4,@Base/array.jl,1021,setindex!
+1,gaussian-2,Knockoffs.jl,3,…arAlgebra/src/blas.jl,1408,"ger!(α::Float64, x::SubArray{Floa…"
+1,joint-lasso,CD,53,@Base/float.jl,409,+
+1,joint-lasso,CD,17,@Base/float.jl,410,-
+1,joint-lasso,CD,14,@Base/essentials.jl,13,getindex
+1,joint-lasso,CD,13,@Base/int.jl,87,+
+1,joint-lasso,CD,8,@Base/int.jl,519,<
+1,joint-lasso,GLMNet.jl,187,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+1,joint-lasso,GLMNet.jl,5,@Base/array.jl,411,copy
+1,slope-1,CD,78,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+1,slope-1,CD,25,@Base/array.jl,1024,setindex!
+1,slope-1,CD,12,@Base/array.jl,1021,setindex!
+1,slope-1,CD,9,@Base/boot.jl,477,Array
+1,slope-1,CD,7,@Base/boot.jl,479,Array
+1,slope-1,SLOPE.jl,182,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+1,slope-2,CD,66,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+1,slope-2,CD,22,@Base/essentials.jl,13,getindex
+1,slope-2,CD,19,@Base/array.jl,1021,setindex!
+1,slope-2,CD,8,@Base/array.jl,1024,setindex!
+1,slope-2,CD,7,@Base/boot.jl,477,Array
+1,slope-2,SLOPE.jl,185,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+1,slope-3,CD,80,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+1,slope-3,CD,13,@Base/array.jl,1024,setindex!
+1,slope-3,CD,12,@Base/essentials.jl,13,getindex
+1,slope-3,CD,10,@Base/array.jl,1021,setindex!
+1,slope-3,CD,7,@Base/boot.jl,477,Array
+1,slope-3,SLOPE.jl,181,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+1,slope-4,CD,82,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+1,slope-4,CD,23,@Base/array.jl,1021,setindex!
+1,slope-4,CD,18,@Base/array.jl,1024,setindex!
+1,slope-4,CD,11,@Base/essentials.jl,13,getindex
+1,slope-4,CD,7,@Base/boot.jl,479,Array
+1,slope-4,SLOPE.jl,173,…xxWrap/src/CxxWrap.jl,724,fit_slope_sparse
+2,cpss,CD-threaded,41,@Base/float.jl,409,+
+2,cpss,CD-threaded,34,@Base/array.jl,1021,setindex!
+2,cpss,CD-threaded,28,@Base/promotion.jl,521,==
+2,cpss,CD-threaded,26,@Base/float.jl,410,-
+2,cpss,CD-threaded,22,@Base/int.jl,87,+
+2,cpss,CD,30,@Base/float.jl,409,+
+2,cpss,CD,14,@Base/int.jl,87,+
+2,cpss,CD,13,@Base/promotion.jl,521,==
+2,cpss,CD,13,@Base/essentials.jl,13,getindex
+2,cpss,CD,12,@Base/float.jl,410,-
+2,cpss,GLMNet.jl,273,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+2,cpss,GLMNet.jl,12,@Base/array.jl,411,copy
+2,cpss,GLMNet.jl,7,@Base/array.jl,1021,setindex!
+2,cpss,GLMNet.jl,2,@Base/int.jl,519,<
+2,cpss,GLMNet.jl,2,@Base/boot.jl,479,Array
+2,fixed,CD,42,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+2,fixed,CD,12,…Algebra/src/lapack.jl,456,"geqrt!(A::Matrix{Float64}, T::Mat…"
+2,fixed,CD,6,…arAlgebra/src/blas.jl,1524,"gemm!(transA::Char, transB::Char,…"
+2,fixed,CD,6,@Base/array.jl,1021,setindex!
+2,fixed,CD,4,…e/multidimensional.jl,403,iterate
+2,fixed,Knockoffs.jl,76,…Algebra/src/lapack.jl,1660,"gesdd!(job::Char, A::Matrix{Float…"
+2,fixed,Knockoffs.jl,38,…Algebra/src/lapack.jl,2093,"geevx!(balanc::Char, jobvl::Char,…"
+2,fixed,Knockoffs.jl,5,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+2,fixed,Knockoffs.jl,2,@Base/array.jl,411,copy
+2,gaussian-1,CD,75,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+2,gaussian-1,CD,7,@Base/array.jl,1024,setindex!
+2,gaussian-1,CD,6,@Base/boot.jl,479,Array
+2,gaussian-1,CD,5,…Algebra/src/lapack.jl,3226,"potrf!(uplo::Char, A::Matrix{Floa…"
+2,gaussian-1,CD,5,@Base/int.jl,519,<
+2,gaussian-1,Knockoffs.jl,38,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+2,gaussian-1,Knockoffs.jl,29,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+2,gaussian-1,Knockoffs.jl,10,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+2,gaussian-1,Knockoffs.jl,10,@Base/array.jl,1024,setindex!
+2,gaussian-1,Knockoffs.jl,8,@Base/boot.jl,479,Array
+2,gaussian-1-maxent,Knockoffs.jl,87,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+2,gaussian-1-maxent,Knockoffs.jl,12,…intrin/memory_addr.jl,1184,macro expansion
+2,gaussian-1-maxent,Knockoffs.jl,9,…intrin/memory_addr.jl,1720,macro expansion
+2,gaussian-1-maxent,Knockoffs.jl,9,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+2,gaussian-1-maxent,Knockoffs.jl,7,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+2,gaussian-1-mvr,Knockoffs.jl,116,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+2,gaussian-1-mvr,Knockoffs.jl,12,…intrin/memory_addr.jl,1184,macro expansion
+2,gaussian-1-mvr,Knockoffs.jl,6,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+2,gaussian-1-mvr,Knockoffs.jl,4,…intrin/memory_addr.jl,1720,macro expansion
+2,gaussian-1-mvr,Knockoffs.jl,4,…_intrin/binary_ops.jl,115,macro expansion
+2,gaussian-2,CD,157,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+2,gaussian-2,CD,11,…Algebra/src/lapack.jl,3226,"potrf!(uplo::Char, A::Matrix{Floa…"
+2,gaussian-2,CD,5,…Algebra/src/lapack.jl,3276,"potrs!(uplo::Char, A::Matrix{Floa…"
+2,gaussian-2,CD,3,@Base/array.jl,1021,setindex!
+2,gaussian-2,CD,3,@Base/abstractarray.jl,702,checkbounds
+2,gaussian-2,Knockoffs.jl,97,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+2,gaussian-2,Knockoffs.jl,30,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+2,gaussian-2,Knockoffs.jl,5,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+2,gaussian-2,Knockoffs.jl,5,@Base/array.jl,1024,setindex!
+2,gaussian-2,Knockoffs.jl,4,…Algebra/src/lapack.jl,565,getrf!(A::Matrix{Float64}; check:…
+2,joint-lasso,CD,52,@Base/float.jl,409,+
+2,joint-lasso,CD,17,@Base/essentials.jl,13,getindex
+2,joint-lasso,CD,16,@Base/float.jl,410,-
+2,joint-lasso,CD,11,@Base/simdloop.jl,75,macro expansion
+2,joint-lasso,CD,11,@Base/float.jl,411,*
+2,joint-lasso,GLMNet.jl,191,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+2,slope-1,CD,81,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+2,slope-1,CD,15,@Base/array.jl,1021,setindex!
+2,slope-1,CD,11,@Base/boot.jl,477,Array
+2,slope-1,CD,9,@Base/array.jl,1024,setindex!
+2,slope-1,CD,8,@Base/essentials.jl,13,getindex
+2,slope-1,SLOPE.jl,184,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+2,slope-2,CD,55,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+2,slope-2,CD,19,@Base/array.jl,1021,setindex!
+2,slope-2,CD,17,@Base/essentials.jl,13,getindex
+2,slope-2,CD,10,@Base/array.jl,1024,setindex!
+2,slope-2,CD,7,@Base/boot.jl,477,Array
+2,slope-2,SLOPE.jl,179,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+2,slope-3,CD,75,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+2,slope-3,CD,16,@Base/essentials.jl,13,getindex
+2,slope-3,CD,13,@Base/array.jl,1024,setindex!
+2,slope-3,CD,12,@Base/boot.jl,477,Array
+2,slope-3,CD,9,@Base/array.jl,1021,setindex!
+2,slope-3,SLOPE.jl,181,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+2,slope-4,CD,80,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+2,slope-4,CD,18,@Base/array.jl,1024,setindex!
+2,slope-4,CD,17,@Base/array.jl,1021,setindex!
+2,slope-4,CD,9,@Base/essentials.jl,13,getindex
+2,slope-4,CD,8,@Base/boot.jl,479,Array
+2,slope-4,SLOPE.jl,177,…xxWrap/src/CxxWrap.jl,724,fit_slope_sparse
+3,cpss,CD-threaded,41,@Base/float.jl,409,+
+3,cpss,CD-threaded,37,@Base/int.jl,87,+
+3,cpss,CD-threaded,27,@Base/promotion.jl,521,==
+3,cpss,CD-threaded,26,@Base/essentials.jl,13,getindex
+3,cpss,CD-threaded,25,@Base/array.jl,1021,setindex!
+3,cpss,CD,19,@Base/float.jl,411,*
+3,cpss,CD,18,@Base/float.jl,409,+
+3,cpss,CD,17,@Base/promotion.jl,521,==
+3,cpss,CD,17,@Base/int.jl,87,+
+3,cpss,CD,17,@Base/int.jl,519,<
+3,cpss,GLMNet.jl,267,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+3,cpss,GLMNet.jl,6,@Base/array.jl,411,copy
+3,cpss,GLMNet.jl,4,@Base/promotion.jl,521,==
+3,fixed,CD,52,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+3,fixed,CD,10,…Algebra/src/lapack.jl,456,"geqrt!(A::Matrix{Float64}, T::Mat…"
+3,fixed,CD,7,@Base/cmem.jl,26,memmove
+3,fixed,CD,6,…Algebra/src/lapack.jl,3082,"gemqrt!(side::Char, trans::Char, …"
+3,fixed,CD,5,@Base/int.jl,520,<=
+3,fixed,Knockoffs.jl,67,…Algebra/src/lapack.jl,1660,"gesdd!(job::Char, A::Matrix{Float…"
+3,fixed,Knockoffs.jl,35,…Algebra/src/lapack.jl,2093,"geevx!(balanc::Char, jobvl::Char,…"
+3,fixed,Knockoffs.jl,7,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+3,fixed,Knockoffs.jl,3,@Base/boot.jl,477,Array
+3,fixed,Knockoffs.jl,2,…arAlgebra/src/blas.jl,1524,"gemm!(transA::Char, transB::Char,…"
+3,gaussian-1,CD,73,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+3,gaussian-1,CD,9,@Base/array.jl,1024,setindex!
+3,gaussian-1,CD,6,…Algebra/src/lapack.jl,3276,"potrs!(uplo::Char, A::Matrix{Floa…"
+3,gaussian-1,CD,5,@Base/boot.jl,479,Array
+3,gaussian-1,CD,3,@Base/int.jl,520,<=
+3,gaussian-1,Knockoffs.jl,39,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+3,gaussian-1,Knockoffs.jl,29,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+3,gaussian-1,Knockoffs.jl,14,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+3,gaussian-1,Knockoffs.jl,10,@Base/array.jl,1024,setindex!
+3,gaussian-1,Knockoffs.jl,6,@Base/boot.jl,479,Array
+3,gaussian-1-maxent,Knockoffs.jl,88,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+3,gaussian-1-maxent,Knockoffs.jl,15,…intrin/memory_addr.jl,1184,macro expansion
+3,gaussian-1-maxent,Knockoffs.jl,8,…intrin/memory_addr.jl,1720,macro expansion
+3,gaussian-1-maxent,Knockoffs.jl,8,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+3,gaussian-1-maxent,Knockoffs.jl,4,…ntrin/intrin_funcs.jl,437,macro expansion
+3,gaussian-1-mvr,Knockoffs.jl,117,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+3,gaussian-1-mvr,Knockoffs.jl,7,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+3,gaussian-1-mvr,Knockoffs.jl,6,…intrin/memory_addr.jl,1720,macro expansion
+3,gaussian-1-mvr,Knockoffs.jl,6,…intrin/memory_addr.jl,1184,macro expansion
+3,gaussian-1-mvr,Knockoffs.jl,6,@Base/array.jl,1024,setindex!
+3,gaussian-2,CD,150,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+3,gaussian-2,CD,7,…Algebra/src/lapack.jl,3226,"potrf!(uplo::Char, A::Matrix{Floa…"
+3,gaussian-2,CD,4,…e/multidimensional.jl,403,iterate
+3,gaussian-2,CD,3,…Algebra/src/lapack.jl,3276,"potrs!(uplo::Char, A::Matrix{Floa…"
+3,gaussian-2,CD,3,@Base/array.jl,1024,setindex!
+3,gaussian-2,Knockoffs.jl,95,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+3,gaussian-2,Knockoffs.jl,32,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+3,gaussian-2,Knockoffs.jl,8,@Base/array.jl,1024,setindex!
+3,gaussian-2,Knockoffs.jl,7,…Algebra/src/lapack.jl,565,getrf!(A::Matrix{Float64}; check:…
+3,gaussian-2,Knockoffs.jl,3,…e/multidimensional.jl,403,iterate
+3,joint-lasso,CD,52,@Base/float.jl,409,+
+3,joint-lasso,CD,16,@Base/float.jl,410,-
+3,joint-lasso,CD,15,@Base/float.jl,411,*
+3,joint-lasso,CD,15,@Base/essentials.jl,13,getindex
+3,joint-lasso,CD,10,@Base/int.jl,87,+
+3,joint-lasso,GLMNet.jl,187,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+3,joint-lasso,GLMNet.jl,3,@Base/array.jl,411,copy
+3,slope-1,CD,78,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+3,slope-1,CD,18,@Base/array.jl,1021,setindex!
+3,slope-1,CD,15,@Base/array.jl,1024,setindex!
+3,slope-1,CD,9,@Base/cmem.jl,26,memmove
+3,slope-1,CD,9,@Base/boot.jl,477,Array
+3,slope-1,SLOPE.jl,175,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+3,slope-2,CD,58,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+3,slope-2,CD,23,@Base/essentials.jl,13,getindex
+3,slope-2,CD,16,@Base/array.jl,1021,setindex!
+3,slope-2,CD,12,@Base/boot.jl,477,Array
+3,slope-2,CD,10,@Base/cmem.jl,26,memmove
+3,slope-2,SLOPE.jl,187,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+3,slope-3,CD,95,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+3,slope-3,CD,12,@Base/array.jl,1024,setindex!
+3,slope-3,CD,10,@Base/essentials.jl,13,getindex
+3,slope-3,CD,8,@Base/float.jl,410,-
+3,slope-3,CD,8,@Base/array.jl,1021,setindex!
+3,slope-3,SLOPE.jl,182,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+3,slope-4,CD,82,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+3,slope-4,CD,24,@Base/array.jl,1021,setindex!
+3,slope-4,CD,19,@Base/array.jl,1024,setindex!
+3,slope-4,CD,13,@Base/essentials.jl,13,getindex
+3,slope-4,CD,8,@Base/boot.jl,479,Array
+3,slope-4,SLOPE.jl,172,…xxWrap/src/CxxWrap.jl,724,fit_slope_sparse
+4,cpss,CD-threaded,41,@Base/array.jl,1021,setindex!
+4,cpss,CD-threaded,37,@Base/float.jl,409,+
+4,cpss,CD-threaded,28,@Base/int.jl,87,+
+4,cpss,CD-threaded,26,@Base/promotion.jl,521,==
+4,cpss,CD-threaded,17,@Base/float.jl,410,-
+4,cpss,CD,21,@Base/int.jl,87,+
+4,cpss,CD,20,@Base/int.jl,519,<
+4,cpss,CD,18,@Base/float.jl,409,+
+4,cpss,CD,14,@Base/float.jl,410,-
+4,cpss,CD,13,@Base/array.jl,1021,setindex!
+4,cpss,GLMNet.jl,265,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+4,cpss,GLMNet.jl,9,@Base/array.jl,411,copy
+4,cpss,GLMNet.jl,6,@Base/array.jl,1021,setindex!
+4,cpss,GLMNet.jl,3,@Base/int.jl,519,<
+4,cpss,GLMNet.jl,2,@Base/promotion.jl,521,==
+4,fixed,CD,44,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+4,fixed,CD,10,…Algebra/src/lapack.jl,456,"geqrt!(A::Matrix{Float64}, T::Mat…"
+4,fixed,CD,9,…Algebra/src/lapack.jl,3082,"gemqrt!(side::Char, trans::Char, …"
+4,fixed,CD,5,…Algebra/src/lapack.jl,3276,"potrs!(uplo::Char, A::Matrix{Floa…"
+4,fixed,CD,5,@Base/cmem.jl,26,memmove
+4,fixed,Knockoffs.jl,80,…Algebra/src/lapack.jl,1660,"gesdd!(job::Char, A::Matrix{Float…"
+4,fixed,Knockoffs.jl,35,…Algebra/src/lapack.jl,2093,"geevx!(balanc::Char, jobvl::Char,…"
+4,fixed,Knockoffs.jl,8,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+4,fixed,Knockoffs.jl,2,…arAlgebra/src/blas.jl,1524,"gemm!(transA::Char, transB::Char,…"
+4,fixed,Knockoffs.jl,2,@Base/array.jl,1024,setindex!
+4,gaussian-1,CD,70,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+4,gaussian-1,CD,9,@Base/array.jl,1024,setindex!
+4,gaussian-1,CD,7,@Base/boot.jl,479,Array
+4,gaussian-1,CD,5,…Algebra/src/lapack.jl,3226,"potrf!(uplo::Char, A::Matrix{Floa…"
+4,gaussian-1,CD,5,@Base/array.jl,1021,setindex!
+4,gaussian-1,Knockoffs.jl,34,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+4,gaussian-1,Knockoffs.jl,24,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+4,gaussian-1,Knockoffs.jl,18,@Base/array.jl,1024,setindex!
+4,gaussian-1,Knockoffs.jl,15,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+4,gaussian-1,Knockoffs.jl,7,@Base/cmem.jl,26,memmove
+4,gaussian-1-maxent,Knockoffs.jl,81,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+4,gaussian-1-maxent,Knockoffs.jl,18,…intrin/memory_addr.jl,1184,macro expansion
+4,gaussian-1-maxent,Knockoffs.jl,10,…intrin/memory_addr.jl,1720,macro expansion
+4,gaussian-1-maxent,Knockoffs.jl,8,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+4,gaussian-1-maxent,Knockoffs.jl,7,@Base/array.jl,1024,setindex!
+4,gaussian-1-mvr,Knockoffs.jl,124,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+4,gaussian-1-mvr,Knockoffs.jl,19,…intrin/memory_addr.jl,1184,macro expansion
+4,gaussian-1-mvr,Knockoffs.jl,8,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+4,gaussian-1-mvr,Knockoffs.jl,6,…intrin/memory_addr.jl,1720,macro expansion
+4,gaussian-1-mvr,Knockoffs.jl,6,@Base/array.jl,1024,setindex!
+4,gaussian-2,CD,161,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+4,gaussian-2,CD,8,…Algebra/src/lapack.jl,3226,"potrf!(uplo::Char, A::Matrix{Floa…"
+4,gaussian-2,CD,7,…Algebra/src/lapack.jl,3276,"potrs!(uplo::Char, A::Matrix{Floa…"
+4,gaussian-2,CD,4,@Base/array.jl,1021,setindex!
+4,gaussian-2,CD,3,@Base/int.jl,520,<=
+4,gaussian-2,Knockoffs.jl,97,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+4,gaussian-2,Knockoffs.jl,27,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+4,gaussian-2,Knockoffs.jl,5,@Base/array.jl,1024,setindex!
+4,gaussian-2,Knockoffs.jl,4,…Algebra/src/lapack.jl,565,getrf!(A::Matrix{Float64}; check:…
+4,gaussian-2,Knockoffs.jl,3,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+4,joint-lasso,CD,42,@Base/float.jl,409,+
+4,joint-lasso,CD,21,@Base/float.jl,410,-
+4,joint-lasso,CD,17,@Base/essentials.jl,13,getindex
+4,joint-lasso,CD,12,@Base/int.jl,87,+
+4,joint-lasso,CD,12,@Base/float.jl,411,*
+4,joint-lasso,GLMNet.jl,186,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+4,joint-lasso,GLMNet.jl,2,@Base/array.jl,411,copy
+4,slope-1,CD,86,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+4,slope-1,CD,17,@Base/array.jl,1021,setindex!
+4,slope-1,CD,13,@Base/cmem.jl,26,memmove
+4,slope-1,CD,12,@Base/array.jl,1024,setindex!
+4,slope-1,CD,8,@Base/boot.jl,477,Array
+4,slope-1,SLOPE.jl,178,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+4,slope-1,SLOPE.jl,2,@Base/boot.jl,477,Array
+4,slope-2,CD,60,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+4,slope-2,CD,19,@Base/essentials.jl,13,getindex
+4,slope-2,CD,18,@Base/array.jl,1021,setindex!
+4,slope-2,CD,12,@Base/array.jl,1024,setindex!
+4,slope-2,CD,11,@Base/boot.jl,477,Array
+4,slope-2,SLOPE.jl,181,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+4,slope-3,CD,81,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+4,slope-3,CD,12,@Base/array.jl,1021,setindex!
+4,slope-3,CD,10,@Base/boot.jl,477,Array
+4,slope-3,CD,9,@Base/essentials.jl,13,getindex
+4,slope-3,CD,7,@Base/array.jl,1024,setindex!
+4,slope-3,SLOPE.jl,174,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+4,slope-3,SLOPE.jl,3,@Base/array.jl,1021,setindex!
+4,slope-4,CD,88,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+4,slope-4,CD,19,@Base/array.jl,1021,setindex!
+4,slope-4,CD,18,@Base/array.jl,1024,setindex!
+4,slope-4,CD,9,@Base/essentials.jl,13,getindex
+4,slope-4,CD,7,@Base/boot.jl,479,Array
+4,slope-4,SLOPE.jl,170,…xxWrap/src/CxxWrap.jl,724,fit_slope_sparse
+4,slope-4,SLOPE.jl,2,@Base/boot.jl,479,Array
+5,cpss,CD-threaded,54,@Base/float.jl,409,+
+5,cpss,CD-threaded,37,@Base/array.jl,1021,setindex!
+5,cpss,CD-threaded,29,@Base/float.jl,410,-
+5,cpss,CD-threaded,25,@Base/int.jl,87,+
+5,cpss,CD-threaded,23,@Base/promotion.jl,521,==
+5,cpss,CD,26,@Base/float.jl,409,+
+5,cpss,CD,17,@Base/int.jl,87,+
+5,cpss,CD,17,@Base/int.jl,519,<
+5,cpss,CD,14,@Base/promotion.jl,521,==
+5,cpss,CD,11,@Base/array.jl,1021,setindex!
+5,cpss,GLMNet.jl,251,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+5,cpss,GLMNet.jl,9,@Base/array.jl,411,copy
+5,cpss,GLMNet.jl,6,@Base/promotion.jl,521,==
+5,fixed,CD,50,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+5,fixed,CD,11,…Algebra/src/lapack.jl,456,"geqrt!(A::Matrix{Float64}, T::Mat…"
+5,fixed,CD,8,…Algebra/src/lapack.jl,3082,"gemqrt!(side::Char, trans::Char, …"
+5,fixed,CD,7,@Base/cmem.jl,26,memmove
+5,fixed,CD,4,…e/multidimensional.jl,403,iterate
+5,fixed,Knockoffs.jl,71,…Algebra/src/lapack.jl,1660,"gesdd!(job::Char, A::Matrix{Float…"
+5,fixed,Knockoffs.jl,34,…Algebra/src/lapack.jl,2093,"geevx!(balanc::Char, jobvl::Char,…"
+5,fixed,Knockoffs.jl,7,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+5,gaussian-1,CD,70,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+5,gaussian-1,CD,8,@Base/boot.jl,479,Array
+5,gaussian-1,CD,6,…e/multidimensional.jl,403,iterate
+5,gaussian-1,CD,6,@Base/array.jl,1024,setindex!
+5,gaussian-1,CD,6,@Base/array.jl,1021,setindex!
+5,gaussian-1,Knockoffs.jl,36,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+5,gaussian-1,Knockoffs.jl,24,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+5,gaussian-1,Knockoffs.jl,17,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+5,gaussian-1,Knockoffs.jl,14,@Base/array.jl,1024,setindex!
+5,gaussian-1,Knockoffs.jl,6,@Base/cmem.jl,26,memmove
+5,gaussian-1-maxent,Knockoffs.jl,80,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+5,gaussian-1-maxent,Knockoffs.jl,22,…intrin/memory_addr.jl,1184,macro expansion
+5,gaussian-1-maxent,Knockoffs.jl,11,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+5,gaussian-1-maxent,Knockoffs.jl,9,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+5,gaussian-1-maxent,Knockoffs.jl,8,…intrin/memory_addr.jl,1720,macro expansion
+5,gaussian-1-mvr,Knockoffs.jl,122,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+5,gaussian-1-mvr,Knockoffs.jl,13,…intrin/memory_addr.jl,1184,macro expansion
+5,gaussian-1-mvr,Knockoffs.jl,9,…intrin/memory_addr.jl,1720,macro expansion
+5,gaussian-1-mvr,Knockoffs.jl,7,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+5,gaussian-1-mvr,Knockoffs.jl,5,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+5,gaussian-2,CD,147,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+5,gaussian-2,CD,4,…Algebra/src/lapack.jl,3276,"potrs!(uplo::Char, A::Matrix{Floa…"
+5,gaussian-2,CD,4,…Algebra/src/lapack.jl,3226,"potrf!(uplo::Char, A::Matrix{Floa…"
+5,gaussian-2,CD,4,@Base/array.jl,1021,setindex!
+5,gaussian-2,CD,3,@Base/int.jl,520,<=
+5,gaussian-2,Knockoffs.jl,100,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+5,gaussian-2,Knockoffs.jl,26,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+5,gaussian-2,Knockoffs.jl,5,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+5,gaussian-2,Knockoffs.jl,5,…Algebra/src/lapack.jl,565,getrf!(A::Matrix{Float64}; check:…
+5,gaussian-2,Knockoffs.jl,4,@Base/array.jl,1024,setindex!
+5,joint-lasso,CD,51,@Base/float.jl,409,+
+5,joint-lasso,CD,20,@Base/float.jl,410,-
+5,joint-lasso,CD,20,@Base/essentials.jl,13,getindex
+5,joint-lasso,CD,12,@Base/float.jl,411,*
+5,joint-lasso,CD,8,@Base/simdloop.jl,75,macro expansion
+5,joint-lasso,GLMNet.jl,185,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+5,slope-1,CD,71,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+5,slope-1,CD,19,@Base/array.jl,1021,setindex!
+5,slope-1,CD,14,@Base/array.jl,1024,setindex!
+5,slope-1,CD,11,@Base/cmem.jl,26,memmove
+5,slope-1,CD,8,@Base/essentials.jl,13,getindex
+5,slope-1,SLOPE.jl,180,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+5,slope-2,CD,56,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+5,slope-2,CD,27,@Base/essentials.jl,13,getindex
+5,slope-2,CD,17,@Base/array.jl,1024,setindex!
+5,slope-2,CD,15,@Base/array.jl,1021,setindex!
+5,slope-2,CD,8,@Base/boot.jl,477,Array
+5,slope-2,SLOPE.jl,176,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+5,slope-3,CD,73,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+5,slope-3,CD,14,@Base/array.jl,1021,setindex!
+5,slope-3,CD,12,@Base/array.jl,1024,setindex!
+5,slope-3,CD,7,@Base/essentials.jl,13,getindex
+5,slope-3,CD,7,@Base/boot.jl,477,Array
+5,slope-3,SLOPE.jl,180,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+5,slope-4,CD,80,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+5,slope-4,CD,27,@Base/array.jl,1021,setindex!
+5,slope-4,CD,19,@Base/array.jl,1024,setindex!
+5,slope-4,CD,14,@Base/essentials.jl,13,getindex
+5,slope-4,CD,9,@Base/boot.jl,479,Array
+5,slope-4,SLOPE.jl,172,…xxWrap/src/CxxWrap.jl,724,fit_slope_sparse
+6,cpss,CD-threaded,38,@Base/float.jl,409,+
+6,cpss,CD-threaded,37,@Base/int.jl,87,+
+6,cpss,CD-threaded,31,@Base/array.jl,1021,setindex!
+6,cpss,CD-threaded,25,@Base/promotion.jl,521,==
+6,cpss,CD-threaded,19,@Base/float.jl,410,-
+6,cpss,CD,19,@Base/float.jl,409,+
+6,cpss,CD,17,@Base/array.jl,1021,setindex!
+6,cpss,CD,14,@Base/int.jl,87,+
+6,cpss,CD,13,@Base/promotion.jl,521,==
+6,cpss,CD,13,@Base/int.jl,519,<
+6,cpss,GLMNet.jl,251,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+6,cpss,GLMNet.jl,6,@Base/array.jl,411,copy
+6,cpss,GLMNet.jl,4,@Base/essentials.jl,14,getindex
+6,cpss,GLMNet.jl,3,@Base/int.jl,519,<
+6,cpss,GLMNet.jl,2,@Base/promotion.jl,521,==
+6,fixed,CD,49,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+6,fixed,CD,15,…Algebra/src/lapack.jl,456,"geqrt!(A::Matrix{Float64}, T::Mat…"
+6,fixed,CD,8,…Algebra/src/lapack.jl,3082,"gemqrt!(side::Char, trans::Char, …"
+6,fixed,CD,4,@Base/cmem.jl,26,memmove
+6,fixed,CD,4,@Base/boot.jl,479,Array
+6,fixed,Knockoffs.jl,77,…Algebra/src/lapack.jl,1660,"gesdd!(job::Char, A::Matrix{Float…"
+6,fixed,Knockoffs.jl,38,…Algebra/src/lapack.jl,2093,"geevx!(balanc::Char, jobvl::Char,…"
+6,fixed,Knockoffs.jl,5,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+6,fixed,Knockoffs.jl,2,@Base/array.jl,1024,setindex!
+6,gaussian-1,CD,77,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+6,gaussian-1,CD,7,…arAlgebra/src/blas.jl,1524,"gemm!(transA::Char, transB::Char,…"
+6,gaussian-1,CD,5,…Algebra/src/lapack.jl,3226,"potrf!(uplo::Char, A::Matrix{Floa…"
+6,gaussian-1,CD,4,@Base/array.jl,1024,setindex!
+6,gaussian-1,CD,3,…Algebra/src/lapack.jl,3276,"potrs!(uplo::Char, A::Matrix{Floa…"
+6,gaussian-1,Knockoffs.jl,34,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+6,gaussian-1,Knockoffs.jl,27,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+6,gaussian-1,Knockoffs.jl,13,@Base/array.jl,1024,setindex!
+6,gaussian-1,Knockoffs.jl,9,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+6,gaussian-1,Knockoffs.jl,6,…Algebra/src/lapack.jl,565,getrf!(A::Matrix{Float64}; check:…
+6,gaussian-1-maxent,Knockoffs.jl,86,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+6,gaussian-1-maxent,Knockoffs.jl,15,…intrin/memory_addr.jl,1184,macro expansion
+6,gaussian-1-maxent,Knockoffs.jl,10,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+6,gaussian-1-maxent,Knockoffs.jl,6,…intrin/memory_addr.jl,1720,macro expansion
+6,gaussian-1-maxent,Knockoffs.jl,5,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+6,gaussian-1-mvr,Knockoffs.jl,106,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+6,gaussian-1-mvr,Knockoffs.jl,9,…intrin/memory_addr.jl,1184,macro expansion
+6,gaussian-1-mvr,Knockoffs.jl,7,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+6,gaussian-1-mvr,Knockoffs.jl,7,@Base/array.jl,1024,setindex!
+6,gaussian-1-mvr,Knockoffs.jl,5,…intrin/memory_addr.jl,1720,macro expansion
+6,gaussian-2,CD,156,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+6,gaussian-2,CD,6,…e/multidimensional.jl,403,iterate
+6,gaussian-2,CD,4,@Base/array.jl,1021,setindex!
+6,gaussian-2,CD,3,…arAlgebra/src/blas.jl,1524,"gemm!(transA::Char, transB::Char,…"
+6,gaussian-2,CD,3,…Algebra/src/lapack.jl,3276,"potrs!(uplo::Char, A::Matrix{Floa…"
+6,gaussian-2,Knockoffs.jl,97,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+6,gaussian-2,Knockoffs.jl,21,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+6,gaussian-2,Knockoffs.jl,5,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+6,gaussian-2,Knockoffs.jl,5,…Algebra/src/lapack.jl,565,getrf!(A::Matrix{Float64}; check:…
+6,gaussian-2,Knockoffs.jl,5,@Base/array.jl,1024,setindex!
+6,joint-lasso,CD,57,@Base/float.jl,409,+
+6,joint-lasso,CD,21,@Base/float.jl,410,-
+6,joint-lasso,CD,17,@Base/essentials.jl,13,getindex
+6,joint-lasso,CD,10,@Base/float.jl,411,*
+6,joint-lasso,CD,9,@Base/int.jl,87,+
+6,joint-lasso,GLMNet.jl,190,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+6,joint-lasso,GLMNet.jl,5,@Base/array.jl,411,copy
+6,slope-1,CD,77,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+6,slope-1,CD,17,@Base/array.jl,1021,setindex!
+6,slope-1,CD,14,@Base/array.jl,1024,setindex!
+6,slope-1,CD,12,@Base/essentials.jl,13,getindex
+6,slope-1,CD,12,@Base/cmem.jl,26,memmove
+6,slope-1,SLOPE.jl,182,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+6,slope-2,CD,55,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+6,slope-2,CD,22,@Base/array.jl,1021,setindex!
+6,slope-2,CD,17,@Base/essentials.jl,13,getindex
+6,slope-2,CD,13,@Base/array.jl,1024,setindex!
+6,slope-2,CD,10,@Base/int.jl,519,<
+6,slope-2,SLOPE.jl,189,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+6,slope-3,CD,82,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+6,slope-3,CD,20,@Base/array.jl,1024,setindex!
+6,slope-3,CD,12,@Base/array.jl,1021,setindex!
+6,slope-3,CD,9,@Base/essentials.jl,13,getindex
+6,slope-3,CD,9,@Base/boot.jl,477,Array
+6,slope-3,SLOPE.jl,178,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+6,slope-4,CD,86,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+6,slope-4,CD,21,@Base/array.jl,1021,setindex!
+6,slope-4,CD,19,@Base/array.jl,1024,setindex!
+6,slope-4,CD,11,@Base/essentials.jl,13,getindex
+6,slope-4,CD,7,@Base/boot.jl,479,Array
+6,slope-4,SLOPE.jl,179,…xxWrap/src/CxxWrap.jl,724,fit_slope_sparse
+7,cpss,CD-threaded,34,@Base/float.jl,409,+
+7,cpss,CD-threaded,29,@Base/int.jl,87,+
+7,cpss,CD-threaded,29,@Base/array.jl,1021,setindex!
+7,cpss,CD-threaded,28,@Base/promotion.jl,521,==
+7,cpss,CD-threaded,22,@Base/float.jl,410,-
+7,cpss,CD,33,@Base/float.jl,409,+
+7,cpss,CD,18,@Base/promotion.jl,521,==
+7,cpss,CD,18,@Base/int.jl,87,+
+7,cpss,CD,15,@Base/float.jl,410,-
+7,cpss,CD,12,@Base/array.jl,1021,setindex!
+7,cpss,GLMNet.jl,259,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+7,cpss,GLMNet.jl,8,@Base/array.jl,411,copy
+7,cpss,GLMNet.jl,6,@Base/promotion.jl,521,==
+7,fixed,CD,49,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+7,fixed,CD,9,…Algebra/src/lapack.jl,456,"geqrt!(A::Matrix{Float64}, T::Mat…"
+7,fixed,CD,7,…Algebra/src/lapack.jl,3082,"gemqrt!(side::Char, trans::Char, …"
+7,fixed,CD,5,@Base/cmem.jl,26,memmove
+7,fixed,CD,4,…Algebra/src/lapack.jl,3226,"potrf!(uplo::Char, A::Matrix{Floa…"
+7,fixed,Knockoffs.jl,79,…Algebra/src/lapack.jl,1660,"gesdd!(job::Char, A::Matrix{Float…"
+7,fixed,Knockoffs.jl,34,…Algebra/src/lapack.jl,2093,"geevx!(balanc::Char, jobvl::Char,…"
+7,fixed,Knockoffs.jl,5,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+7,fixed,Knockoffs.jl,2,@Base/boot.jl,479,Array
+7,gaussian-1,CD,67,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+7,gaussian-1,CD,15,@Base/array.jl,1024,setindex!
+7,gaussian-1,CD,8,…Algebra/src/lapack.jl,3226,"potrf!(uplo::Char, A::Matrix{Floa…"
+7,gaussian-1,CD,5,…arAlgebra/src/blas.jl,1524,"gemm!(transA::Char, transB::Char,…"
+7,gaussian-1,CD,5,@Base/boot.jl,479,Array
+7,gaussian-1,Knockoffs.jl,39,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+7,gaussian-1,Knockoffs.jl,28,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+7,gaussian-1,Knockoffs.jl,10,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+7,gaussian-1,Knockoffs.jl,10,@Base/array.jl,1024,setindex!
+7,gaussian-1,Knockoffs.jl,8,@Base/boot.jl,479,Array
+7,gaussian-1-maxent,Knockoffs.jl,86,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+7,gaussian-1-maxent,Knockoffs.jl,13,…intrin/memory_addr.jl,1184,macro expansion
+7,gaussian-1-maxent,Knockoffs.jl,12,…intrin/memory_addr.jl,1720,macro expansion
+7,gaussian-1-maxent,Knockoffs.jl,11,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+7,gaussian-1-maxent,Knockoffs.jl,6,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+7,gaussian-1-mvr,Knockoffs.jl,106,…Algebra/src/lapack.jl,3557,"trtrs!(uplo::Char, trans::Char, d…"
+7,gaussian-1-mvr,Knockoffs.jl,8,…intrin/memory_addr.jl,1184,macro expansion
+7,gaussian-1-mvr,Knockoffs.jl,8,@Base/array.jl,1024,setindex!
+7,gaussian-1-mvr,Knockoffs.jl,6,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+7,gaussian-1-mvr,Knockoffs.jl,4,…intrin/memory_addr.jl,1720,macro expansion
+7,gaussian-2,CD,155,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+7,gaussian-2,CD,4,@Base/array.jl,1021,setindex!
+7,gaussian-2,CD,3,…e/multidimensional.jl,403,iterate
+7,gaussian-2,CD,3,@Base/cmem.jl,26,memmove
+7,gaussian-2,CD,2,…e/multidimensional.jl,?,__inc
+7,gaussian-2,Knockoffs.jl,96,…Algebra/src/lapack.jl,5245,"syevr!(jobz::Char, range::Char, u…"
+7,gaussian-2,Knockoffs.jl,31,…Algebra/src/lapack.jl,1044,"getri!(A::Matrix{Float64}, ipiv::…"
+7,gaussian-2,Knockoffs.jl,7,…Algebra/src/lapack.jl,565,getrf!(A::Matrix{Float64}; check:…
+7,gaussian-2,Knockoffs.jl,5,…arAlgebra/src/blas.jl,2071,"trmm!(side::Char, uplo::Char, tra…"
+7,gaussian-2,Knockoffs.jl,5,@Base/array.jl,1024,setindex!
+7,joint-lasso,CD,57,@Base/float.jl,409,+
+7,joint-lasso,CD,18,@Base/float.jl,410,-
+7,joint-lasso,CD,14,@Base/essentials.jl,13,getindex
+7,joint-lasso,CD,12,@Base/int.jl,87,+
+7,joint-lasso,CD,10,@Base/float.jl,411,*
+7,joint-lasso,GLMNet.jl,189,@GLMNet/src/GLMNet.jl,291,"glmnet!(X::Matrix{Float64}, y::Ve…"
+7,slope-1,CD,76,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+7,slope-1,CD,16,@Base/array.jl,1024,setindex!
+7,slope-1,CD,15,@Base/array.jl,1021,setindex!
+7,slope-1,CD,8,@Base/boot.jl,477,Array
+7,slope-1,CD,7,@Base/boot.jl,479,Array
+7,slope-1,SLOPE.jl,175,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+7,slope-1,SLOPE.jl,2,@Base/boot.jl,479,Array
+7,slope-1,SLOPE.jl,1,@Base/array.jl,2027,"hcat(::Vector{Float64}, ::Vector{…"
+7,slope-2,CD,64,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+7,slope-2,CD,15,@Base/array.jl,1021,setindex!
+7,slope-2,CD,12,@Base/essentials.jl,13,getindex
+7,slope-2,CD,11,@Base/array.jl,1024,setindex!
+7,slope-2,CD,8,@Base/promotion.jl,521,==
+7,slope-2,SLOPE.jl,173,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+7,slope-3,CD,83,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+7,slope-3,CD,11,@Base/essentials.jl,13,getindex
+7,slope-3,CD,11,@Base/array.jl,1024,setindex!
+7,slope-3,CD,10,@Base/array.jl,1021,setindex!
+7,slope-3,CD,8,@Base/boot.jl,477,Array
+7,slope-3,SLOPE.jl,175,…xxWrap/src/CxxWrap.jl,724,fit_slope_dense
+7,slope-4,CD,90,…arAlgebra/src/blas.jl,667,"gemv!(trans::Char, alpha::Float64…"
+7,slope-4,CD,29,@Base/array.jl,1021,setindex!
+7,slope-4,CD,18,@Base/array.jl,1024,setindex!
+7,slope-4,CD,12,@Base/essentials.jl,13,getindex
+7,slope-4,CD,8,@Base/boot.jl,479,Array
+7,slope-4,SLOPE.jl,173,…xxWrap/src/CxxWrap.jl,724,fit_slope_sparse
+7,slope-4,SLOPE.jl,2,…s/src/sparsematrix.jl,?,"sparse!(I::Vector{Int64}, J::Vect…"
