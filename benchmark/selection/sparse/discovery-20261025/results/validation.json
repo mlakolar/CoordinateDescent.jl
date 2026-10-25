@@ -13,5 +13,7 @@
   "original_sparse_parity_with_SLOPE_jl": true,
   "largest_design_bytes": 637184,
   "largest_workspace_bytes": 1517840,
-  "largest_dense_equivalent_bytes": 1600000000
+  "largest_dense_equivalent_bytes": 1600000000,
+  "standalone_memory_validation": "../fit-only-memory/results/validation.json",
+  "original_memory_scope": "Historical harness RSS; superseded for cross-backend RSS conclusions by standalone fit-only cohort"
 }

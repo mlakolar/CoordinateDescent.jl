@@ -1,0 +1,54 @@
+{
+  "source_head": "8a6589c244f55dcaa1b8798b4fd8dcaf15fc4606",
+  "checks": [
+    {
+      "name": "codecov/project",
+      "conclusion": "failure",
+      "url": "https://github.com/mlakolar/HighDimensionalModels.jl/runs/121191223242",
+      "summary": "[View this Pull Request on Codecov](https://app.codecov.io/gh/mlakolar/HighDimensionalModels.jl/pull/84?dropdown=coverage&src=pr&el=h1&utm_medium=referral&utm_source=github&utm_content=checks&utm_campaign=pr+comments&utm_term=Mladen+Kolar)\n\n99.75% (-0.14%) compared to c408831",
+      "text": "## [Codecov](https://app.codecov.io/gh/mlakolar/HighDimensionalModels.jl/pull/84?dropdown=coverage&src=pr&el=h1&utm_medium=referral&utm_source=github&utm_content=checks&utm_campaign=pr+comments&utm_term=Mladen+Kolar) Report\n:white_check_mark: All modified and coverable lines are covered by tests.\n:white_check_mark: Project coverage is 99.75%. Comparing base ([`c408831`](https://app.codecov.io/gh/mlakolar/HighDimensionalModels.jl/commit/c408831e2b011e83fa427248bf074dc0fc91d870?dropdown=coverage&el=desc&utm_medium=referral&utm_source=github&utm_content=checks&utm_campaign=pr+comments&utm_term=Mladen+Kolar)) to head ([`8a6589c`](https://app.codecov.io/gh/mlakolar/HighDimensionalModels.jl/commit/8a6589c244f55dcaa1b8798b4fd8dcaf15fc4606?dropdown=coverage&el=desc&utm_medium=referral&utm_source=github&utm_content=checks&utm_campaign=pr+comments&utm_term=Mladen+Kolar)).\n:warning: Report is 3 commits behind head on master.\n\n<details><summary>Additional details and impacted files</summary>\n\n\n\n```diff\n@@            Coverage Diff             @@\n##           master      #84      +/-   ##\n==========================================\n- Coverage   99.88%   99.75%   -0.14%     \n==========================================\n  Files          18       21       +3     \n  Lines        1772     2036     +264     \n==========================================\n+ Hits         1770     2031     +261     \n- Misses          2        5       +3     \n```\n</details>\n\n[:umbrella: View full report in Codecov by Harness](https://app.codecov.io/gh/mlakolar/HighDimensionalModels.jl/pull/84?dropdown=coverage&src=pr&el=continue&utm_medium=referral&utm_source=github&utm_content=checks&utm_campaign=pr+comments&utm_term=Mladen+Kolar).   \n:loudspeaker: Have feedback on the report? [Share it here](https://about.codecov.io/codecov-pr-comment-feedback/?utm_medium=referral&utm_source=github&utm_content=checks&utm_campaign=pr+comments&utm_term=Mladen+Kolar).\n<details><summary> :rocket: New features to boost your workflow: </summary>\n\n- :snowflake: [Test Analytics](https://docs.codecov.com/docs/test-analytics): Detect flaky tests, report on failures, and find test suite problems.\n</details>"
+    },
+    {
+      "name": "codecov/patch",
+      "conclusion": "success",
+      "url": "https://github.com/mlakolar/HighDimensionalModels.jl/runs/121191188661",
+      "summary": "[View this Pull Request on Codecov](https://app.codecov.io/gh/mlakolar/HighDimensionalModels.jl/pull/84?dropdown=coverage&src=pr&el=h1&utm_medium=referral&utm_source=github&utm_content=checks&utm_campaign=pr+comments&utm_term=Mladen+Kolar)\n\nCoverage not affected when comparing c408831...8a6589c"
+    },
+    {
+      "name": "Examples",
+      "conclusion": "success",
+      "url": "https://github.com/mlakolar/HighDimensionalModels.jl/actions/runs/40200048013/job/121189113239",
+      "summary": null
+    },
+    {
+      "name": "Julia lts - ubuntu-latest - x64",
+      "conclusion": "success",
+      "url": "https://github.com/mlakolar/HighDimensionalModels.jl/actions/runs/40200048013/job/121189113196",
+      "summary": null
+    },
+    {
+      "name": "Julia 1 - windows-latest - x64",
+      "conclusion": "success",
+      "url": "https://github.com/mlakolar/HighDimensionalModels.jl/actions/runs/40200048013/job/121189113153",
+      "summary": null
+    },
+    {
+      "name": "Julia 1 - ubuntu-latest - x64",
+      "conclusion": "success",
+      "url": "https://github.com/mlakolar/HighDimensionalModels.jl/actions/runs/40200048013/job/121189113132",
+      "summary": null
+    },
+    {
+      "name": "Documentation",
+      "conclusion": "success",
+      "url": "https://github.com/mlakolar/HighDimensionalModels.jl/actions/runs/40200048021/job/121189113111",
+      "summary": null
+    },
+    {
+      "name": "Julia 1 - macos-latest - aarch64",
+      "conclusion": "success",
+      "url": "https://github.com/mlakolar/HighDimensionalModels.jl/actions/runs/40200048013/job/121189112969",
+      "summary": null
+    }
+  ]
+}

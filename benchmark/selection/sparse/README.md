@@ -51,13 +51,22 @@ No reduced-fit stopping flag substitutes for the full certificate.
 ## Memory and acceptance
 
 Fresh processes measure peak resident memory for cases 4, 10 and 11, seven
-replications per backend/size (baseline omitted at case11). Python's Linux
+replications per backend/size (baseline omitted at case11). The final comparison
+uses `memory_fit_only.sbatch`: 77 standalone fitting processes, all independently
+certified after their measured process exits. SLOPE.jl's worker imports only its
+own backend and the input/output dependencies. Two warm calls and one retained
+fit match the original R worker. Python's Linux
 `resource.getrusage(RUSAGE_CHILDREN).ru_maxrss` includes the interpreter,
 imports/JIT and child backend, and is reported in MiB. It is not the transformed
 matrix's size, nor an exact incremental fitting-memory measure. Memory workers
 may run concurrently in up to four separate 4 GB Slurm steps; their elapsed times are not
 used for performance rankings. Julia heap allocation totals exclude C++/Fortran
-allocation and are reported separately. Owned operator and solver-workspace
+allocation and are reported separately. The earlier 77-process harness-RSS
+cohort included Julia certificate/operator-summary work and an HDM/CD import
+for SLOPE.jl; its records remain as historical evidence but are superseded for
+RSS comparisons. The corrected cohort uses debug/Xeon4116/d05-41; the timing
+cohort remains EPYC7313/b11-09. Initial precompilation can inflate maxima; no
+replications are trimmed. Owned operator and solver-workspace
 storage is measured directly on the final implementation.
 
 Targets: independently certified residual<=1e-7; storage O(nnz+n+p), excluding
@@ -104,3 +113,17 @@ Pkg.test's sandbox. `compatibility_validation.sbatch` separately tests the
 final PS36/PB0e98 integration, using any debug CPU because this stage does not
 produce comparative performance measurements. The registry preserves actual job IDs, failures, source
 overlays and aggregate resource accounting.
+
+For the corrected RSS cohort, create `rss-fit-only/env` from the frozen
+`env335` Project/Manifest and add SpecialFunctions as a direct dependency in
+that Project (it is already present in the same manifest). Keep all existing
+resolved source paths and versions. Link `rss-fit-only/inputs` to the saved
+inputs and stage the four `memory_fit_*` files in `rss-fit-only/scripts`.
+With `RUN` set to the original remote root, submit `memory_fit_only.sbatch`.
+It sets `BENCHMARK_MODULE=CoordinateDescent` for the frozen pre-rename runtime,
+launches 77 fresh measurement processes in four exclusive one-CPU/2GB steps,
+then runs seven independent audits in separate processes. Summaries are made
+only after all audits pass. The final source, environment, commands and
+compressed worker receipts are in
+[`fit-only-memory`](discovery-20261025/fit-only-memory/). No measured process
+launches its verifier, so a verifier cannot contaminate child high-water RSS.

@@ -52,8 +52,8 @@ I/O, profiling and independent certificates are outside the timings.
 | Large centered/scaled, 1500×6000, density .002 | 17.920 | 305.661 | 47.382 | 55.000 |
 | Storage canary, 10000×20000, density .0001 | 28.636 | omitted | 50.550 | 62.000 |
 
-The first ten ordinary paths have twenty levels down to .2 of the null
-threshold, except the long path, which has fifty levels down to .02. The canary
+Cases 1–8 and 10 have twenty levels down to .2 of the null
+threshold. The long path has fifty levels down to .02. The canary
 has ten levels. Exact dimensions, flags and realized densities are in
 [cases.csv](discovery-20261025/inputs/cases.csv).
 
@@ -90,8 +90,10 @@ path, and SLOPE.jl at 1e-8 reached 2.7851e-7 on the .001-density case. The final
 cohort uses the fixed tighter settings throughout. Warm time comparisons at
 unequal, unverified accuracy are excluded.
 
-The campaign contains 28 timed processes, 903 batch rows, 301 path accuracy
-records, 77 fresh-process memory records and 14 separately collected profiles.
+The primary campaign contains 28 timed processes, 903 batch rows, 301 path
+accuracy records and 14 separately collected profiles. A corrected memory
+cohort contains 77 standalone fit processes with external certificates; the
+original 77 harness-memory processes are retained separately.
 The [validation receipt](discovery-20261025/results/validation.json),
 [accuracy summaries](discovery-20261025/results/accuracy-summary.csv), and
 [memory accuracy](discovery-20261025/results/memory-accuracy.csv) retain the checks.
@@ -102,20 +104,42 @@ Median fresh-process peak resident memory, MiB, over seven replications:
 
 | Case | Native | Old | SLOPE.jl | R auto |
 |---|---:|---:|---:|---:|
-| Original sparse | 412.5 | 451.9 | 473.8 | 206.0 |
-| Large centered/scaled | 466.5 | 564.1 | 494.7 | 210.6 |
-| Storage canary | 491.8 | omitted | 512.5 | 212.1 |
+| Original sparse | 390.9 | 381.6 | 391.3 | 205.9 |
+| Large centered/scaled | 410.9 | 503.9 | 404.4 | 210.7 |
+| Storage canary | 441.8 | omitted | 422.6 | 212.5 |
 
-Native sparse handling reduces total process memory relative to the measured
-old code and SLOPE.jl. **R still uses substantially less total process memory**,
-roughly half as much on these cases, despite slower warm fits. The structural
-storage target does not imply the lowest process RSS.
+Native sparse handling reduces large-case process RSS relative to the old
+adapter, but it is slightly higher on the small case. SLOPE.jl is similar on
+the original sparse case and uses less RSS on the larger cases. **R uses
+substantially less total process memory**, roughly half as much, despite slower
+warm fits. The structural storage target does not imply the lowest process RSS.
 
-Linux `getrusage(RUSAGE_CHILDREN).ru_maxrss` includes imports, JIT and backend
-startup. It does not isolate incremental fitting memory. Fresh memory workers
-may run concurrently; their times are excluded from the speed rankings.
-Julia heap allocation counts exclude foreign allocations and cannot establish
-cross-language memory superiority. See [RSS ranges](discovery-20261025/results/memory-summary.csv).
+The final table uses job **13424760** on Xeon 4116 node d05-41. All backends
+perform two warm calls and one retained fit; imports/JIT, output serialization
+and any package precompilation children are inside the measured process tree.
+Each Python measurement process captures its fitting child's
+`RUSAGE_CHILDREN.ru_maxrss` and exits before a separate verifier starts.
+SLOPE.jl's worker does not import HDM/CD. Thus every backend's independent
+certificate is outside its RSS measurement. All 77 paths pass, with maximum
+relative residual 4.119e-8 and objective discrepancy 8.88e-16. See
+[corrected summaries and ranges](discovery-20261025/fit-only-memory/results/summary.csv)
+and the [validation receipt](discovery-20261025/fit-only-memory/results/validation.json).
+The old comparator is its standalone SLOPE driver with minimal numerical
+imports, while native loads the model package. These are different complete
+process footprints; the owned design/workspace measurements isolate the
+algorithm's storage requirement more directly.
+
+The original harness-RSS cohort on EPYC 7313 included Julia certificate and
+operator-summary work inside the measured worker, and imported HDM/CD even for
+SLOPE.jl; R verification was external. Its [original measurements](discovery-20261025/results/memory-summary.csv)
+are preserved but superseded for cross-backend RSS conclusions. The two memory
+cohorts also used different CPU models, so their difference does not isolate a
+pure harness effect. Neither cohort estimates incremental fitting memory.
+Initial Julia cache compilation causes some large maxima (up to 930.5 MiB for
+SLOPE.jl); seven-replication medians and all ranges are retained without trimming.
+Fresh memory workers run concurrently and their times are excluded from speed
+rankings. Julia heap counts exclude foreign allocations and cannot establish
+cross-language memory superiority.
 
 ## Tests and source provenance
 
@@ -157,7 +181,11 @@ on Julia 1.10.12**. The [logs and manifests](discovery-20261025/compatibility/)
 identify the exact pre-module-rename source snapshot. A Julia 1.10 CI failure
 in the old test snapshot was an overly strict absolute-only matrix comparison;
 the correction adds a 100eps(Float64) relative roundoff bound and leaves all
-solver/certificate thresholds unchanged. Benchmark measurements remain labelled with their actual dependency
+solver/certificate thresholds unchanged. Job **13424722** then passed the same
+**2742 full-suite and 245+53 targeted assertions** with the renamed package at
+HDM `8a6589c244f55dcaa1b8798b4fd8dcaf15fc4606`, PS3bee, PBb6 and
+KernelSmoothing653784. Its [logs and manifests](discovery-20261025/renamed/)
+are retained separately. Benchmark measurements remain labelled with their actual dependency
 cohort; unchanged numerical kernels justify reusing those runs, while newer
 package imports could change fixed RSS overhead.
 
@@ -174,9 +202,10 @@ package imports could change fixed RSS overhead.
    sparse products; sorting/proximal work also appears. Generic leaf labels do
    not identify a unique phase or prove that one cache change will help. Use
    those traces to choose a bounded follow-up before changing solver algorithms.
-4. Keep R available when total process RAM, startup cost or its broader features
-   are decisive. These measurements rank matched warm least-squares paths,
-   not complete GLM or cross-validation workflows.
+4. Keep standalone R or SLOPE.jl workflows available when process RAM or broader
+   features are decisive. Calling an alternative from a process that already
+   imports HDM does not inherit the standalone worker's footprint. Startup
+   speed, complete GLM and cross-validation workflows were not ranked here.
 
 Run `20261025-cd82-sparse`, primary completed job `13424223`, has its
 [protocol and recreation recipe](README.md) and lightweight project registry
@@ -184,3 +213,13 @@ at `.slurm/runs/20261025-cd82-sparse.json` in the project parent. Compact report
 inputs and adverse calibration results are retained here; large per-path
 coefficient outputs remain at
 `/home1/mkolar/juliaPkg/runs/20261025-cd82-sparse` on Discovery.
+
+The final accounting remains within the approved shared allowance: at most
+158.1 running-union minutes of 180 and a conservative 11.4 allocated CPU-hours
+of 16, including coordinated solver work and retries. Current-phase allocations
+never exceed 8 CPUs or 16 GB. Hosted CI at source head `8a6589c` passes all
+platform tests, docs and examples; patch coverage passes. Codecov's project
+gate remains red (99.75% versus 99.88%) against stale base `c408831`, three
+master commits behind, while explicitly reporting all modified coverable lines
+covered. No coverage thresholds were reduced. The PR remains draft for review
+with its companion dependency.

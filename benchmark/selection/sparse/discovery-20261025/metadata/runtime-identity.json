@@ -55,5 +55,28 @@
     "src/solve.jl": "b3b43fd47c487e325bfa422c1f5476c2186b322d",
     "src/types.jl": "aec69381ca1062a471689057fc21e903fa9a90ff"
   },
-  "HDM_slope_sha256": "b32489f93b06453f2301ffe6074b966038fff470af379d0a66fa3e87966bc386"
+  "HDM_slope_sha256": "b32489f93b06453f2301ffe6074b966038fff470af379d0a66fa3e87966bc386",
+  "renamed_integration": {
+    "PS": "3bee2f91604fe08d34a07d45bcc638e3b4face3a",
+    "PB": "b6c949f3dd26cad09252e1c2c9e49810eb69403e",
+    "KernelSmoothing": "653784f0c2d48084ac5251db1d992f270708bae0",
+    "PS_verbatim_blobs": {
+      "src/solvers/slope.jl": "7ea91082238d8420091e2dd6a2fb0f50883115e4",
+      "src/solvers/image_models.jl": "80d725167848fbc627a5f883ec7c02ae28496841",
+      "src/solve.jl": "b3b43fd47c487e325bfa422c1f5476c2186b322d"
+    },
+    "APG_equal_after_name_substitutions": {
+      "deltaX": "delta_x",
+      "maxResidual": "max_residual"
+    },
+    "PB_relevant_sources_equal_to_0e98": true,
+    "timings": "Original335/PB86cohort; no numerical re-fit for canonical field/module names; new package imports may alter fixed RSS overhead.",
+    "PB_verbatim_blobs": {
+      "src/functions/leastsquares.jl": "df9a436f3acc1324577e347a764860d99246cb59",
+      "src/functions/ordered.jl": "906fe22ca51eecf6d26f1c911c7504df7290dbb2",
+      "src/functions/norms.jl": "6da173a75114ca5b5b66d425686157b4dfd69036",
+      "src/caches.jl": "dc57582fb659348a66e3221f8d5eaeb30e44093b",
+      "src/calculus.jl": "fec316b23d308a6db8bdf7f3e26593a21256d1d7"
+    }
+  }
 }
