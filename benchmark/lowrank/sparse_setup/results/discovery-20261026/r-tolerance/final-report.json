@@ -1,0 +1,700 @@
+{
+  "new_R_processes": 240,
+  "new_R_certificates": 760,
+  "max_R_kkt": 5.972666190590034e-09,
+  "max_R_response": 2.8233725532303837e-15,
+  "R_setting_decision": "Use global historical R outer1e-8/inner1e-9 for the main alternative ranking: all760newfitcertificatespassedunchanged1e-6thresholds;strictR1e-10/1e-12isretainedassensitivityandnotusedtoinflateprimaryspeedclaims.",
+  "strong_wide_R_unmatched": 1,
+  "strong_wide_R_max_objective_difference": 0.10286275786274546,
+  "primary_metadata": 960,
+  "native_profiles": 1680,
+  "R_profiles_primary": 360,
+  "R_profiles_followup": 360,
+  "source_and_Julia_results_unchanged": true,
+  "sensitivity": [
+    {
+      "case": "small",
+      "mode": "public",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 8.011817932128904,
+      "historical_R_ms": 5.73313236236572,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "small",
+      "mode": "public",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 6.72650337219238,
+      "historical_R_ms": 4.930973052978515,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "small",
+      "mode": "public",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 6.569266319274901,
+      "historical_R_ms": 5.100846290588381,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "small",
+      "mode": "public",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 8.011817932128904,
+      "historical_R_ms": 5.73313236236572,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "small",
+      "mode": "public",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 6.72650337219238,
+      "historical_R_ms": 4.930973052978515,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "small",
+      "mode": "public",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 6.569266319274901,
+      "historical_R_ms": 5.100846290588381,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "small",
+      "mode": "common",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 6.5687894821167,
+      "historical_R_ms": 4.14550304412842,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "small",
+      "mode": "common",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 5.20682334899902,
+      "historical_R_ms": 3.52144241333008,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "small",
+      "mode": "common",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 5.06830215454102,
+      "historical_R_ms": 3.67128849029541,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "small",
+      "mode": "common",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 6.5687894821167,
+      "historical_R_ms": 4.14550304412842,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "small",
+      "mode": "common",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 5.20682334899902,
+      "historical_R_ms": 3.52144241333008,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "small",
+      "mode": "common",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 5.06830215454102,
+      "historical_R_ms": 3.67128849029541,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "public",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 9.229183197021484,
+      "historical_R_ms": 7.883667945861815,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "public",
+      "config": "cd-0.1-adaptive",
+      "strict_R_ms": 9.220004081726074,
+      "historical_R_ms": 7.946133613586426,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "public",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 9.474754333496094,
+      "historical_R_ms": 7.913827896118164,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "public",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 9.282231330871586,
+      "historical_R_ms": 8.00776481628418,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "public",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 9.229183197021484,
+      "historical_R_ms": 7.883667945861815,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "public",
+      "config": "fista-0.1-adaptive",
+      "strict_R_ms": 9.220004081726074,
+      "historical_R_ms": 7.946133613586426,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "public",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 9.474754333496094,
+      "historical_R_ms": 7.913827896118164,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "public",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 9.282231330871586,
+      "historical_R_ms": 8.00776481628418,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "common",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 5.10716438293457,
+      "historical_R_ms": 3.528594970703125,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "common",
+      "config": "cd-0.1-adaptive",
+      "strict_R_ms": 4.9111843109130895,
+      "historical_R_ms": 3.65757942199707,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "common",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 5.193591117858885,
+      "historical_R_ms": 3.5719871520996103,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "common",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 5.132317543029785,
+      "historical_R_ms": 3.77321243286133,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "common",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 5.10716438293457,
+      "historical_R_ms": 3.528594970703125,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "common",
+      "config": "fista-0.1-adaptive",
+      "strict_R_ms": 4.9111843109130895,
+      "historical_R_ms": 3.65757942199707,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "common",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 5.193591117858885,
+      "historical_R_ms": 3.5719871520996103,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "medium",
+      "mode": "common",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 5.132317543029785,
+      "historical_R_ms": 3.77321243286133,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "public",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 65.34445285797119,
+      "historical_R_ms": 61.056613922119155,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "public",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 65.83917140960696,
+      "historical_R_ms": 60.871958732605,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "public",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 66.72203540802005,
+      "historical_R_ms": 62.1708631515503,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "public",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 65.34445285797119,
+      "historical_R_ms": 61.056613922119155,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "public",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 65.83917140960696,
+      "historical_R_ms": 60.871958732605,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "public",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 66.72203540802005,
+      "historical_R_ms": 62.1708631515503,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "common",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 17.270088195800803,
+      "historical_R_ms": 13.93568515777585,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "common",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 18.48256587982175,
+      "historical_R_ms": 14.4575834274292,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "common",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 19.8010206222534,
+      "historical_R_ms": 15.98632335662845,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "common",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 17.270088195800803,
+      "historical_R_ms": 13.93568515777585,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "common",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 18.48256587982175,
+      "historical_R_ms": 14.4575834274292,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "responses",
+      "mode": "common",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 19.8010206222534,
+      "historical_R_ms": 15.98632335662845,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "wide",
+      "mode": "public",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 75.3219127655029,
+      "historical_R_ms": 60.54186820983885,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "wide",
+      "mode": "public",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 71.55394554138185,
+      "historical_R_ms": 60.234904289245605,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "wide",
+      "mode": "public",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 70.5945491790771,
+      "historical_R_ms": 59.1070652008057,
+      "strict_matched": 19,
+      "historical_matched": 19
+    },
+    {
+      "case": "wide",
+      "mode": "public",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 75.3219127655029,
+      "historical_R_ms": 60.54186820983885,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "wide",
+      "mode": "public",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 71.55394554138185,
+      "historical_R_ms": 60.234904289245605,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "wide",
+      "mode": "public",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 70.5945491790771,
+      "historical_R_ms": 59.1070652008057,
+      "strict_matched": 19,
+      "historical_matched": 19
+    },
+    {
+      "case": "wide",
+      "mode": "common",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 36.25309467315675,
+      "historical_R_ms": 24.8602628707886,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "wide",
+      "mode": "common",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 33.9229106903076,
+      "historical_R_ms": 23.00691604614255,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "wide",
+      "mode": "common",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 31.852245330810497,
+      "historical_R_ms": 22.665977478027298,
+      "strict_matched": 15,
+      "historical_matched": 15
+    },
+    {
+      "case": "wide",
+      "mode": "common",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 36.25309467315675,
+      "historical_R_ms": 24.8602628707886,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "wide",
+      "mode": "common",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 33.9229106903076,
+      "historical_R_ms": 23.00691604614255,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "wide",
+      "mode": "common",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 31.852245330810497,
+      "historical_R_ms": 22.665977478027298,
+      "strict_matched": 15,
+      "historical_matched": 15
+    },
+    {
+      "case": "ill",
+      "mode": "public",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 621.4587688446045,
+      "historical_R_ms": 421.0662841796875,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "ill",
+      "mode": "public",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 218.1181907653805,
+      "historical_R_ms": 136.281728744507,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "ill",
+      "mode": "public",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 102.17750072479255,
+      "historical_R_ms": 66.0818815231323,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "ill",
+      "mode": "public",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 621.4587688446045,
+      "historical_R_ms": 421.0662841796875,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "ill",
+      "mode": "public",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 218.1181907653805,
+      "historical_R_ms": 136.281728744507,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "ill",
+      "mode": "public",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 102.17750072479255,
+      "historical_R_ms": 66.0818815231323,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "ill",
+      "mode": "common",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 667.552471160889,
+      "historical_R_ms": 454.3480873107915,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "ill",
+      "mode": "common",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 217.58949756622297,
+      "historical_R_ms": 140.213847160339,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "ill",
+      "mode": "common",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 94.33388710021995,
+      "historical_R_ms": 58.41469764709475,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "ill",
+      "mode": "common",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 667.552471160889,
+      "historical_R_ms": 454.3480873107915,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "ill",
+      "mode": "common",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 217.58949756622297,
+      "historical_R_ms": 140.213847160339,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "ill",
+      "mode": "common",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 94.33388710021995,
+      "historical_R_ms": 58.41469764709475,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "public",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 99.84755516052272,
+      "historical_R_ms": 54.93974685668945,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "public",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 31.218171119689952,
+      "historical_R_ms": 20.350337028503397,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "public",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 13.364195823669398,
+      "historical_R_ms": 10.9325647354126,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "public",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 99.84755516052272,
+      "historical_R_ms": 54.93974685668945,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "public",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 31.218171119689952,
+      "historical_R_ms": 20.350337028503397,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "public",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 13.364195823669398,
+      "historical_R_ms": 10.9325647354126,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "common",
+      "config": "cd-0.02-unit",
+      "strict_R_ms": 88.5987281799316,
+      "historical_R_ms": 42.9309606552124,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "common",
+      "config": "cd-0.1-unit",
+      "strict_R_ms": 25.8234739303589,
+      "historical_R_ms": 14.612197875976548,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "common",
+      "config": "cd-0.5-unit",
+      "strict_R_ms": 7.4777603149414045,
+      "historical_R_ms": 5.39886951446533,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "common",
+      "config": "fista-0.02-unit",
+      "strict_R_ms": 88.5987281799316,
+      "historical_R_ms": 42.9309606552124,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "common",
+      "config": "fista-0.1-unit",
+      "strict_R_ms": 25.8234739303589,
+      "historical_R_ms": 14.612197875976548,
+      "strict_matched": 20,
+      "historical_matched": 20
+    },
+    {
+      "case": "deficient",
+      "mode": "common",
+      "config": "fista-0.5-unit",
+      "strict_R_ms": 7.4777603149414045,
+      "historical_R_ms": 5.39886951446533,
+      "strict_matched": 20,
+      "historical_matched": 20
+    }
+  ]
+}

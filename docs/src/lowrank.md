@@ -147,3 +147,14 @@ squared losses: its penalty is `n * λ` for the objectives here. Its adaptive
 nuclear-norm estimator shrinks the fitted-value singular values, so it is
 not an oracle for the coefficient nuclear penalty; the latter has an exact
 orthonormal-design test and a proximal-gradient optimality check.
+
+
+The sparse-fit setup optimization reuses sufficient statistics across penalty
+levels and uses conservative thin-factor result diagnostics. CD remains the
+default block solver. In the retained20-input Discovery optimization study,
+explicit `block_solver = :fista` was useful for ill-conditioned and rank-deficient
+inputs, especially at weaker penalties, while CD was faster on strong/middle
+wide inputs. The study does not establish a universal solver or statistical
+regularization default. See the benchmark's `sparse_setup/results/discovery-20261026/FINAL.md`
+for complete public fits, paths, common-initialization kernels, R comparisons,
+uncertainty, regressions and memory limits.

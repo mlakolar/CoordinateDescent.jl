@@ -111,3 +111,11 @@ R startup (`source /etc/profile` returned nonzero under errexit). Recovery
 13448988 reused those Julia outputs, changed startup to modules.sh, and passed
 all 190 individual-fit plus 224 path-level certificates on the same six
 calibration inputs. No fresh evaluation inputs were used to tune adapters.
+
+The full20-input evaluation and independent checks are complete. See
+[final evidence and defaults](results/discovery-20261026/FINAL.md). A separate
+R-only stopping-tolerance follow-up uses the faster globally accuracy-valid
+historical R setting for comparator ranks, reusing all Julia fits. Preserve the
+small-CD regression, uncertain wide-CD single-fit gain, whole-process memory
+limits and the strong-wide different stationary point. Retain CD and statistical
+settings; explicit FISTA remains useful for ill-conditioned/rank-deficient fits.
