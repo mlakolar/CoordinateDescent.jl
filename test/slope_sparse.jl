@@ -51,6 +51,47 @@ const CD = HighDimensionalModels
   @test_throws ArgumentError slope(spzeros(0,22),Float64[],ones(22))
 end
 
+@testset "SLOPE constant columns and large offsets" begin
+  for T in (Float32, Float64), n in (3, 7, 10)
+    X = fill(T(0.1), n, 1)
+    y = T.(collect(1:n).^2)
+    for A in (X, sparse(X))
+      Z,v,_,_,sc = CD._slope_data(A,y,true,true)
+      @test all(iszero, Z)
+      @test sc == ones(T,1)
+      @test iszero(norm(Z * ones(T,1)))
+      @test iszero(norm(Z' * v))
+      path = SLOPEPath(A,y;intercept=true,standardize_x=true,nλ=3,max_iter=100)
+      @test all(path.converged)
+      @test all(b -> all(iszero,b), path.βpath)
+    end
+  end
+  for offset in (1e8, 1e12), standardize_x in (false,true)
+    X = reshape(offset .+ Float64.(0:9),:,1)
+    A = sparse(X)
+    saved = copy(A)
+    y = Float64.(0:9)
+    Z,v,_,_,sc = CD._slope_data(A,y,true,standardize_x)
+    D,_,_,_,_ = CD._slope_data(X,y,true,standardize_x)
+    @test Z.X isa SparseMatrixCSC && nnz(Z.X) == nnz(A)
+    @test Matrix(Z) == D
+    @test Z * [0.75] ≈ D * [0.75] atol=1e-14
+    @test Z' * v ≈ D' * v atol=1e-13
+    for tol in (1e-7,1e-8)
+      a = slope(A,y,[0.01];intercept=true,standardize_x,max_iter=100,tol)
+      b = slope(X,y,[0.01];intercept=true,standardize_x,max_iter=100,tol)
+      @test a.converged && b.converged
+      @test a.x ≈ b.x atol=1e-7
+      # Check the returned point against the explicitly centered design.
+      point = a.x .* sc
+      grad = D'*(D*point-v)/length(v)
+      trial = sign.(point-grad) .* max.(abs.(point-grad) .- 0.01,0.)
+      @test norm(point-trial,Inf) <= tol * max(1.,norm(D'v/length(v),Inf))
+    end
+    @test A == saved && nonzeros(A) == nonzeros(saved)
+  end
+end
+
 @testset "Sparse SLOPE fit, path and full certificate" begin
   rng = Xoshiro(8202)
   X = sprand(rng,100,30,0.2)

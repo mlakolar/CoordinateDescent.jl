@@ -31,11 +31,21 @@ function _knockoff_parameters(S, s)
   d = s === nothing ? equicorrelated_s(S) : Vector{eltype(S)}(s)
   length(d) == p || throw(DimensionMismatch("s must have one entry per predictor"))
   all(isfinite, d) && all(>=(0), d) || throw(ArgumentError("s must be finite and nonnegative"))
+  # Check the joint covariance on the correlation scale. An absolute tolerance
+  # in input units can accept an infeasible diagonal after a change of units.
+  scales = sqrt.(diag(S))
+  R = S ./ (scales * transpose(scales))
+  relative_d = d ./ diag(S)
+  all(isfinite, relative_d) || throw(ArgumentError("s is infeasible on the covariance scale"))
+  normalized = 2R - Diagonal(relative_d)
+  tolerance = 100eps(eltype(S)) * max(2opnorm(R, Inf), norm(relative_d, Inf))
+  eigmin(Symmetric(normalized)) >= -tolerance ||
+    throw(ArgumentError("s is infeasible: 2Sigma - diag(s) is not PSD"))
   A = cholesky(Symmetric(S)) \ Matrix(Diagonal(d))
   C = Matrix(Symmetric(2Diagonal(d) - Diagonal(d) * A))
   # Reject a materially infeasible diagonal; clip only eigenvalues at roundoff.
   ev = eigen(Symmetric(C))
-  minimum(ev.values) >= -100eps(eltype(S)) * max(opnorm(S, Inf), one(eltype(S))) ||
+  minimum(ev.values) >= -100eps(eltype(S)) * max(opnorm(2Diagonal(d), Inf), opnorm(Diagonal(d) * A, Inf)) ||
     throw(ArgumentError("s is infeasible: 2diag(s) - diag(s)*inv(Sigma)*diag(s) is not PSD"))
   F = cholesky(Symmetric(C); check=false)
   root = issuccess(F) ? Matrix(F.U) : Diagonal(sqrt.(max.(ev.values, 0))) * transpose(ev.vectors)

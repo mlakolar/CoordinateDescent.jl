@@ -126,6 +126,30 @@ end
   @test_throws ArgumentError knockoff_filter(X,y,0.1;method=:fixed,Xk)
 end
 
+@testset "Knockoff feasibility under changes of units" begin
+  for T in (Float32,Float64), scale in (T(1e-8),one(T),T(1e8))
+    X = reshape(scale .* T[1,2],:,1)
+    S = X'X
+    bad = 3 .* diag(S)
+    @test_throws ArgumentError fixed_knockoffs(X;s=bad)
+    @test_throws ArgumentError gaussian_knockoffs(X,T[0],S;s=bad)
+    for ratio in (zero(T),one(T),T(2))
+      s = ratio .* diag(S)
+      K = fixed_knockoffs(X;s)
+      @test (K'K)[1]/S[1] ≈ one(T) atol=100eps(T)
+      @test (X'K)[1]/S[1] ≈ one(T)-ratio atol=100eps(T)
+      _,A,C = HighDimensionalModels._knockoff_parameters(S,s)
+      @test (C'C)[1]/S[1] ≈ 2ratio-ratio^2 atol=100eps(T)
+      @test gaussian_knockoffs(X,T[0],S;s,noise=zeros(T,2,1)) ≈ X-X*A
+    end
+  end
+  # A large variance in another column must not mask an infeasible small one.
+  X = [1e-8 0.; 0. 1.; 0. 0.; 0. 0.]
+  S = X'X
+  @test_throws ArgumentError fixed_knockoffs(X;s=[3e-16,0.])
+  @test_throws ArgumentError gaussian_knockoffs(X,zeros(2),S;s=[3e-16,0.])
+end
+
 @testset "Complementary pairs and deterministic parallel fitting" begin
   rng = Xoshiro(83)
   X = randn(rng,61,20)

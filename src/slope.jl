@@ -66,7 +66,7 @@ function _slope_data(X, y, intercept, standardize_x)
   T = float(promote_type(eltype(X), eltype(y)))
   Z, v = Matrix{T}(X), Vector{T}(y)
   all(isfinite, Z) && all(isfinite, v) || throw(ArgumentError("X and y must be finite"))
-  xb = intercept ? vec(mean(Z; dims=1)) : zeros(T, p)
+  xb = intercept ? _column_means(Z) : zeros(T, p)
   yb = intercept ? mean(v) : zero(T)
   Z .-= transpose(xb)
   v .-= yb
@@ -90,13 +90,25 @@ function _slope_data(X::SparseMatrixCSC, y, intercept, standardize_x)
   v .-= yb
   scales = standardize_x ? _loadings(A, intercept) : ones(T, p)
   replace!(scales, zero(T) => one(T))
-  if standardize_x
-    vals = nonzeros(A)
-    for j in 1:p, k in nzrange(A, j)
-      vals[k] /= scales[j]
+  center = intercept ? xb ./ scales : nothing
+  vals = nonzeros(A)
+  for j in 1:p
+    r = nzrange(A, j)
+    if intercept && length(r) == n
+      # A fully stored column can be centered before scaling without filling
+      # implicit zeros. This avoids cancelling large products for offset columns
+      # and makes constant columns exactly zero in both forward and adjoint maps.
+      for k in r
+        vals[k] = (vals[k] - xb[j]) / scales[j]
+      end
+      center[j] = zero(T)
+    elseif standardize_x
+      for k in r
+        vals[k] /= scales[j]
+      end
     end
   end
-  Z = _SLOPESparseDesign(A, intercept ? xb ./ scales : nothing)
+  Z = _SLOPESparseDesign(A, center)
   Z, v, xb, yb, scales
 end
 
