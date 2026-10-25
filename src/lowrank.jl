@@ -292,7 +292,7 @@ function _lr_group!(A, XX, C, λ, w; max_iter, tol)
     err = _lr_group_kkt(A, G, λ, w)
     err <= tol * scale && return true
   end
-  false
+  return false
 end
 
 function _lr_group_fista!(A, XX, C, λ, w; max_iter, tol, L)
@@ -330,7 +330,7 @@ function _lr_group_fista!(A, XX, C, λ, w; max_iter, tol, L)
     A .= W
     t = tn
   end
-  false
+  return false
 end
 
 function _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol, block_solver = :cd)

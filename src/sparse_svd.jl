@@ -14,7 +14,7 @@ function _lr_lasso_gram!(u, H, z, λ; max_iter, tol)
     err = maximum(u[j] == 0 ? max(0, abs(g[j])-λ) : abs(g[j]+λ*sign(u[j])) for j in eachindex(u))
     err <= tol * max(1, norm(z)) && return true
   end
-  false
+  return false
 end
 
 function _lr_unit(d, λ, wu, wv, u0, v0; max_iter, tol, inner_max_iter, inner_tol)
