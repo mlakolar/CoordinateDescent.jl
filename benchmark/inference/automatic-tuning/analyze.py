@@ -40,7 +40,7 @@ for label in ['moderate','correlated']:
     if all(f.exists() for f in files):
      a,b,c=[np.loadtxt(f,delimiter=',') for f in files]
      parity.append(dict(**common,comparison='ours-hdi',beta_max_abs=float(np.max(abs(a[:,0]-b[:,0]))),se_max_abs=float(np.max(abs(a[:,1]-b[:,1]))),se_max_relative=float(np.max(abs(a[:,1]/b[:,1]-1)))))
-     parity.append(dict(**common,comparison='ours-econml',beta_max_abs=float(np.max(abs(a[:,0]-c[:,0]))),se_max_abs=float(np.max(abs(a[:,1]-c[:,1]))),se_max_relative=float(np.max(abs(a[:,1]/c[:,1]-1)))))
+     parity.append(dict(**common,comparison='ours-econml',beta_max_abs=float(np.max(abs(a[:,0]-c[:,0]))),se_max_abs=float(np.max(abs(a[:,1]-c[:,1]))),se_max_relative=float(np.max(abs(a[:,1]/c[:,1]-1))),se_ratio_spread=float(np.ptp(a[:,1]/c[:,1]))))
     files=[Path('bench')/f'{e}-{label}-{rep}-theta.csv' for e in ['oursqp','sslasso']]
     if all(f.exists() for f in files):
      a,b=[np.loadtxt(f,delimiter=',') for f in files];parity.append(dict(**common,comparison='oursqp-sslasso',theta_max_abs=float(np.max(abs(a-b)))))

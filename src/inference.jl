@@ -318,7 +318,9 @@ The desparsified lasso, `beta + theta * X'(y-mu)/n`, for Gaussian, logistic
 (`:binomial`) and Poisson regression. An omitted `lambda` selects the initial
 penalty by five-fold prediction CV (`initial_tuning=:cv`), using the minimum
 held-out MSE for Gaussian data or deviance for GLMs on a 40-level lasso path.
-`initial_cv_folds` and `initial_cv_nlambda` control this search. A numerical
+`initial_cv_folds` and `initial_cv_nlambda` control this search. Unless an
+explicit `options.gaptol` is supplied, inference CV paths use `gaptol=0` and
+stop using `options.opt_tol`, preserving the validated numerical policy. A numerical
 penalty bypasses CV. Gaussian noise uses residual RMS with
 `n - nnz(beta) - intercept` degrees of freedom; `sigma` may supply the noise SD.
 For Gaussian data, `initial_tuning=:scaled` with an omitted penalty retains the
@@ -327,6 +329,9 @@ For GLMs the Hessian-weighted, weighted-centered design supplies the projection
 and the model variance is one. The default nodewise projection also uses pooled
 CV; `nodewise_lambda=:universal` or a number overrides it. These prediction CV
 rules are automatic computational policies, not guarantees of valid inference.
+They remain experimental: the fresh Discovery holdout study found substantial
+active-coefficient undercoverage even in moderate high-dimensional designs.
+Numerical convergence alone does not establish calibration.
 
 `initial` can supply all p slopes; its intercept is `mean(y-X*initial)` for
 Gaussian models, or `initial_intercept` for GLMs. `projection` can reuse an
@@ -359,12 +364,15 @@ function debiased_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, la
   sigmafit = nothing
   if initial === nothing
     if lambda === nothing && initial_tuning == :cv
+      # Inference keeps the fit-accuracy stopping rule used in validation.
+      # Generic prediction paths may otherwise use a looser default gap target.
+      cvoptions = options.gaptol === nothing ? CDOptions(options; gaptol=0) : options
       cv = if family == :gaussian
-        CVLassoPath(A,b,options; nfolds=initial_cv_folds,nλ=initial_cv_nlambda,
+        CVLassoPath(A,b,cvoptions; nfolds=initial_cv_folds,nλ=initial_cv_nlambda,
                     intercept,standardize_x,threads=false,rng)
       else
         loss = family == :binomial ? ProximalBase.Logistic() : ProximalBase.Poisson()
-        CVGLMLassoPath(A,b,loss,options; nfolds=initial_cv_folds,nλ=initial_cv_nlambda,
+        CVGLMLassoPath(A,b,loss,cvoptions; nfolds=initial_cv_folds,nλ=initial_cv_nlambda,
                        intercept,standardize_x,threads=false,rng)
       end
       lambda = cv.λmin

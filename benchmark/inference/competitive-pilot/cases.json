@@ -1,0 +1,102 @@
+[
+  {
+    "scenario": "gaussian-moderate",
+    "family": "gaussian",
+    "n": 200,
+    "p": 500,
+    "rho": 0.3,
+    "s": 5,
+    "targets": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "lambda_main": 0.1246455785258967,
+    "lambda_node": 0.2492911570517934,
+    "reps": 20,
+    "noise_sd": 1,
+    "intercept": 0.2
+  },
+  {
+    "scenario": "gaussian-correlated",
+    "family": "gaussian",
+    "n": 100,
+    "p": 500,
+    "rho": 0.9,
+    "s": 15,
+    "targets": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "lambda_main": 0.17627546764116372,
+    "lambda_node": 0.35255093528232745,
+    "reps": 20,
+    "noise_sd": 1,
+    "intercept": 0.2
+  },
+  {
+    "scenario": "binomial-moderate",
+    "family": "binomial",
+    "n": 200,
+    "p": 500,
+    "rho": 0.3,
+    "s": 5,
+    "targets": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "lambda_main": 0.02492911570517934,
+    "lambda_node": 0.2492911570517934,
+    "reps": 20,
+    "noise_sd": 1,
+    "intercept": 0.2
+  },
+  {
+    "scenario": "binomial-correlated",
+    "family": "binomial",
+    "n": 100,
+    "p": 500,
+    "rho": 0.9,
+    "s": 15,
+    "targets": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "lambda_main": 0.035255093528232744,
+    "lambda_node": 0.35255093528232745,
+    "reps": 20,
+    "noise_sd": 1,
+    "intercept": 0.2
+  }
+]

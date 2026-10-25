@@ -1,0 +1,10 @@
+{
+  "supported_fits": 680,
+  "unsupported_combinations": 40,
+  "coefficient_rows": 6800,
+  "matched_nodewise_comparisons": 400,
+  "sslasso_corrected_qp_checks": 40,
+  "sslasso_worst_all_row_gap": 6.47037978751541e-13,
+  "same_seed_profile_checks": 5,
+  "full1000_comparison_submitted": false
+}

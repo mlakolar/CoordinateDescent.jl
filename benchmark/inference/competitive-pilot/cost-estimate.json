@@ -1,0 +1,23 @@
+{
+  "complete": true,
+  "replications_per_case": 20,
+  "case_count": 4,
+  "targets_per_case": 10,
+  "full_replications_per_case": 1000,
+  "fit_cpu_hours": 246.41037515026824,
+  "fresh_process_cpu_hours": 317.33180079886614,
+  "ideal_fit_wall_hours_8cpu": 30.80129689378353,
+  "ideal_process_wall_hours_8cpu": 39.66647509985827,
+  "fresh_process_budget_wall_hours_8cpu_25pct_margin": 50,
+  "maximum_successful_process_rss_mib": 784.90625,
+  "recommended_cpus": 8,
+  "recommended_memory_gib": 16,
+  "all_completed_supported_attempts_process_cpu_hours_scaled50": 317.33180079886614,
+  "fit_seconds_full1000_cpu_hours_mcse": 1.7615113230267945,
+  "process_seconds_full1000_cpu_hours_mcse": 2.1174364543808424,
+  "cpu_seconds_full1000_cpu_hours_mcse": 2.1886557121215504,
+  "data_bytes_pilot": 154318044,
+  "data_gib_full1000_if_csv_inputs_retained": 7.185993902385235,
+  "matched_nodewise_max_estimate_difference": 5.538625510589923e-05,
+  "matched_nodewise_max_se_difference": 4.6885197800550227e-07
+}

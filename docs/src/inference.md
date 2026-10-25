@@ -6,6 +6,14 @@ Gaussian linear model, the estimate of the slope vector is
 when an intercept is fitted. Inference concerns the original regression slopes,
 including those set to zero by the lasso. It does not include the intercept.
 
+Automatic tuning is experimental. A fresh Discovery holdout study with 100
+datasets per design found active-coefficient coverage of 77.6% and 73.0% in
+Gaussian designs, and 56.2% and 85.0% in logistic designs, for nominal 95%
+intervals. All fits converged. This includes a moderate-correlation sparse
+design, so the observed problem is broader than the severe stress case.
+See `benchmark/inference/automatic-tuning/results/discovery-20261025/RESULTS.md`
+for settings, uncertainty, diagnostics and matched computational comparisons.
+
 ```julia
 using CoordinateDescent, Random
 rng = Xoshiro(77)
@@ -23,7 +31,10 @@ The omitted initial penalty is selected by five-fold cross-validation at the
 minimum held-out MSE (Gaussian) or deviance (GLM), using a 40-level lasso path.
 Gaussian noise is estimated from the residual sum of squares divided by
 `n - nnz(beta) - intercept`. Supply `sigma` when an external noise estimate is
-available. `initial_cv_folds` and `initial_cv_nlambda` control the search.
+available. `initial_cv_folds` and `initial_cv_nlambda` control the search. Inference CV
+uses `gaptol=0` unless explicitly overridden in `options`, so the selected
+path fits use `options.opt_tol` rather than the generic prediction-path gap
+target.
 
 The default nodewise penalty is selected by pooled five-fold prediction CV over
 20 randomly sampled predictor columns, or all columns when there are fewer.
