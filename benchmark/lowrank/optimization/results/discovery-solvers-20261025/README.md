@@ -237,7 +237,10 @@ the current master dependency stack. The original module names in frozen
 harnesses/manifests are intentional. The exact measured package is preserved
 in [measured-package-267430f.tar.gz](provenance/measured-package-267430f.tar.gz)
 so rewriting branch history does not remove the source needed for recreation.
-Post-rebase correctness is checked separately by GitHub CI. A subsequent
+Before merge, the branch was also rebased onto master
+`7ff77eb0ca7b663bcc78a06d0ae1d2e915eed7f2` to integrate the structured-estimator
+exports, docs, tests and newer ProximalBase minimum. The measured environments
+remain frozen. Post-rebase correctness is checked separately by GitHub CI. A subsequent
 correctness review changed the optional exact Stein degrees-of-freedom tie
 check to use relative singular-value ratios, preserving response-scale
 invariance and avoiding squared-value underflow/overflow. This report retains
