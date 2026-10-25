@@ -113,9 +113,10 @@ end
   @test norm(H*A - C) > 1e-12
 
   fill!(A, 0)
-  @test !HighDimensionalModels._lr_group_fista!(A, H, C, 0.0, ones(2);
+  Cf = reshape([1.0, 0.0], 2, 1)
+  @test !HighDimensionalModels._lr_group_fista!(A, H, Cf, 0.0, ones(2);
     max_iter = 1, tol = 1e-12, L = 3.0)
-  @test norm(H*A - C) > 1e-12
+  @test norm(H*A - Cf) > 1e-12
 
   # A zero quadratic has the zero minimum-norm solution, including with a
   # nonzero warm start. The final KKT check still rejects an inconsistent C.
