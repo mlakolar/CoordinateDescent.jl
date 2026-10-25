@@ -1,0 +1,4 @@
+Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
+3	:	1792927710.657	  1093.462	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness/worker.sh 8203 R million million/baseline-full > million/baseline-full/worker-8203.log 2>&1
+1	:	1792927710.647	  1117.391	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness/worker.sh 8201 R million million/baseline-full > million/baseline-full/worker-8201.log 2>&1
+2	:	1792927710.654	  1267.299	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness/worker.sh 8202 R million million/baseline-full > million/baseline-full/worker-8202.log 2>&1

@@ -1,0 +1,30 @@
+{
+  "baseline_commit": "b570922b5cad321b817ee04b309c5cea7c4189db",
+  "candidate_solver_commit": "7bf2e2ec11715404f37e57345ec31fbfdef25905",
+  "candidate_final_tests": "harness-final/structured-final.jl",
+  "dependencies": {
+    "ProximalBase.jl": "b6c949f3dd26cad09252e1c2c9e49810eb69403e",
+    "ProximalOPT.jl": "b9cf11c46a12b0d686f242ee63162692a9091a85",
+    "KernelSmoothing.jl": "5fb7901b95975228af465e5f91ec5e0d3bacc060"
+  },
+  "source_sha256": {
+    "HighDimensionalModels.jl/src/structured.jl": "05bd75aa15fe19aa5ef7def00c0a8bc229cdf58779b4320884e8e040d0d8ae9d",
+    "HighDimensionalModels-baseline/src/structured.jl": "b5f9442c9a47d688f8ab0bff3a1bb644dbc5166d778ee5f6cd232bd718c10000",
+    "harness/measure.jl": "47d38b8e0b326554f59251db0ea6c1af4d97af712aab1985e712f768ffef6311",
+    "harness/reference.R": "a5cd812a5a4aea416a18a4f858e5e7a481b180812d9d703edc0216c96f93e822",
+    "harness-final/structured-final.jl": "00d86ce9e2865d97f1de8f93374f905ee91e7d7cefa1ad929176892c95d2693c"
+  },
+  "run_id": "20261025-cd97-defaults",
+  "seeds": [
+    8501,
+    8502,
+    8503
+  ],
+  "final_numerical_source_unchanged_from_candidate_v1": true,
+  "published_harness": {
+    "measure.jl": {
+      "sha256": "b2d998b6eebc61d20053aa82b1950c47d7dc5dc4e15e8d7b734a2cf9d3b61756",
+      "difference_from_run_snapshot": "Helper identifiers readinput/loadcase renamed to read_input/load_case; no other text change."
+    }
+  }
+}

@@ -1,0 +1,189 @@
+Test Summary:             | Pass  Total   Time
+Optimized structured fits |  336    336  49.2s
+ERROR: Some tests did not pass: 252 passed, 0 failed, 4 errored, 0 broken.
+generalized lasso, graphs, paths and df: Error During Test at /home1/mkolar/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:120
+  Test threw exception
+  Expression: dof(generalized_lasso(signal, G, 10.0; abstol = 1.0e-10, reltol = 1.0e-9)) == 2
+  MethodError: no method matching ldiv!(::SparseArrays.CHOLMOD.Factor{Float64, Int64}, ::Vector{Float64})
+
+  Closest candidates are:
+    ldiv!(!Matched::LinearAlgebra.QRPivoted{T, var"#s999", C} where {var"#s999"<:(StridedMatrix{T} where T), C<:AbstractVector{T}}, ::AbstractVector{T}) where T<:Union{Float32, Float64, ComplexF64, ComplexF32}
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/qr.jl:610
+    ldiv!(!Matched::LinearAlgebra.QRPivoted, ::AbstractVector)
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/qr.jl:677
+    ldiv!(!Matched::LinearAlgebra.LQ, ::AbstractVecOrMat)
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/lq.jl:185
+    ...
+
+  Stacktrace:
+    [1] ldiv!(Y::Vector{Float64}, A::SparseArrays.CHOLMOD.Factor{Float64, Int64}, B::Vector{Float64})
+      @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/factorization.jl:168
+    [2] _structured_solve!(x::Vector{Float64}, F::SparseArrays.CHOLMOD.Factor{Float64, Int64}, b::Vector{Float64})
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:273
+    [3] _split_fit(A::CoordinateDescent._SignalDesign{Float64}, b::Vector{Float64}, K::SparseArrays.SparseMatrixCSC{Float64, Int64}, g::ProximalBase.NormL1{Float64, Nothing}, ρ::Float64; max_iter::Int64, abstol::Float64, reltol::Float64, start::Nothing, gram::LinearAlgebra.Diagonal{Float64, Vector{Float64}}, xy::Vector{Float64}, factor::Nothing, bandwidth::Nothing)
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:305
+    [4] generalized_lasso(X::CoordinateDescent._SignalDesign{Float64}, y::Vector{Float64}, D::SparseArrays.SparseMatrixCSC{Float64, Int64}, λ::Float64; intercept::Bool, rho::Nothing, max_iter::Int64, abstol::Float64, reltol::Float64, df_tol::Float64)
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:364
+    [5] generalized_lasso
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:348 [inlined]
+    [6] #generalized_lasso#207
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:370 [inlined]
+    [7] macro expansion
+      @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:670 [inlined]
+    [8] macro expansion
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:120 [inlined]
+    [9] macro expansion
+      @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+   [10] top-level scope
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:106
+generalized lasso, graphs, paths and df: Error During Test at /home1/mkolar/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:105
+  Got exception outside of a @test
+  MethodError: no method matching ldiv!(::SparseArrays.CHOLMOD.Factor{Float64, Int64}, ::Vector{Float64})
+
+  Closest candidates are:
+    ldiv!(!Matched::LinearAlgebra.QRPivoted{T, var"#s999", C} where {var"#s999"<:(StridedMatrix{T} where T), C<:AbstractVector{T}}, ::AbstractVector{T}) where T<:Union{Float32, Float64, ComplexF64, ComplexF32}
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/qr.jl:610
+    ldiv!(!Matched::LinearAlgebra.QRPivoted, ::AbstractVector)
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/qr.jl:677
+    ldiv!(!Matched::LinearAlgebra.LQ, ::AbstractVecOrMat)
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/lq.jl:185
+    ...
+
+  Stacktrace:
+    [1] ldiv!(Y::Vector{Float64}, A::SparseArrays.CHOLMOD.Factor{Float64, Int64}, B::Vector{Float64})
+      @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/factorization.jl:168
+    [2] _structured_solve!(x::Vector{Float64}, F::SparseArrays.CHOLMOD.Factor{Float64, Int64}, b::Vector{Float64})
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:273
+    [3] _split_fit(A::SparseArrays.SparseMatrixCSC{Float64, Int64}, b::Vector{Float64}, K::SparseArrays.SparseMatrixCSC{Float64, Int64}, g::ProximalBase.NormL1{Float64, Nothing}, ρ::Float64; max_iter::Int64, abstol::Float64, reltol::Float64, start::Nothing, gram::SparseArrays.SparseMatrixCSC{Float64, Int64}, xy::Vector{Float64}, factor::Nothing, bandwidth::Nothing)
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:305
+    [4] _split_fit
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:290 [inlined]
+    [5] generalized_lasso(X::SparseArrays.SparseMatrixCSC{Float64, Int64}, y::Vector{Float64}, D::SparseArrays.SparseMatrixCSC{Float64, Int64}, λ::Float64; intercept::Bool, rho::Nothing, max_iter::Int64, abstol::Float64, reltol::Float64, df_tol::Float64)
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:364
+    [6] generalized_lasso(X::SparseArrays.SparseMatrixCSC{Float64, Int64}, y::Vector{Float64}, D::SparseArrays.SparseMatrixCSC{Float64, Int64}, λ::Float64)
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:348
+    [7] macro expansion
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:123 [inlined]
+    [8] macro expansion
+      @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+    [9] top-level scope
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:106
+   [10] include(fname::String)
+      @ Base.MainInclude ./client.jl:487
+   [11] macro expansion
+      @ none:1 [inlined]
+   [12] macro expansion
+      @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+   [13] top-level scope
+      @ none:1
+trend filtering and irregular locations: Error During Test at /home1/mkolar/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:146
+  Got exception outside of a @test
+  MethodError: no method matching ldiv!(::SparseArrays.CHOLMOD.Factor{Float64, Int64}, ::Vector{Float64})
+
+  Closest candidates are:
+    ldiv!(!Matched::LinearAlgebra.QRPivoted{T, var"#s999", C} where {var"#s999"<:(StridedMatrix{T} where T), C<:AbstractVector{T}}, ::AbstractVector{T}) where T<:Union{Float32, Float64, ComplexF64, ComplexF32}
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/qr.jl:610
+    ldiv!(!Matched::LinearAlgebra.QRPivoted, ::AbstractVector)
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/qr.jl:677
+    ldiv!(!Matched::LinearAlgebra.LQ, ::AbstractVecOrMat)
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/lq.jl:185
+    ...
+
+  Stacktrace:
+    [1] ldiv!(Y::Vector{Float64}, A::SparseArrays.CHOLMOD.Factor{Float64, Int64}, B::Vector{Float64})
+      @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/factorization.jl:168
+    [2] _structured_solve!(x::Vector{Float64}, F::SparseArrays.CHOLMOD.Factor{Float64, Int64}, b::Vector{Float64})
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:273
+    [3] _split_fit(A::CoordinateDescent._SignalDesign{Float64}, b::Vector{Float64}, K::SparseArrays.SparseMatrixCSC{Float64, Int64}, g::ProximalBase.NormL1{Float64, Nothing}, ρ::Float64; max_iter::Int64, abstol::Float64, reltol::Float64, start::Nothing, gram::LinearAlgebra.Diagonal{Float64, Vector{Float64}}, xy::Vector{Float64}, factor::Nothing, bandwidth::Nothing)
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:305
+    [4] generalized_lasso(X::CoordinateDescent._SignalDesign{Float64}, y::Vector{Float64}, D::SparseArrays.SparseMatrixCSC{Float64, Int64}, λ::Float64; intercept::Bool, rho::Nothing, max_iter::Int64, abstol::Float64, reltol::Float64, df_tol::Float64)
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:364
+    [5] generalized_lasso
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:348 [inlined]
+    [6] #generalized_lasso#207
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:370 [inlined]
+    [7] macro expansion
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:153 [inlined]
+    [8] macro expansion
+      @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+    [9] top-level scope
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:147
+   [10] include(fname::String)
+      @ Base.MainInclude ./client.jl:487
+   [11] macro expansion
+      @ none:1 [inlined]
+   [12] macro expansion
+      @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+   [13] top-level scope
+      @ none:1
+CV has a common grid and respects training folds: Error During Test at /home1/mkolar/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:171
+  Got exception outside of a @test
+  MethodError: no method matching ldiv!(::SparseArrays.CHOLMOD.Factor{Float64, Int64}, ::Vector{Float64})
+
+  Closest candidates are:
+    ldiv!(!Matched::LinearAlgebra.QRPivoted{T, var"#s999", C} where {var"#s999"<:(StridedMatrix{T} where T), C<:AbstractVector{T}}, ::AbstractVector{T}) where T<:Union{Float32, Float64, ComplexF64, ComplexF32}
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/qr.jl:610
+    ldiv!(!Matched::LinearAlgebra.QRPivoted, ::AbstractVector)
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/qr.jl:677
+    ldiv!(!Matched::LinearAlgebra.LQ, ::AbstractVecOrMat)
+     @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/lq.jl:185
+    ...
+
+  Stacktrace:
+    [1] ldiv!(Y::Vector{Float64}, A::SparseArrays.CHOLMOD.Factor{Float64, Int64}, B::Vector{Float64})
+      @ LinearAlgebra ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/LinearAlgebra/src/factorization.jl:168
+    [2] _structured_solve!(x::Vector{Float64}, F::SparseArrays.CHOLMOD.Factor{Float64, Int64}, b::Vector{Float64})
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:273
+    [3] _split_fit(A::SparseArrays.SparseMatrixCSC{Float64, Int64}, b::Vector{Float64}, K::SparseArrays.SparseMatrixCSC{Float64, Int64}, g::ProximalBase.TotalVariation1D{Float64}, ρ::Float64; max_iter::Int64, abstol::Float64, reltol::Float64, start::Nothing, gram::SparseArrays.SparseMatrixCSC{Float64, Int64}, xy::Vector{Float64}, factor::SparseArrays.CHOLMOD.Factor{Float64, Int64}, bandwidth::Nothing)
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:305
+    [4] _admm_path(X::SparseArrays.SparseMatrixCSC{Float64, Int64}, y::Vector{Float64}, D::SparseArrays.SparseMatrixCSC{Float64, Int64}, K::SparseArrays.SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}; family::Symbol, trend_order::Int64, intercept::Bool, rho::Nothing, max_iter::Int64, abstol::Float64, reltol::Float64, df_tol::Float64, spacing::Int64)
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:597
+    [5] _admm_path
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:563 [inlined]
+    [6] trend_filter_path(X::SparseArrays.SparseMatrixCSC{Float64, Int64}, y::Vector{Float64}, levels::Vector{Float64}; order::Int64, x::Nothing, rho::Nothing, kwargs::@Kwargs{})
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:660
+    [7] trend_filter_path
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:645 [inlined]
+    [8] #247
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:787 [inlined]
+    [9] _structured_cv(makepath::CoordinateDescent.var"#247#248"{@Kwargs{}}, X::SparseArrays.SparseMatrixCSC{Float64, Int64}, y::Vector{Float64}, levels::Vector{Float64}; nfolds::Int64, folds::Nothing, rng::Random.Xoshiro, threads::Bool)
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:727
+   [10] _structured_cv
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:720 [inlined]
+   [11] #cv_trend_filter#246
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:787 [inlined]
+   [12] cv_trend_filter
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:784 [inlined]
+   [13] cv_trend_filter(y::Vector{Float64}, levels::Vector{Float64}; kwargs::@Kwargs{nfolds::Int64, rng::Random.Xoshiro, threads::Bool})
+      @ CoordinateDescent ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/src/structured.jl:790
+   [14] macro expansion
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:189 [inlined]
+   [15] macro expansion
+      @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+   [16] top-level scope
+      @ ~/juliaPkg/runs/20261025-cd80-competitive/source-opt-v1/test/structured.jl:172
+   [17] include(fname::String)
+      @ Base.MainInclude ./client.jl:487
+   [18] macro expansion
+      @ none:1 [inlined]
+   [19] macro expansion
+      @ ~/juliaPkg/julia-1.10.12/share/julia/stdlib/v1.10/Test/src/Test.jl:1582 [inlined]
+   [20] top-level scope
+      @ none:1
+Test Summary:                                      | Pass  Error  Total   Time
+Optimized structured fits                          |  252      4    256  56.4s
+  difference and graph matrices                    |   12            12   2.4s
+  banded signal normal equations                   |   72            72  17.7s
+  fused regression and signal fits                 |   24            24   9.6s
+  generalized lasso, graphs, paths and df          |   13      2     15   3.9s
+  trend filtering and irregular locations          |           1      1   0.3s
+  CV has a common grid and respects training folds |    6      1      7   4.8s
+  Discovery R golden paths                         |  114           114   3.2s
+  Method ambiguity                                 |    1             1   1.7s
+  Unbound type parameters                          |    1             1   0.1s
+  Undefined exports                                |    1             1   0.0s
+  Compare Project.toml and test/Project.toml       |    1             1   0.0s
+  Stale dependencies                               |    1             1   1.6s
+  Compat bounds                                    |    4             4   0.2s
+  Piracy                                           |    1             1   0.1s
+  Persistent tasks                                 |    1             1   5.1s

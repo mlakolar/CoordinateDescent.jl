@@ -18,6 +18,10 @@ coordinates, such as the weighted ℓ1 norm `NormL1`. The lasso solvers accept
 real data and penalties of any type and convert them to a common floating point
 type: the element type of `X` and `y` promoted to a float, or that of the
 iterate passed to `scaled_lasso!` and `feasible_lasso!`.
+
+Penalties on ordered coefficients and graphs are fitted by [`fused_lasso`](@ref),
+[`trend_filter`](@ref) and [`generalized_lasso`](@ref), using exact proximal
+steps, proximal gradient or specialized ADMM rather than coordinate descent.
 """
 module HighDimensionalModels
 
@@ -70,6 +74,12 @@ export
   multi_lasso,
   MultiLassoPath,
 
+  # penalties on ordered coefficients and graphs
+  fused_lasso, generalized_lasso, trend_filter,
+  difference_matrix, graph_difference,
+  StructuredLassoSolution, GeneralizedLassoPath, CVGeneralizedLassoPath,
+  fused_lasso_path, trend_filter_path, cv_fused_lasso, cv_trend_filter,
+
   # inference after selection, as in R's hdm
   theory_lambda,
   rlasso,
@@ -89,6 +99,7 @@ include("group.jl")
 include("sparsegroup.jl")
 include("multiresponse.jl")
 include("cv.jl")
+include("structured.jl")
 include("hdm.jl")
 include("statsapi.jl")
 include("formula.jl")
