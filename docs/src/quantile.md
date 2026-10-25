@@ -134,3 +134,10 @@ demonstrated in the solver follow-up benchmarks.
 
 Quantile inference is tracked separately in
 [issue #104](https://github.com/mlakolar/HighDimensionalModels.jl/issues/104).
+
+The larger Discovery benchmark campaign is tracked in
+[issue #105](https://github.com/mlakolar/HighDimensionalModels.jl/issues/105).
+Workspace development resolves ProximalSolvers master, including the merged
+convolution-certification changes from PR #96. CI verifies this capability
+explicitly. Migration version numbers remain unchanged; the feature-detected
+older-release behavior described above is retained.

@@ -91,7 +91,26 @@ end
   tiny=QuantileLassoPath(X,y,[.1,.01];time_limit=1e-12)
   @test !tiny.complete && isempty(tiny.solutions) && tiny.status==:TIME_LIMIT
   @test size(coef(tiny))==(6,0) && size(dual_scores(tiny))==(61,0)
+  @test size(predict(tiny,X)) == (61,0)
+  @test_throws DimensionMismatch predict(tiny,zeros(4,2))
   @test_throws ErrorException quantile_lasso(X,y,.1;time_limit=1e-12)
+  @test dof(nullfit) == 1
+  @test dof(quantile_lasso(X,y,1e3;intercept=false)) == 0
+  fitted_path=fit(QuantileLassoPath,X,y,[.3,.1];standardize_x=false)
+  @test fitted_path.complete && all(s.converged for s in fitted_path.solutions)
+  @test predict(fitted_path,X) ≈ reduce(hcat,[predict(s,X) for s in fitted_path.solutions])
+  # A native iteration limit before any pair exists must return no invented fit.
+  limited_optimizer() = begin
+    opt=HiGHS.Optimizer()
+    QMOI.set(opt,QMOI.RawOptimizerAttribute("presolve"),"off")
+    QMOI.set(opt,QMOI.RawOptimizerAttribute("simplex_iteration_limit"),0)
+    opt
+  end
+  unavailable,status=HighDimensionalModels._quantile_exact_path(X,y,[.1],ones(5),.5,true;
+    tol=1e-6,time_limit=Inf,initial_basis=:default,simplex=:dual,start=time_ns(),optimizer_factory=limited_optimizer)
+  @test isempty(unavailable) && status==:ITERATION_LIMIT
+  coverage=Base.JLOptions().code_coverage == 0 ? "none" : "user"
+  run(`$(Base.julia_cmd()) --startup-file=no --depwarn=error --code-coverage=$coverage --project=$(dirname(Base.active_project())) $(joinpath(@__DIR__,"quantile_optional_backend.jl"))`)
   # Smoothing exposes its own raw score, and never overwrites it with a certificate.
   for τ in (.2,.5,.8)
     p=QuantileLassoPath(X,y,[.3,.1];method=:smooth,tau=τ,bandwidth=.2,standardize_x=false,tol=3e-5)

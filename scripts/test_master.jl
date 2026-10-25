@@ -45,6 +45,11 @@ for (name, uuid) in deps
 end
 println("Master test environment: ", environment)
 if !("--setup-only" in ARGS)
+    # CI must exercise the certified smoothed backend, rather than silently
+    # taking the supported older-release fallback with an unmerged workspace.
+    using ProximalBase, ProximalSolvers
+    all(kernel -> ProximalSolvers._hasconjugate(ProximalBase.ConvolutionCheck(0.5,0.2;kernel)),
+        (:uniform,:epanechnikov)) || error("workspace ProximalSolvers must include convolution certificates (PR #96)")
     depwarn = get(ENV, "JULIA_TEST_DEPWARN", "yes")
     depwarn in ("yes", "no", "error") || error("invalid JULIA_TEST_DEPWARN")
     coverage = get(ENV, "JULIA_TEST_COVERAGE", "false") == "true" ? "user" : "none"

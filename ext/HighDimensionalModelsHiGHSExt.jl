@@ -6,9 +6,11 @@ const MOI = HiGHS.MOI
 
 function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},
                                   ls::Vector{Float64}, w::Vector{Float64}, τ::Float64, intercept::Bool;
-                                  tol, time_limit, initial_basis, simplex, start)
+                                  tol, time_limit, initial_basis, simplex, start,
+                                  optimizer_factory=HiGHS.Optimizer)
   n, p = size(X)
-  opt = HiGHS.Optimizer()
+  # The private factory permits deterministic native termination tests.
+  opt = optimizer_factory()
   MOI.set(opt, MOI.Silent(), true)
   for (name, val) in (("threads",1), ("parallel","off"), ("solver","simplex"),
                       ("simplex_strategy",simplex == :dual ? 1 : 4),
