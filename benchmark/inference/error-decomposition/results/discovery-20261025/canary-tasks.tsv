@@ -1,0 +1,6 @@
+binomial-moderate	1	1	canary
+binomial-correlated	1	1	canary
+binomial-benign	1	1	canary
+binomial-random	1	1	canary
+gaussian-moderate	1	1	canary
+gaussian-benign	1	1	canary

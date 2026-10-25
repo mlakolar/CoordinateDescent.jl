@@ -1,0 +1,11 @@
+{
+  "expected_rows": 154000,
+  "rows": 154000,
+  "unique_rows": 154000,
+  "missing": [],
+  "errors": [],
+  "all_converged": true,
+  "finite_positive_se": true,
+  "max_identity_error": 1.9984014443252818e-15,
+  "max_score_intercept_orthogonality": 3.021773543028659e-10
+}
