@@ -1,5 +1,5 @@
 # Generate shared numerical inputs, or compare the independent R fits.
-using CoordinateDescent, LinearAlgebra, Random, DelimitedFiles, Test, Printf
+using HighDimensionalModels, LinearAlgebra, Random, DelimitedFiles, Test, Printf
 mode, out = ARGS
 mkpath(out)
 if mode == "generate"

@@ -1,5 +1,5 @@
 # Each invocation is an independent data replication; run under Slurm.
-using CoordinateDescent, LinearAlgebra, Random, Profile, Printf
+using HighDimensionalModels, LinearAlgebra, Random, Profile, Printf
 BLAS.set_num_threads(1)
 rep, out = parse(Int,ARGS[1]), ARGS[2]
 mkpath(out)

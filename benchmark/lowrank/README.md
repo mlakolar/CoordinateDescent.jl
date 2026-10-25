@@ -10,6 +10,10 @@ and rank-deficient cases. It compares the same fixed objectives, including
 generic proximal algorithms, and retains accuracy failures and profiler data.
 It is separate from the package-only baseline below.
 
+The current `bench.jl` and `oracle.jl` use the renamed HighDimensionalModels
+module. Frozen optimization harnesses and recorded environments retain their
+historical CoordinateDescent name; use their pinned recreation recipes.
+
 Run timing and profiling on Discovery. The Slurm launcher requests four CPUs,
 12 GB, and one hour; it uses GNU Parallel and exclusive single-CPU `srun`
 steps, with one Julia/BLAS thread per independent replication.
@@ -25,13 +29,13 @@ seconds, allocated bytes, rank and convergence; they retain every round.
 
 ```sh
 srun --account=mkolar_1314 --partition=main --cpus-per-task=1 --mem=4G --time=00:15:00 \
-  julia --project=benchmark/lowrank -e 'using Pkg; Pkg.instantiate()'
+  julia scripts/instantiate.jl benchmark/lowrank
 export JULIA=/path/to/julia
 sbatch --parsable --comment=YOUR_UNIQUE_RUN_ID benchmark/lowrank/discovery.sbatch
 ```
 
-Julia 1.10 ignores `[sources]`; develop this checkout and add the unregistered
-ProximalSolvers and ProximalBase dependencies as in the repository CI setup.
+The setup script resolves this checkout and sibling master dependencies on
+all supported Julia versions, including Julia 1.10.
 Pin dependency revisions and save the resolved manifest for a measured run.
 Run all Julia preparation, tests, oracles and compilation inside Slurm
 allocations as well; local editing and orchestration do not require Julia.

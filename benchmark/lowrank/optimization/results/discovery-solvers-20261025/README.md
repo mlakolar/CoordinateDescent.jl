@@ -6,7 +6,7 @@ fixed-rank result diagnostics. APG and coordinate descent remain the defaults.
 Both solver choices propagate through paths and cross-validation.
 
 ```julia
-using CoordinateDescent, ProximalAlgorithms
+using HighDimensionalModels, ProximalAlgorithms
 nuclear_regression(X, Y, λ; solver = :panoc)
 sparse_reduced_rank(X, Y, r, λ; block_solver = :fista)
 ```
@@ -44,10 +44,34 @@ are outside fit timers. Fresh-process high-water RSS includes the runtime,
 packages, warm-up, and post-fit certificate/factor-replay work, with a separate
 post-warm-up baseline; it is not an allocation count for one solver call.
 
-At the middle penalty, native PANOC takes **14–38% less time on five of six
-designs**; it is about 4% slower on the many-response design. Fixed-rank public
-fits take **17–39% less time**, with identical attained objectives. Rank paths
-take **47–60% less time**. Public block FISTA has its clearest gains on
+## What each comparison establishes
+
+“Previous” means the earlier implementation of this new feature in this PR,
+not a released package with an existing low-rank API. Fixed-rank before/after
+ratios compare that earlier public API with the optimized public API on the
+same inputs and CPU. PANOC/APG and FISTA/CD ratios instead compare solver
+options within our updated package. They are not package-to-package speedups.
+
+| Comparison at the middle penalty (rank 3 for fixed-rank fits) | Finding across the six designs |
+|---|---|
+| Updated vs previous fixed-rank public API | 17–39% less time; rank 0–3 paths take 47–60% less time. |
+| Our PANOC vs our APG | 14–38% less time on five designs, about 4% more on many responses; APG before/after is essentially unchanged. |
+| Our public block FISTA vs our public CD | 62% less time on ill-conditioned and 25% less on rank-deficient inputs; otherwise about 0–5% gain, with no consistent adaptive-weight gain. |
+| Our updated fixed-rank API vs SciPy compact-SVD adapter | SciPy is faster on five designs; our API is faster only on small inputs. SciPy returns coefficients alone. |
+| Our updated fixed-rank API vs R rrpack QR/SVD | Our API is faster on all six designs. This excludes the unreliable R normal-equation route. |
+| Our nuclear APG/PANOC vs Python PyProximal FISTA/ADMM adapters | Both native options are faster than both tested Python adapters on all six designs. |
+| Our nuclear PANOC vs generic Julia PANOC | Generic Julia PANOC is faster on five designs; our wrapper wins on wide inputs. Both use ProximalAlgorithms, with different prox workspaces, steps, and returned diagnostics. |
+| Our public sparse APIs vs R rrpack srrr | Both native options are faster on five designs; R is faster on wide inputs with matching middle-penalty objectives. |
+| Our sparse-component kernel vs generic FISTA and R component | Our kernel is faster on all six designs; this is one fixed-penalty rank-one component, not a complete sparse-SVD selection procedure. |
+
+These findings apply to the tested implementations, inputs, penalties, and
+accuracy checks. They do not establish a universal package ranking. The
+following tables give milliseconds and disclose unequal interface work.
+
+At the middle penalty, native PANOC takes **14–38% less time than our APG
+on five of six designs**; it is about 4% slower on the many-response design. Fixed-rank public
+fits take **17–39% less time than our previous implementation**, with identical attained objectives. Rank paths
+take **47–60% less time than our previous implementation**. Public block FISTA has its clearest gains on
 ill-conditioned and rank-deficient inputs; its gains elsewhere are small once
 initialization and result diagnostics are included.
 
@@ -198,6 +222,22 @@ precompilation and exposed eight near-zero residual assertions with an overly
 strict relative-only tolerance; correcting the assertions' absolute roundoff
 allowance produced the complete passing suites. Production solver code did
 not change between these tests and measurements.
+
+## Rebase and measured source
+
+The branch was rebased onto master `415fb1a152db911190a70d6717f5937a9a6b6b1c`,
+which renames CoordinateDescent to HighDimensionalModels and resolves workspace
+dependencies from sibling master checkouts. The low-rank numerical kernels are
+unchanged; module/extension registration and the live benchmark entry points
+use the new name. The example above uses the current name.
+
+All performance numbers and Discovery test counts in this report refer to
+the frozen pre-rebase source and pinned dependencies, not a new measurement of
+the current master dependency stack. The original module names in frozen
+harnesses/manifests are intentional. The exact measured package is preserved
+in [measured-package-267430f.tar.gz](provenance/measured-package-267430f.tar.gz)
+so rewriting branch history does not remove the source needed for recreation.
+Post-rebase correctness is checked separately by GitHub CI.
 
 The measured production implementation is commit
 `267430fc240841e072aab77cf6341bd135a74076`. Before baselines use the frozen
