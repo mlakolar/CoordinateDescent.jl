@@ -40,6 +40,8 @@ makedocs(
         "Paths, screening and solver options" => "paths.md",
         "The group lasso" => "group.md",
         "Debiased inference and score tests" => "inference.md",
+        "Fused regression, trend filtering and graphs" => "structured.md",
+
         "Writing a loss or a penalty" => "extending.md",
         "Varying-coefficient models" => "varying.md",
         "Examples" => example_pages,

@@ -1,0 +1,66 @@
+{
+  "run_id": "20261025-cd80-stopping",
+  "baseline_source_commit": "646a82c3c7e9348a1de5dc0257daeacbd7d3904b",
+  "final_source_commit": "50048255f49511518a622a20df838d1a71301064",
+  "source_v1": {
+    "patch": "candidate-source.patch",
+    "rule": "Float64 signal order1 only: feasible gap<=0.3reltol*objective,5xresidual guard,nearzero fallback",
+    "sha256": "17a867ff49d61df14a0e3a5604d34f450d91a63d2addbb8162124d2f1912a255",
+    "source_snapshot": "source-gap-v1.tar"
+  },
+  "source_v2": {
+    "reason": "Restore the original short-circuit residual expression for all unchanged models; gap branch computations unchanged. Revalidate both Julia versions and repeat only135candidate timings; reuse baseline/Rtimings and CPU/allocation profiles.",
+    "sha256": "f47e8b2fed34254c83d2c3390d0ce36812b1141bab1a879077432d5a30b1041c",
+    "snapshot": "source-gap-v2.tar"
+  },
+  "old_run": {
+    "environment": "/home1/mkolar/juliaPkg/runs/20261025-cd80-competitive/env-opt-v4-release",
+    "inputs": "Retain previous main and million inputs/coefficient references unchanged",
+    "previous_run": "/home1/mkolar/juliaPkg/runs/20261025-cd80-competitive"
+  },
+  "source_root": "/home1/mkolar/juliaPkg/runs/20261025-cd80-stopping",
+  "replications": {
+    "calibration_seeds": [
+      8201,
+      8202,
+      8203
+    ],
+    "million_calibration_rng_seeds": [
+      18201,
+      18202,
+      18203
+    ],
+    "holdout_seeds": [
+      8301,
+      8302,
+      8303
+    ],
+    "timing_rounds": 3
+  },
+  "resources": {
+    "approved_additional_active_seconds": 2700,
+    "actual_additional_active_seconds": 1627,
+    "max_cpus": 3,
+    "max_memory_gb": 12,
+    "prior_task_active_seconds": 6758
+  },
+  "julia_benchmark": "1.13.2",
+  "julia_validation": [
+    "1.13.2",
+    "1.10.12"
+  ],
+  "R": "4.5.3",
+  "glmgen_commit": "9e6061503d6dd103712a0c07f6be7293c1c58aaf",
+  "timing_reuse": "calibration-warmfix overrides two first-wrapper cases; julia-final replaces all135candidate timings. Unchanged source baseline andR measurements retained.",
+  "profile_scope": "CPU and sampledallocation profiles on3freshdatasets for bothsources. Captured onsourcev1; v2 restores unrelatedresidual branch shortcircuit andleavesgapbranch computationsunchanged. Finalsourcecandidate timings repeated.",
+  "timing_caveat": "NonexclusiveEPYC7513; finalsourcecandidate confirmation runs laterallocation thanbaseline. Actualsourcev1 old/new comparison sharesoneallocation withsourceorder alternatingbyseed.",
+  "canonical_integration": {
+    "commit": "ceb9d36e9cc89d871d9e0f4d88ceedea96e78810",
+    "upstream": "f96177192d511512c6c4b145e23ecdd86e9da789",
+    "solver_core_sha256": "b5f9442c9a47d688f8ab0bff3a1bb644dbc5166d778ee5f6cd232bd718c10000",
+    "solver_core_byte_identical_to_benchmarked_source": true,
+    "ProximalBase_current_master": "b6c949f3dd26cad09252e1c2c9e49810eb69403e",
+    "ordered_operator_file_identical_to_frozen_benchmark_dependency": true,
+    "note": "Namespace/import integration uses HighDimensionalModels; calibrated solver core unchanged. Canonical integration runs the GitHub master-dependency workflow."
+  }
+}

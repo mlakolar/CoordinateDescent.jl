@@ -1,0 +1,196 @@
+bytes=159984 type=Profile.Allocs.BufferType
+  maybe_record_alloc_to_profile at gc-alloc-profiler.h:43 [inlined]
+  ijl_gc_managed_malloc at gc-stock.c:3944
+  jl_alloc_genericmemory_unchecked at genericmemory.c:38
+  GenericMemory at boot.jl:588 [inlined]
+  Array at boot.jl:648 [inlined]
+  vcat(::UnitRange{Int64}, ::UnitRange{Int64}) at range.jl:1388
+  difference_matrix(n::Int64, order::Int64; x::Nothing) at structured.jl:55
+  difference_matrix at structured.jl:39 [inlined]
+  trend_filter(X::CoordinateDescent._SignalDesign{Float64}, y::Vector{Float64}, λ::Float64; order::Int64, x::Nothing, intercept::Bool, rho::Nothing, max_iter::Int64, abstol::Float64, reltol::Float64, df_tol::Float64) at structured.jl:498
+  trend_filter at structured.jl:489 [inlined]
+  #trend_filter#215 at structured.jl:521 [inlined]
+  trend_filter at structured.jl:521 [inlined]
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}}; tight::Bool) at julia.jl:30
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}}) at julia.jl:25
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}})
+  macro expansion at Allocs.jl:82 [inlined]
+  (::var"#14#15")(io::IOStream) at julia.jl:72
+  open(::var"#14#15", ::String, ::Vararg{String}; kwargs::Base.Pairs{Symbol, Union{}, Nothing, @NamedTuple{}}) at io.jl:429
+  open(::Function, ::String, ::String) at io.jl:426
+  jl_apply at julia.h:2319 [inlined]
+  do_call at interpreter.c:123
+  eval_value at interpreter.c:243
+  eval_stmt_value at interpreter.c:194 [inlined]
+  eval_body at interpreter.c:679
+  jl_interpret_toplevel_thunk at interpreter.c:884
+  ip:0xffffffffffffffff
+  ip:0x17042
+  ip:0x7f2e4b4b4910
+  jl_system_image_data at sys.so:?
+  jl_toplevel_eval_flex at toplevel.c:742
+  jl_eval_toplevel_stmts at toplevel.c:585
+  jl_toplevel_eval_flex at toplevel.c:683
+  ijl_toplevel_eval at toplevel.c:754
+  ijl_toplevel_eval_in at toplevel.c:799
+  eval(m::Module, e::Any) at boot.jl:489
+  include_string(mapexpr::typeof(identity), mod::Module, code::String, filename::String) at loading.jl:3045
+  _include(mapexpr::Function, mod::Module, _path::String) at loading.jl:3105
+  include(mod::Module, _path::String) at Base.jl:309
+  exec_options(opts::Base.JLOptions) at client.jl:344
+  _start() at client.jl:577
+  _start() at sys.so:?
+  jl_apply at julia.h:2319 [inlined]
+  true_main at jlapi.c:985
+  jl_repl_entrypoint at jlapi.c:1152
+  main at loader_exe.c:58
+  __libc_start_main at libc.so.6:?
+  ip:0x4010b8 at start.S:123
+bytes=159968 type=Profile.Allocs.BufferType
+  maybe_record_alloc_to_profile at gc-alloc-profiler.h:43 [inlined]
+  ijl_gc_managed_malloc at gc-stock.c:3944
+  jl_alloc_genericmemory_unchecked at genericmemory.c:38
+  GenericMemory at boot.jl:588 [inlined]
+  Array at boot.jl:648 [inlined]
+  vcat(::UnitRange{Int64}, ::UnitRange{Int64}) at range.jl:1388
+  difference_matrix(n::Int64, order::Int64; x::Nothing) at structured.jl:55
+  difference_matrix at structured.jl:39 [inlined]
+  trend_filter(X::CoordinateDescent._SignalDesign{Float64}, y::Vector{Float64}, λ::Float64; order::Int64, x::Nothing, intercept::Bool, rho::Nothing, max_iter::Int64, abstol::Float64, reltol::Float64, df_tol::Float64) at structured.jl:498
+  trend_filter at structured.jl:489 [inlined]
+  #trend_filter#215 at structured.jl:521 [inlined]
+  trend_filter at structured.jl:521 [inlined]
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}}; tight::Bool) at julia.jl:30
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}}) at julia.jl:25
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}})
+  macro expansion at Allocs.jl:82 [inlined]
+  (::var"#14#15")(io::IOStream) at julia.jl:72
+  open(::var"#14#15", ::String, ::Vararg{String}; kwargs::Base.Pairs{Symbol, Union{}, Nothing, @NamedTuple{}}) at io.jl:429
+  open(::Function, ::String, ::String) at io.jl:426
+  jl_apply at julia.h:2319 [inlined]
+  do_call at interpreter.c:123
+  eval_value at interpreter.c:243
+  eval_stmt_value at interpreter.c:194 [inlined]
+  eval_body at interpreter.c:679
+  jl_interpret_toplevel_thunk at interpreter.c:884
+  ip:0xffffffffffffffff
+  ip:0x17042
+  ip:0x7f2e4b4b4910
+  jl_system_image_data at sys.so:?
+  jl_toplevel_eval_flex at toplevel.c:742
+  jl_eval_toplevel_stmts at toplevel.c:585
+  jl_toplevel_eval_flex at toplevel.c:683
+  ijl_toplevel_eval at toplevel.c:754
+  ijl_toplevel_eval_in at toplevel.c:799
+  eval(m::Module, e::Any) at boot.jl:489
+  include_string(mapexpr::typeof(identity), mod::Module, code::String, filename::String) at loading.jl:3045
+  _include(mapexpr::Function, mod::Module, _path::String) at loading.jl:3105
+  include(mod::Module, _path::String) at Base.jl:309
+  exec_options(opts::Base.JLOptions) at client.jl:344
+  _start() at client.jl:577
+  _start() at sys.so:?
+  jl_apply at julia.h:2319 [inlined]
+  true_main at jlapi.c:985
+  jl_repl_entrypoint at jlapi.c:1152
+  main at loader_exe.c:58
+  __libc_start_main at libc.so.6:?
+  ip:0x4010b8 at start.S:123
+bytes=48 type=Matrix{Float64}
+  maybe_record_alloc_to_profile at gc-alloc-profiler.h:43 [inlined]
+  ijl_gc_small_alloc at gc-stock.c:784
+  Array at boot.jl:652 [inlined]
+  Array at boot.jl:662 [inlined]
+  zeros at array.jl:626 [inlined]
+  zeros at array.jl:622 [inlined]
+  _structured_band_factor(H::SparseMatrixCSC{Float64, Int64}, width::Int64) at structured.jl:227
+  _split_factor(gram::Diagonal{Float64, Vector{Float64}}, K::SparseMatrixCSC{Float64, Int64}, ρ::Float64; bandwidth::Int64) at structured.jl:282
+  _split_factor at structured.jl:279 [inlined]
+  _split_fit(A::CoordinateDescent._SignalDesign{Float64}, b::Vector{Float64}, K::SparseMatrixCSC{Float64, Int64}, g::ProximalBase.TotalVariation1D{Float64}, ρ::Float64; max_iter::Int64, abstol::Float64, reltol::Float64, start::Nothing, gram::Diagonal{Float64, Vector{Float64}}, xy::Vector{Float64}, factor::Nothing, bandwidth::Int64) at structured.jl:293
+  kwcall(::@NamedTuple{max_iter::Int64, abstol::Float64, reltol::Float64, bandwidth::Int64}, ::typeof(CoordinateDescent._split_fit), A::CoordinateDescent._SignalDesign{Float64}, b::Vector{Float64}, K::SparseMatrixCSC{Float64, Int64}, g::ProximalBase.TotalVariation1D{Float64}, ρ::Float64) at structured.jl:289
+  trend_filter(X::CoordinateDescent._SignalDesign{Float64}, y::Vector{Float64}, λ::Float64; order::Int64, x::Nothing, intercept::Bool, rho::Nothing, max_iter::Int64, abstol::Float64, reltol::Float64, df_tol::Float64) at structured.jl:515
+  trend_filter at structured.jl:489 [inlined]
+  #trend_filter#215 at structured.jl:521 [inlined]
+  trend_filter at structured.jl:521 [inlined]
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}}; tight::Bool) at julia.jl:30
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}}) at julia.jl:25
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}})
+  macro expansion at Allocs.jl:82 [inlined]
+  (::var"#14#15")(io::IOStream) at julia.jl:72
+  open(::var"#14#15", ::String, ::Vararg{String}; kwargs::Base.Pairs{Symbol, Union{}, Nothing, @NamedTuple{}}) at io.jl:429
+  open(::Function, ::String, ::String) at io.jl:426
+  jl_apply at julia.h:2319 [inlined]
+  do_call at interpreter.c:123
+  eval_value at interpreter.c:243
+  eval_stmt_value at interpreter.c:194 [inlined]
+  eval_body at interpreter.c:679
+  jl_interpret_toplevel_thunk at interpreter.c:884
+  ip:0xffffffffffffffff
+  ip:0x17042
+  ip:0x7f2e4b4b4910
+  jl_system_image_data at sys.so:?
+  jl_toplevel_eval_flex at toplevel.c:742
+  jl_eval_toplevel_stmts at toplevel.c:585
+  jl_toplevel_eval_flex at toplevel.c:683
+  ijl_toplevel_eval at toplevel.c:754
+  ijl_toplevel_eval_in at toplevel.c:799
+  eval(m::Module, e::Any) at boot.jl:489
+  include_string(mapexpr::typeof(identity), mod::Module, code::String, filename::String) at loading.jl:3045
+  _include(mapexpr::Function, mod::Module, _path::String) at loading.jl:3105
+  include(mod::Module, _path::String) at Base.jl:309
+  exec_options(opts::Base.JLOptions) at client.jl:344
+  _start() at client.jl:577
+  _start() at sys.so:?
+  jl_apply at julia.h:2319 [inlined]
+  true_main at jlapi.c:985
+  jl_repl_entrypoint at jlapi.c:1152
+  main at loader_exe.c:58
+  __libc_start_main at libc.so.6:?
+  ip:0x4010b8 at start.S:123
+bytes=24 type=Memory{Int64}
+  maybe_record_alloc_to_profile at gc-alloc-profiler.h:43 [inlined]
+  jl_gc_alloc_ at gc-stock.c:814
+  jl_alloc_genericmemory_unchecked at genericmemory.c:41
+  GenericMemory at boot.jl:588 [inlined]
+  Array at boot.jl:648 [inlined]
+  spmatmul(A::SparseMatrixCSC{Float64, Int64}, B::SparseMatrixCSC{Float64, Int64}) at linalg.jl:358
+  * at linalg.jl:312 [inlined]
+  difference_matrix(n::Int64, order::Int64; x::Nothing) at structured.jl:56
+  difference_matrix at structured.jl:39 [inlined]
+  trend_filter(X::CoordinateDescent._SignalDesign{Float64}, y::Vector{Float64}, λ::Float64; order::Int64, x::Nothing, intercept::Bool, rho::Nothing, max_iter::Int64, abstol::Float64, reltol::Float64, df_tol::Float64) at structured.jl:507
+  trend_filter at structured.jl:489 [inlined]
+  #trend_filter#215 at structured.jl:521 [inlined]
+  trend_filter at structured.jl:521 [inlined]
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}}; tight::Bool) at julia.jl:30
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}}) at julia.jl:25
+  solve(c::@NamedTuple{id::SubString{String}, family::SubString{String}, n::Int64, p::Int64, order::Int64, grid::SubString{String}, path::Int64, lo::Float64, hi::Float64, genlasso::SubString{String}}, a::@NamedTuple{X::Nothing, y::Vector{Float64}, x::Nothing, D::SparseMatrixCSC{Float64, Int64}, levels::Vector{Float64}})
+  macro expansion at Allocs.jl:82 [inlined]
+  (::var"#14#15")(io::IOStream) at julia.jl:72
+  open(::var"#14#15", ::String, ::Vararg{String}; kwargs::Base.Pairs{Symbol, Union{}, Nothing, @NamedTuple{}}) at io.jl:429
+  open(::Function, ::String, ::String) at io.jl:426
+  jl_apply at julia.h:2319 [inlined]
+  do_call at interpreter.c:123
+  eval_value at interpreter.c:243
+  eval_stmt_value at interpreter.c:194 [inlined]
+  eval_body at interpreter.c:679
+  jl_interpret_toplevel_thunk at interpreter.c:884
+  ip:0xffffffffffffffff
+  ip:0x17042
+  ip:0x7f2e4b4b4910
+  jl_system_image_data at sys.so:?
+  jl_toplevel_eval_flex at toplevel.c:742
+  jl_eval_toplevel_stmts at toplevel.c:585
+  jl_toplevel_eval_flex at toplevel.c:683
+  ijl_toplevel_eval at toplevel.c:754
+  ijl_toplevel_eval_in at toplevel.c:799
+  eval(m::Module, e::Any) at boot.jl:489
+  include_string(mapexpr::typeof(identity), mod::Module, code::String, filename::String) at loading.jl:3045
+  _include(mapexpr::Function, mod::Module, _path::String) at loading.jl:3105
+  include(mod::Module, _path::String) at Base.jl:309
+  exec_options(opts::Base.JLOptions) at client.jl:344
+  _start() at client.jl:577
+  _start() at sys.so:?
+  jl_apply at julia.h:2319 [inlined]
+  true_main at jlapi.c:985
+  jl_repl_entrypoint at jlapi.c:1152
+  main at loader_exe.c:58
+  __libc_start_main at libc.so.6:?
+  ip:0x4010b8 at start.S:123
