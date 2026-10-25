@@ -114,6 +114,19 @@ function _structured_options(max_iter, abstol, reltol, df_tol)
   nothing
 end
 
+# Calibrated separately by solver family. Residual thresholds do not represent
+# the same objective or coefficient accuracy in ADMM and proximal gradient.
+# Keep the independently calibrated linear-signal rule and non-Float64 defaults.
+function _structured_tolerances(X, y, family, order = nothing)
+  T = float(promote_type(eltype(X), eltype(y)))
+  if T !== Float64 || (family == :trend && X isa _SignalDesign && order == 1)
+    return (abstol = 1e-7, reltol = 1e-6)
+  elseif family == :generalized
+    return (abstol = 1e-9, reltol = 1e-8)
+  end
+  (abstol = 1e-8, reltol = 1e-7)
+end
+
 function _structured_data(X, y, intercept)
   T, A, b = _float_data(X, y)
   n, p = size(A)
@@ -374,7 +387,7 @@ end
 
 """
     generalized_lasso(X, y, D, λ; intercept = false, rho = nothing,
-                      max_iter = 20_000, abstol = 1e-7, reltol = 1e-6,
+                      max_iter = 20_000, abstol = 1e-9, reltol = 1e-8,
                       df_tol = 1e-4)
     generalized_lasso(y, D, λ; kwargs...)
 
@@ -392,11 +405,16 @@ result reports nonconvergence if the residual stopping criteria are unmet.
 inactive rows satisfy `abs(D*beta) <= df_tol`. At transition points the
 degrees-of-freedom estimate is sensitive to this numerical tolerance.
 Compared with R's `genlasso`, use `lambda_R = n*λ`.
+The default residual tolerances above apply to Float64 data; other floating
+types retain `abstol = 1e-7, reltol = 1e-6`. Residual convergence does not
+certify a uniform relative coefficient error on ill-conditioned designs.
 """
 function generalized_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real},
                            D::AbstractMatrix{<:Real}, λ::Real;
                            intercept::Bool = false, rho = nothing, max_iter::Integer = 20_000,
-                           abstol::Real = 1e-7, reltol::Real = 1e-6, df_tol::Real = 1e-4)
+                           abstol::Real = _structured_tolerances(X, y, :generalized).abstol,
+                           reltol::Real = _structured_tolerances(X, y, :generalized).reltol,
+                           df_tol::Real = 1e-4)
   _structured_lambda(λ)
   _structured_options(max_iter, abstol, reltol, df_tol)
   A, b, xm, ym = _structured_data(X, y, intercept)
@@ -420,7 +438,7 @@ generalized_lasso(y::AbstractVector{<:Real}, D::AbstractMatrix{<:Real}, λ::Real
 
 """
     fused_lasso(X, y, λ1, λ2; intercept = false, max_iter = 20_000,
-                abstol = 1e-7, reltol = 1e-6, df_tol = 1e-4)
+                abstol = 1e-8, reltol = 1e-7, df_tol = 1e-4)
     fused_lasso(y, λ1, λ2; kwargs...)
 
 Minimize `norm(y - intercept - X*beta)^2/(2n) + λ1*norm(beta,1) +
@@ -428,12 +446,18 @@ Minimize `norm(y - intercept - X*beta)^2/(2n) + λ1*norm(beta,1) +
 and ProximalBase's exact sparse fused-lasso proximal operator. The signal form
 is a single proximal step. Columns retain their original scales and order.
 The stopping test is the proximal-gradient residual in coefficient units,
-`norm(v - prox(v - step*gradient))/step` at the extrapolated iterate `v`, against
-`sqrt(p)*abstol + reltol*max(norm(X'y/n), 1)`. `dual_residual` reports it.
+`norm(beta - prox(beta - step*gradient))/step`, against
+`sqrt(p)*abstol + reltol*max(norm(X'y/n), 1)`. Before reporting convergence,
+the residual is checked at the returned coefficients using the original design;
+`dual_residual` reports that value. The defaults above apply to Float64 data;
+other floating types retain `abstol = 1e-7, reltol = 1e-6`. This is an
+optimality-residual test, not a uniform relative coefficient-error guarantee.
 """
 function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::Real, λ2::Real;
                      intercept::Bool = false, max_iter::Integer = 20_000,
-                     abstol::Real = 1e-7, reltol::Real = 1e-6, df_tol::Real = 1e-4,
+                     abstol::Real = _structured_tolerances(X, y, :fused).abstol,
+                     reltol::Real = _structured_tolerances(X, y, :fused).reltol,
+                     df_tol::Real = 1e-4,
                      _start = nothing, _data = nothing, _gram = nothing, _xy = nothing)
   _structured_lambda(λ1); _structured_lambda(λ2)
   _structured_options(max_iter, abstol, reltol, df_tol)
@@ -508,22 +532,19 @@ function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::
       copyto!(β, candidate)
       it = iter
       if dr <= threshold
-        if use_gram
-          # A cached normal matrix can lose accuracy on ill-conditioned data.
-          # Verify the original-design gradient before accepting convergence;
-          # if necessary, finish with direct products and reset momentum.
-          mul!(r, A, β); r .-= b
-          mul!(grad, transpose(A), r); grad ./= n
-          @. v = β - step * grad
-          prox!(delta, g, v, step)
-          @. v = β - delta
-          dr = norm(v) / step
-          if dr > threshold
-            use_gram = false
-            momentum = one(T)
-            copyto!(extrapolated, β)
-            continue
-          end
+        # Check the returned point, not only its extrapolated predecessor.
+        # Original-design products also protect against normal-matrix error.
+        mul!(r, A, β); r .-= b
+        mul!(grad, transpose(A), r); grad ./= n
+        @. v = β - step * grad
+        prox!(delta, g, v, step)
+        @. v = β - delta
+        dr = norm(v) / step
+        if !(dr <= threshold)
+          use_gram = false
+          momentum = one(T)
+          copyto!(extrapolated, β)
+          continue
         end
         ok = true
         break
@@ -573,11 +594,16 @@ with primal and dual residuals at most five times their usual bounds. The
 gap is checked every ten iterations and at the first and final iteration.
 Near a zero objective the original residual test is used. Other fits and
 absolute-only tolerances retain residual stopping.
+Other Float64 trend fits default to `abstol = 1e-8, reltol = 1e-7`.
+Linear signals and other floating types retain `1e-7, 1e-6`. Explicit
+tolerances override these defaults, including on paths and CV folds.
 """
 function trend_filter(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ::Real;
                       order::Integer = 1, x = nothing, intercept::Bool = false,
                       rho = nothing, max_iter::Integer = 20_000,
-                      abstol::Real = 1e-7, reltol::Real = 1e-6, df_tol::Real = 1e-4)
+                      abstol::Real = _structured_tolerances(X, y, :trend, order).abstol,
+                      reltol::Real = _structured_tolerances(X, y, :trend, order).reltol,
+                      df_tol::Real = 1e-4)
   _structured_lambda(λ)
   _structured_options(max_iter, abstol, reltol, df_tol)
   p = size(X, 2)
@@ -652,7 +678,9 @@ end
 
 function _admm_path(X, y, D, K, levels; family = :generalized, trend_order = nothing,
                     intercept::Bool = false, rho = nothing, max_iter::Integer = 20_000,
-                    abstol::Real = 1e-7, reltol::Real = 1e-6, df_tol::Real = 1e-4,
+                    abstol::Real = _structured_tolerances(X, y, family, trend_order).abstol,
+                    reltol::Real = _structured_tolerances(X, y, family, trend_order).reltol,
+                    df_tol::Real = 1e-4,
                     spacing = 1)
   _structured_options(max_iter, abstol, reltol, df_tol)
   A, b, xm, ym = _structured_data(X, y, intercept)

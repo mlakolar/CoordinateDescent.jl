@@ -97,6 +97,24 @@ Float32 fits and absolute-only tolerances (`reltol=0`) retain residual
 stopping. `primal_residual` and `dual_residual` always report their actual
 values at termination.
 
+Default tolerances are calibrated by solver family. For Float64 inputs,
+generalized/graph lasso uses `abstol=1e-9, reltol=1e-8`; fused regression and
+other trend fits use `1e-8, 1e-7`. Linear signal fits retain `1e-7, 1e-6`
+with the gap rule above. Other floating types retain `1e-7, 1e-6`.
+Explicit tolerances override these defaults consistently in fits, paths and
+CV folds. The stricter residual defaults address accuracy failures on
+strongly penalized quadratic signals and correlated regression designs.
+
+`converged` means the applicable stopping test passed. Except for the
+linear-signal objective certificate, it reports ADMM residual convergence or
+a proximal-gradient residual, not a certified objective gap. Fused regression
+checks its residual at the returned coefficients using the original design,
+including when normal equations are cached. No stopping rule here guarantees
+a fixed relative coefficient error uniformly over ill-conditioned or
+nonidentifiable designs. Tighten tolerances and check solution stability when
+coefficient precision matters; changing `df_tol` also requires a sufficiently
+accurate solve.
+
 Degrees of freedom use the generalized-lasso formula
 `rank(X * null(D[inactive, :]))`, plus one for an intercept, following
 [Tibshirani and Taylor](https://doi.org/10.1214/11-AOS878). Inactive rows

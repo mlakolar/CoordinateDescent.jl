@@ -188,18 +188,20 @@ end
   @test all(isnan, aic(trend_filter_path(y,[.1,.01];max_iter=0)))
 end
 
-@testset "linear signal objective certificates" begin
+@testset "signal objective certificates" begin
   for seed in 1:3
     rng = Xoshiro(8400 + seed)
-    for n in (3, 17), alpha in (.1, 10.), irregular in (false, true)
+    # The dual identity holds for every K, although production gap stopping
+    # remains calibrated only for order-one Float64 signals.
+    for n in (5, 17), order in 1:3, alpha in (.1, 10.), irregular in (false, true)
       x = irregular ? cumsum(.8 .+ .4rand(rng,n)) : nothing
-      K = difference_matrix(n)
-      x === nothing || (K = Diagonal(1 ./ diff(x)) * K)
-      D1 = Matrix(difference_matrix(n-1))
-      beta, y, u = randn(rng,n), randn(rng,n), randn(rng,n-1)
+      K = difference_matrix(n,order;x)
+      x === nothing || (K = Diagonal([order/(x[j+order]-x[j]) for j in 1:n-order]) * K)
+      D1 = Matrix(difference_matrix(n-order))
+      beta, y, u = randn(rng,n), randn(rng,n), randn(rng,n-order)
       rho = .7
       gap, objective = HighDimensionalModels._structured_signal_gap!(
-        zeros(n), zeros(n-1), K, beta, y, K*beta, u, rho, alpha)
+        zeros(n), zeros(n-order), K, beta, y, K*beta, u, rho, alpha)
       q = clamp.(-cumsum(rho*u)[1:end-1], -alpha, alpha)
       v = transpose(Matrix(K)) * transpose(D1) * q
       primal = sum(abs2,beta-y)/2 + alpha*sum(abs,D1*Matrix(K)*beta)
@@ -237,6 +239,50 @@ end
   single = trend_filter(Float32.(y),.1;order=1)
   @test single.x isa Vector{Float32}
   @test single.converged
+end
+
+@testset "default structured stopping accuracy" begin
+  for seed in 1:3
+    rng = Xoshiro(9700 + seed)
+    X = randn(rng,60,4)
+    for j in 2:4
+      X[:,j] .= .95 .* X[:,j-1] .+ sqrt(1-.95^2) .* X[:,j]
+    end
+    y = X*[.5,-.5,.5,0.] + .1randn(rng,60)
+    levels = [.1,.03,.003]
+    G = graph_difference(4,[(1,2),(2,3),(3,4),(4,1),(1,2)])
+    F = [.25Matrix{Float64}(I,4,4); .75Matrix(difference_matrix(4))]
+    for (path,D) in ((GeneralizedLassoPath(X,y,G,levels),Matrix(G)),
+                     (fused_lasso_path(X,y,levels;l1_ratio=.25),F))
+      for (lambda,fit) in zip(levels,path.solutions)
+        exact = dual_reference(X,y,D,lambda)
+        optimum = sum(abs2,y-X*exact)/120 + lambda*sum(abs,D*exact)
+        @test fit.converged
+        @test norm(fit.x-exact)/max(norm(exact),eps()) <= 1e-4
+        @test abs(fit.objective-optimum)/max(abs(optimum),eps()) <= 1e-6
+      end
+    end
+    for order in 2:3, x in (nothing,cumsum(.8 .+ .4rand(rng,6)))
+      signal = 1 .+ sin.(1:6) .+ .1randn(rng,6)
+      D = Matrix(difference_matrix(6,order+1;x))
+      path = trend_filter_path(signal,[10.,1.,.1]./6;order,x)
+      for (lambda,fit) in zip(path.λpath,path.solutions)
+        exact = dual_reference(Matrix{Float64}(I,6,6),signal,D,lambda)
+        optimum = sum(abs2,signal-exact)/12 + lambda*sum(abs,D*exact)
+        @test fit.converged
+        @test norm(fit.x-exact)/norm(exact) <= 1e-4
+        @test abs(fit.objective-optimum)/max(abs(optimum),eps()) <= 1e-6
+      end
+    end
+    # Explicit tolerances still control both direct and cached regression.
+    for path in (false,true)
+      fit = path ? only(fused_lasso_path(X,y,[.03];l1_ratio=.25,
+        abstol=1e-8,reltol=0).solutions) :
+        fused_lasso(X,y,.0075,.0225;abstol=1e-8,reltol=0)
+      @test fit.converged
+      @test fit.dual_residual <= sqrt(4)*1e-8
+    end
+  end
 end
 
 @testset "CV has a common grid and respects training folds" begin
