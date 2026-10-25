@@ -99,16 +99,26 @@ end
   fitted_path=fit(QuantileLassoPath,X,y,[.3,.1];standardize_x=false)
   @test fitted_path.complete && all(s.converged for s in fitted_path.solutions)
   @test predict(fitted_path,X) ≈ reduce(hcat,[predict(s,X) for s in fitted_path.solutions])
-  # A native iteration limit before any pair exists must return no invented fit.
+  # A bounded native solve preserves an available inaccurate pair explicitly.
   limited_optimizer() = begin
     opt=HiGHS.Optimizer()
     QMOI.set(opt,QMOI.RawOptimizerAttribute("presolve"),"off")
     QMOI.set(opt,QMOI.RawOptimizerAttribute("simplex_iteration_limit"),0)
     opt
   end
-  unavailable,status=HighDimensionalModels._quantile_exact_path(X,y,[.1],ones(5),.5,true;
+  partial,status=HighDimensionalModels._quantile_exact_path(X,y,[.1],ones(5),.5,true;
     tol=1e-6,time_limit=Inf,initial_basis=:default,simplex=:dual,start=time_ns(),optimizer_factory=limited_optimizer)
-  @test isempty(unavailable) && status==:ITERATION_LIMIT
+  @test status==:ITERATION_LIMIT
+  @test length(partial)==1 && !only(partial).converged
+  # Zero native time stops before any pair exists, unlike zero simplex steps.
+  empty_optimizer() = begin
+    opt=HiGHS.Optimizer()
+    QMOI.set(opt,QMOI.TimeLimitSec(),0.0)
+    opt
+  end
+  unavailable,status=HighDimensionalModels._quantile_exact_path(X,y,[.1],ones(5),.5,true;
+    tol=1e-6,time_limit=Inf,initial_basis=:default,simplex=:dual,start=time_ns(),optimizer_factory=empty_optimizer)
+  @test isempty(unavailable) && status==:TIME_LIMIT
   coverage=Base.JLOptions().code_coverage == 0 ? "none" : "user"
   run(`$(Base.julia_cmd()) --startup-file=no --depwarn=error --code-coverage=$coverage --project=$(dirname(Base.active_project())) $(joinpath(@__DIR__,"quantile_optional_backend.jl"))`)
   # Smoothing exposes its own raw score, and never overwrites it with a certificate.

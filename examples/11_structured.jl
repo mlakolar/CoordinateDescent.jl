@@ -26,7 +26,7 @@ tpath = trend_filter_path(signal,[.03,.01,.003,.001];order=1)
 valid = findall(isfinite,bic(tpath))
 j = valid[argmin(bic(tpath)[valid])]
 tf = coef(tpath,tpath.λpath[j])
-lp = KernelSmoothing.localpolynomial(x,signal,x;bandwidth=8.,degree=1)
+lp = KernelSmoothing.local_polynomial(x,signal,x;bandwidth=8.,degree=1)
 println("Trend filtering MSE on this signal: ", mean(abs2,tf-truth))
 println("Local linear MSE on this signal: ", mean(abs2,lp-truth))
 @assert all(isfinite,tf) && all(isfinite,lp)
