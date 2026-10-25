@@ -26,7 +26,7 @@ using ProximalSolvers
 using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel
 using StatsAPI: StatsAPI, aic, bic, coef, coefnames, confint, deviance, dof, fit, fitted, nobs, nulldeviance, predict,
   residuals, responsename, stderror, vcov
-using Random: AbstractRNG, Xoshiro, default_rng, randperm
+using Random: AbstractRNG, Xoshiro, default_rng, randperm, randn
 using SparseArrays
 using SpecialFunctions: erfc, erfcinv
 using Statistics
@@ -76,6 +76,12 @@ export
   post_lasso,
   double_selection,
 
+  # selection with error control
+  slope, slope_bh, SLOPEPath, SLOPESolution,
+  equicorrelated_s, gaussian_knockoffs, fixed_knockoffs,
+  knockoff_threshold, lasso_coefdiff, knockoff_filter, KnockoffResult,
+  complementary_pairs, stability_bound, stability_selection, StabilitySelectionResult,
+
   # varying-coefficient models (kernels from KernelSmoothing.jl)
   varying_coefficient, varying_coefficient_lasso, varying_coefficient_cv, varying_coefficient_lasso_cv
 
@@ -93,6 +99,10 @@ include("hdm.jl")
 include("statsapi.jl")
 include("formula.jl")
 include("varying.jl")
+
+include("slope.jl")
+include("knockoffs.jl")
+include("stability.jl")
 
 include("deprecated.jl")
 

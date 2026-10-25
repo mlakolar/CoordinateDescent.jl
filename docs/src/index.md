@@ -83,6 +83,7 @@ path = LassoPath(X, y; nλ = 50, intercept = true)
 - [Paths, screening and solver options](paths.md): [`LassoPath`](@ref), the
   options of coordinate descent and when each pays off, and the Gram form.
 - [The group lasso](group.md).
+- [Variable selection with error control](selection.md): SLOPE, knockoff+, and complementary-pairs stability selection.
 - [Writing a loss or a penalty](extending.md) of your own.
 - [Varying-coefficient models](varying.md).
 - The examples, which go through the package and its options with their output.
