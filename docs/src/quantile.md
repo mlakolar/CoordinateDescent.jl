@@ -16,8 +16,8 @@ s = path[2]
 
 At a valid solution, `dual_scores(s)` lies in `[tau-1,tau]`. A stopped exact
 fit can retain an infeasible iterate with `converged=false`; its raw scores are
-kept for diagnostics. With an intercept, valid scores
-sum to zero, and `X'u/n` satisfies the weighted lasso stationarity conditions.
+kept for diagnostics. With an intercept, valid scores sum to zero, and `X'u/n`
+satisfies the weighted lasso stationarity conditions.
 At nonzero residuals the score is determined by the sign; at zero residuals
 preserve the optimizer's value. Different optimal bases can return different
 valid duals. Compare their KKT conditions and the quantities your inference uses,
@@ -49,6 +49,16 @@ A smoothed path uses the production proximal Newton implementation:
 smooth = QuantileLassoPath(X, y, [0.2, 0.1, 0.05];
                           method=:smooth, bandwidth=0.2)
 ```
+
+At each penalty, proximal Newton builds a weighted least-squares approximation
+to the smooth loss and solves its lasso subproblem by coordinate descent.
+Backtracking accepts a step that does not increase the penalized objective.
+The path uses warm starts, sequential strong screening and subsequent checks
+of the excluded coordinates. In the benchmarked dependency version, the
+convolution loss does not activate the solver's gap-based stopping rule;
+Newton stops on objective change and the quantile interface checks raw-dual
+accuracy afterward. The external `tol` marks acceptance without automatically
+refining a rejected fit.
 
 Its dual vectors are Epanechnikov convolution scores. They have the same scaling
 interface but are not automatically interchangeable with exact quantile scores
