@@ -1,5 +1,9 @@
 # Python, Julia, and R optimization comparison
 
+A subsequent [solver-option follow-up](../discovery-solvers-20261025/README.md)
+implements PANOC, block FISTA, and diagnostic reuse. Its measurements use
+a different fixed CPU model and include fresh before/after baselines.
+
 The implementation is competitive, with clear opportunities to improve it.
 Its nuclear solver beats the tested Python FISTA/ADMM adapters, but PANOC
 often wins within Julia. Row-sparse coordinate descent beats rrpack at the

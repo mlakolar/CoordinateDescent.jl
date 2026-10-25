@@ -1,5 +1,9 @@
 # Low-rank regression: Discovery validation and performance
 
+The [solver-option follow-up](optimization/results/discovery-solvers-20261025/README.md)
+measures public PANOC and block FISTA and cheaper fixed-rank diagnostics,
+with five independent inputs and fresh before/after baselines.
+
 The subsequent [Python/Julia/R optimization comparison](optimization/results/discovery-20261025/README.md)
 uses five independent inputs on six designs, including wide, ill-conditioned,
 and rank-deficient cases. It compares the same fixed objectives, including

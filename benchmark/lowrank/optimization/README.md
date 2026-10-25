@@ -4,6 +4,10 @@ This campaign compares solvers for fixed objectives. It does not compare
 prediction, cross-validation choices, or statistical estimators. MATLAB is
 excluded.
 
+The subsequent [solver-option and diagnostic follow-up](results/discovery-solvers-20261025/README.md)
+adds public PANOC and block FISTA options and reruns all competitors on one
+fixed Discovery debug CPU model, including fresh before/after baselines.
+
 [Measured results and interpretation](results/discovery-20261025/README.md)
 cover 5,460 timing observations, 290 profile reports, and 170 fresh-process
 memory observations. Production solver code was frozen throughout the comparison.
