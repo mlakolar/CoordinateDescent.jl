@@ -244,7 +244,12 @@ function QuantileLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real},
     _quantile_exact_path(Xf, yf, ls, w, Float64(tau), intercept;
                          tol=Float64(tol), time_limit=Float64(time_limit), initial_basis, simplex, start)
   else
-    path = GLMLassoPath(Xf, yf, ls, ProximalBase.ConvolutionCheck(Float64(tau), Float64(bandwidth)), options;
+    # Use the requested observation-score accuracy for Newton's certified
+    # stopping too. The backend's feasible certificate and its raw-score guard
+    # are distinct; the saved scores always remain the loss gradient.
+    gt = options.gaptol === nothing ? Float64(tol) : min(options.gaptol, Float64(tol))
+    smooth_options = CDOptions(options; gaptol=gt)
+    path = GLMLassoPath(Xf, yf, ls, ProximalBase.ConvolutionCheck(Float64(tau), Float64(bandwidth)), smooth_options;
                        intercept, standardize_x=false, penalty=NormL1(1.0, w), devmax=1,
                        newton_tol, newton_max_iter, screening, rng)
     ss = QuantileLassoSolution[]
