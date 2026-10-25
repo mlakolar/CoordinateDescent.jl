@@ -1,6 +1,6 @@
 # Fused regression, graphs and trend filtering
 #     julia --project=examples examples/11_structured.jl
-using CoordinateDescent, Random, LinearAlgebra, Statistics
+using HighDimensionalModels, Random, LinearAlgebra, Statistics
 import KernelSmoothing
 rng = Xoshiro(80)
 

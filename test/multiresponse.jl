@@ -1,6 +1,6 @@
 module MultiLassoTest
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 function kkt_rows(G, B, λ, ω)
@@ -47,7 +47,7 @@ end
   @test length(path.λpath) == 25 && all(path.converged) && path.intercept
   @test nnz(path.Bpath[1]) == 0 && !isempty(path.activerows[2])
   for k in (6, 25)
-    s = multi_lasso(X, Y, path.λpath[k], CDOptions(; opt_tol = 1e-10))
+    s = multi_lasso(X, Y, path.λpath[k], CDOptions(; opt_tol = 1e-10, gaptol = 0))
     @test Matrix(path.Bpath[k]) ≈ Matrix(s.B) atol = 1e-5
     @test path.β0path[k] ≈ s.intercept atol = 1e-5
   end

@@ -1,5 +1,5 @@
 module StructuredTest
-using CoordinateDescent, Test, LinearAlgebra, SparseArrays, Random, Statistics
+using HighDimensionalModels, Test, LinearAlgebra, SparseArrays, Random, Statistics
 
 # Exhaustive dual active sets give an independent exact reference for small
 # problems, including redundant rows of D. No optimizer is reused here.
@@ -48,11 +48,11 @@ end
     x = irregular ? cumsum(T.(.5 .+ rand(rng, p))) : nothing
     K = difference_matrix(p, order; x)
     gram = Diagonal(ones(T, p))
-    F = CoordinateDescent._split_factor(gram, K, rho; bandwidth=order)
+    F = HighDimensionalModels._split_factor(gram, K, rho; bandwidth=order)
     H = Matrix(gram) + rho * Matrix(K)' * Matrix(K)
     b, answer = T.(randn(rng, p)), zeros(T, p)
     original = copy(b)
-    CoordinateDescent._structured_solve!(answer, F, b)
+    HighDimensionalModels._structured_solve!(answer, F, b)
     @test H * answer ≈ b rtol=200eps(T)
     @test answer ≈ H \ b rtol=200eps(T)
     @test b == original
@@ -198,7 +198,7 @@ end
       D1 = Matrix(difference_matrix(n-1))
       beta, y, u = randn(rng,n), randn(rng,n), randn(rng,n-1)
       rho = .7
-      gap, objective = CoordinateDescent._structured_signal_gap!(
+      gap, objective = HighDimensionalModels._structured_signal_gap!(
         zeros(n), zeros(n-1), K, beta, y, K*beta, u, rho, alpha)
       q = clamp.(-cumsum(rho*u)[1:end-1], -alpha, alpha)
       v = transpose(Matrix(K)) * transpose(D1) * q

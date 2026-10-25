@@ -1,7 +1,7 @@
 # Benchmarks
 
 Run the scripts from the root of the repository, in the environment of this
-folder, which loads CoordinateDescent from this checkout:
+folder, which loads HighDimensionalModels from this checkout:
 
 ```
 julia --project=benchmark -e 'using Pkg; Pkg.instantiate()'

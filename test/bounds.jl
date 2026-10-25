@@ -1,6 +1,6 @@
 module BoundsTest
 
-using CoordinateDescent, ProximalBase, ProximalSolvers
+using HighDimensionalModels, ProximalBase, ProximalSolvers
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 logistic(z) = 1 / (1 + exp(-z))
@@ -159,7 +159,7 @@ expand(b, p) = b isa Real ? fill(Float64(b), p) : b
   @testset "glm_lasso and GLMLassoPath" begin
     yl = Float64.(rand(Xoshiro(6), n) .< logistic.(0.3 .+ X * β))
     l, u = fill(-0.2, p), fill(Inf, p)
-    tight = CDOptions(CDOptions(); opt_tol = 1e-12)
+    tight = CDOptions(CDOptions(); opt_tol = 1e-12, gaptol = 0)
     sol = glm_lasso(X, yl, 0.02, ProximalBase.Logistic(), tight; lower = -0.2, newton_tol = 1e-12)
     b = Vector(sol.x)
     @test inbox(b, l, u)

@@ -13,7 +13,7 @@
 #
 #     julia --project=examples examples/10_glm.jl
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Printf, Random, Statistics
 
 Random.seed!(10)

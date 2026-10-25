@@ -1,4 +1,4 @@
-using Documenter, Literate, CoordinateDescent
+using Documenter, Literate, HighDimensionalModels
 
 # The examples become pages, run when the documentation is built. The first
 # comment line of an example is its title; a section marker "# --- title ---"
@@ -25,12 +25,12 @@ for file in sort(filter(f -> occursin(r"^\d\d_.*\.jl$", f), readdir(EXAMPLES)))
 end
 
 makedocs(
-    sitename = "CoordinateDescent.jl",
+    sitename = "HighDimensionalModels.jl",
     authors = "Mladen Kolar",
-    modules = [CoordinateDescent],
+    modules = [HighDimensionalModels],
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://mlakolar.github.io/CoordinateDescent.jl/stable/",
+        canonical = "https://mlakolar.github.io/HighDimensionalModels.jl/stable/",
         mathengine = Documenter.KaTeX(),
         size_threshold = 400_000,
     ),
@@ -53,4 +53,4 @@ makedocs(
     checkdocs = :exports,
 )
 
-deploydocs(repo = "github.com/mlakolar/CoordinateDescent.jl.git", devbranch = "master", push_preview = false)
+deploydocs(repo = "github.com/mlakolar/HighDimensionalModels.jl.git", devbranch = "master", push_preview = false)

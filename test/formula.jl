@@ -1,6 +1,6 @@
 module FormulaTest
 
-using CoordinateDescent, ProximalBase, StatsModels
+using HighDimensionalModels, ProximalBase, StatsModels
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 logistic(z) = 1 / (1 + exp(-z))
@@ -61,7 +61,7 @@ logistic(z) = 1 / (1 + exp(-z))
 
   @testset "other estimators" begin
     s = sqrt_lasso(@formula(y ~ x1 + x2 + g), data, 0.5)
-    @test s.model isa CoordinateDescent.LassoSolution && length(coef(s)) == 5
+    @test s.model isa HighDimensionalModels.LassoSolution && length(coef(s)) == 5
     @test Vector(coef(s)) ≈ Vector(coef(sqrt_lasso(X, y, 0.5; intercept = true))) atol = 1e-5
     a = adaptive_lasso(@formula(y ~ x1 + x2 + g), data, 0.05)
     @test coefnames(a) == ["(Intercept)", "x1", "x2", "g: b", "g: c"]
@@ -90,11 +90,11 @@ logistic(z) = 1 / (1 + exp(-z))
     @test group_lasso(@formula(y ~ x1 + g + x2), data, 0.05; groups = [1:1, 2:4]).model.groups == [[1], [2, 3, 4]]
     gpath = fit(GroupLassoPath, @formula(y ~ x1 + g + x2), data; nλ = 8)
     λs = gpath.model.λpath
-    gq = fit(GroupLassoPath, @formula(y ~ x1 + g + x2), data, λs, CDOptions(; opt_tol = 1e-10))
+    gq = fit(GroupLassoPath, @formula(y ~ x1 + g + x2), data, λs, CDOptions(; opt_tol = 1e-10, gaptol = 0))
     @test gq.model.λpath == λs && gq.model.groups == [[1], [2, 3], [4]]
 
     r = rlasso(@formula(y ~ x1 + x2 + g), data)
-    @test r.model isa CoordinateDescent.RLassoSolution && predict(r, data) ≈ y .- residuals(r)
+    @test r.model isa HighDimensionalModels.RLassoSolution && predict(r, data) ≈ y .- residuals(r)
   end
 
   @testset "errors" begin

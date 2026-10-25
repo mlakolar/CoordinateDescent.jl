@@ -1,5 +1,5 @@
 # Issue #73: run this script in environments pointing at the base and patched
-# CoordinateDescent checkouts, with identical ProximalBase/ProximalSolvers.
+# HighDimensionalModels checkouts, with identical ProximalBase/ProximalSolvers.
 # Includes construction, one BLAS thread, fixed data and solver seeds, and a
 # warm-up before the reported repetitions. No cluster is needed.
 #
@@ -8,7 +8,7 @@
 #
 # CD_PATH_BENCH_REPS sets the number of measured repetitions (default 3).
 # CD_PATH_BENCH_OUTPUT optionally saves the CV grid and errors for comparison.
-using CoordinateDescent, LinearAlgebra, Random, Statistics, Printf
+using HighDimensionalModels, LinearAlgebra, Random, Statistics, Printf
 
 BLAS.set_num_threads(1)
 const QUICK = get(ENV, "CD_PATH_BENCH_QUICK", "0") == "1"

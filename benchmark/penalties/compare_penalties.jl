@@ -14,7 +14,7 @@
 #     Rscript benchmark/penalties/compare_penalties.R DIR             # needs glmnet and ncvreg
 #     julia --project=benchmark/penalties benchmark/penalties/compare_penalties.jl compare DIR
 
-using CoordinateDescent, DelimitedFiles, Printf, Random, Statistics
+using HighDimensionalModels, DelimitedFiles, Printf, Random, Statistics
 using ProximalBase: MCP, SCAD, ElasticNet, Scaled
 
 # AR(ρ) columns on different scales, an intercept and eight nonzero

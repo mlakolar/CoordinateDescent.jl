@@ -1,6 +1,6 @@
 module SparseGroupTest
 
-using CoordinateDescent, ProximalBase, StatsModels
+using HighDimensionalModels, ProximalBase, StatsModels
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 soft(v, t) = sign.(v) .* max.(abs.(v) .- t, 0)
@@ -35,7 +35,7 @@ end
   xbar = vec(mean(X; dims = 1)); s = vec(sqrt.(mean((X .- transpose(xbar)) .^ 2; dims = 1)))
   Xs = (X .- transpose(xbar)) ./ transpose(s); yc = y .- mean(y)
   gradt(b) = -Xs' * (yc - Xs * (s .* b)) / n            # the gradient in t = s .* β
-  tight = CDOptions(; opt_tol = 1e-12)
+  tight = CDOptions(; opt_tol = 1e-12, gaptol = 0)
 
   @testset "sparse_group_lasso, alpha = $α" for α in (0.2, 0.5, 0.95)
     λ = 0.05
@@ -90,7 +90,7 @@ end
     @test coefnames(m) == ["(Intercept)", "x1", "g: b", "g: c", "g: d", "x2"]
     mp = fit(SparseGroupLassoPath, @formula(y ~ x1 + g + x2), data; nλ = 10)
     @test mp.model isa SparseGroupLassoPath && length(mp.model.λpath) == 10
-    q = fit(SparseGroupLassoPath, @formula(y ~ x1 + g + x2), data, mp.model.λpath, CDOptions(; opt_tol = 1e-10);
+    q = fit(SparseGroupLassoPath, @formula(y ~ x1 + g + x2), data, mp.model.λpath, CDOptions(; opt_tol = 1e-10, gaptol = 0);
             groups = [1:1, 2:5])
     @test q.model.groups == [[1], [2, 3, 4, 5]]
   end

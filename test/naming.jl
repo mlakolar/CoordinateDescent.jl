@@ -1,5 +1,5 @@
 module NamingTest
-using CoordinateDescent, ProximalBase, ProximalSolvers, Test, Random, LinearAlgebra, KernelSmoothing
+using HighDimensionalModels, ProximalBase, ProximalSolvers, Test, Random, LinearAlgebra, KernelSmoothing
 
 struct DefaultScaleLoss <: CoordinateDifferentiableFunction end
 
@@ -9,8 +9,8 @@ _read_opt_tol(o) = o.opt_tol
 _read_options_cd(o) = o.options_cd
 
 @testset "Julia naming and integer inputs" begin
-  @test CoordinateDescent.coordinate_scale(DefaultScaleLoss(), 1) === 1
-  @test CoordinateDescent.response_scale(DefaultScaleLoss()) === 1
+  @test HighDimensionalModels.coordinate_scale(DefaultScaleLoss(), 1) === 1
+  @test HighDimensionalModels.response_scale(DefaultScaleLoss()) === 1
   o = CDOptions(; max_iter=Int32(100), num_steps=Int32(5), anderson=Int32(0))
   @test o.max_iter isa Int
   @test (@inferred _read_max_iter(o)) === 100

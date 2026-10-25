@@ -1,5 +1,5 @@
 module StructuredGoldenTest
-using CoordinateDescent, LinearAlgebra, Test
+using HighDimensionalModels, LinearAlgebra, Test
 BLAS.set_num_threads(1)
 root = get(ENV, "CD_STRUCTURED_GOLDEN", joinpath(@__DIR__, "golden", "structured"))
 function readmat(d,f)

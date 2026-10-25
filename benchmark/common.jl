@@ -1,6 +1,12 @@
 # Designs and interleaved timing for the scripts of this folder.
 
-using CoordinateDescent, ProximalBase, LinearAlgebra, Random, Statistics, Printf
+if Base.find_package("HighDimensionalModels") !== nothing
+  @eval using HighDimensionalModels
+  const CoordinateDescent = HighDimensionalModels
+else
+  @eval using CoordinateDescent
+end
+using ProximalBase, LinearAlgebra, Random, Statistics, Printf
 BLAS.set_num_threads(1)
 
 # Gaussian columns with AR(1) correlation ρ between neighbors, or correlation

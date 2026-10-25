@@ -19,7 +19,7 @@ Zou, 2015). [`CDLeastSquaresLoss`](@ref), also with an intercept, and
 [`CDQuadraticLoss`](@ref) support groups.
 
 ```@example group
-using CoordinateDescent, ProximalBase, LinearAlgebra, Random
+using HighDimensionalModels, ProximalBase, LinearAlgebra, Random
 
 rng = Xoshiro(1)
 n, p = 200, 50

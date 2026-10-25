@@ -7,7 +7,7 @@
 #
 #     julia --project=examples examples/01_lasso.jl
 
-using CoordinateDescent
+using HighDimensionalModels
 using ProximalBase: MCP, SCAD
 using LinearAlgebra, Printf, Random, Statistics
 

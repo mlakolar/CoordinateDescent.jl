@@ -20,7 +20,7 @@
 #
 #     julia --project=examples examples/09_custom_penalty.jl
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 import ProximalBase: isseparable, isproximable, prox_entry
 using LinearAlgebra, Printf, Random, Statistics
 

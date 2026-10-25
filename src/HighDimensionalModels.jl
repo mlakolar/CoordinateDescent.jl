@@ -1,5 +1,5 @@
 """
-    CoordinateDescent
+    HighDimensionalModels
 
 Lasso estimators computed by coordinate descent: [`lasso`](@ref),
 [`sqrt_lasso`](@ref), [`scaled_lasso`](@ref), [`feasible_lasso!`](@ref),
@@ -23,7 +23,7 @@ Penalties on ordered coefficients and graphs are fitted by [`fused_lasso`](@ref)
 [`trend_filter`](@ref) and [`generalized_lasso`](@ref), using exact proximal
 steps, proximal gradient or specialized ADMM rather than coordinate descent.
 """
-module CoordinateDescent
+module HighDimensionalModels
 
 using ProximalBase
 using ProximalSolvers

@@ -136,4 +136,4 @@ signal; it does not establish a general accuracy advantage for either method.
 R's `genlasso` and `glmgen::trendfilter` use an unnormalized squared loss.
 Use `lambda_R = n*lambda_Julia` on identical inputs and difference matrices.
 The independent golden-data generator and replicated Discovery launcher are
-in [`benchmark/structured`](https://github.com/mlakolar/CoordinateDescent.jl/tree/master/benchmark/structured).
+in [`benchmark/structured`](https://github.com/mlakolar/HighDimensionalModels.jl/tree/master/benchmark/structured).

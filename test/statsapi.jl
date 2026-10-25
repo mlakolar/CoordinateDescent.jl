@@ -1,6 +1,6 @@
 module StatsAPIEstimatorsTest
 
-using CoordinateDescent, ProximalBase
+using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 logistic(z) = 1 / (1 + exp(-z))
@@ -42,9 +42,11 @@ logistic(z) = 1 / (1 + exp(-z))
     sh = glm_lasso(X, X * β .+ randn(rng, n), 0.05, ProximalBase.Huber(1.0))
     @test predict(sh, X) ≈ predict(sh, X; type = :link)
     # a loss whose mean is not known has only the link scale
-    @test_throws ArgumentError CoordinateDescent._inverselink(ProximalBase.SquaredHinge(), 0.0)
+    @test_throws ArgumentError HighDimensionalModels._inverselink(ProximalBase.SquaredHinge(), 0.0)
 
-    path = GLMLassoPath(X, y; nλ = 15)
+    # gaptol = 0, for the comparison of two runs with different coordinate orders below
+    exact = CDOptions(; gaptol = 0)
+    path = GLMLassoPath(X, y, ProximalBase.Logistic(), exact; nλ = 15)
     B = coef(path)
     @test size(B) == (p + 1, length(path.λpath))
     for k in eachindex(path.λpath)
@@ -58,7 +60,7 @@ logistic(z) = 1 / (1 + exp(-z))
     @test H[:, 6] ≈ path.β0path[6] .+ X * Vector(path.βpath[6])
     @test predict(path, X) ≈ logistic.(H)
     @test nobs(path) == n && nulldeviance(path) == path.nulldeviance
-    q = fit(GLMLassoPath, X, y; nλ = 15)
+    q = fit(GLMLassoPath, X, y, ProximalBase.Logistic(), exact; nλ = 15)
     # the random coordinate orders come from the global generator, so compare to a tolerance
     @test q.λpath == path.λpath && all(k -> isapprox(q.βpath[k], path.βpath[k]; atol = 1e-6), eachindex(q.λpath))
   end
@@ -73,13 +75,14 @@ logistic(z) = 1 / (1 + exp(-z))
       @test nobs(sol) == n && dof(sol) == nnz(sol.x) + intercept
     end
     @test_throws DimensionMismatch predict(group_lasso(X, y, 0.1, groups), X[:, 1:5])
-    path = GroupLassoPath(X, y, groups; nλ = 10)
+    exact = CDOptions(; gaptol = 0)
+    path = GroupLassoPath(X, y, groups, exact; nλ = 10)
     B = coef(path)
     @test size(B) == (p + 1, length(path.λpath))
     @test all(k -> coef(path, path.λpath[k]) == B[:, k], eachindex(path.λpath))
     @test predict(path, X)[:, 5] ≈ path.β0path[5] .+ X * Vector(path.βpath[5])
     @test nobs(path) == n
-    q = fit(GroupLassoPath, X, y, groups; nλ = 10)
+    q = fit(GroupLassoPath, X, y, groups, exact; nλ = 10)
     @test q.λpath == path.λpath && all(k -> isapprox(q.βpath[k], path.βpath[k]; atol = 1e-6), eachindex(q.λpath))
   end
 

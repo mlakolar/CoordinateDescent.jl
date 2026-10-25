@@ -137,7 +137,7 @@ stopping rule independent of the units of the data (see [`CDOptions`](@ref)),
 `full_gradient!(grad, f, x)`, a faster way to compute the whole gradient, and
 `f(x)`, the value of `f` at `x` from the cache, which Anderson acceleration
 needs (`anderson` in [`CDOptions`](@ref)). These functions are not exported;
-extend them as `CoordinateDescent.initialize!` and so on. The four required
+extend them as `HighDimensionalModels.initialize!` and so on. The four required
 functions have no methods of their own, so a missing method raises a
 `MethodError` that lists the methods that exist.
 

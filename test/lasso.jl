@@ -2,7 +2,7 @@ module LassoTest
 
 const  NUMBER_REPEAT = 1
 
-using CoordinateDescent
+using HighDimensionalModels
 using Test
 using ProximalBase
 using ProximalSolvers
@@ -45,12 +45,12 @@ Random.seed!(1)
       Y = X[:,1:s] * ones(s) + 0.1 * randn(n)
 
       λ = fill(0.3, p)
-      beta = lasso(X, Y, 1., λ, CDOptions(;opt_tol=1e-12))
+      beta = lasso(X, Y, 1., λ, CDOptions(;opt_tol=1e-12, gaptol = 0))
 
       f = CDQuadraticLoss(X'X/n, -X'Y/n)
       g = NormL1(1., λ)
       x1 = SparseIterate( p )
-      coordinate_descent!(x1, f, g, CDOptions(;opt_tol=1e-12))
+      coordinate_descent!(x1, f, g, CDOptions(;opt_tol=1e-12, gaptol = 0))
       @test beta.x ≈ x1 atol=1e-5
 
       @test (maximum(abs.(X'*(Y - X*beta.x) / n)) - 0.3) / 0.3 ≈ 0. atol=1e-5
@@ -92,8 +92,8 @@ end
 
     x1 = SparseIterate(p)
     x2 = SparseIterate(p)
-    coordinate_descent!(x1, f1, g, CDOptions(;opt_tol=1e-12))
-    coordinate_descent!(x2, f2, g, CDOptions(;opt_tol=1e-12))
+    coordinate_descent!(x1, f1, g, CDOptions(;opt_tol=1e-12, gaptol = 0))
+    coordinate_descent!(x2, f2, g, CDOptions(;opt_tol=1e-12, gaptol = 0))
 
     @test maximum(abs.(x1 - x2)) ≈ 0. atol=1e-5
     @test (maximum(abs.(X'*(Y - X*x1) / n)) - 0.2) / 0.2 ≈ 0. atol=1e-5
@@ -120,7 +120,7 @@ end
       f = CDSqrtLassoLoss(Y, X)
 
       x1 = SparseIterate(p)
-      coordinate_descent!(x1, f, g, CDOptions(;max_iter=5000, opt_tol=1e-8))
+      coordinate_descent!(x1, f, g, CDOptions(;max_iter=5000, opt_tol=1e-8, gaptol = 0))
 
       @test max(0, maximum(abs.(X'*(Y - X*x1) / norm(Y - X*x1))) - λ) / λ  ≈ 0. atol=1e-3
     end
@@ -136,10 +136,10 @@ end
       β = randn(s)
       Y = X[:,1:s] * β + randn(n)
 
-      opt1 = CDOptions(;max_iter=5000, opt_tol=1e-10, warm_start=true, randomize=false)
-      opt2 = CDOptions(;max_iter=5000, opt_tol=1e-10, warm_start=true, randomize=true)
-      opt3 = CDOptions(;max_iter=5000, opt_tol=1e-10, warm_start=false, randomize=false)
-      opt4 = CDOptions(;max_iter=5000, opt_tol=1e-10, warm_start=false, randomize=true)
+      opt1 = CDOptions(;max_iter=5000, opt_tol=1e-10, warm_start=true, randomize=false, gaptol = 0)
+      opt2 = CDOptions(;max_iter=5000, opt_tol=1e-10, warm_start=true, randomize=true, gaptol = 0)
+      opt3 = CDOptions(;max_iter=5000, opt_tol=1e-10, warm_start=false, randomize=false, gaptol = 0)
+      opt4 = CDOptions(;max_iter=5000, opt_tol=1e-10, warm_start=false, randomize=true, gaptol = 0)
 
       x1 = SparseIterate(sprand(p, 0.6))
       x2 = SparseIterate(sprand(p, 0.6))
@@ -198,8 +198,8 @@ end
 
     λ = rand() / 5.
 
-    opt1 = IterLassoOptions(;max_iter=100, opt_tol=1e-8, options_cd=CDOptions(;max_iter=5000, opt_tol=1e-8))
-    opt2 = IterLassoOptions(;max_iter=100, opt_tol=1e-8, init_procedure=:InitStd, σinit=2., options_cd=CDOptions(;max_iter=5000, opt_tol=1e-8))
+    opt1 = IterLassoOptions(;max_iter=100, opt_tol=1e-8, options_cd=CDOptions(;max_iter=5000, opt_tol=1e-8, gaptol = 0))
+    opt2 = IterLassoOptions(;max_iter=100, opt_tol=1e-8, init_procedure=:InitStd, σinit=2., options_cd=CDOptions(;max_iter=5000, opt_tol=1e-8, gaptol = 0))
 
     x1 = SparseIterate(p)
     x2 = SparseIterate(p)
@@ -235,7 +235,7 @@ end
   Y = X[:,1:s] * ones(s) + randn(n)
 
   λ = 1.5
-  sol = sqrt_lasso(X, Y, λ, CDOptions(;max_iter=5000, opt_tol=1e-10))
+  sol = sqrt_lasso(X, Y, λ, CDOptions(;max_iter=5000, opt_tol=1e-10, gaptol = 0))
   stdX = vec(sqrt.(sum(abs2, X, dims=1) / n))
   r = Y - X*sol.x
   @test sol.penalty.w ≈ stdX
@@ -248,7 +248,7 @@ end
   Y = X[:,1:s] * randn(s) + randn(n)
 
   λ = 0.05
-  opt = IterLassoOptions(;max_iter=100, opt_tol=1e-8, options_cd=CDOptions(;opt_tol=1e-10))
+  opt = IterLassoOptions(;max_iter=100, opt_tol=1e-8, options_cd=CDOptions(;opt_tol=1e-10, gaptol = 0))
   x = SparseIterate(p)
   sol1 = scaled_lasso!(x, X, Y, λ, ones(p), opt)
   sol2 = scaled_lasso(X, Y, λ, ones(p), opt)
@@ -268,7 +268,7 @@ end
   @test sol0.penalty.w ≈ vec(sqrt.(sum(abs2, X .* Y, dims=1) / n))
   for init_procedure in (:Screening, :InitStd, :WarmStart)
     opt = IterLassoOptions(;max_iter=100, opt_tol=1e-6, init_procedure=init_procedure,
-                           options_cd=CDOptions(;max_iter=5000, opt_tol=1e-10))
+                           options_cd=CDOptions(;max_iter=5000, opt_tol=1e-10, gaptol = 0))
     sol = feasible_lasso!(SparseIterate(p), X, Y, λ0, opt)
 
     # the loadings are Γ_j = sqrt(∑ X_ij^2 r_i^2 / n) evaluated at the solution
@@ -298,7 +298,7 @@ end
 
     λ1 = 0.3
     λ2 = 0.1
-    opt = CDOptions(;max_iter=5000, opt_tol=1e-8)
+    opt = CDOptions(;max_iter=5000, opt_tol=1e-8, gaptol = 0)
 
     x1 = lasso(X, Y, λ1)
     x2 = lasso(X, Y, λ2)
@@ -332,7 +332,7 @@ end
 
     λ1 = 0.3
     λ2 = 0.1
-    opt = CDOptions(;max_iter=5000, opt_tol=1e-8)
+    opt = CDOptions(;max_iter=5000, opt_tol=1e-8, gaptol = 0)
 
     x1 = lasso(X, Y, λ1, loadingX, opt)
     x2 = lasso(X, Y, λ2, loadingX, opt)
@@ -360,7 +360,7 @@ end
   X = randn(n, p)
   Y = X[:,1:s] * ones(s) + randn(n)
 
-  sol = lasso(X, Y, 0.1, CDOptions(;opt_tol=1e-10))
+  sol = lasso(X, Y, 0.1, CDOptions(;opt_tol=1e-10, gaptol = 0))
   @test sol.residuals ≈ Y - X*sol.x
   @test sol.σ ≈ std(Y - X*sol.x)
   @test sol.penalty.λ0 == 0.1
@@ -372,7 +372,7 @@ end
   Y = X[:,1:s] * ones(s) + randn(n)
 
   λ = 1.5
-  sol = sqrt_lasso(X, Y, λ, CDOptions(;max_iter=5000, opt_tol=1e-10, warm_start=false); standardize_x=false)
+  sol = sqrt_lasso(X, Y, λ, CDOptions(;max_iter=5000, opt_tol=1e-10, warm_start=false, gaptol = 0); standardize_x=false)
   r = Y - X*sol.x
   @test maximum(abs.(X'*r)) / norm(r) ≈ λ atol=1e-4
 end
@@ -383,7 +383,7 @@ end
   Y = X[:,1:s] * randn(s) + 0.5 * randn(n)
 
   λ = sqrt(2 * log(p) / n)
-  opt = IterLassoOptions(;max_iter=100, opt_tol=1e-10, options_cd=CDOptions(;opt_tol=1e-12))
+  opt = IterLassoOptions(;max_iter=100, opt_tol=1e-10, options_cd=CDOptions(;opt_tol=1e-12, gaptol = 0))
   sol = scaled_lasso(X, Y, λ, ones(p), opt)
   r = Y - X*sol.x
 
@@ -395,13 +395,13 @@ end
 
   # starting from the solution, the warm start stops at once at the same point
   x = copy(sol.x)
-  sol2 = scaled_lasso!(x, X, Y, λ, ones(p), IterLassoOptions(;init_procedure=:WarmStart, max_iter=100, opt_tol=1e-10, options_cd=CDOptions(;opt_tol=1e-12)))
+  sol2 = scaled_lasso!(x, X, Y, λ, ones(p), IterLassoOptions(;init_procedure=:WarmStart, max_iter=100, opt_tol=1e-10, options_cd=CDOptions(;opt_tol=1e-12, gaptol = 0)))
   @test Vector(sol2.x) ≈ Vector(sol.x) atol=1e-6
   @test sol2.σ ≈ sol.σ rtol=1e-6
 
   # one outer iteration meets the stopping rule: the initial σ is the one of
   # the update, not the sample standard deviation of the residuals
-  sol3 = @test_logs scaled_lasso!(copy(sol.x), X, Y, λ, ones(p), IterLassoOptions(;init_procedure=:WarmStart, max_iter=1, opt_tol=1e-6, options_cd=CDOptions(;opt_tol=1e-12)))
+  sol3 = @test_logs scaled_lasso!(copy(sol.x), X, Y, λ, ones(p), IterLassoOptions(;init_procedure=:WarmStart, max_iter=1, opt_tol=1e-6, options_cd=CDOptions(;opt_tol=1e-12, gaptol = 0)))
   @test sol3.converged
 end
 
@@ -410,7 +410,7 @@ end
   X = randn(n, p) .* (0.5 .+ rand(1, p))
   Y = X[:,1:s] * ones(s) + randn(n)
   λ = 1.2
-  tight = CDOptions(;max_iter=10_000, opt_tol=1e-12)
+  tight = CDOptions(;max_iter=10_000, opt_tol=1e-12, gaptol = 0)
 
   # the square-root lasso from the data, with the loss ‖r‖ and the penalty λ
   xd = SparseIterate(p)
@@ -429,10 +429,10 @@ end
 
   # momentum on and off, the cyclic order with Anderson acceleration, and the
   # path from zero give the same solution
-  for o in (CDOptions(;max_iter=10_000, opt_tol=1e-12, momentum=false),
-            CDOptions(;max_iter=10_000, opt_tol=1e-12, momentum=true),
-            CDOptions(;max_iter=10_000, opt_tol=1e-12, order=:cyclic, anderson=5),
-            CDOptions(;max_iter=10_000, opt_tol=1e-12, warm_start=false))
+  for o in (CDOptions(;max_iter=10_000, opt_tol=1e-12, momentum=false, gaptol = 0),
+            CDOptions(;max_iter=10_000, opt_tol=1e-12, momentum=true, gaptol = 0),
+            CDOptions(;max_iter=10_000, opt_tol=1e-12, order=:cyclic, anderson=5, gaptol = 0),
+            CDOptions(;max_iter=10_000, opt_tol=1e-12, warm_start=false, gaptol = 0))
     x = SparseIterate(p)
     coordinate_descent!(x, CDSqrtQuadraticLoss(A, b, c), NormL1(λ / sqrt(n)), o)
     @test Vector(x) ≈ Vector(xd) atol=1e-8
@@ -472,7 +472,7 @@ end
   λ = sqrt(2 * log(p) / n)
   w = vec(sqrt.(sum(abs2, X; dims=1) / n))
 
-  sol = scaled_lasso(X, Y, λ, w, IterLassoOptions(;options_cd=CDOptions(;opt_tol=1e-12)))
+  sol = scaled_lasso(X, Y, λ, w, IterLassoOptions(;options_cd=CDOptions(;opt_tol=1e-12, gaptol = 0)))
   r = Y - X * sol.x
   @test sol.σ ≈ norm(r) / sqrt(n)
   # the optimality conditions of the lasso at the penalty λσ̂
@@ -483,7 +483,7 @@ end
 
   # from the sufficient statistics, the same solution
   f = CDSqrtQuadraticLoss(X'X / n, -X'Y / n, dot(Y, Y) / n)
-  solg = scaled_lasso!(SparseIterate(p), f, λ, w, CDOptions(;opt_tol=1e-12))
+  solg = scaled_lasso!(SparseIterate(p), f, λ, w, CDOptions(;opt_tol=1e-12, gaptol = 0))
   @test Vector(solg.x) ≈ Vector(sol.x) atol=1e-8
   @test solg.σ ≈ sol.σ rtol=1e-8
   @test solg.penalty.λ0 ≈ λ * solg.σ
@@ -496,11 +496,11 @@ end
   ωj = sqrt.(diag(S))
   ωj[j] = Inf
   solj = scaled_lasso!(SparseIterate(p), CDSqrtQuadraticLoss(S, -S[:, j], S[j, j]), λ, ωj,
-                      CDOptions(;opt_tol=1e-12))
+                      CDOptions(;opt_tol=1e-12, gaptol = 0))
   @test iszero(solj.x[j])
   others = [1:j-1; j+1:p]
   ref = scaled_lasso(X[:, others], X[:, j], λ, sqrt.(diag(S))[others],
-                    IterLassoOptions(;options_cd=CDOptions(;opt_tol=1e-12)))
+                    IterLassoOptions(;options_cd=CDOptions(;opt_tol=1e-12, gaptol = 0)))
   @test Vector(solj.x)[others] ≈ Vector(ref.x) atol=1e-8
   @test solj.σ ≈ ref.σ rtol=1e-8
 
@@ -516,7 +516,7 @@ end
 
   λpath = [0.5, 0.3, 0.2, 0.1, 0.05, 0.01]
   λcopy = copy(λpath)
-  path = LassoPath(X, Y, λpath, CDOptions(;opt_tol=1e-8); max_hat_s=10)
+  path = LassoPath(X, Y, λpath, CDOptions(;opt_tol=1e-8, gaptol = 0); max_hat_s=10)
 
   @test λpath == λcopy                            # the input is not modified
   @test length(path.λpath) == length(path.βpath)
@@ -533,7 +533,7 @@ end
   X = randn(n, p)
   Y = X[:,1:3] * ones(3) + 0.1 * randn(n)
   λmax = maximum(abs.(X'Y)) / n
-  opt = CDOptions(;opt_tol=1e-8)
+  opt = CDOptions(;opt_tol=1e-8, gaptol = 0)
   path = LassoPath(X, Y, λmax .* [0.9, 0.7, 0.5], opt; standardize_x=false)
 
   @test eltype(path.βpath) == SparseVector{Float64, Int}
@@ -552,7 +552,7 @@ end
   Xc, Yc = X .- mean(X, dims=1), Y .- mean(Y)
   xbar = vec(mean(X, dims=1))
   λ = 0.05
-  opt = CDOptions(;opt_tol=1e-12)
+  opt = CDOptions(;opt_tol=1e-12, gaptol = 0)
 
   ref = lasso(Xc, Yc, λ, opt)
   sol = lasso(X, Y, λ, opt; intercept=true)
@@ -573,20 +573,20 @@ end
   @test sol.penalty.w ≈ sd
   @test Vector(sol.x) ≈ Vector(lasso(Xc, Yc, λ, sd, opt).x) atol=1e-8
 
-  opt = CDOptions(;opt_tol=1e-10)
+  opt = CDOptions(;opt_tol=1e-10, gaptol = 0)
   sol = sqrt_lasso(X, Y, 2.0, opt; intercept=true)
   @test Vector(sol.x) ≈ Vector(sqrt_lasso(Xc, Yc, 2.0, opt).x) atol=1e-7
   @test sol.intercept ≈ mean(Y) - dot(xbar, Vector(sol.x))
   @test Vector(sqrt_lasso(X, Y, 2.0, ω, opt; intercept=true).x) ≈ Vector(sqrt_lasso(Xc, Yc, 2.0, ω, opt).x) atol=1e-7
 
-  iopt = IterLassoOptions(;opt_tol=1e-8, options_cd=CDOptions(;opt_tol=1e-12))
+  iopt = IterLassoOptions(;opt_tol=1e-8, options_cd=CDOptions(;opt_tol=1e-12, gaptol = 0))
   s1 = scaled_lasso(X, Y, λ, ones(p), iopt; intercept=true)
   s2 = scaled_lasso(Xc, Yc, λ, ones(p), iopt)
   @test Vector(s1.x) ≈ Vector(s2.x) atol=1e-6
   @test s1.σ ≈ s2.σ rtol=1e-6
   @test s1.intercept ≈ mean(Y) - dot(xbar, Vector(s1.x))
   for init_procedure in (:Screening, :InitStd)
-    iopt = IterLassoOptions(;opt_tol=1e-8, init_procedure=init_procedure, options_cd=CDOptions(;opt_tol=1e-12))
+    iopt = IterLassoOptions(;opt_tol=1e-8, init_procedure=init_procedure, options_cd=CDOptions(;opt_tol=1e-12, gaptol = 0))
     f1 = feasible_lasso!(SparseIterate(p), X, Y, λ, iopt; intercept=true)
     f2 = feasible_lasso!(SparseIterate(p), Xc, Yc, λ, iopt)
     @test Vector(f1.x) ≈ Vector(f2.x) atol=1e-6
@@ -600,7 +600,7 @@ end
   Y = 2 .+ X[:,1:5] * ones(5) + randn(n)
   Xc, Yc = X .- mean(X, dims=1), Y .- mean(Y)
   sd = vec(std(X, dims=1, corrected=false))
-  opt = CDOptions(;opt_tol=1e-10)
+  opt = CDOptions(;opt_tol=1e-10, gaptol = 0)
 
   path = LassoPath(X, Y, opt; nλ=20, intercept=true)
   @test length(path.λpath) == length(path.βpath) == length(path.β0path) == 20
@@ -640,11 +640,33 @@ end
   @test LassoPath(Int.(round.(X)), Y; nλ=3) isa LassoPath{Float64}
 end
 
+@testset "gaptol: paths stop on the duality gap" begin
+  @test CDOptions().gaptol === nothing
+  @test CDOptions(; gaptol = 1e-6).gaptol == 1e-6
+  @test CDOptions(CDOptions(; gaptol = 0); opt_tol = 1e-9).gaptol == 0
+  @test_throws ArgumentError CDOptions(; gaptol = -1)
+  rng = Xoshiro(23)
+  n, p = 100, 300
+  X = randn(rng, n, p)
+  Y = 1 .+ X[:, 1:5] * ones(5) + randn(rng, n)
+  # ProximalSolvers' default target, the faster setting, and the changes with a tight opt_tol
+  P4 = LassoPath(X, Y; nλ = 20, rng = Xoshiro(1))
+  P3 = LassoPath(X, Y; nλ = 20, gaptol = 1e-3, rng = Xoshiro(1))
+  P0 = LassoPath(X, Y; nλ = 20, gaptol = 0, opt_tol = 1e-12, rng = Xoshiro(1))
+  @test all(P4.converged) && all(P3.converged) && all(P0.converged)
+  # the coefficients are within about the target of the solution, relative to the largest
+  for (P, ε) in ((P4, 1e-4), (P3, 1e-3))
+    @test all(k -> norm(P.βpath[k] - P0.βpath[k], Inf) <= 200ε * max(norm(P0.βpath[k], Inf), 1e-3), eachindex(P0.λpath))
+    @test all(k -> abs(P.β0path[k] - P0.β0path[k]) <= 200ε * max(abs(P0.β0path[k]), 1.0), eachindex(P0.λpath))
+  end
+  @test sum(P3.iterations) < sum(P4.iterations) < sum(P0.iterations)
+end
+
 @testset "lasso path screening" begin
   n, p = 100, 2000
   X = randn(n, p)
   Y = X[:,1:10] * ones(10) + randn(n)
-  opt = CDOptions(;opt_tol=1e-10)
+  opt = CDOptions(;opt_tol=1e-10, gaptol = 0)
   for intercept in (false, true)
     p1 = LassoPath(X, Y, opt; nλ=30, intercept=intercept)
     p2 = LassoPath(X, Y, p1.λpath, opt; intercept=intercept, screening=false)
@@ -665,7 +687,7 @@ end
   Y = X[:,1:s] * ones(s) + randn(n)
 
   # repeated λ values give repeated supports, which are refit once
-  path = LassoPath(X, Y, [0.5, 0.5, 0.1, 0.1], CDOptions(;opt_tol=1e-8))
+  path = LassoPath(X, Y, [0.5, 0.5, 0.1, 0.1], CDOptions(;opt_tol=1e-8, gaptol = 0))
   rf = refit_lasso_path(path, X, Y)
   supports = unique([findall(!iszero, β) for β in path.βpath])
   @test length(rf) == length(supports) == 2
@@ -686,7 +708,7 @@ end
   end
   # supports with n columns or more, and collinear columns, are refit by \
   Xd = [X[:, 1:3] X[:, 1] randn(n, 2)]
-  path = LassoPath(Xd, Y, [0.05, 0.01, 0.001], CDOptions(;opt_tol=1e-8); standardize_x=false)
+  path = LassoPath(Xd, Y, [0.05, 0.01, 0.001], CDOptions(;opt_tol=1e-8, gaptol = 0); standardize_x=false)
   rf = refit_lasso_path(path, Xd, Y)
   for (S, β) in rf
     @test β ≈ Xd[:, S] \ Y
@@ -728,7 +750,7 @@ end
 
   # scaled and feasible lasso: inner passes are summed, and the outer
   # iteration of feasible_lasso! is checked too
-  opt = IterLassoOptions(;max_iter=100, opt_tol=1e-6, options_cd=CDOptions(;opt_tol=1e-10))
+  opt = IterLassoOptions(;max_iter=100, opt_tol=1e-6, options_cd=CDOptions(;opt_tol=1e-10, gaptol = 0))
   sol = @test_logs scaled_lasso(X, Y, λ, ones(p), opt)
   @test sol.converged
   @test sol.iterations >= 2
@@ -755,7 +777,7 @@ end
   n, p, s = 100, 20, 3
   X = randn(n, p)
   Y = X[:,1:s] * ones(s) + randn(n)
-  opt = CDOptions(;opt_tol=1e-12)
+  opt = CDOptions(;opt_tol=1e-12, gaptol = 0)
   ref = Vector(lasso(X, Y, 0.1, opt).x)
 
   @test Vector(lasso(X, Y, 1//10, opt).x) ≈ ref
@@ -772,7 +794,7 @@ end
   Xi, Yi = rand(-3:3, n, p), rand(-5:5, n)              # integer data
   @test Vector(lasso(Xi, Yi, 0.1, opt).x) ≈ Vector(lasso(Float64.(Xi), Float64.(Yi), 0.1, opt).x)
 
-  opt = CDOptions(;opt_tol=1e-10)
+  opt = CDOptions(;opt_tol=1e-10, gaptol = 0)
   @test Vector(sqrt_lasso(X, Y, 2, opt).x) ≈ Vector(sqrt_lasso(X, Y, 2.0, opt).x) atol=1e-8
   @test Vector(sqrt_lasso(X, Y, 2, ones(Int, p), opt).x) ≈ Vector(sqrt_lasso(X, Y, 2.0, ones(p), opt).x) atol=1e-8
 
@@ -780,7 +802,7 @@ end
   @test path isa LassoPath{Float64}
   @test path.λpath == [1.0, 0.5]
 
-  iopt = IterLassoOptions(;opt_tol=1e-6, options_cd=CDOptions(;opt_tol=1e-10))
+  iopt = IterLassoOptions(;opt_tol=1e-6, options_cd=CDOptions(;opt_tol=1e-10, gaptol = 0))
   @test Vector(scaled_lasso(X, Y, 1//10, ones(Int, p), iopt).x) ≈ Vector(scaled_lasso(X, Y, 0.1, ones(p), iopt).x) atol=1e-6
   sol = scaled_lasso!(SparseIterate(p), X32, Y, 0.1, ones(p), iopt)  # the iterate fixes the type
   @test eltype(sol.x) == Float64
@@ -833,7 +855,7 @@ end
   # largest also column 4, and the four largest, with the tie at 1, all
   X = Matrix(1.0I, 5, 5)
   y = [3.0, -1.0, -3.0, 2.0, 1.0]
-  find = CoordinateDescent._find_largest_correlations
+  find = HighDimensionalModels._find_largest_correlations
   @test find(X, y, 1) == find(X, y, 2) == [true, false, true, false, false]
   @test find(X, y, 3) == [true, false, true, true, false]
   @test find(X, y, 4) == trues(5)
@@ -865,7 +887,7 @@ end
 
   # copies with changes keep every other field
   o = CDOptions(; max_iter = 500, opt_tol = 1e-9, order = :cyclic, warm_start = false, num_steps = 7,
-                relative_tol = false, anderson = 3)
+                relative_tol = false, anderson = 3, gaptol = 0)
   o2 = CDOptions(o; max_iter = 1)
   @test o2.max_iter == 1
   @test all(getfield(o2, k) == getfield(o, k) for k in fieldnames(CDOptions) if k !== :max_iter)
@@ -883,7 +905,7 @@ end
   @test_throws ArgumentError IterLassoOptions(io; sinit = 0)
 
   # the estimators take the fields as keywords, which change the options passed
-  cyc = CDOptions(; order = :cyclic, opt_tol = 1e-10)
+  cyc = CDOptions(; order = :cyclic, opt_tol = 1e-10, gaptol = 0)
   same(a, b) = Vector(a.x) == Vector(b.x) && a.iterations == b.iterations && a.converged == b.converged
   @test same(lasso(X, Y, λ; order = :cyclic, opt_tol = 1e-10), lasso(X, Y, λ, cyc))
   @test same(lasso(X, Y, λ, CDOptions(; order = :cyclic); opt_tol = 1e-10), lasso(X, Y, λ, cyc))
@@ -954,7 +976,7 @@ end
   X = randn(rng, n, p)
   Y = X[:, 1:s] * ones(s) + 0.5 * randn(rng, n)
   λ = 0.05
-  opt = CDOptions(; opt_tol = 1e-12, order = :cyclic)
+  opt = CDOptions(; opt_tol = 1e-12, order = :cyclic, gaptol = 0)
   close(a, b) = isapprox(Vector(a.x), Vector(b.x); atol = 1e-8) && isapprox(a.intercept, b.intercept; atol = 1e-8)
 
   # the same solution from every type of the same matrix: a transpose or adjoint
@@ -987,15 +1009,15 @@ end
   Xs[:, 3] .= 2.0                                     # a constant column
   Xs[:, 5] .= 0.0                                     # an empty one, which stores zeros
   Ys = Matrix(Xs)[:, 1:s] * ones(s) + 0.5 * randn(rng, n)
-  @test CoordinateDescent._design(Xs) === Xs
-  @test CoordinateDescent._design(transpose(sparse(Matrix(Xs)'))) isa SparseMatrixCSC
-  @test CoordinateDescent._column_means(Xs) ≈ CoordinateDescent._column_means(Matrix(Xs))
-  @test CoordinateDescent._column_means(Xs)[[3, 5]] == [2.0, 0.0]          # exactly, as for dense columns
+  @test HighDimensionalModels._design(Xs) === Xs
+  @test HighDimensionalModels._design(transpose(sparse(Matrix(Xs)'))) isa SparseMatrixCSC
+  @test HighDimensionalModels._column_means(Xs) ≈ HighDimensionalModels._column_means(Matrix(Xs))
+  @test HighDimensionalModels._column_means(Xs)[[3, 5]] == [2.0, 0.0]          # exactly, as for dense columns
   for intercept in (false, true)
-    @test CoordinateDescent._loadings(Xs, intercept) ≈ CoordinateDescent._loadings(Matrix(Xs), intercept)
+    @test HighDimensionalModels._loadings(Xs, intercept) ≈ HighDimensionalModels._loadings(Matrix(Xs), intercept)
   end
-  e, xbar = randn(rng, n), CoordinateDescent._column_means(Matrix(Xs))
-  @test CoordinateDescent._get_loadings!(zeros(p), Xs, e, xbar) ≈ CoordinateDescent._get_loadings!(zeros(p), Matrix(Xs), e, xbar)
+  e, xbar = randn(rng, n), HighDimensionalModels._column_means(Matrix(Xs))
+  @test HighDimensionalModels._get_loadings!(zeros(p), Xs, e, xbar) ≈ HighDimensionalModels._get_loadings!(zeros(p), Matrix(Xs), e, xbar)
   @test close(lasso(Xs, Ys, λ, opt; intercept = true, standardize_x = true),
               lasso(Matrix(Xs), Ys, λ, opt; intercept = true, standardize_x = true))
   @test close(feasible_lasso!(SparseIterate(p), Xs, Ys, λ, IterLassoOptions(; options_cd = opt); intercept = true),
@@ -1077,7 +1099,7 @@ end
   X = randn(rng, n, p) .+ 0.3 .* randn(rng, 1, p)          # columns with nonzero means
   Y = 2.0 .+ X[:, 1:s] * ones(s) + randn(rng, n)
   λ = 0.02
-  opt = CDOptions(; opt_tol = 1e-10, order = :cyclic)
+  opt = CDOptions(; opt_tol = 1e-10, order = :cyclic, gaptol = 0)
 
   # the same loss and stopping rule on the Gram matrix as on the residuals
   for intercept in (false, true), standardize_x in (false, true)
@@ -1110,14 +1132,14 @@ end
 
   # :auto takes the Gram matrix for a path on a dense X with n ≥ p and
   # p ≤ 2000, the residuals otherwise and at one λ
-  @test CoordinateDescent._usegram(:auto, X, true)
-  @test CoordinateDescent._usegram(:auto, X[1:p, :], true)                # n = p
-  @test !CoordinateDescent._usegram(:auto, X[1:p-1, :], true)             # n < p
-  @test !CoordinateDescent._usegram(:auto, X, false)                      # one λ
-  @test !CoordinateDescent._usegram(:auto, sparse(X), true)
-  @test CoordinateDescent._usegram(:auto, falses(2000, 2000), true)
-  @test !CoordinateDescent._usegram(:auto, falses(3000, 2001), true)      # p > 2000
-  @test CoordinateDescent._usegram(true, sparse(X), false) && !CoordinateDescent._usegram(false, X, true)
+  @test HighDimensionalModels._usegram(:auto, X, true)
+  @test HighDimensionalModels._usegram(:auto, X[1:p, :], true)                # n = p
+  @test !HighDimensionalModels._usegram(:auto, X[1:p-1, :], true)             # n < p
+  @test !HighDimensionalModels._usegram(:auto, X, false)                      # one λ
+  @test !HighDimensionalModels._usegram(:auto, sparse(X), true)
+  @test HighDimensionalModels._usegram(:auto, falses(2000, 2000), true)
+  @test !HighDimensionalModels._usegram(:auto, falses(3000, 2001), true)      # p > 2000
+  @test HighDimensionalModels._usegram(true, sparse(X), false) && !HighDimensionalModels._usegram(false, X, true)
   @test_throws ArgumentError lasso(X, Y, λ; gram = :yes)
   a, b = lasso(X, Y, λ, opt), lasso(X, Y, λ, opt; gram = false)
   @test a.x == b.x && a.iterations == b.iterations
@@ -1128,15 +1150,15 @@ end
   # from a sparse X and in Float32
   xbar = vec(mean(X; dims = 1))
   ref(X, xbar) = (X .- xbar')' * (X .- xbar') / size(X, 1)
-  @test CoordinateDescent._gram(X, xbar) ≈ ref(X, xbar)
-  @test CoordinateDescent._gram(X, zeros(p)) ≈ X'X / n
-  @test issymmetric(CoordinateDescent._gram(X, xbar))
+  @test HighDimensionalModels._gram(X, xbar) ≈ ref(X, xbar)
+  @test HighDimensionalModels._gram(X, zeros(p)) ≈ X'X / n
+  @test issymmetric(HighDimensionalModels._gram(X, xbar))
   Xl = randn(rng, 30_000, 40) .+ 1.0                                      # 2 blocks of 26214 rows
   xl = vec(mean(Xl; dims = 1))
-  @test CoordinateDescent._gram(Xl, xl) ≈ ref(Xl, xl)
-  @test CoordinateDescent._gram(sparse(X), xbar) ≈ ref(X, xbar)
-  @test CoordinateDescent._gram(Float32.(X), Float32.(xbar)) ≈ Float32.(ref(X, xbar)) rtol = 1e-4
-  @test CoordinateDescent._gram(big.(X[1:20, 1:3]), big.(xbar[1:3])) ≈ ref(X[1:20, 1:3], xbar[1:3])
+  @test HighDimensionalModels._gram(Xl, xl) ≈ ref(Xl, xl)
+  @test HighDimensionalModels._gram(sparse(X), xbar) ≈ ref(X, xbar)
+  @test HighDimensionalModels._gram(Float32.(X), Float32.(xbar)) ≈ Float32.(ref(X, xbar)) rtol = 1e-4
+  @test HighDimensionalModels._gram(big.(X[1:20, 1:3]), big.(xbar[1:3])) ≈ ref(X[1:20, 1:3], xbar[1:3])
 
   # a sparse X on the Gram matrix, and NaN in the data
   Xs = sprandn(rng, n, p, 0.3)
@@ -1154,7 +1176,7 @@ end
   X = randn(rng, n, p) .+ 0.5 .* randn(rng, 1, p)
   Y = 1.0 .+ X[:, 1:s] * ones(s) + randn(rng, n)
   λ = 0.05
-  opt = CDOptions(; opt_tol = 1e-12, order = :cyclic)
+  opt = CDOptions(; opt_tol = 1e-12, order = :cyclic, gaptol = 0)
   k = rand(rng, 1:3, n)
   rows = reduce(vcat, [fill(i, k[i]) for i in 1:n])
   close(a, b; atol = 1e-7) = isapprox(Vector(a.x), Vector(b.x); atol) && isapprox(a.intercept, b.intercept; atol)
@@ -1216,12 +1238,12 @@ end
 
   # the weighted loadings and Gram matrix, also of a sparse X
   xw = X' * w / sum(w)
-  @test CoordinateDescent._loadings(X, true, w) ≈ sqrt.(vec(sum(w .* (X .- xw') .^ 2; dims = 1)) / sum(w))
-  @test CoordinateDescent._loadings(sparse(X), true, w) ≈ CoordinateDescent._loadings(X, true, w)
+  @test HighDimensionalModels._loadings(X, true, w) ≈ sqrt.(vec(sum(w .* (X .- xw') .^ 2; dims = 1)) / sum(w))
+  @test HighDimensionalModels._loadings(sparse(X), true, w) ≈ HighDimensionalModels._loadings(X, true, w)
   Gw = (X .- xw')' * (w .* (X .- xw')) / sum(w)
-  @test CoordinateDescent._gram(X, xw, w) ≈ Gw
-  @test CoordinateDescent._gram(sparse(X), xw, w) ≈ Gw
-  @test CoordinateDescent._column_means(X, w) ≈ xw
+  @test HighDimensionalModels._gram(X, xw, w) ≈ Gw
+  @test HighDimensionalModels._gram(sparse(X), xw, w) ≈ Gw
+  @test HighDimensionalModels._column_means(X, w) ≈ xw
 
   # checks of the weights and the offset
   @test_throws ArgumentError lasso(X, Y, λ; weights = -w)

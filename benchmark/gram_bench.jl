@@ -8,7 +8,7 @@
 #
 #     julia --project=benchmark benchmark/gram_bench.jl
 
-using CoordinateDescent, LinearAlgebra, Printf, Random, Statistics
+using HighDimensionalModels, LinearAlgebra, Printf, Random, Statistics
 
 LinearAlgebra.BLAS.set_num_threads(1)
 
@@ -46,8 +46,8 @@ function run(rng)
   for n in NS, p in PS, kind in (:iid, :ar1)
     X, y = design(rng, n, p, kind)
     λmax = maximum(abs, X' * (y .- mean(y))) / n
-    auto1 = CoordinateDescent._usegram(:auto, X, false)
-    autoP = CoordinateDescent._usegram(:auto, X, true)
+    auto1 = HighDimensionalModels._usegram(:auto, X, false)
+    autoP = HighDimensionalModels._usegram(:auto, X, true)
     # warm-up of both forms at this size, outside the timings
     lasso(X, y, λmax / 2; intercept = true, gram = false); lasso(X, y, λmax / 2; intercept = true, gram = true)
     for frac in (0.1, 0.02)

@@ -1,5 +1,5 @@
 [deps]
-CoordinateDescent = "c00ed354-b9be-54b8-8a23-c5ac771bc43a"
+HighDimensionalModels = "c00ed354-b9be-54b8-8a23-c5ac771bc43a"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GLMNet = "8d5ece8b-de18-5317-b113-243142960cc6"
 Lasso = "b4fcebef-c861-5a0f-a7e2-ba9dc32b180a"
@@ -10,12 +10,12 @@ ProximalSolvers = "fc4971f5-6616-4709-9bfc-89a819252f6b"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [sources]
-CoordinateDescent = {path = "../.."}
-ProximalBase = {url = "https://github.com/mlakolar/ProximalBase.jl", rev = "master"}
-ProximalSolvers = {url = "https://github.com/mlakolar/ProximalSolvers.jl", rev = "master"}
+HighDimensionalModels = {path = "../.."}
+ProximalBase = {path = "../../../ProximalBase.jl"}
+ProximalSolvers = {path = "../../../ProximalOPT.jl"}
 
 [compat]
-CoordinateDescent = "0.8"
+HighDimensionalModels = "0.8"
 Distributions = "0.25"
 GLMNet = "0.7"
 Lasso = "0.7"
