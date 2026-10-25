@@ -1,0 +1,5 @@
+# Sparse-learner DoubleML v2 canary
+
+Native DoubleMLLPLR is unchanged at official revision6884b5f. First native-reference canary v1 used sklearn's broad default LogisticRegressionCV C grid and 60-level LassoCV to.001. It encountered unselected path-tail convergence warnings with very strict1e-8 tolerances; those runs are retained as failures, not claimed coverage evidence. V2 is a separate learner configuration, not a retry silently relabeling v1.
+
+V2 uses eight penalties in[.2,2]sqrt(log(p)/n),5-foldCV, nuisance tolerance1e-6,10000logistic/100000lineariterations. Logistic Cs=1/(n*lambda), retaining native liblinear conventions, so effective per-training-fold penalty differs by its training sample fraction. This grid is inspired by the Liu HD paper's scale but is NOT an exact reproduction of either its calibrated HD estimator or ML simulation. Both native nested5x5crossfit score variants and first/last requested roles are retained. All source convergence warnings remain rejected. Native score sandwich and solved-score checks remain mandatory. No confirmation data are used.

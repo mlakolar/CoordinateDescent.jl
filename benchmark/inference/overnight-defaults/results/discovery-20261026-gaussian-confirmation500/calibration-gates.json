@@ -1,0 +1,82 @@
+[
+  {
+    "case": "gaussian-moderate",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9538841650525959,
+    "null_upper95_mc": 0.02934290557926482,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-correlated",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9613581089563324,
+    "null_upper95_mc": 0.045268344142188985,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-benign",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9504599192186276,
+    "null_upper95_mc": 0.045140662888175934,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-random",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9577607209116782,
+    "null_upper95_mc": 0.03915821065495012,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-weak",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9532671359586602,
+    "null_upper95_mc": 0.044026340684881426,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-largen",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9379445548575257,
+    "null_upper95_mc": 0.05041389909769893,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-independent",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9534889010833358,
+    "null_upper95_mc": 0.03769268226112763,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-hetero",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9517288627559864,
+    "null_upper95_mc": 0.0408661835534043,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-heavy",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9525550108970205,
+    "null_upper95_mc": 0.035624889185111815,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-hetero-target",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9507764862640665,
+    "null_upper95_mc": 0.040955300631333506,
+    "engineering_calibration_gate": true
+  }
+]

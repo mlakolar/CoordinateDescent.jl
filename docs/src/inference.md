@@ -6,7 +6,26 @@ Gaussian linear model, the estimate of the slope vector is
 when an intercept is fitted. Inference concerns the original regression slopes,
 including those set to zero by the lasso. It does not include the intercept.
 
-Automatic tuning is experimental. A fresh Discovery holdout study with 100
+The automatic Gaussian call now uses a family-specific policy: five-fold
+CV-min lasso initialization, restricted LDPE projection with four controls
+chosen using X only and a 50% projection-SD budget, and centered HC3 variance.
+The initial estimator remains regularized. Selected-model refitting did not
+uniformly improve development coverage. Expert calls can supply refitted
+coefficients through `initial` and `initial_intercept`.
+
+This recipe was frozen before 500 fresh datasets in each of ten Gaussian
+designs. All 5,000 fits completed. Pooled active coverage ranged from 94.64%
+to 96.84%, and type I error from 2.32% to 4.20%. Requested-role active coverage
+ranged from 93.2% to 97.8%. Three roles had marginal Monte Carlo lower bounds
+below the exploratory 92.5% tolerance. Correlated designs had long intervals
+and low power. These are empirical calibration checks, not a uniform coverage
+theorem. The complete report retains uncertainty, power and all target roles.
+See `benchmark/inference/overnight-defaults/results/` and the frozen recipe
+`benchmark/inference/overnight-defaults/frozen-gaussian-hc3.json`.
+
+Logistic, Poisson and QP automatic policies remain experimental. An earlier
+prediction-CV policy was also inadequate for Gaussian data. A fresh Discovery
+holdout study with 100
 datasets per design found active-coefficient coverage of 77.6% and 73.0% in
 Gaussian designs, and 56.2% and 85.0% in logistic designs, for nominal 95%
 intervals. All fits converged. This includes a moderate-correlation sparse
@@ -19,8 +38,8 @@ per design. Active coverage ranged from 94.2% to 95.2% in the four Gaussian
 cases, and from 90.5% to 96.4% in the four logistic cases. It reduced remaining
 bias, with longer intervals and lower power. Logistic undercoverage persisted
 in the benign, moderate and random-support cases. Many selected penalties were
-finite-grid endpoints. This candidate remains an explicit expert option;
-it has not replaced the experimental CV defaults. See
+finite-grid endpoints. The model-based restricted-LDPE candidate remains an explicit expert option;
+it is distinct from the newer Gaussian HC3 policy above. See
 `benchmark/inference/bias-tuning/results/discovery-20261025/RESULTS.md` and
 `CURRENT_COMPARISON.md` there for uncertainty, grid diagnostics, the refreshed
 paired competitor pilot, and conditional resource estimates.
@@ -54,7 +73,22 @@ uses `gaptol=0` unless explicitly overridden in `options`, so the selected
 path fits use `options.opt_tol` rather than the generic prediction-path gap
 target.
 
-The default nodewise penalty is selected by pooled five-fold prediction CV over
+For an otherwise automatic Gaussian call, restricted LDPE uses 60 levels down
+to 0.001 of the conditional maximum, bias target `sqrt(2log(p))`, relaxation
+0.1, and `ldpe_kappa=0.5`. Four unpenalized controls are capped by `p-1` and
+`n-2`. Automatic Gaussian numerical options are `opt_tol=1e-8, gaptol=0`.
+Explicit `options` are respected.
+
+An explicit initial penalty, initial estimator, projection, noise SD,
+`nodewise_lambda`, or nonstandard intercept/scaling requests expert behavior.
+Its variance defaults to model-based. `variance=:hc0`, `:hc1`, `:hc2`, and
+`:hc3` choose empirical-score variance policies. HC1--HC3 are Gaussian only.
+HC3 divides residuals by `1-h`, where `h` is the leverage of the selected
+initial design. Rank failure or leverage approaching one raises an error.
+`robust=true` aliases HC0; `robust=false` aliases model-based variance.
+
+For GLMs, and explicitly with `nodewise_lambda=:cv`, the nodewise penalty is
+selected by pooled five-fold prediction CV over
 20 randomly sampled predictor columns, or all columns when there are fewer.
 Selection is independent of the requested targets and uses a common decreasing
 20-level geometric grid from the largest sampled absolute correlation to 5%
@@ -146,9 +180,9 @@ be reused across responses.
 ## Joint inference and resampling
 
 The multiplier bootstrap draws one common Gaussian multiplier per observation
-and projects it through all influence vectors. `robust=true` in the original
-fit uses centered empirical score influences; the default uses homoskedastic
-model influences. `multipliers` can supply an explicit n-by-B matrix. Returned
+and projects it through all influence vectors. It preserves the fitted variance
+policy, including HC3 influences for automatic Gaussian fits. Explicit
+`robust=true` uses HC0 influences and `variance=:model` uses model influences. `multipliers` can supply an explicit n-by-B matrix. Returned
 `draws` are studentized, with targets in rows and bootstrap samples in columns.
 P-values compare absolute statistics and include an add-one correction.
 `stepdown=true` computes stepdown adjusted p-values. Intervals always use the
@@ -158,8 +192,10 @@ small to resolve the requested confidence level, the interval is unbounded.
 `bootstrap_lasso(X,y,fit; B=999, wild=false, rng)` implements the separate
 residual bootstrap with lasso refitting at the fixed initial penalty. It reuses
 the nodewise scores, re-estimates the residual noise level in each sample,
-and refits under the complete null for the max-T adjustment. It corresponds
-to `hdi::boot.lasso.proj` with `boot.shortcut=true` after matching the initial
+and refits under the complete null for the max-T adjustment. HC policies
+recompute their selected-model corrections after every refit. The model-based
+and HC0 variants correspond to `hdi::boot.lasso.proj` with
+`boot.shortcut=true` after matching the initial
 fit, nodewise tuning, scaling and sampled errors. The default uses resampled
 centered residuals; `wild=true` uses normal wild errors. `resamples` supplies
 the already sampled n-by-B error matrix. The bootstrap is Gaussian-only.

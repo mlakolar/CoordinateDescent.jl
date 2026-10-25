@@ -1,0 +1,49 @@
+{
+  "active_coverage_range": [
+    0.932,
+    0.978
+  ],
+  "null_rejection_range": [
+    0.01,
+    0.054
+  ],
+  "role_flags": [
+    {
+      "case": "gaussian-hetero",
+      "slot": 5,
+      "truth": 0.5,
+      "coverage": 0.94,
+      "coverage_mcse": 0.010631371130019326,
+      "lower95": 0.9191628954788832,
+      "rejection": 0.994,
+      "rejection_mcse": 0.0034571525577583684,
+      "upper95_rejection": 1.000775894502267,
+      "length": 0.4025688314691235
+    },
+    {
+      "case": "gaussian-largen",
+      "slot": 2,
+      "truth": -0.5,
+      "coverage": 0.932,
+      "coverage_mcse": 0.01126969440686162,
+      "lower95": 0.9099118048457788,
+      "rejection": 1.0,
+      "rejection_mcse": 0.0,
+      "upper95_rejection": 1.0,
+      "length": 0.23384645032240808
+    },
+    {
+      "case": "gaussian-largen",
+      "slot": 3,
+      "truth": 0.5,
+      "coverage": 0.94,
+      "coverage_mcse": 0.010631371130019326,
+      "lower95": 0.9191628954788832,
+      "rejection": 1.0,
+      "rejection_mcse": 0.0,
+      "upper95_rejection": 1.0,
+      "length": 0.23356043278683847
+    }
+  ],
+  "note": "Role review uses unadjusted marginal normal MC intervals; exploratory diagnostics, no multiplicity-adjusted simultaneous claim. Pooled prospective gate is separate. No retuning on these data."
+}

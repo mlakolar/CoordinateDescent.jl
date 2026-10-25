@@ -46,7 +46,31 @@ using Random, LinearAlgebra, Statistics, SparseArrays
   rr = debiased_lasso(X, y, 0.1; sigma = 1, projection = P, robust = true, options = opt)
   @test maximum(abs, mean(rr.influence; dims = 1)) < 1e-12
   @test all(isfinite, vcov(rr))
+  @test rr.variance == :hc0
+  hc3 = debiased_lasso(X, y, 0.1; projection=P, variance=:hc3, options=opt)
+  selected = hcat(ones(size(X,1)), X[:,findall(!iszero,hc3.initial)])
+  hat = vec(sum((selected / (selected'selected)) .* selected; dims=2))
+  direct = P.scores .* (hc3.residuals ./ (1 .- hat))
+  direct .-= mean(direct; dims=1)
+  @test hc3.variance == :hc3 && hc3.robust
+  @test coef(hc3) ≈ coef(r)
+  @test hc3.influence ≈ direct atol=1e-10
+  @test vcov(hc3) ≈ direct'direct / size(X,1)^2 atol=1e-10
+  @test_throws ArgumentError debiased_lasso(X,y,.1; robust=false,variance=:hc3)
+  @test_throws ArgumentError debiased_lasso(X,y,.1; variance=:unknown)
+  @test_throws ArgumentError debiased_lasso(X,Float64.(y .> median(y)),.1;family=:binomial,variance=:hc3)
   @test debiased_lasso(X, y; options = opt).converged
+
+  # The out-of-box Gaussian policy must reproduce the source-frozen recipe.
+  auto = debiased_lasso(X,y;threads=false,rng=Xoshiro(7720))
+  frozen = debiased_lasso(X,y;threads=false,nodewise_lambda=:ldpe,
+    ldpe_unpenalized=4,ldpe_kappa=.5,variance=:hc3,
+    options=CDOptions(;opt_tol=1e-8,gaptol=0),rng=Xoshiro(7720))
+  @test auto.variance == :hc3 && auto.projection.tuning == :ldpe
+  @test auto.initial ≈ frozen.initial atol=1e-10
+  @test auto.projection.theta ≈ frozen.projection.theta atol=1e-10
+  @test coef(auto) ≈ coef(frozen) atol=1e-10
+  @test stderror(auto) ≈ stderror(frozen) atol=1e-10
 
   # Orthogonal design: the debiasing removes soft-threshold bias exactly.
   O = Matrix(qr(randn(rng, 40, 5)).Q)[:, 1:5] .* sqrt(40)
@@ -79,6 +103,17 @@ using Random, LinearAlgebra, Statistics, SparseArrays
   bs2 = bootstrap_lasso(X, y, r; resamples = errors, options = opt, rng = Xoshiro(8))
   @test bs.draws == bs2.draws
   @test all(bs.adjusted_pvalues .>= bs.pvalues)
+  b3 = bootstrap_lasso(X,y,hc3;resamples=errors[:,1:1],options=opt,rng=Xoshiro(7722))
+  bootfit = lasso(X,X*hc3.initial .+ hc3.intercept .+ errors[:,1],hc3.lambda,opt;
+                  intercept=true,standardize_x=true,rng=Xoshiro(7722))
+  bootbeta = Vector(bootfit.x)
+  bootM = hcat(ones(size(X,1)),X[:,findall(!iszero,bootbeta)])
+  boothat = vec(sum((bootM / (bootM'bootM)) .* bootM;dims=2))
+  bootinf = P.scores .* (bootfit.residuals ./ (1 .- boothat))
+  bootinf .-= mean(bootinf;dims=1)
+  bootse = vec(sqrt.(sum(abs2,bootinf;dims=1))) / size(X,1)
+  bootest = bootbeta + P.scores'bootfit.residuals / size(X,1)
+  @test b3.draws[:,1] ≈ (bootest - hc3.initial) ./ bootse atol=1e-8
   @test_throws ArgumentError bootstrap_lasso(X, y .+ 1, r; resamples = errors)
 
   # At zero penalty, the Gaussian score reduces to the classical restricted score.

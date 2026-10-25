@@ -1,0 +1,11 @@
+{
+  "stage": "development",
+  "planned_datasets": 900,
+  "records": 90000,
+  "unique_records": 90000,
+  "missing_markers": [],
+  "method_target_errors": 0,
+  "incomplete_or_invalid_datasets": [],
+  "finite_records": true,
+  "max_leverage_trace_error": 2.1316282072803006e-14
+}

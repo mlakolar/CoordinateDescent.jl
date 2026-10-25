@@ -404,7 +404,32 @@ struct DebiasedLassoResult{T}
   hasintercept::Bool
   standardize_x::Bool
   robust::Bool
+  variance::Symbol
   converged::Bool
+end
+
+# HC corrections use the selected initial design, including its intercept.
+# This is a finite-sample variance policy, not a post-selection coverage proof.
+function _inference_influence(A, residuals, scores, beta, intercept, sd, variance)
+  variance == :model && return sd .* scores
+  n = size(A, 1)
+  adjusted = residuals
+  if variance in (:hc1, :hc2, :hc3)
+    ids = findall(!iszero, beta)
+    M = intercept ? hcat(ones(eltype(A), n), A[:, ids]) : A[:, ids]
+    k = size(M, 2)
+    k < n && rank(M) == k || throw(ArgumentError("HC variance needs a full-rank initial selected design with residual degrees of freedom"))
+    if variance == :hc1
+      adjusted = residuals .* sqrt(n / (n - k))
+    else
+      h = k == 0 ? zeros(eltype(A), n) : vec(sum(abs2, Matrix(qr(M).Q)[:, 1:k]; dims=2))
+      all(x -> 0 <= x < 1 - 1e-8, h) || throw(ArgumentError("HC variance needs leverages below one"))
+      adjusted = residuals ./ (variance == :hc2 ? sqrt.(1 .- h) : 1 .- h)
+    end
+  end
+  influence = scores .* adjusted
+  influence .-= mean(influence; dims=1)
+  influence
 end
 
 function _glm_moments(eta, family)
@@ -433,35 +458,68 @@ penalty bypasses CV. Gaussian noise uses residual RMS with
 `n - nnz(beta) - intercept` degrees of freedom; `sigma` may supply the noise SD.
 For Gaussian data, `initial_tuning=:scaled` with an omitted penalty retains the
 scaled lasso at universal level `sqrt(2log(max(p,2))/n)` and its noise estimate.
-For GLMs the Hessian-weighted, weighted-centered design supplies the projection
-and the model variance is one. The default nodewise projection also uses pooled
-CV; `nodewise_lambda=:universal` or a number overrides it. These prediction CV
-rules are automatic computational policies, not guarantees of valid inference.
-They remain experimental: the fresh Discovery holdout study found substantial
-active-coefficient undercoverage even in moderate high-dimensional designs.
-Numerical convergence alone does not establish calibration.
+For an otherwise automatic Gaussian call, the default projection is restricted
+LDPE: four X-only correlated controls (capped by the available dimension),
+`ldpe_kappa=0.5`, 60 levels down to 0.001 of the conditional maximum,
+and bias target `sqrt(2log(p))`. The default variance is centered HC3, using
+leverages of the selected initial design. This policy passed pooled calibration
+checks on 500 fresh datasets in each of ten Gaussian designs. Requested-role
+coverage ranged from 93.2% to 97.8%; correlated designs had long intervals and
+low power. These are empirical results, not uniform coverage guarantees.
+The initial estimator remains regularized: post-selection refits did not
+uniformly improve development calibration.
+
+An explicit initial penalty, initial fit, projection, `nodewise_lambda`, noise
+SD, or nonstandard centering/scaling requests the expert path. Its variance
+defaults to model-based. `nodewise_lambda=:cv` restores pooled projection CV;
+`:universal`, `:ldpe`, or a number specifies another projection rule. For GLMs
+the Hessian-weighted, weighted-centered design supplies the projection and the
+model variance is one. GLM and QP defaults remain experimental: fresh studies
+found undercoverage. Numerical convergence does not establish calibration.
 
 `initial` can supply all p slopes; its intercept is `mean(y-X*initial)` for
 Gaussian models, or `initial_intercept` for GLMs. `projection` can reuse an
 approximate inverse (caller must ensure it belongs to the same working design).
-`robust=true` uses centered empirical score influences for the sandwich
-variance; otherwise use model-based influences. Other keywords are passed to
+`variance` selects `:model`, `:hc0`, `:hc1`, `:hc2`, or `:hc3`. HC1--HC3 are
+Gaussian only and require a full-rank initial selected design. `robust=true`
+is the compatible alias for `variance=:hc0`, and `robust=false` for `:model`.
+Explicit policies override the automatic variance choice. Other keywords pass to
 [`debiasing_matrix`](@ref), including `method`, `lambda` there named
 `nodewise_lambda`, `mu`, `targets`, `gram`, `threads`, and `lambda_path`.
-`intercept=true`, `standardize_x=true`, `options=CDOptions()` and `rng` also
-control the initial fit. Nonconvergence is reported in the result, and must be
+`intercept=true`, `standardize_x=true`, `options` and `rng` also control the
+initial fit. Automatic Gaussian fits use `opt_tol=1e-8, gaptol=0`; explicit
+`options` are respected. Other calls retain `CDOptions()` as their default.
+Nonconvergence is reported in the result, and must be
 resolved before using its intervals. Confidence intervals are asymptotic.
 """
 function debiased_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, lambda::Union{Nothing, Real} = nothing;
     family::Symbol = :gaussian, initial = nothing, initial_intercept::Real = 0,
-    sigma::Union{Nothing, Real} = nothing, projection = nothing, robust::Bool = false,
+    sigma::Union{Nothing, Real} = nothing, projection = nothing, robust::Union{Nothing, Bool} = nothing,
+    variance::Symbol = :auto,
     intercept::Bool = true, standardize_x::Bool = true,
     nodewise_lambda::Union{Nothing, Real, Symbol} = nothing,
     initial_tuning::Symbol = :cv, initial_cv_folds::Integer = min(5, size(X,1)), initial_cv_nlambda::Integer = 40,
-    options::CDOptions = CDOptions(), rng::AbstractRNG = default_rng(), kwargs...)
+    options::Union{Nothing, CDOptions} = nothing, rng::AbstractRNG = default_rng(), kwargs...)
   A, b = _inference_data(X, y)
   T = eltype(A); n, p = size(A)
   family in (:gaussian, :binomial, :poisson) || throw(ArgumentError("unknown family $family"))
+  automatic = family == :gaussian && lambda === nothing && initial === nothing &&
+    projection === nothing && nodewise_lambda === nothing && sigma === nothing &&
+    initial_tuning == :cv && intercept && standardize_x && get(kwargs, :method, :nodewise) == :nodewise
+  options = options === nothing ? (automatic ? CDOptions(; opt_tol=1e-8, gaptol=0) : CDOptions()) : options
+  if automatic
+    nodewise_lambda = :ldpe
+    kwargs = merge((ldpe_unpenalized=min(4, p-1, n-2), ldpe_kappa=0.5), (; kwargs...))
+  end
+  variance in (:auto, :model, :hc0, :hc1, :hc2, :hc3) || throw(ArgumentError("unknown variance policy $variance"))
+  if variance == :auto
+    variance = robust === nothing ? (automatic ? :hc3 : :model) : (robust ? :hc0 : :model)
+  elseif robust !== nothing && (robust ? variance != :hc0 : variance != :model)
+    throw(ArgumentError("specify variance or the compatible robust alias, not conflicting policies"))
+  end
+  family != :gaussian && variance in (:hc1, :hc2, :hc3) &&
+    throw(ArgumentError("HC1/HC2/HC3 variance policies are Gaussian only"))
+  robust = variance != :model
   lambda === nothing || _inference_level(lambda, "lambda")
   sigma === nothing || (isfinite(sigma) && sigma > 0) || throw(ArgumentError("sigma must be positive and finite"))
   family != :gaussian && sigma !== nothing && sigma != 1 && throw(ArgumentError("GLM dispersion is one"))
@@ -518,7 +576,7 @@ function debiased_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, la
     isfinite(sd) && sd > 0 || throw(ArgumentError("noise estimate must be positive and finite"))
     proj = projection === nothing ? debiasing_matrix(A; lambda = nodewise_lambda, intercept, standardize_x, options, rng, kwargs...) : projection
     scores = proj.scores
-    influence = robust ? scores .* res : sd .* scores
+    influence = _inference_influence(A, res, scores, beta, intercept, sd, variance)
   else
     _check_response(family == :binomial ? ProximalBase.Logistic() : ProximalBase.Poisson(), b)
     meanfit, h = _glm_moments(eta, family)
@@ -534,12 +592,12 @@ function debiased_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, la
   end
   size(scores) == (n, length(proj.targets)) && size(proj.theta, 2) == p ||
     throw(DimensionMismatch("projection does not match X"))
-  robust && (influence .-= mean(influence; dims = 1))
+  family != :gaussian && robust && (influence .-= mean(influence; dims = 1))
   se = vec(sqrt.(sum(abs2, influence; dims = 1))) ./ n
   all(x -> isfinite(x) && x > 0, se) || throw(ArgumentError("degenerate standard errors"))
   bhat = beta[proj.targets] + transpose(scores) * res ./ n
   pv = 2 .* _pnorm.(-abs.(bhat ./ se))
-  DebiasedLassoResult(bhat, se, pv, beta, T(beta0), res, influence, proj, T(lambda), sd, family, intercept, standardize_x, robust,
+  DebiasedLassoResult(bhat, se, pv, beta, T(beta0), res, influence, proj, T(lambda), sd, family, intercept, standardize_x, robust, variance,
                       conv && all(proj.converged))
 end
 
@@ -668,8 +726,7 @@ function bootstrap_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, r
       df > 0 || throw(ArgumentError("bootstrap refit has no residual degrees of freedom"))
       sd = norm(fit.residuals) / sqrt(df)
       sd > 0 || throw(ArgumentError("degenerate bootstrap residuals"))
-      inf = r.robust ? r.projection.scores .* fit.residuals : sd .* r.projection.scores
-      r.robust && (inf .-= mean(inf; dims = 1))
+      inf = _inference_influence(A, fit.residuals, r.projection.scores, beta, hasintercept, sd, r.variance)
       se = vec(sqrt.(sum(abs2, inf; dims = 1))) ./ n
       bhat = beta[r.projection.targets] + transpose(r.projection.scores) * fit.residuals ./ n
       truth = undernull ? zeros(m) : r.initial[r.projection.targets]
