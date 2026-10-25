@@ -7,7 +7,7 @@ import csv,json,math,statistics,sys
 from pathlib import Path
 from collections import defaultdict
 stage,suffix,maxrep=sys.argv[1],sys.argv[2],int(sys.argv[3]);dest=Path('reports')/(stage+'-'+suffix)
-cases={r['case']:r for r in csv.DictReader(open('cases.csv'))}
+cases={r['case']:r for r in csv.DictReader(open(sys.argv[4] if len(sys.argv)>4 else 'cases.csv'))}
 groups=defaultdict(lambda:defaultdict(list))
 for r in csv.DictReader((dest/'records.csv').open()):groups[(r['case'],r['method'])][int(r['rep'])].append(r)
 def dataset_metrics(rr):
@@ -19,7 +19,7 @@ def aggregate(vals):
     return out
 summary=[];slots=[];invalid=[];counts=[]
 for (case,method),reps in sorted(groups.items()):
-    c=cases[case];count=6 if c['design']=='belloni' else 7 if c['design']=='sihr' else 10;valid={}
+    c=cases[case];count=int(c.get('target_count') or (6 if c['design']=='belloni' else 7 if c['design']=='sihr' else 10));valid={}
     for rep,rr in reps.items():
         if len(rr)==count and len({r['target'] for r in rr})==count and all(r['converged'].lower()=='true' and float(r['se'])>0 and all(math.isfinite(float(r[k])) for k in ['estimate','se','lower','upper','pvalue']) and 0<=float(r['pvalue'])<=1 for r in rr):valid[rep]=rr
         else:invalid.append([case,method,rep,len(rr)])
