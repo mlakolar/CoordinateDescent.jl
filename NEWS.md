@@ -4,7 +4,25 @@ Debiased Gaussian, logistic and Poisson lasso inference, with parallel nodewise
 regressions on a shared Gram matrix or Javanmard--Montanari QP projections.
 Adds multiplier max-T inference, a residual/wild bootstrap with lasso refitting,
 and single-coefficient decorrelated score tests. See the inference guide for
-normalizations, tuning, assumptions and Discovery validation.
+normalizations, tuning, assumptions and Discovery validation. Initial penalties
+and nodewise projections now have bounded automatic CV defaults, with explicit
+penalties and the original theoretical rules available for expert use.
+
+## Paths stop on a certified duality gap
+
+With ProximalSolvers' gap stopping (ProximalSolvers #86), the paths (`LassoPath`, `CVLassoPath`,
+`GLMLassoPath`, `GroupLassoPath`, `SparseGroupLassoPath`, `MultiLassoPath`)
+and the last level of `warm_start = false` stop each level once its relative
+duality gap is at most `1e-4`, for the losses and penalties that have a gap,
+instead of solving every level to `opt_tol`. The coefficients are then within
+about `1e-4` of the solution, relative to the largest, and within about
+`5e-3` at worst. On the benchmark workloads of ProximalSolvers #86, `LassoPath`
+and `CVLassoPath` took 19 to 34% less time, and `GLMLassoPath` between 27% less
+and 9% more. The new option
+`gaptol` of `CDOptions` sets the target: `nothing` (the default) takes
+ProximalSolvers' `PATH_GAPTOL = 1e-4`, `1e-3` is the faster setting, and
+`gaptol = 0` stops on the changes with `opt_tol`, as before. Tests that compare
+paths with near-exact solutions pass `gaptol = 0`.
 
 # Version 0.8.0
 

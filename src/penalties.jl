@@ -146,7 +146,8 @@ function _solve_levels!(x, m, g, options::CDOptions; rng::AbstractRNG = default_
   (path && !(g isa NormL1)) || return _solve!(x, m, g, options; rng)
   s = _solver(options; rng)
   fill!(x, zero(eltype(x)))
-  solve!(x, m, g, s; continuation = options.num_steps, continuation_tol = convex ? sqrt(s.tol) : s.tol)
+  solve!(x, m, g, s; continuation = options.num_steps, continuation_tol = convex ? sqrt(s.tol) : s.tol,
+         _gapkw(options)...)
 end
 
 # One level of local linear approximation from zero. When every level starts

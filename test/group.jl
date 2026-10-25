@@ -45,7 +45,7 @@ end
     @test kkt_group(-Z' * r / n, θ, groups, λ, w) < 1e-6
     # the same solution as coordinate descent on Z, mapped back
     xz = AtomIterate(p, groups)
-    coordinate_descent!(xz, CDLeastSquaresLoss(y, Z; intercept = true), GroupNormL2(λ, groups, w), CDOptions(; opt_tol = 1e-10))
+    coordinate_descent!(xz, CDLeastSquaresLoss(y, Z; intercept = true), GroupNormL2(λ, groups, w), CDOptions(; opt_tol = 1e-10, gaptol = 0))
     βz = reduce(vcat, [Rs[k] \ xz[G] for (k, G) in enumerate(groups)])
     @test Vector(sol.x) ≈ βz atol = 1e-5
     @test sol.activegroups == [k for (k, G) in enumerate(groups) if norm(βz[G]) > 0]
@@ -95,18 +95,21 @@ end
   end
 
   @testset "paths" begin
-    path = GroupLassoPath(X, y, groups; nλ = 30, λminratio = 0.01)
+    # gaptol = 0: each level stops on the changes, for the near-exact
+    # comparisons with the direct solves below
+    exact = CDOptions(; gaptol = 0)
+    path = GroupLassoPath(X, y, groups, exact; nλ = 30, λminratio = 0.01)
     @test length(path.λpath) == 30 && all(path.converged) && path.intercept
     @test nnz(path.βpath[1]) == 0 && isempty(path.activegroups[1])
     @test !isempty(path.activegroups[2])                      # λmax is the smallest level with a zero solution
     @test all(path.kkt_checks .>= 1)
     for k in (8, 30)
-      sol = group_lasso(X, y, path.λpath[k], groups, CDOptions(; opt_tol = 1e-10))
+      sol = group_lasso(X, y, path.λpath[k], groups, CDOptions(; opt_tol = 1e-10, gaptol = 0))
       @test Vector(path.βpath[k]) ≈ Vector(sol.x) atol = 1e-5
       @test path.β0path[k] ≈ sol.intercept atol = 1e-5
       @test path.activegroups[k] == sol.activegroups
     end
-    path0 = GroupLassoPath(X, y, path.λpath, groups; screening = false)
+    path0 = GroupLassoPath(X, y, path.λpath, groups, exact; screening = false)
     @test all(norm(path.βpath[k] - path0.βpath[k]) < 1e-5 for k in eachindex(path.λpath))
     pathm = GroupLassoPath(X, y, groups; nλ = 50, max_groups = 3)
     @test length(last(pathm.activegroups)) > 3 && all(length(a) <= 3 for a in pathm.activegroups[1:end-1])

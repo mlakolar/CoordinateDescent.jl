@@ -135,7 +135,7 @@ end
   @testset "the varying-coefficient lasso" begin
     Xl = [X randn(Xoshiro(7), n, 5)]                # five variables that do not matter
     for penalty in (:group, :lasso)
-      fit = varying_coefficient_lasso(Xl, z, y, zgrid, 0.1, CDOptions(; opt_tol = 1e-12); kernel = epa, bandwidth = 0.2,
+      fit = varying_coefficient_lasso(Xl, z, y, zgrid, 0.1, CDOptions(; opt_tol = 1e-12, gaptol = 0); kernel = epa, bandwidth = 0.2,
                                     penalty)
       @test fit.penalty == penalty && size(fit.selected) == (8, 4) && nobs(fit) == n
       @test all(fit.selected[1:2, :]) && !any(fit.selected[3:8, :])          # β₁ and β₂ in, the rest out
@@ -156,9 +156,9 @@ end
     keep = findall(v .> 0)
     Zl = reduce(hcat, [Xl[keep, j] .* ((z[keep] .- z0) ./ 0.2) .^ r for j in 1:8 for r in 0:1])
     r = sqrt.(length(keep) .* v[keep] ./ sum(v[keep]))
-    gl = group_lasso(r .* Zl, r .* y[keep], 0.05, [[2j - 1, 2j] for j in 1:8], CDOptions(; opt_tol = 1e-12);
+    gl = group_lasso(r .* Zl, r .* y[keep], 0.05, [[2j - 1, 2j] for j in 1:8], CDOptions(; opt_tol = 1e-12, gaptol = 0);
                     intercept = false, groupweights = fill(sqrt(2), 8))
-    fit = varying_coefficient_lasso(Xl, z, y, [z0], 0.05, CDOptions(; opt_tol = 1e-12); kernel = epa, bandwidth = 0.2)
+    fit = varying_coefficient_lasso(Xl, z, y, [z0], 0.05, CDOptions(; opt_tol = 1e-12, gaptol = 0); kernel = epa, bandwidth = 0.2)
     @test coef(fit)[:, 1] ≈ Vector(gl.x)[1:2:end] atol = 1e-8
     @test coef(fit; derivative = 1)[:, 1] ≈ Vector(gl.x)[2:2:end] ./ 0.2 atol = 1e-7
     # without refit

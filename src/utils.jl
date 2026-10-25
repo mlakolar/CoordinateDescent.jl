@@ -37,7 +37,7 @@ end
 
 """
     CDOptions(; max_iter=100_000, opt_tol=1e-7, order=:random, warm_start=true,
-                num_steps=50, relative_tol=true, anderson=0, momentum=nothing)
+                num_steps=50, relative_tol=true, anderson=0, momentum=nothing, gaptol=nothing)
     CDOptions(o::CDOptions; changes...)
 
 Options for [`coordinate_descent!`](@ref) and the lasso solvers, which run the
@@ -75,6 +75,17 @@ options passed to them.
   known to help: with `order = :random`, a `SparseIterate` and a built-in loss.
   `true` asks for it with any loss, and needs `order = :random`; `false` turns
   it off
+- `gaptol`: the relative duality gap at which each level of a path stops, and
+  the last level of the path of `warm_start = false` (see ProximalSolvers'
+  `solve_path`), for the losses and penalties that have a gap (least squares
+  and the GLMs with the ℓ1 norm, its weighted and nonnegative forms, the
+  elastic net, the group lasso and the sparse group lasso). `nothing`, the
+  default, takes ProximalSolvers' default `PATH_GAPTOL = 1e-4`; `1e-3` is
+  the faster setting; `0` stops on the changes of the coordinates with
+  `opt_tol`, as before. A positive `gaptol` also stops a single
+  solve (`warm_start = true`), which otherwise uses `opt_tol`. The
+  coefficients are within about `gaptol` of the solution, relative to the
+  largest, and within about 50 `gaptol` at worst
 """
 struct CDOptions
   max_iter::Int
@@ -85,9 +96,11 @@ struct CDOptions
   relative_tol::Bool         # changes measured relative to the scales of the loss
   anderson::Int             # memory of Anderson acceleration, 0 for none
   momentum::Union{Bool, Nothing}   # Nesterov momentum, nothing for the default
+  gaptol::Union{Float64, Nothing}  # the relative duality gap of the paths, nothing for the default
 
-  function CDOptions(max_iter, opt_tol, order::Symbol, warm_start, num_steps, relative_tol, anderson, momentum)
-    o = new(max_iter, opt_tol, order, warm_start, num_steps, relative_tol, anderson, momentum)
+  function CDOptions(max_iter, opt_tol, order::Symbol, warm_start, num_steps, relative_tol, anderson, momentum,
+                     gaptol = nothing)
+    o = new(max_iter, opt_tol, order, warm_start, num_steps, relative_tol, anderson, momentum, gaptol)
     o.max_iter >= 0 || throw(ArgumentError("max_iter must be nonnegative, but it is $(o.max_iter)."))
     o.opt_tol >= 0 || throw(ArgumentError("opt_tol must be nonnegative, but it is $(o.opt_tol)."))
     o.order === :active &&
@@ -100,6 +113,8 @@ struct CDOptions
       throw(ArgumentError("anderson needs order = :cyclic, since the extrapolation assumes the same order in every pass."))
     o.momentum === true && o.order === :cyclic &&
       throw(ArgumentError("momentum needs order = :random; with the cyclic order it can stall far from the minimizer."))
+    o.gaptol === nothing || o.gaptol >= 0 ||
+      throw(ArgumentError("gaptol must be nonnegative or nothing, but it is $(o.gaptol)."))
     o
   end
 end
@@ -121,15 +136,16 @@ function _cdoptions(;
   max_iter::Real=100_000, opt_tol::Real=1e-7,
   order::Union{Symbol, Nothing}=nothing, randomize::Union{Bool, Nothing}=nothing,
   warm_start::Bool=true, num_steps::Real=50, relative_tol::Bool=true,
-  anderson::Real=0, momentum::Union{Bool, Nothing}=nothing)
+  anderson::Real=0, momentum::Union{Bool, Nothing}=nothing, gaptol::Union{Real, Nothing}=nothing)
   order === nothing || randomize === nothing ||
     throw(ArgumentError("Pass order or randomize, not both."))
   o = order !== nothing ? order : randomize === false ? :cyclic : :random
-  CDOptions(Int(max_iter), Float64(opt_tol), o, warm_start, Int(num_steps), relative_tol, Int(anderson), momentum)
+  CDOptions(Int(max_iter), Float64(opt_tol), o, warm_start, Int(num_steps), relative_tol, Int(anderson), momentum,
+            gaptol === nothing ? nothing : Float64(gaptol))
 end
 
 const _CDOPTIONS_KEYWORDS = (:max_iter, :opt_tol, :order, :randomize, :warm_start, :num_steps, :relative_tol,
-                             :anderson, :momentum)
+                             :anderson, :momentum, :gaptol)
 
 # the keyword arguments changes must name fields of options of type O
 function _check_keywords(::Type{O}, valid, changes) where {O}
@@ -144,7 +160,7 @@ function CDOptions(o::CDOptions; changes...)
   # randomize replaces order unless both are given
   order = haskey(changes, :randomize) ? (;) : (; order = o.order)
   CDOptions(; max_iter = o.max_iter, opt_tol = o.opt_tol, order..., warm_start = o.warm_start, num_steps = o.num_steps,
-            relative_tol = o.relative_tol, anderson = o.anderson, momentum = o.momentum, changes...)
+            relative_tol = o.relative_tol, anderson = o.anderson, momentum = o.momentum, gaptol = o.gaptol, changes...)
 end
 
 # the options with the fields named in the keyword arguments kw replaced, as the
@@ -152,10 +168,15 @@ end
 _options(o, kw) = isempty(kw) ? o : typeof(o)(o; kw...)
 
 # the coordinate descent of ProximalSolvers with these options, drawing its
-# random orders from rng
+# random orders from rng; a single solve stops on the duality gap only with a
+# positive gaptol
 _solver(o::CDOptions; rng::AbstractRNG = default_rng()) =
   CDSolver(; maxpasses = o.max_iter, tol = o.opt_tol, order = o.order, relative = o.relative_tol,
-           anderson = o.anderson, momentum = o.momentum, rng)
+           anderson = o.anderson, momentum = o.momentum, rng, gaptol = something(o.gaptol, 0.0))
+
+# the gap target of the paths and continuation of ProximalSolvers (solve_path
+# and solve! with continuation; not the paths of LLA, which stop on the changes)
+_gapkw(o::CDOptions) = (; gaptol = o.gaptol)
 
 # Minimizes f + g by the coordinate descent of ProximalSolvers, from x when
 # options.warm_start is true. Otherwise x is set to zero and, for NormL1 and
@@ -166,7 +187,7 @@ function _solve!(x, f, g, options::CDOptions; rng::AbstractRNG = default_rng())
   options.warm_start && return solve!(x, f, g, s)
   fill!(x, zero(eltype(x)))
   if g isa Union{NormL1, GroupNormL2} && options.num_steps > 0
-    solve!(x, f, g, s; continuation = options.num_steps)
+    solve!(x, f, g, s; continuation = options.num_steps, _gapkw(options)...)
   else
     solve!(x, f, g, s)
   end
