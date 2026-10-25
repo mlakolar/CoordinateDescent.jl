@@ -65,7 +65,7 @@ jobs:
         run: |
           using Pkg
           Pkg.add([PackageSpec(url="https://github.com/mlakolar/ProximalBase.jl", rev="master"),
-                   PackageSpec(url="https://github.com/mlakolar/ProximalSolvers.jl", rev="master"),
+                   PackageSpec(url="https://github.com/mlakolar/ProximalSolvers.jl", rev="gap-stop"),
                    PackageSpec(url="https://github.com/mlakolar/KernelSmoothing.jl", rev="master")])
       - uses: julia-actions/julia-buildpkg@v1
       - name: Test the canonical API with deprecations as errors

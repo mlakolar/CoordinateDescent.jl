@@ -172,7 +172,7 @@ function SparseGroupLassoPath(X::AbstractMatrix{T}, y::AbstractVector{T}, λpath
   all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
   m, g1, x, gs, w, s = _sparse_group_problem(X, y, groups, T(alpha), intercept, standardize_x, groupweights)
   β0path = T[]
-  path = solve_path(m, g1, λpath, _solver(options; rng); x, screening, maxnnz = max_groups,
+  path = solve_path(m, g1, λpath, _solver(options; rng); x, screening, maxnnz = max_groups, _gapkw(options)...,
                     callback = (k, λ, x, m) -> (push!(β0path, ProximalSolvers.intercept(m, x)); false))
   βpath = [_unscaledcoef(Vector(θ), s) for θ in path.solutions]
   SparseGroupLassoPath{T}(path.λ, βpath, β0path, [_activegroups(gs, β) for β in βpath], path.passes, path.converged,

@@ -137,6 +137,7 @@ function MultiLassoPath(X::AbstractMatrix{T}, Y::AbstractMatrix{T}, λpath::Vect
   m, groups, x, ω = _multi_problem(X, Y, intercept, standardize_x)
   β0path = Vector{T}[]
   path = solve_path(m, GroupNormL2(one(T), groups, ω), λpath, _solver(options); x, screening, maxnnz = max_rows,
+                    _gapkw(options)...,
                     callback = (k, λ, x, m) -> (push!(β0path, ProximalSolvers.intercept(m, x)); false))
   Bpath = [sparse(reshape(Vector(θ), p, q)) for θ in path.solutions]
   MultiLassoPath{T}(path.λ, Bpath, β0path, _activerows.(Bpath), path.passes, path.converged, path.kkt_checks, intercept,
