@@ -53,8 +53,8 @@ jobs:
       - uses: julia-actions/cache@v3
       # ProximalSolvers is not registered yet: 0.1.0 is General PR #173068, and
       # 0.1.1, which has SqrtQuadraticFunction, is on its master. Julia 1.11 and
-      # later take it from [sources] in Project.toml; Julia 1.10 ignores
-      # [sources]. Remove this step and [sources] once 0.1.1 is registered.
+      # later take the pinned SLOPEAPG revision from [sources]; Julia 1.10 ignores
+      # [sources]. Keep this revision until SLOPEAPG is released and registered.
       # ProximalSolvers' master takes ProximalBase from its master (Constrained,
       # not yet released), so add both in one call; [sources] does it on Julia 1.11+.
       # KernelSmoothing, whose kernels the tests of the varying-coefficient
@@ -65,7 +65,7 @@ jobs:
         run: |
           using Pkg
           Pkg.add([PackageSpec(url="https://github.com/mlakolar/ProximalBase.jl", rev="master"),
-                   PackageSpec(url="https://github.com/mlakolar/ProximalSolvers.jl", rev="master"),
+                   PackageSpec(url="https://github.com/mlakolar/ProximalSolvers.jl", rev="ffdc26c1a20703da7afe8c0e7755e1768c07f2b5"),
                    PackageSpec(url="https://github.com/mlakolar/KernelSmoothing.jl", rev="master")])
       - uses: julia-actions/julia-buildpkg@v1
       - name: Test the canonical API with deprecations as errors

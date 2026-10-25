@@ -23,7 +23,7 @@ CoordinateDescentStatsModelsExt = "StatsModels"
 [sources]
 KernelSmoothing = {url = "https://github.com/mlakolar/KernelSmoothing.jl", rev = "master"}
 ProximalBase = {url = "https://github.com/mlakolar/ProximalBase.jl", rev = "master"}
-ProximalSolvers = {url = "https://github.com/mlakolar/ProximalSolvers.jl", rev = "master"}
+ProximalSolvers = {url = "https://github.com/mlakolar/ProximalSolvers.jl", rev = "ffdc26c1a20703da7afe8c0e7755e1768c07f2b5"}
 
 [compat]
 Aqua = "0.8"

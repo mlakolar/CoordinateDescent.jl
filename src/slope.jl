@@ -1,5 +1,6 @@
 # SLOPE uses the sorted penalty of ProximalBase and the accelerated proximal
-# gradient solver of ProximalSolvers. All penalties here use loss / n.
+# gradient path engine of ProximalSolvers. Data preparation, calibration and
+# statistical result objects remain here. All penalties here use loss / n.
 
 """
     slope_bh(p; q=0.1, sigma=1, n=1)
@@ -17,8 +18,47 @@ function slope_bh(p::Integer; q::Real=0.1, sigma::Real=1, n::Integer=1)
   [sigma / sqrt(n) * sqrt(2) * erfcinv(q * j / p) for j in 1:p]
 end
 
-# Validation and centering are shared by the fit and the path. A dense copy
-# makes the transformed design explicit, including for sparse input.
+# A sparse standardized design, centered by a rank-one correction. Scaling
+# touches stored entries once; centering never fills the implicit zeros.
+struct _SLOPESparseDesign{T,I,C} <: AbstractMatrix{T}
+  X::SparseMatrixCSC{T,I}
+  center::C
+end
+Base.size(Z::_SLOPESparseDesign) = size(Z.X)
+Base.getindex(Z::_SLOPESparseDesign, i::Int, j::Int) =
+  Z.X[i,j] - (Z.center === nothing ? zero(eltype(Z)) : Z.center[j])
+Base.getindex(Z::_SLOPESparseDesign, ::Colon, E::AbstractVector{<:Integer}) =
+  _SLOPESparseDesign(Z.X[:,E], Z.center === nothing ? nothing : Z.center[E])
+
+function LinearAlgebra.mul!(out::AbstractVector, Z::_SLOPESparseDesign,
+                            b::AbstractVector, α::Number, δ::Number)
+  mul!(out, Z.X, b, α, δ)
+  if Z.center !== nothing
+    shift = α * dot(Z.center, b)
+    out .-= shift
+  end
+  out
+end
+LinearAlgebra.mul!(out::AbstractVector, Z::_SLOPESparseDesign, b::AbstractVector) =
+  mul!(out, Z, b, true, false)
+
+function LinearAlgebra.mul!(out::AbstractVector,
+                            A::Union{Transpose{<:Any,<:_SLOPESparseDesign},Adjoint{<:Any,<:_SLOPESparseDesign}},
+                            b::AbstractVector, α::Number, δ::Number)
+  Z = parent(A)
+  mul!(out, transpose(Z.X), b, α, δ)
+  if Z.center !== nothing
+    shift = α * sum(b)
+    out .-= shift .* Z.center
+  end
+  out
+end
+LinearAlgebra.mul!(out::AbstractVector,
+                   A::Union{Transpose{<:Any,<:_SLOPESparseDesign},Adjoint{<:Any,<:_SLOPESparseDesign}},
+                   b::AbstractVector) = mul!(out, A, b, true, false)
+
+# Validation and centering are shared by the fit and the path. Keep the
+# existing explicit transformation and BLAS products for dense inputs.
 function _slope_data(X, y, intercept, standardize_x)
   n, p = size(X)
   n > 0 && p > 0 || throw(ArgumentError("X must have positive dimensions"))
@@ -37,69 +77,35 @@ function _slope_data(X, y, intercept, standardize_x)
   Z, v, xb, yb, scales
 end
 
+function _slope_data(X::SparseMatrixCSC, y, intercept, standardize_x)
+  n, p = size(X)
+  n > 0 && p > 0 || throw(ArgumentError("X must have positive dimensions"))
+  length(y) == n || throw(DimensionMismatch("X and y have different observation counts"))
+  T = float(promote_type(eltype(X), eltype(y)))
+  A = copy(SparseMatrixCSC{T,eltype(rowvals(X))}(X))
+  v = Vector{T}(y)
+  all(isfinite, nonzeros(A)) && all(isfinite, v) || throw(ArgumentError("X and y must be finite"))
+  xb = intercept ? _column_means(A) : zeros(T, p)
+  yb = intercept ? mean(v) : zero(T)
+  v .-= yb
+  scales = standardize_x ? _loadings(A, intercept) : ones(T, p)
+  replace!(scales, zero(T) => one(T))
+  if standardize_x
+    vals = nonzeros(A)
+    for j in 1:p, k in nzrange(A, j)
+      vals[k] /= scales[j]
+    end
+  end
+  Z = _SLOPESparseDesign(A, intercept ? xb ./ scales : nothing)
+  Z, v, xb, yb, scales
+end
+
 function _slope_lambda(lambda, p, ::Type{T}) where {T}
   length(lambda) == p || throw(DimensionMismatch("lambda must have one entry per predictor"))
   λ = Vector{T}(lambda)
   all(isfinite, λ) && all(>=(0), λ) && issorted(λ; rev=true) ||
     throw(ArgumentError("lambda must be finite, nonnegative and nonincreasing"))
   λ
-end
-
-# Algorithm 2 of Larsson, Bogdan and Wallin (2020), with the preceding
-# gradient sorted in magnitude. 'previous - current' is added by rank.
-function _slope_strong(grad, previous, current)
-  order = sortperm(abs.(grad); rev=true)
-  k, s = 0, zero(eltype(grad))
-  for i in eachindex(order)
-    s += abs(grad[order[i]]) + previous[i] - 2current[i]
-    if s >= 0
-      k, s = i, zero(s)
-    end
-  end
-  order[1:k]
-end
-
-# A full proximal fixed-point residual certifies all clusters, including the
-# zero cluster: checking each coordinate against its own λ would be invalid.
-function _slope_kkt(Z, y, β, λ)
-  grad = transpose(Z) * (Z * β - y) / length(y)
-  trial = similar(β)
-  prox!(trial, ProximalBase.SLOPE(λ), β - grad, one(eltype(β)))
-  norm(β - trial, Inf), grad, trial
-end
-
-function _slope_fit!(β, Z, y, λ, candidates; max_iter, tol)
-  p = length(β)
-  E = sort!(unique!(collect(candidates)))
-  total, repairs = 0, 0
-  # Scale the residual by the gradient of the null fit, independent of the
-  # reduced problem and the starting point.
-  target = tol * max(one(eltype(β)), norm(transpose(Z) * y / length(y), Inf))
-  while true
-    if !isempty(E) && total + 1 < max_iter
-      b = β[E]
-      f = (one(eltype(β)) / length(y)) * LeastSquaresLoss(y, Z[:, E])
-      g = ProximalBase.SLOPE(λ[1:length(E)])
-      opts = ProximalOptions(; maxiter=max(2, max_iter-total), ftol=eps(Float64),
-        xtol=eps(Float64), gradtol=tol/10, allow_f_increases=true)
-      r = ProximalSolvers.solve!(b, f, g, AccProxGradDescent(), opts)
-      total += r.iterations
-      β[E] = b
-    end
-    residual, grad, trial = _slope_kkt(Z, y, β, λ)
-    residual <= target && return total, true, residual, length(E), repairs, grad
-    total + 1 >= max_iter && return total, false, residual, length(E), repairs, grad
-    # Add every excluded coordinate moved by the full prox. Include all
-    # remaining columns as a conservative fallback when only E fails KKT.
-    added = setdiff(findall(j -> abs(trial[j]) > target, 1:p), E)
-    if isempty(added)
-      length(E) == p && continue
-      added = setdiff(1:p, E)
-    end
-    append!(E, added)
-    sort!(E)
-    repairs += 1
-  end
 end
 
 """
@@ -135,7 +141,8 @@ proximal gradient. `lambda` must be nonincreasing and nonnegative. The second
 form uses [`slope_bh`](@ref) with `n=size(X,1)`. With `standardize_x`, the
 penalty applies to the coefficients of columns scaled to mean square one;
 returned coefficients are on the input scale. An intercept centers X and y.
-The design is copied to a dense floating-point matrix. Failure of the full
+The design is copied to floating-point storage. `SparseMatrixCSC` inputs stay
+sparse, including with centering and standardization. Failure of the full
 optimality check gives `converged=false` and a warning.
 """
 function slope(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, lambda::AbstractVector{<:Real};
@@ -144,7 +151,10 @@ function slope(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, lambda::Abs
   Z, v, xb, yb, scales = _slope_data(X, y, intercept, standardize_x)
   β = zeros(eltype(Z), size(Z, 2))
   λ = _slope_lambda(lambda, length(β), eltype(β))
-  it, ok, residual = _slope_fit!(β, Z, v, λ, eachindex(β); max_iter, tol)
+  f = (one(eltype(Z)) / length(v)) * LeastSquaresLoss(v, Z)
+  r = ProximalSolvers.solve!(β, f, ProximalBase.SLOPE(λ),
+    ProximalSolvers.SLOPEAPG(; maxiter=max_iter, tol))
+  it, ok, residual = r.iterations, r.converged, r.kkt_residual
   ok || @warn "SLOPE did not meet its full optimality tolerance" residual iterations=it
   β ./= scales
   β0 = yb - dot(xb, β)
@@ -193,33 +203,26 @@ function SLOPEPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, factors
   T, p = eltype(Z), size(Z, 2)
   λ = _slope_lambda(lambda === nothing ? slope_bh(p; q, sigma, n=length(y)) : lambda, p, T)
   β = zeros(T, p)
-  grad = -transpose(Z) * v / length(v)
+  f = (one(T) / length(v)) * LeastSquaresLoss(v, Z)
+  g = ProximalBase.SLOPE(λ)
   if factors === nothing
     nλ > 0 && isfinite(λmin_ratio) && 0 < λmin_ratio <= 1 ||
       throw(ArgumentError("nλ must be positive and λmin_ratio in (0, 1]"))
     λ[1] > 0 || throw(ArgumentError("automatic paths need a nonzero base sequence"))
-    amax = maximum(cumsum(sort(abs.(grad); rev=true)) ./ cumsum(λ))
+    amax = ProximalSolvers.lambda_max(f, g, β)
     amax = iszero(amax) ? one(T) : amax
     factors = nλ == 1 ? T[amax] : exp.(range(log(amax), log(amax * λmin_ratio); length=nλ))
   end
   a = T.(collect(factors))
   !isempty(a) && all(isfinite, a) && all(>(0), a) && issorted(a; rev=true) ||
     throw(ArgumentError("factors must be positive, finite and nonincreasing"))
-  bs, b0 = Vector{T}[], T[]
-  oks, its, res, sizes, repairs = BitVector(), Int[], T[], Int[], Int[]
-  previous = a[1] .* λ
-  for (i, factor) in enumerate(a)
-    current = factor .* λ
-    E = !screening || i == 1 ? collect(1:p) :
-      union(_slope_strong(grad, previous, current), findall(!iszero, β))
-    it, ok, r, sz, rep, grad = _slope_fit!(β, Z, v, current, E; max_iter, tol)
-    push!(bs, β ./ scales)
-    push!(b0, yb - dot(xb, bs[end]))
-    push!(oks, ok); push!(its, it); push!(res, r); push!(sizes, sz); push!(repairs, rep)
-    previous = current
-  end
-  all(oks) || @warn "some SLOPE path levels did not meet the full optimality tolerance"
-  SLOPEPath(a, λ, bs, b0, intercept, length(y), oks, its, res, sizes, repairs)
+  r = ProximalSolvers.solve_path(f, g, a,
+    ProximalSolvers.SLOPEAPG(; maxiter=max_iter, tol); x=β, screening)
+  bs = [b ./ scales for b in r.solutions]
+  b0 = [yb - dot(xb, b) for b in bs]
+  all(r.converged) || @warn "some SLOPE path levels did not meet the full optimality tolerance"
+  SLOPEPath(a, λ, bs, b0, intercept, length(y), r.converged, r.iterations,
+    r.kkt_residuals, r.working_sizes, r.kkt_repairs)
 end
 
 StatsAPI.coef(s::SLOPESolution) = s.hasintercept ? [s.intercept; s.x] : copy(s.x)

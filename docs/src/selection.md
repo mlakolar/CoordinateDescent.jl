@@ -37,8 +37,11 @@ uses ``X^TX/n=I`` and independent Gaussian noise of known standard deviation
 selection does not inherit this guarantee. An intercept centers both X and y;
 with an intercept, orthogonality must hold for the centered design. With
 `standardize_x=true`, the penalty is on the coefficients of columns with mean
-square one; the returned coefficients are on the original scale. A dense copy
-is used, including for sparse inputs.
+square one; the returned coefficients are on the original scale.
+`SparseMatrixCSC` inputs stay sparse: scaling touches only stored entries and
+centering is applied implicitly in matrix products. The transformed design and
+solver workspaces use storage proportional to `nnz(X) + n + p`, in addition to
+the coefficient path. Dense inputs retain their explicit transformation.
 
 The solver uses accelerated proximal gradient from ProximalSolvers and the
 sorted ℓ1 proximal operator from ProximalBase. Paths warm start and use the
