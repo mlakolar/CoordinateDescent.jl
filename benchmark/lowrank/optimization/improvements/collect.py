@@ -28,7 +28,7 @@ for name in ("source-sha256.txt","joblog.tsv"):
 for name in ("source-sha256.txt","joblog.tsv"):
     src=Path("results/focused-memory")/name
     if src.is_file():copy(src,f"provenance/focused-memory-{name}")
-for name in ("source-sha256.txt","joblog.tsv","large-joblog.tsv","reused.json"):
+for name in ("source-sha256.txt","joblog.tsv","large-joblog.tsv","reused.json","platform.txt"):
     src=Path("results/memory-pass")/name
     if src.is_file():copy(src,f"provenance/memory-pass-{name}")
 profiles=[];diagnostics=[]

@@ -1,6 +1,6 @@
 {
   "run_id": "20261025-cd81-solvers",
-  "status": "core_complete_memory_budget_pending",
+  "status": "validated",
   "cluster": {
     "account": "mkolar_1314",
     "constraint": "xeon-4116",
@@ -60,29 +60,45 @@
       "resources": "8CPU16GB2min debug/xeon-4116",
       "source": "memory-v11.tar; frozen measured numerical workers unchanged",
       "stage": "Focused five-replication fresh-process memory for new native options and before-rank baseline"
+    },
+    {
+      "job_id": "13425977",
+      "outcome": "COMPLETED1019s(16m59s),exit0; reused24 valid observations,201 ordinary+5large steps succeeded; all230 unique memory observations passed fit/RSS checks,46 groups with five independent inputs; compact delivery collected.",
+      "resources": "8CPU16GB19min debug/xeon-4116",
+      "source": "memory-v12.tar sha256 f6ae3fe93f3f0f5fe38a2714d3cf449080ffec5a06c783cfeab61e951fcd440d",
+      "stage": "Approved full fresh-process memory continuation, reuse valid24"
     }
   ],
   "accounting": {
-    "current_allocated_cpu_hours": 3.9244444444444446,
-    "current_running_union_seconds": 3314,
-    "peak_cpus": 8,
-    "peak_memory_gb": 16,
+    "current_running_union_seconds": 4333,
     "prior_running_union_seconds": 3872,
-    "remaining_standing_seconds": 14,
-    "task_allocated_cpu_hours": 7.8694444444444445,
-    "task_running_minutes": 119.76666666666667,
-    "task_running_union_seconds": 7186
+    "task_running_union_seconds": 8205,
+    "task_running_minutes": 136.75,
+    "remaining_standing_seconds": 0,
+    "remaining_approved_seconds": 195,
+    "current_allocated_cpu_hours": 6.188888888888889,
+    "task_allocated_cpu_hours": 10.133888888888889,
+    "peak_cpus": 8,
+    "peak_memory_gb": 16
   },
   "validation": {
     "Julia1.10_full_checks": 2927,
     "Julia1.13_full_checks": 2925,
+    "archived_profile_files": 535,
     "known_failures": "5 ill-conditioned R normal-equation fits;QR route passes",
-    "memory_summary": "Incomplete; no fresh aggregate claimed",
-    "raw_memory_complete_rows": 24,
+    "local_checks": "Python AST, bash syntax, git diff --check; no local Julia or benchmark execution",
+    "memory_summary": "230/230 passed;46 method/design groups\u00d75 independent inputs,all distinct,baseline<=peak",
+    "production_and_core_driver_hashes": "match measured source hashes",
+    "profile_inputs_per_group": 5,
+    "profile_replication_groups": 86,
+    "raw_memory_complete_rows": 230,
     "saved_fit_checks": 1860,
     "saved_fit_passes": 1855,
     "text_profiles": 430,
-    "timing_rows": 7110
+    "timing_rows": 7110,
+    "memory_online_fit_checks": 230,
+    "core_artifacts_reused": "timings,profile-index,independent-certificates byte-identical after memory pass",
+    "memory_source_hashes": "match local canonical driver/summary/selector/collector/batch sources"
   },
-  "budget_status": "Standing120min task allowance; proposed20min extension pending; no jobs running."
+  "budget_status": "User approved20 additional running minutes; finaltask136m45s of140min, no jobs running."
 }

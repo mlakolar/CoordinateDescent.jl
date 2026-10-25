@@ -145,18 +145,49 @@ profiles concentrate in SciPy's SVD; R component profiles primarily resolve to
 cProfile times, and Rprof percentages are not directly comparable. Per-input
 hotspots and sample counts are retained in the profile index.
 
-The complete timing/profiling comparison above is validated. The full
-230-observation fresh-process memory rerun is **unfinished**. After the core
-comparison, a bounded focused attempt (job 13424709) reached its wall limit
-before its planned 60 observations completed. Its raw outputs are retained in
-[focused-memory-raw.tar.gz](focused-memory-raw.tar.gz); they are not mixed with
-the earlier CPU's memory summaries or presented as a complete five-replication
-memory comparison. Completing the all-method memory pass requires the pending
-extra-budget approval. The task used 119 min 46 s of the standing 120-minute
-running-time allowance, with at most 8 CPUs and 16 GB. No further numerical
-jobs are running or authorized beyond that ceiling yet.
+The fresh-process memory pass is complete: **230 observations**, covering
+23 methods/baselines on each of the many-response and wide designs, with
+**five independent inputs per group**. Every observation passed its fit
+certificate and the coverage/RSS consistency checks. Values below are median
+**peak / post-warm-up baseline MiB**; [the full memory table](memory-aggregate.csv)
+includes all methods and replication ranges.
 
+| Method | Many responses | Wide |
+|---|---:|---:|
+| Previous fixed-rank API | 847.1 / 831.4 | 834.2 / 834.2 |
+| Updated fixed-rank API | 831.3 / 827.6 | 827.4 / 827.4 |
+| Native nuclear APG | 930.0 / 856.0 | 925.1 / 852.8 |
+| Native nuclear PANOC | 925.2 / 861.1 | 910.4 / 858.9 |
+| Generic Julia PANOC | 913.8 / 847.3 | 897.6 / 841.6 |
+| Public sparse coordinate descent | 848.5 / 830.5 | 882.1 / 830.2 |
+| Public sparse block FISTA | 850.3 / 827.4 | 837.9 / 832.2 |
+| Julia component kernel | 837.1 / 826.9 | 832.8 / 829.3 |
+| Python FISTA | 137.2 / 115.9 | 116.6 / 108.5 |
+| R QR/SVD | 291.7 / 277.6 | 253.9 / 250.0 |
+| R component | 2558.3 / 263.7 | 268.4 / 244.3 |
 
+The fixed-rank time improvements accompany modest changes in fresh-process
+peak RSS. PANOC's peak is close to APG's. Public block FISTA has a lower peak
+on the wide design, while the many-response peaks are essentially the same.
+The R component implementation reaches about 2,558 MiB on the many-response
+case, compared with about 837 MiB for the Julia component kernel. Python has
+substantially lower whole-process peaks than Julia in these tests.
+
+These counters include runtime, packages, compilation/warm-up, and post-fit
+checking. Julia's baseline accounts for most of its peak, so these are not
+isolated optimizer-workspace measurements. Identical peak and baseline values
+mean warm-up already set the high-water mark; they do not imply zero fit
+allocations. R counters come from its guarded child process and are not an
+allocation-wide sum over parent and child. Component comparisons concern one
+fixed-penalty exclusive component, as in the timing experiment.
+
+Job 13425977 completed the approved memory continuation in **16 min 59 s**,
+reusing 24 complete observations from the earlier focused attempt and running
+only the 206 missing steps. The initial focused job 13424709 reached its wall
+limit; its [raw outputs](focused-memory-raw.tar.gz) remain available. The user
+approved 20 extra running minutes, retaining the 8-CPU/16-GB maximum. Total
+task running time is **136 min 45 s**, within the 140-minute allowance.
+The passed timing/profile/certificate artifacts were retained unchanged.
 
 Full package suites passed on Discovery: **2,925/2,925** checks on Julia 1.13.2
 and **2,927/2,927** on Julia 1.10.12, including Aqua and the new optional-backend,
@@ -192,5 +223,5 @@ See the [driver and recreation recipe](../../improvements/README.md),
 [complete timing table](full-table.md), [all timings](all-timings.csv),
 [paired ratios](paired-ratios.csv), [independent certificates](independent-certificates.csv),
 [profile index](profile-index.csv), [profiles](profiles.tar.gz), and
-the memory status above. The parent workspace keeps the
+[memory observations](memory.csv). The parent workspace keeps the
 lightweight run record at `.slurm/runs/20261025-cd81-solvers.json`.

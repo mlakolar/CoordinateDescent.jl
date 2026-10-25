@@ -4,7 +4,7 @@
   "before_timing_rows": 810,
   "adaptive_timing_rows": 90,
   "profiles": 430,
-  "memory_observations": 0,
+  "memory_observations": 230,
   "coefficient_checks": 1860,
   "coefficient_passes": 1855,
   "failures": [

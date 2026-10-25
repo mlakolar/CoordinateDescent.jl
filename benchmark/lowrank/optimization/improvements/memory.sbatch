@@ -20,13 +20,14 @@ export PYTHON="$PWD/venv/bin/python"
 module load rstats/4.5.2
 unset PARALLEL
 export CD81_PARALLEL_BIN="/apps/spack/2406/apps/linux-rocky8-x86_64_v3/gcc-13.3.0/parallel-20240522-qizrgyo/bin/parallel"
-# Submission requires the requested additional compute budget.
+# User approved20 additional running minutes, retaining8CPU/16GB ceiling.
 mkdir -p results/memory-pass
-sha256sum code/memory-v3.sh code/updated_worker.jl code/resume_memory.py code/memory_summary.py > results/memory-pass/source-sha256.txt
-"$PYTHON" code/resume_memory.py
+lscpu > results/memory-pass/platform.txt
+sha256sum code/memory-v3.sh code/updated_worker.jl code/resume_memory-v12.py code/memory-summary-v12.py code/collect-memory-v12.py memory.sbatch > results/memory-pass/source-sha256.txt
+"$PYTHON" code/resume_memory-v12.py
 "$CD81_PARALLEL_BIN" -j8 --colsep ' ' --joblog results/memory-pass/joblog.tsv \
  'srun --exclusive --exact -N1 -n1 -c1 --mem=2G bash code/memory-v3.sh {1} {2} {3} > results/memory-pass/{1}-{3}.log 2>&1' :::: memory-tasks.txt
 "$CD81_PARALLEL_BIN" -j2 --colsep ' ' --joblog results/memory-pass/large-joblog.tsv \
  'srun --exclusive --exact -N1 -n1 -c1 --mem=8G bash code/memory-v3.sh {1} {2} {3} > results/memory-pass/{1}-{3}.log 2>&1' :::: memory-large-tasks.txt
-srun --exclusive --exact -N1 -n1 -c1 --mem=2G "$PYTHON" code/memory_summary.py
-"$PYTHON" code/collect.py
+srun --exclusive --exact -N1 -n1 -c1 --mem=2G "$PYTHON" code/memory-summary-v12.py
+"$PYTHON" code/collect-memory-v12.py

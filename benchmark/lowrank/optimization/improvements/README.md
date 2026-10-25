@@ -46,12 +46,13 @@ and ProximalBase's workspace-based nuclear prox; the earlier generic
 ProximalOperators adapter retains its measured 1/L step. These are comparisons
 of accurate implementations, not identical iteration trajectories.
 
-Completed core coverage is 7,110 timing rows, 430 text profiles, and 1,860
-independent saved-fit checks (1,855 pass; the five known R normal-equation
-failures remain). The planned 230 fresh-process memory observations are
-unfinished. A focused pass retained 24 complete raw observations before its
-wall limit. No fresh memory aggregate is claimed; the extra-budget request
-remains pending. All timing and profiling replications are complete.
+Completed coverage is 7,110 timing rows, 430 text profiles, 230 fresh-process
+memory observations, and 1,860 independent saved-fit checks (1,855 pass; the
+five known R normal-equation failures remain). Every memory group has five
+independent inputs and passed coverage, fit-certificate, and RSS checks.
+An initial focused pass retained 24 complete observations before its wall
+limit. The user approved 20 additional running minutes; the missing-only
+continuation finished in 16 min 59 s with the same 8-CPU/16-GB maximum.
 Profiling covers all five inputs on medium, many-response, and wide designs,
 plus both adaptive-weight sparse methods on medium. The known normal-equation
 R failure is retained; its QR alternative is included. Profile percentages
@@ -107,8 +108,13 @@ canonical files too. `resume_worker.jl` and `remaining.sh` retain their names.
 The checked-in launchers additionally record historical recovery jobs; source
 archives in the run registry retain the exact earlier submitted versions.
 
-`memory.sbatch` is a prepared, unsubmitted 19-minute continuation for the
-full memory pass. It requires the pending extra-budget approval.
-`resume_memory.py` reuses the 24 complete raw observations, preserves partial
-files, and selects only missing steps. It neither reruns core timings nor
-recomputes their passed certificates.
+`memory.sbatch` records the submitted 19-minute continuation for the full
+memory pass. `resume_memory.py` reused the 24 complete observations, preserved
+partial files, and selected only 206 missing steps. It neither reran core
+timings/profiles nor recomputed their passed independent certificates. The
+continuation is job 13425977; all 230 observations passed final checks.
+
+For this continuation's aliases, stage `resume_memory.py` as
+`resume_memory-v12.py`, `memory_summary.py` as `memory-summary-v12.py`, and
+`collect.py` as `collect-memory-v12.py`. Exact staged sources are retained in
+`memory-v12.tar` in the run registry directory and the report's source archive.
