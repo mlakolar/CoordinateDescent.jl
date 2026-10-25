@@ -18,6 +18,7 @@ tests = [
   "hdm",
   "inference",
   "inference_golden",
+  "inference_tuning",
   "varying",
   "statsapi",
   "formula",

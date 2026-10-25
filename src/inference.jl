@@ -61,8 +61,56 @@ function _inference_workers(f, count, threads)
   end
 end
 
+# Pooled prediction CV over a bounded, response-independent sample of nodes.
+# Every fold estimates its own centering/scaling. The selected penalty belongs
+# to the standardized full-data design; targets do not affect node selection.
+function _nodewise_cv(A::Matrix{T}, options, rng; nfolds=5, nlambda=20, nodes=20,
+                      intercept=true, standardize_x=true, gram=true) where {T}
+  n, p = size(A)
+  2 <= nfolds <= n || throw(ArgumentError("nodewise_cv_folds must be between 2 and n"))
+  nlambda >= 2 || throw(ArgumentError("nodewise_cv_nlambda must be at least 2"))
+  nodes >= 1 || throw(ArgumentError("nodewise_cv_nodes must be positive"))
+  p == 1 && return zero(T)
+  js = sort!(randperm(rng, p)[1:min(nodes, p)])
+  fl, K = _foldlabels(rng, n, nfolds, nothing)
+  # Columns are already standardized according to the caller's convention.
+  G = transpose(A) * A[:,js] / n
+  top = maximum(abs(G[k,a]) for (a,j) in enumerate(js) for k in 1:p if k != j)
+  top <= eps(T) && return zero(T)
+  levels = exp.(range(log(top), log(top * T(0.05)); length=nlambda))
+  errs = zeros(T, nlambda)
+  for k in 1:K
+    train, test = findall(!=(k), fl), findall(==(k), fl)
+    B, C = copy(A[train,:]), copy(A[test,:])
+    center = intercept ? vec(mean(B; dims=1)) : zeros(T,p)
+    B .-= transpose(center); C .-= transpose(center)
+    scale = standardize_x ? vec(sqrt.(sum(abs2,B; dims=1) ./ length(train))) : ones(T,p)
+    all(>(eps(T)), scale) || throw(ArgumentError("constant predictor in nodewise CV training fold"))
+    B ./= transpose(scale); C ./= transpose(scale)
+    H = gram ? transpose(B) * B / length(train) : nothing
+    b = zeros(T,p)
+    model = gram ? ProximalSolvers.cdmodel(QuadraticFunction(H,b,zero(T)), nothing) : nothing
+    for j in js
+      if gram
+        b .= .-view(H,:,j); model.c = H[j,j]/2
+      else
+        model, _, _ = _lsmodel(B, Vector(B[:,j]), false, false)
+      end
+      lo, hi = fill(T(-Inf),p), fill(T(Inf),p); lo[j] = hi[j] = 0
+      box = IndBox(lo,hi); x = SparseIterate(T,p)
+      for (a,level) in enumerate(levels)
+        r = coordinate_descent!(x,model,Constrained(NormL1(level),box),options; rng)
+        r.converged || throw(ArgumentError("nodewise CV did not converge; adjust options"))
+        e = C[:,j] - C * _sparsevec(x)
+        errs[a] += sum(abs2,e)
+      end
+    end
+  end
+  levels[argmin(errs)]
+end
+
 """
-    nodewise_lasso(X, lambda=sqrt(2log(max(size(X,2),2))/size(X,1)); kwargs...)
+    nodewise_lasso(X, lambda=nothing; kwargs...)
     debiasing_matrix(X; method=:nodewise, lambda, mu, kwargs...)
 
 Regress each target column on all other columns by the lasso, and divide its
@@ -81,9 +129,17 @@ problem-specific seeds drawn from `rng`.
 `gram=true` requests it explicitly and `false` works on the residuals. Both
 design and output scores are dense even for sparse input. Memory is O(np+p²)
 with the Gram matrix, O(np) plus solver states without it. No p-by-p matrix is
-copied per node. The default penalty is theoretical, not hdi's pooled CV rule.
+copied per node. An omitted `lambda` (or `:cv`) selects a common penalty by
+pooled five-fold prediction CV over 20 randomly sampled columns (or all columns
+if fewer). The geometric grid has 20 levels from the largest sampled absolute
+correlation to 5% of that value. Every training fold estimates its own centering
+and scaling. `nodewise_cv_folds`, `nodewise_cv_nodes`, and
+`nodewise_cv_nlambda` control this bounded search. Sampling does not depend on
+`targets`. `lambda=:universal` retains `sqrt(2log(max(p,2))/n)`; a number fixes
+the penalty and bypasses CV. Returned `lambda` records the selected penalty.
+CV optimizes prediction error and does not guarantee coverage.
 
-With `method=:qp`, solve Javanmard and Montanari's (2014) program
+With `method=:qp`, `mu` defaults to the universal level (no CV). Solve Javanmard and Montanari's (2014) program
 `min m'Gram*m/2` subject to `norm(Gram*m-e_j, Inf) <= mu`, with `0 < mu < 1`.
 The dual is `min u'Gram*u/2-u_j+mu*norm(u,1)`, solved by coordinate descent.
 The returned row is its primal solution `m=u`; feasibility and primal-dual gap
@@ -93,18 +149,19 @@ are not normalized to unit diagonal and are not symmetrized. The QP requires
 the shared Gram form. Inference needs the sparsity and regularity assumptions
 of the cited methods; an approximate inverse alone does not ensure coverage.
 """
-nodewise_lasso(X::AbstractMatrix{<:Real}, lambda::Real = sqrt(2log(max(size(X, 2), 2))/size(X, 1)); kwargs...) =
+nodewise_lasso(X::AbstractMatrix{<:Real}, lambda::Union{Nothing, Real, Symbol} = nothing; kwargs...) =
   debiasing_matrix(X; method = :nodewise, lambda, kwargs...)
 
 function debiasing_matrix(X::AbstractMatrix{<:Real}; method::Symbol = :nodewise,
-    lambda::Real = sqrt(2log(max(size(X, 2), 2))/size(X, 1)), mu::Real = lambda,
+    lambda::Union{Nothing, Real, Symbol} = nothing, mu::Union{Nothing, Real} = nothing,
     intercept::Bool = true, standardize_x::Bool = true, targets = 1:size(X, 2),
     lambda_path = nothing, gram::Union{Bool, Symbol} = :auto,
     max_gram_bytes::Integer = 2^30, threads::Bool = true,
+    nodewise_cv_folds::Integer = min(5, size(X,1)), nodewise_cv_nlambda::Integer = 20, nodewise_cv_nodes::Integer = 20,
     options::CDOptions = CDOptions(), rng::AbstractRNG = default_rng())
   method in (:nodewise, :qp) || throw(ArgumentError("method must be :nodewise or :qp"))
-  _inference_level(lambda, "lambda")
-  method == :qp && !(isfinite(mu) && 0 < mu < 1) && throw(ArgumentError("mu must be in (0,1)"))
+  lambda isa Real && _inference_level(lambda, "lambda")
+  lambda isa Symbol && !(lambda in (:cv, :universal)) && throw(ArgumentError("lambda must be :cv, :universal or a number"))
   gram in (true, false, :auto) || throw(ArgumentError("gram must be true, false or :auto"))
   max_gram_bytes >= 0 || throw(ArgumentError("max_gram_bytes must be nonnegative"))
   A = _inference_data(X)
@@ -117,6 +174,18 @@ function debiasing_matrix(X::AbstractMatrix{<:Real}; method::Symbol = :nodewise,
   all(j -> sum(abs2, view(A, :, j)) > 0, 1:p) || throw(ArgumentError("X has a constant or zero predictor"))
   A ./= transpose(scales)
   usegram = gram === true || (gram === :auto && sizeof(T) * big(p)^2 <= max_gram_bytes)
+  automatic = lambda === nothing || lambda === :cv
+  universal = T(sqrt(2log(max(p,2))/n))
+  if method == :nodewise
+    lambda = automatic ? _nodewise_cv(A, options, rng; nfolds=nodewise_cv_folds,
+      nlambda=nodewise_cv_nlambda, nodes=nodewise_cv_nodes, intercept, standardize_x, gram=usegram) :
+      lambda === :universal ? universal : T(lambda)
+  else
+    lambda = lambda isa Real ? T(lambda) : universal
+  end
+  mu = mu === nothing ? lambda : T(mu)
+  method == :qp && !(isfinite(mu) && 0 < mu < 1) && throw(ArgumentError("mu must be in (0,1)"))
+  automatic && lambda_path !== nothing && throw(ArgumentError("lambda_path requires an explicit numerical lambda"))
   method == :qp && !usegram && throw(ArgumentError("the QP requires gram=true or sufficient max_gram_bytes"))
   G = usegram ? _gram(A, zeros(T, p)) : nothing
   levels = lambda_path === nothing ? T[lambda] : collect(T, lambda_path)
@@ -246,12 +315,18 @@ end
     debiased_lasso(X, y, lambda=nothing; family=:gaussian, kwargs...)
 
 The desparsified lasso, `beta + theta * X'(y-mu)/n`, for Gaussian, logistic
-(`:binomial`) and Poisson regression. For Gaussian data an omitted `lambda`
-uses the scaled lasso with universal level `sqrt(2log(p)/n)` and its noise
-estimate. An explicit penalty uses `lasso`; its default noise estimate is the
-residual RMS with `n - nnz(beta) - intercept` degrees of freedom. `sigma` can
-instead supply the noise SD. For GLMs, supply `lambda`; the Hessian-weighted,
-weighted-centered design supplies the projection and the model variance is one.
+(`:binomial`) and Poisson regression. An omitted `lambda` selects the initial
+penalty by five-fold prediction CV (`initial_tuning=:cv`), using the minimum
+held-out MSE for Gaussian data or deviance for GLMs on a 40-level lasso path.
+`initial_cv_folds` and `initial_cv_nlambda` control this search. A numerical
+penalty bypasses CV. Gaussian noise uses residual RMS with
+`n - nnz(beta) - intercept` degrees of freedom; `sigma` may supply the noise SD.
+For Gaussian data, `initial_tuning=:scaled` with an omitted penalty retains the
+scaled lasso at universal level `sqrt(2log(max(p,2))/n)` and its noise estimate.
+For GLMs the Hessian-weighted, weighted-centered design supplies the projection
+and the model variance is one. The default nodewise projection also uses pooled
+CV; `nodewise_lambda=:universal` or a number overrides it. These prediction CV
+rules are automatic computational policies, not guarantees of valid inference.
 
 `initial` can supply all p slopes; its intercept is `mean(y-X*initial)` for
 Gaussian models, or `initial_intercept` for GLMs. `projection` can reuse an
@@ -268,7 +343,8 @@ function debiased_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, la
     family::Symbol = :gaussian, initial = nothing, initial_intercept::Real = 0,
     sigma::Union{Nothing, Real} = nothing, projection = nothing, robust::Bool = false,
     intercept::Bool = true, standardize_x::Bool = true,
-    nodewise_lambda::Real = sqrt(2log(max(size(X, 2), 2))/size(X, 1)),
+    nodewise_lambda::Union{Nothing, Real, Symbol} = nothing,
+    initial_tuning::Symbol = :cv, initial_cv_folds::Integer = min(5, size(X,1)), initial_cv_nlambda::Integer = 40,
     options::CDOptions = CDOptions(), rng::AbstractRNG = default_rng(), kwargs...)
   A, b = _inference_data(X, y)
   T = eltype(A); n, p = size(A)
@@ -276,15 +352,29 @@ function debiased_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, la
   lambda === nothing || _inference_level(lambda, "lambda")
   sigma === nothing || (isfinite(sigma) && sigma > 0) || throw(ArgumentError("sigma must be positive and finite"))
   family != :gaussian && sigma !== nothing && sigma != 1 && throw(ArgumentError("GLM dispersion is one"))
+  initial_tuning in (:cv, :scaled) || throw(ArgumentError("initial_tuning must be :cv or :scaled"))
+  initial_cv_nlambda >= 2 || throw(ArgumentError("initial_cv_nlambda must be at least 2"))
+  family != :gaussian && lambda === nothing && initial_tuning == :scaled &&
+    throw(ArgumentError("scaled initial tuning is Gaussian only"))
   sigmafit = nothing
   if initial === nothing
+    if lambda === nothing && initial_tuning == :cv
+      cv = if family == :gaussian
+        CVLassoPath(A,b,options; nfolds=initial_cv_folds,nλ=initial_cv_nlambda,
+                    intercept,standardize_x,threads=false,rng)
+      else
+        loss = family == :binomial ? ProximalBase.Logistic() : ProximalBase.Poisson()
+        CVGLMLassoPath(A,b,loss,options; nfolds=initial_cv_folds,nλ=initial_cv_nlambda,
+                       intercept,standardize_x,threads=false,rng)
+      end
+      lambda = cv.λmin
+    end
     sol = if family == :gaussian && lambda === nothing
       scaled_lasso(A, b, T(sqrt(2log(max(p, 2))/n)), standardize_x ? _loadings(A, intercept) : ones(T, p),
                    IterLassoOptions(; options_cd = options); intercept, rng)
     elseif family == :gaussian
       lasso(A, b, T(lambda), options; intercept, standardize_x, rng)
     else
-      lambda === nothing && throw(ArgumentError("supply lambda for a GLM"))
       loss = family == :binomial ? ProximalBase.Logistic() : ProximalBase.Poisson()
       glm_lasso(A, b, T(lambda), loss, options; intercept, standardize_x, rng)
     end

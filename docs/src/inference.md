@@ -11,7 +11,7 @@ using CoordinateDescent, Random
 rng = Xoshiro(77)
 X = randn(rng, 200, 30)
 y = X[:, 1] + randn(rng, 200)
-fit = debiased_lasso(X, y; rng)   # scaled lasso initial fit and noise estimate
+fit = debiased_lasso(X, y; rng)   # automatic initial and projection tuning
 fit.converged || error("tighten the solver settings before inference")
 coef(fit), stderror(fit), confint(fit)
 joint = multiplier_bootstrap(fit; B = 1999, rng)
@@ -19,11 +19,33 @@ joint.adjusted_pvalues           # single-step Westfall--Young max-T
 joint.intervals                  # simultaneous intervals
 ```
 
-The default nodewise penalty is `sqrt(2log(max(p,2))/n)` on centered columns
-with population standard deviation one. It is a theoretical choice, and is
-**not** the pooled nodewise cross-validation rule in `hdi`. A supplied initial
-penalty is on the objective `sum(abs2, residuals)/(2n) + lambda*norm(beta,1)`
-on standardized columns, unless `standardize_x=false`.
+The omitted initial penalty is selected by five-fold cross-validation at the
+minimum held-out MSE (Gaussian) or deviance (GLM), using a 40-level lasso path.
+Gaussian noise is estimated from the residual sum of squares divided by
+`n - nnz(beta) - intercept`. Supply `sigma` when an external noise estimate is
+available. `initial_cv_folds` and `initial_cv_nlambda` control the search.
+
+The default nodewise penalty is selected by pooled five-fold prediction CV over
+20 randomly sampled predictor columns, or all columns when there are fewer.
+Selection is independent of the requested targets and uses a common decreasing
+20-level geometric grid from the largest sampled absolute correlation to 5%
+of that value. Each training fold estimates its own centering and scaling.
+`nodewise_cv_folds`, `nodewise_cv_nodes`, and `nodewise_cv_nlambda` control this
+bounded search. The selected penalties are recorded in `fit.lambda` and
+`fit.projection.lambda`; pass an explicit `rng` for reproducibility.
+
+Numerical initial and nodewise penalties bypass the respective CV searches.
+For Gaussian models, `initial_tuning=:scaled` with an omitted initial penalty
+uses the original scaled lasso and its noise estimate; `nodewise_lambda=:universal`
+uses the original universal nodewise level `sqrt(2log(max(p,2))/n)`.
+QP projections retain their universal default constraint level; pooled CV
+applies only to nodewise projections. These automatic prediction rules do not
+guarantee confidence coverage, especially under strong correlation or dense
+signals. Expert tuning and diagnostic output remain necessary in difficult cases.
+
+A supplied initial penalty is on the objective
+`sum(abs2, residuals)/(2n) + lambda*norm(beta,1)` on standardized columns,
+unless `standardize_x=false`.
 
 ## Projection and reuse
 
@@ -91,7 +113,7 @@ golden inputs. This method does not repeat CV within resamples.
 
 ```julia
 binary_y = Float64.(rand(rng, size(X,1)) .< 0.5)
-glmfit = debiased_lasso(X, binary_y, 0.05; family = :binomial, rng)
+glmfit = debiased_lasso(X, binary_y; family = :binomial, rng)
 test = decorrelated_score(X, binary_y, 1, 0.05; family = :binomial, null = 0, rng)
 test.statistic, test.pvalue, test.converged
 ```
@@ -100,7 +122,7 @@ Logistic and Poisson debiasing uses the Hessian-weighted design, centered
 at its weighted mean to project out an unpenalized intercept. Its score
 correction uses the original covariates and `y - fitted_mean`; model variance
 uses the Hessian, while the robust option uses empirical score products.
-Supply the initial penalty explicitly. Binomial and Poisson dispersion is one.
+An omitted initial penalty uses automatic deviance CV. Binomial and Poisson dispersion is one.
 
 The score test fits nuisance coefficients under the supplied null, then uses
 Hessian-weighted penalized least squares to project the target on the nuisance
