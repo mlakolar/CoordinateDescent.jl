@@ -2,6 +2,7 @@
 import csv,json,os,sys
 from pathlib import Path
 import numpy as np
+prefix=os.environ.get('HDM_R_PREFIX','R')
 root=Path(os.environ['HDM_KNOCKOFF_STUDY']);sc,shard=map(int,sys.argv[1:3]);out=root/f'scenario-{sc}-shard-{shard}'
 
 def arr(f,n):
@@ -26,7 +27,7 @@ with (out/'fits.bin').open('rb') as f:
         if not len(h):break
         seed,p,nm=map(int,h);native[seed]=arr(f,2*p*nm).reshape((2*p,nm),order='F')
 rows=[]
-with (out/'R-inputs.bin').open('rb') as inputs,(out/'R-fits.bin').open('rb') as fits:
+with (out/'R-inputs.bin').open('rb') as inputs,(out/f'{prefix}-fits.bin').open('rb') as fits:
     while True:
         h=np.fromfile(inputs,dtype='<i8',count=8)
         if not len(h):break
@@ -39,12 +40,12 @@ with (out/'R-inputs.bin').open('rb') as inputs,(out/'R-fits.bin').open('rb') as 
               relative_coefficient_difference=float(np.linalg.norm(b-bn,np.inf)/max(1,np.linalg.norm(bn,np.inf))),
               selection_disagreement=len(selection(b)^selection(bn))))
     assert not fits.read(1)
-with (out/'R-certificates.csv').open('w') as f:
+with (out/f'{prefix}-certificates.csv').open('w') as f:
     w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
 summary=dict(certificates=len(rows),valid=sum(r['valid'] for r in rows),failures=[r for r in rows if not r['valid']],
              max_residual=max(r['residual'] for r in rows),max_relative_objective_difference=max(r['relative_objective_difference'] for r in rows),
              max_relative_coefficient_difference=max(r['relative_coefficient_difference'] for r in rows),
              selection_disagreements=sum(r['selection_disagreement']>0 for r in rows))
-(out/'R-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+(out/f'{prefix}-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
 assert all(r['valid'] for r in rows),'R comparator accuracy failures retained'
 print(json.dumps(summary))
