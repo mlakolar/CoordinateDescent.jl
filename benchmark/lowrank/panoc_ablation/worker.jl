@@ -14,7 +14,7 @@ open(joinpath(out,"timings.csv"),"w") do io
    d=H._lr_data(X,Y,true);g=H._lr_gradient(d);cached=(;d,g)
    for mode in ("public","cached")
     cachearg=mode=="public" ? nothing : cached
-    fit()=controlled(X,Y,λ,config;cached=cachearg)
+    fit = () -> controlled(X,Y,λ,config;cached=cachearg)
     fit();z=nothing
     for rd in 1:3
      GC.gc();tm=@timed fit();z=tm.value
@@ -29,12 +29,12 @@ open(joinpath(out,"timings.csv"),"w") do io
     end
     push!(rows,Dict("config"=>config,"mode"=>mode,"iterations"=>z.iterations,"converged"=>z.converged,"rank"=>z.solution===nothing ? -1 : z.solution.rank,"df"=>z.solution===nothing ? -1 : z.solution.df))
    end
-   fit()=controlled(X,Y,λ,config)
-   Profile.clear();Profile.@profile fit()
+   profilefit = () -> controlled(X,Y,λ,config)
+   Profile.clear();Profile.@profile profilefit()
    open(joinpath(out,"$config-cpu.txt"),"w") do f
     println(f,"raw_stack_words=",length(Profile.fetch()));Profile.print(f;format=:flat,sortedby=:count)
    end
-   Profile.Allocs.clear();Profile.Allocs.@profile sample_rate=.01 fit()
+   Profile.Allocs.clear();Profile.Allocs.@profile sample_rate=.01 profilefit()
    allocs=Profile.Allocs.fetch().allocs
    open(joinpath(out,"$config-alloc.txt"),"w") do f
     println(f,"sampled_allocations=",length(allocs))
