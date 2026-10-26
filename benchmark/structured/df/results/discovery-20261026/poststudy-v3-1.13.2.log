@@ -1,0 +1,22 @@
+Test Summary:                 | Pass  Total  Time
+difference and graph matrices |   12     12  2.1s
+Test Summary:                  | Pass  Total  Time
+banded signal normal equations |   72     72  8.4s
+Test Summary:                    | Pass  Total   Time
+fused regression and signal fits |   32     32  10.9s
+Test Summary:                           | Pass  Total  Time
+generalized lasso, graphs, paths and df |   31     31  7.8s
+Test Summary:                           | Pass  Total  Time
+trend filtering and irregular locations |   62     62  3.0s
+Test Summary:                 | Pass  Total  Time
+signal objective certificates |  358    358  2.3s
+Test Summary:                        | Pass  Total  Time
+default structured stopping accuracy |  180    180  0.6s
+Test Summary:                                    | Pass  Total  Time
+CV has a common grid and respects training folds |   10     10  3.2s
+Test Summary:                               | Pass  Total  Time
+structured signal interfaces and safeguards |   26     26  3.6s
+Test Summary:                                          | Pass  Total  Time
+component degrees of freedom against dense null spaces |  761    761  2.1s
+Test Summary:            | Pass  Total  Time
+Discovery R golden paths |  114    114  1.7s
