@@ -116,8 +116,11 @@ check and both native scale-relative feasibility checks. Backend iterate-change
 tolerance alone is insufficient. Failure raises an error without switching
 strategy or projecting an infeasible diagonal. The backend returns neither an
 actual iteration count nor a convergence status; diagnostics mark those fields
-unavailable and report independent stationarity separately. Optimizer controls
-are provisional until the Discovery evidence report is complete.
+unavailable and report independent stationarity separately. The optimized
+defaults are `niter=1000`, `tol=1e-10`, `λmin=1e-10`, `robust=false`, with
+`optimality_tol=max(1e-6,100eps(input precision))`. The recorded matrix study
+supports these controls; the backend's looser package defaults can return
+feasible diagonals that miss original-objective stationarity.
 
 `KnockoffDiagonal` owns its diagonal and metadata. Passing `s=plan.s` explicitly
 records user construction; it validates that vector against the supplied
@@ -128,6 +131,17 @@ seven-argument result constructors remain available with unspecified metadata.
 An optimized diagonal does not repair a misspecified covariance, a statistic
 without swap antisymmetry, or a fixed-X procedure without sufficiency. The
 population-model assumptions and fixed-X restrictions above still apply.
+
+The [replicated Discovery study](https://github.com/mlakolar/HighDimensionalModels.jl/pull/117)
+uses 1,008 independent datasets per scenario and common innovations, lasso
+statistic and penalty across constructions. For the recorded AR(.4) design
+with alternating signals, power rises from 0.64% with equicorrelation to 39.90%
+with MVR, at estimated FDR 6.92%. Same-sign cases lose power, and optimized
+construction has a substantial runtime cost. Equicorrelation, safety `1e-8`,
+and knockoff+ target `q=0.1` therefore remain the compatibility defaults.
+These results concern the listed simulation laws; they do not supply a
+data-driven strategy or penalty selector, or a misspecified-model guarantee.
+
 
 The statistic is ``W_j=|\widehat\beta_j|-|\widehat\beta_{p+j}|`` from the
 joint lasso on ``[X\ \widetilde X]``. The filter fits without an intercept or
