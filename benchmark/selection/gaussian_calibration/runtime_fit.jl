@@ -87,7 +87,7 @@ open(out*".bin",mode) do dst
           end
         else
           jf=() -> SJ.slope(X,c.y;α=factors,λ=w,fit_intercept=false,centering=:none,scaling=:none,
-              tol=1e-8,max_it=100000,max_clusters=c.p+1,dev_change_tol=0.0,dev_ratio_tol=1.0)
+              tol=1e-10,max_it=100000,max_clusters=c.p+1,dev_change_tol=0.0,dev_ratio_tol=1.0)
           calls=[("public",jf)]
         end
         calls=circshift(calls,mod(rep+c.dataset,length(calls)))

@@ -190,3 +190,16 @@ not an additional independent cohort or a replacement of old timings. Native
 statistical single-fit settings remain1e-9/max100000 as already certified.
 Public production tol1e-7/max10000 and screening defaults remain unchanged.
 Main generation still waits on the corrected runtime adapter canary gate.
+
+Corrected native runtime canary13455395 completed all native workers in62s,
+with complete public/prepared fields bitwise equal and all72 allocation witnesses
+positive. Independent checks passed all native comparison/default points but
+found6 R path-point failures in dense case1 and42 SLOPE.jl path-point failures
+in correlated case3 (three timing rounds counted separately). Their maximum
+residuals were1.154e-7 and1.120e-6. Other cases passed. Successful comparator
+returns are not accuracy certificates. Before main generation, use runtime
+SLOPE.jl/R tol1e-10 (original iteration caps) and recertify all outputs on the
+same12 inputs; reuse all already-valid native1e-8/default workers. Preserve
+old comparator timings/failures and all native1e-9 sensitivity results. Native
+runtime control1e-8, public production defaults and statistical single-fit
+comparison controls stay as documented; the shared1e-7 certificate never changes.

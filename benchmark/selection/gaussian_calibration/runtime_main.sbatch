@@ -8,15 +8,15 @@
 #SBATCH --mem=64G
 #SBATCH --time=02:00:00
 #SBATCH --job-name=hdm107-runtime-main
-#SBATCH --comment=20261026-hdm107-runtime-main-v4
-#SBATCH --output=runtime-main-v4-%j.out
+#SBATCH --comment=20261026-hdm107-runtime-main-v5
+#SBATCH --output=runtime-main-v5-%j.out
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
 module load gcc/13.3.0 apptainer parallel/20240522
-export HDM_BASE="$PWD" HDM_CODE="$PWD/study-v4-code" HDM_STUDY="$PWD/runtime-main-v4" HDM_GATE=main HDM_ALLOC_SAMPLE_RATE=0.001
+export HDM_BASE="$PWD" HDM_CODE="$PWD/study-v5-code" HDM_STUDY="$PWD/runtime-main-v5" HDM_GATE=main HDM_ALLOC_SAMPLE_RATE=0.001
 export JULIA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 JULIA_PKG_PRECOMPILE_AUTO=0
 export JULIA_DEPOT_PATH="$PWD/depot:/home1/mkolar/juliaPkg/runs/20261026-hdm-overnight/issue99/depot:/home1/mkolar/juliaPkg/runs/20261025-cd82-compare/depot:/home1/mkolar/juliaPkg/runs/20261025-cd82-selection/depot:/home1/mkolar/juliaPkg/depot:"
-export HDM_PARALLEL=/apps/spack/2406/apps/linux-rocky8-x86_64_v4/gcc-13.3.0/parallel-20240522-qizrgyo/bin/parallel
+export HDM_PARALLEL=/apps/spack/2406/apps/linux-rocky8-x86_64_v5/gcc-13.3.0/parallel-20240522-qizrgyo/bin/parallel
 unset PARALLEL
 mkdir -p "$HDM_STUDY/logs"
 "$HDM_PARALLEL" --jobs 7 --halt soon,fail=1 --joblog "$HDM_STUDY/generate-joblog.tsv" \

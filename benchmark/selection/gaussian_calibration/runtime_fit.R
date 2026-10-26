@@ -22,7 +22,7 @@ repeat {
     w<-W[,j];amax<-max(cumsum(sort(abs(as.numeric(crossprod(X,y))/n),decreasing=TRUE))/cumsum(w))
     factors<-if(payload=='fit') 1 else exp(seq(log(amax),log(.2*amax),length.out=20))
     callfit<-function() SLOPE::SLOPE(X,y,lambda=w,alpha=factors,gamma=1,intercept=FALSE,center='none',scale='none',
-      tol=1e-8,max_passes=1000000,threads=1,tol_dev_ratio=1,tol_dev_change=0,max_variables=p+1,solver='auto')
+      tol=1e-10,max_passes=1000000,threads=1,tol_dev_ratio=1,tol_dev_change=0,max_variables=p+1,solver='auto')
     warm<-callfit()
     for(round in seq_len(3)) {
       gc();t0<-as.numeric(Sys.time());z<-callfit();elapsed<-as.numeric(Sys.time())-t0
