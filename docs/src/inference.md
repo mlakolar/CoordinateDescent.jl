@@ -248,3 +248,7 @@ are described in `benchmark/inference/README.md` in the source distribution.
 `RESULTS.md` and `GLM_RESULTS.md` in that directory retain the observed
 undercoverage and conservative score results; the default tuning is not an
 empirically validated guarantee of nominal coverage across these designs.
+
+With a fixed `rng`, each predictor uses a random stream indexed by its physical
+column. Selecting or reordering targets keeps those predictor streams unchanged.
+This also avoids dependence on the length of bulk random-number draws.

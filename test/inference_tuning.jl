@@ -23,3 +23,25 @@ using Random, LinearAlgebra, Statistics
   @test_throws ArgumentError nodewise_lasso(X;nodewise_cv_nodes=0)
   @test_throws ArgumentError nodewise_lasso(X;nodewise_cv_folds=81)
 end
+
+
+@testset "inference target subsets keep predictor random streams" begin
+  rg = Xoshiro(6601)
+  X = randn(rg, 80, 24)
+  y = 0.2 .+ 0.8 .* X[:,1] .- 0.5 .* X[:,2] .+ randn(rg,80)
+  seed = 7741
+  full = debiased_lasso(X,y; threads=false,rng=Xoshiro(seed))
+  for targets in ([3,1,12], [12,3,1])
+    sub = debiased_lasso(X,y; targets,threads=false,rng=Xoshiro(seed))
+    @test sub.converged && full.converged
+    @test sub.beta ≈ full.beta[targets] atol=1e-11 rtol=1e-11
+    @test sub.se ≈ full.se[targets] atol=1e-11 rtol=1e-11
+    @test sub.projection.lambda ≈ full.projection.lambda[targets] atol=1e-12 rtol=1e-12
+  end
+  if Threads.nthreads() > 1
+    targets = [12,3,1]
+    sub = debiased_lasso(X,y; targets,threads=true,rng=Xoshiro(seed))
+    @test sub.beta ≈ full.beta[targets] atol=1e-11 rtol=1e-11
+    @test sub.se ≈ full.se[targets] atol=1e-11 rtol=1e-11
+  end
+end

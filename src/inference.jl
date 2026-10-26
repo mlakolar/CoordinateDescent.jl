@@ -289,7 +289,9 @@ function debiasing_matrix(X::AbstractMatrix{<:Real}; method::Symbol = :nodewise,
   actual_lambda=fill(T(method == :qp ? mu : lambda),length(ts))
   bias_factors=fill(T(NaN),length(ts));noise_factors=fill(T(NaN),length(ts))
   reference_noise=fill(T(NaN),length(ts));bias_met=fill(false,length(ts));boundary=fill(false,length(ts))
-  seeds = rand(rng, UInt64, length(ts))
+  # Draw by physical predictor: changing the requested subset/order must not
+  # change a predictor's descent stream (including Xoshiro bulk generation).
+  seeds = rand(rng, UInt64, p)
   _inference_workers(length(ts), threads) do ids
     # Construct once: QuadModel checks G for finite entries at construction.
     b = zeros(T, p)
@@ -297,7 +299,7 @@ function debiasing_matrix(X::AbstractMatrix{<:Real}; method::Symbol = :nodewise,
     for a in ids
       j = ts[a]
       x = SparseIterate(T, p)
-      gen = Xoshiro(seeds[a])
+      gen = Xoshiro(seeds[j])
       if method == :qp
         fill!(b, 0); b[j] = -1
         m.c = zero(T)
