@@ -1,0 +1,8 @@
+{
+  "worker_receipts": 480,
+  "expected_workers": 480,
+  "cpu_seconds": 185014.228189,
+  "process_seconds_sum": 187081.65245147655,
+  "max_worker_rss_gib": 0.251495361328125,
+  "note": "Single dataset/score per fresh process, two requested targets. Actual child CPU;per-worker peakRSS,not aggregate memory. Allocation128CPUs/128GiB for3025s. Full results include121targeterrors;processsuccessisnot calibration."
+}

@@ -1,5 +1,7 @@
 # Overnight issue-77 default research, 2026-10-26 Dubai
 
+**Provenance correction, 2026-10-26:** the expanded design offsets overlap some old cross-stage seed blocks. Earlier per-design estimates are retained, but statements below calling the entire collection independent are qualified by the [seed audit](results/discovery-20261026-seed-stream-audit/RESULTS.md). Replacement validation uses disjoint base1000000000 and canonical physical-target projection streams, frozen/pushed3eefe3b before generation. The old target-request-dependent stream defect was fixed/tested in e13b40f; full ordered all-target output is unchanged. The new500-per-design validation completed as13455264: all5000fits/50000records valid,10pooled gates passed, six active and four null role flags retained. See [disjoint validation](results/discovery-20261026-gaussian-disjoint500/RESULTS.md). No tuning was changed against its outcomes.
+
 User authorization: continue overnight in auto research mode; use compute as needed on Discovery without permission questions; method/family-specific defaults are allowed; investigate post-penalty refitting, published methods and additional packages; launch a large campaign only after defensible defaults are independently validated. This supersedes earlier instructions holding every large campaign until another user confirmation, but does not waive scientific validation.
 
 Stage1:19 designs x20 datasets in development namespace92100000; canary92000000. Fresh confirmation namespace92200000 was reserved at the outset. Its Gaussian case offsets have now been used only for the frozen500-dataset validation; logistic confirmation offsets remain unused. All data generation, fitting, timing, aggregation run on Discovery compute nodes. All errors/warnings retained. GNU Parallel exclusive srun workers; one BLAS thread per worker. Use proportionate8CPU/16GiB canary and16CPU/32GiB development allocations; no two-hour task cap. Account every job and retry.
@@ -60,7 +62,7 @@ Gaussian update: the frozen CV-min/restricted-LDPE/HC3 recipe passed its pooled 
 
 ### Frozen Gaussian campaign, own policy arm
 
-The independent 1,000-per-design arm is complete: 10,000 datasets and 100,000
+The historical 1,000-per-design own arm is complete: 10,000 datasets and 100,000
 marginal intervals, zero fit errors. See
 [the campaign report](results/discovery-20261026-gaussian-campaign1000/RESULTS.md).
 Pooled active coverage is 94.44–96.90%; null rejection is 2.64–4.24%. All ten

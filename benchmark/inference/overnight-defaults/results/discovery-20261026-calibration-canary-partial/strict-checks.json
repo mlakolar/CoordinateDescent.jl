@@ -1,0 +1,18 @@
+{
+  "incomplete_or_nonconverged": [
+    [
+      "binomial-largen",
+      "calibrated_1se",
+      1,
+      2
+    ],
+    [
+      "binomial-largen",
+      "calibrated_min",
+      1,
+      2
+    ]
+  ],
+  "target_role_truth_consistent": true,
+  "method_case_groups": 24
+}

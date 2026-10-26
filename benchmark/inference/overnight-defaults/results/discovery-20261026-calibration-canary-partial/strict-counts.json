@@ -1,0 +1,170 @@
+[
+  {
+    "case": "belloni-0",
+    "method": "calibrated_1se",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0",
+    "method": "calibrated_min",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "calibrated_1se",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "calibrated_min",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "calibrated_1se",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "calibrated_min",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "calibrated_1se",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "calibrated_min",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "calibrated_1se",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "calibrated_min",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "calibrated_1se",
+    "valid": 0,
+    "planned": 1,
+    "missing_or_invalid": 1
+  },
+  {
+    "case": "binomial-largen",
+    "method": "calibrated_min",
+    "valid": 0,
+    "planned": 1,
+    "missing_or_invalid": 1
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "calibrated_1se",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "calibrated_min",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "calibrated_1se",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "calibrated_min",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "calibrated_1se",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "calibrated_min",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "calibrated_1se",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "calibrated_min",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "liu-published",
+    "method": "calibrated_1se",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "liu-published",
+    "method": "calibrated_min",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "liu-small",
+    "method": "calibrated_1se",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "liu-small",
+    "method": "calibrated_min",
+    "valid": 1,
+    "planned": 1,
+    "missing_or_invalid": 0
+  }
+]

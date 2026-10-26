@@ -1,0 +1,55 @@
+{
+  "stage": "canary",
+  "planned_datasets": 12,
+  "records": 186,
+  "unique_records": 186,
+  "missing_markers": [
+    [
+      "binomial-largen",
+      1,
+      2
+    ],
+    [
+      "binomial-largen",
+      1,
+      3
+    ],
+    [
+      "binomial-largen",
+      1,
+      4
+    ],
+    [
+      "binomial-largen",
+      1,
+      5
+    ],
+    [
+      "binomial-largen",
+      1,
+      6
+    ],
+    [
+      "binomial-largen",
+      1,
+      7
+    ],
+    [
+      "binomial-largen",
+      1,
+      8
+    ],
+    [
+      "binomial-largen",
+      1,
+      9
+    ]
+  ],
+  "target_errors": 0,
+  "warning_files": 63,
+  "finite_records": true,
+  "max_alpha_kkt": 1.16776113655709e-05,
+  "max_gamma_kkt": 1.16463768949221e-05,
+  "max_root_error": 3.948613901128e-12,
+  "max_derivative_error": 4.02793354226105e-11
+}

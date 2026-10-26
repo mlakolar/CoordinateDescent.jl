@@ -1,0 +1,170 @@
+[
+  {
+    "case": "belloni-0",
+    "method": "doubleml_sparse_instrument",
+    "valid": 16,
+    "planned": 20,
+    "missing_or_invalid": 4
+  },
+  {
+    "case": "belloni-0",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 18,
+    "planned": 20,
+    "missing_or_invalid": 2
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "doubleml_sparse_instrument",
+    "valid": 18,
+    "planned": 20,
+    "missing_or_invalid": 2
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 18,
+    "planned": 20,
+    "missing_or_invalid": 2
+  },
+  {
+    "case": "binomial-benign",
+    "method": "doubleml_sparse_instrument",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "doubleml_sparse_instrument",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "doubleml_sparse_instrument",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "doubleml_sparse_instrument",
+    "valid": 12,
+    "planned": 20,
+    "missing_or_invalid": 8
+  },
+  {
+    "case": "binomial-largen",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 12,
+    "planned": 20,
+    "missing_or_invalid": 8
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "doubleml_sparse_instrument",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "doubleml_sparse_instrument",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "doubleml_sparse_instrument",
+    "valid": 0,
+    "planned": 20,
+    "missing_or_invalid": 20
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 2,
+    "planned": 20,
+    "missing_or_invalid": 18
+  },
+  {
+    "case": "binomial-weak",
+    "method": "doubleml_sparse_instrument",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "liu-published",
+    "method": "doubleml_sparse_instrument",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "liu-published",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 20,
+    "planned": 20,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "liu-small",
+    "method": "doubleml_sparse_instrument",
+    "valid": 8,
+    "planned": 20,
+    "missing_or_invalid": 12
+  },
+  {
+    "case": "liu-small",
+    "method": "doubleml_sparse_nuisance_space",
+    "valid": 11,
+    "planned": 20,
+    "missing_or_invalid": 9
+  }
+]

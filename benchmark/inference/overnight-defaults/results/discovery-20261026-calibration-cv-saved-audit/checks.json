@@ -1,0 +1,7 @@
+{
+  "policy_rows": 40,
+  "selection_disagreements": 2,
+  "common_finite_fold_values": 614,
+  "max_absolute_fold_difference": 0.11266138608318954,
+  "max_relative_fold_difference": 0.0011726140938063154
+}

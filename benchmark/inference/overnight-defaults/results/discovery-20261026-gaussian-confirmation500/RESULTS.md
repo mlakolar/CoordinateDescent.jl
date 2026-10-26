@@ -1,5 +1,7 @@
 # Frozen Gaussian HC3: independent confirmation
 
+Provenance addendum (2026-10-26): see the [seed-stream audit](../discovery-20261026-seed-stream-audit/RESULTS.md). Cross-design/stage seed blocks can overlap, so earlier collection-wide independence claims are qualified. Numerical tables and adverse findings are preserved. New disjoint validation is recorded separately. Historical ten-target calls also precede the canonical-target RNG correction e13b40f.
+
 EMPIRICAL. The recipe was frozen and pushed in e2a30f4 before any confirmation data were generated. Discovery job13448981 completed500fresh datasets in each of ten prespecified Gaussian designs:5000datasets and50000unique finite target records, zero fit errors. The nine development designs were supplemented, before validation, with noise variance depending on the first tested predictor. Seeds use namespace92200000 with original case offsets. No tuning used these results.
 
 All ten designs passed the prespecified pooled engineering gate:>=99%complete fits, active-coverage lower marginal95%MCbound>=92.5%, and null-rejection upper bound<=7.5%. Pooled active coverage was94.64–96.84%, with dataset-level MCSE about0.36–0.43percentage points. TypeI error was2.32–4.20%. These tolerances are not a theorem of uniform coverage.

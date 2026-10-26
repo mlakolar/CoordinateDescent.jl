@@ -1,5 +1,7 @@
 # Gaussian production-policy arm: 1,000 fresh datasets per design
 
+Provenance addendum (2026-10-26): see the [seed-stream audit](../discovery-20261026-seed-stream-audit/RESULTS.md). Cross-design/stage seed blocks can overlap, so earlier collection-wide independence claims are qualified. Numerical tables and adverse findings are preserved. New disjoint validation is recorded separately. Historical ten-target calls also precede the canonical-target RNG correction e13b40f.
+
 EMPIRICAL. Frozen Gaussian HC3 policy; 10 designs, 10,000 response datasets and 100,000 marginal coefficient intervals. All fits were complete, finite and converged. This is the own-policy arm; the expanded competitor comparison is not complete. The policy was frozen before the independent 500-per-design confirmation and was not retuned for this campaign.
 
 |Design|Active coverage ± MCSE (%)|Null type I ± MCSE (%)|Power ± MCSE (%)|Active interval length ± MCSE|Warm fit mean (s)|

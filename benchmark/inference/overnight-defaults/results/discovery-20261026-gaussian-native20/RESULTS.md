@@ -1,5 +1,7 @@
 # Gaussian competitor pilot: native defaults and production-policy timing
 
+Provenance addendum (2026-10-26): see the [seed-stream audit](../discovery-20261026-seed-stream-audit/RESULTS.md). Cross-design/stage seed blocks can overlap, so earlier collection-wide independence claims are qualified. Numerical tables and adverse findings are preserved. New disjoint validation is recorded separately. Historical ten-target calls also precede the canonical-target RNG correction e13b40f.
+
 EMPIRICAL. Twenty matched response datasets in each of Gaussian moderate/correlated/benign designs;60datasets,420fit tasks. All input hashes match the frozen1000-per-design own arm. This is a native/default pipeline comparison. The earlier fixed-penalty engine comparison remains a separate matched statistical exercise. hdi/EconML/sslasso infer all slopes; Julia, SIHR and hdm request ten targets.
 
 |Design|Method|Finite intervals /20|Strict checks /20|Active coverage ± MCSE (%)|Null type I ± MCSE (%)|Power (%)|Active length|Mean fit (s)|

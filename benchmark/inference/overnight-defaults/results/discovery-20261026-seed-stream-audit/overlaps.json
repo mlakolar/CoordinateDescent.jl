@@ -1,0 +1,344 @@
+[
+  {
+    "a": {
+      "stage": "canary",
+      "case": "binomial-random",
+      "row": 11,
+      "start": 92110001,
+      "end": 92110001
+    },
+    "b": {
+      "stage": "development",
+      "case": "gaussian-moderate",
+      "row": 1,
+      "start": 92110001,
+      "end": 92110100
+    },
+    "overlap_seed_count": 1,
+    "first": 92110001,
+    "last": 92110001
+  },
+  {
+    "a": {
+      "stage": "canary",
+      "case": "binomial-weak",
+      "row": 12,
+      "start": 92120001,
+      "end": 92120001
+    },
+    "b": {
+      "stage": "development",
+      "case": "gaussian-correlated",
+      "row": 2,
+      "start": 92120001,
+      "end": 92120100
+    },
+    "overlap_seed_count": 1,
+    "first": 92120001,
+    "last": 92120001
+  },
+  {
+    "a": {
+      "stage": "canary",
+      "case": "binomial-largen",
+      "row": 13,
+      "start": 92130001,
+      "end": 92130001
+    },
+    "b": {
+      "stage": "development",
+      "case": "gaussian-benign",
+      "row": 3,
+      "start": 92130001,
+      "end": 92130100
+    },
+    "overlap_seed_count": 1,
+    "first": 92130001,
+    "last": 92130001
+  },
+  {
+    "a": {
+      "stage": "canary",
+      "case": "binomial-independent",
+      "row": 14,
+      "start": 92140001,
+      "end": 92140001
+    },
+    "b": {
+      "stage": "development",
+      "case": "gaussian-random",
+      "row": 4,
+      "start": 92140001,
+      "end": 92140100
+    },
+    "overlap_seed_count": 1,
+    "first": 92140001,
+    "last": 92140001
+  },
+  {
+    "a": {
+      "stage": "canary",
+      "case": "gaussian-hetero",
+      "row": 15,
+      "start": 92150001,
+      "end": 92150001
+    },
+    "b": {
+      "stage": "development",
+      "case": "gaussian-weak",
+      "row": 5,
+      "start": 92150001,
+      "end": 92150100
+    },
+    "overlap_seed_count": 1,
+    "first": 92150001,
+    "last": 92150001
+  },
+  {
+    "a": {
+      "stage": "canary",
+      "case": "gaussian-heavy",
+      "row": 16,
+      "start": 92160001,
+      "end": 92160001
+    },
+    "b": {
+      "stage": "development",
+      "case": "gaussian-largen",
+      "row": 6,
+      "start": 92160001,
+      "end": 92160100
+    },
+    "overlap_seed_count": 1,
+    "first": 92160001,
+    "last": 92160001
+  },
+  {
+    "a": {
+      "stage": "canary",
+      "case": "belloni-0",
+      "row": 17,
+      "start": 92170001,
+      "end": 92170001
+    },
+    "b": {
+      "stage": "development",
+      "case": "gaussian-independent",
+      "row": 7,
+      "start": 92170001,
+      "end": 92170100
+    },
+    "overlap_seed_count": 1,
+    "first": 92170001,
+    "last": 92170001
+  },
+  {
+    "a": {
+      "stage": "canary",
+      "case": "belloni-0p2",
+      "row": 18,
+      "start": 92180001,
+      "end": 92180001
+    },
+    "b": {
+      "stage": "development",
+      "case": "binomial-moderate",
+      "row": 8,
+      "start": 92180001,
+      "end": 92180100
+    },
+    "overlap_seed_count": 1,
+    "first": 92180001,
+    "last": 92180001
+  },
+  {
+    "a": {
+      "stage": "canary",
+      "case": "binomial-sihr",
+      "row": 19,
+      "start": 92190001,
+      "end": 92190001
+    },
+    "b": {
+      "stage": "development",
+      "case": "binomial-correlated",
+      "row": 9,
+      "start": 92190001,
+      "end": 92190100
+    },
+    "overlap_seed_count": 1,
+    "first": 92190001,
+    "last": 92190001
+  },
+  {
+    "a": {
+      "stage": "development",
+      "case": "binomial-random",
+      "row": 11,
+      "start": 92210001,
+      "end": 92210100
+    },
+    "b": {
+      "stage": "confirmation",
+      "case": "gaussian-moderate",
+      "row": 1,
+      "start": 92210001,
+      "end": 92210500
+    },
+    "overlap_seed_count": 100,
+    "first": 92210001,
+    "last": 92210100
+  },
+  {
+    "a": {
+      "stage": "development",
+      "case": "binomial-weak",
+      "row": 12,
+      "start": 92220001,
+      "end": 92220100
+    },
+    "b": {
+      "stage": "confirmation",
+      "case": "gaussian-correlated",
+      "row": 2,
+      "start": 92220001,
+      "end": 92220500
+    },
+    "overlap_seed_count": 100,
+    "first": 92220001,
+    "last": 92220100
+  },
+  {
+    "a": {
+      "stage": "development",
+      "case": "binomial-largen",
+      "row": 13,
+      "start": 92230001,
+      "end": 92230100
+    },
+    "b": {
+      "stage": "confirmation",
+      "case": "gaussian-benign",
+      "row": 3,
+      "start": 92230001,
+      "end": 92230500
+    },
+    "overlap_seed_count": 100,
+    "first": 92230001,
+    "last": 92230100
+  },
+  {
+    "a": {
+      "stage": "development",
+      "case": "binomial-independent",
+      "row": 14,
+      "start": 92240001,
+      "end": 92240100
+    },
+    "b": {
+      "stage": "confirmation",
+      "case": "gaussian-random",
+      "row": 4,
+      "start": 92240001,
+      "end": 92240500
+    },
+    "overlap_seed_count": 100,
+    "first": 92240001,
+    "last": 92240100
+  },
+  {
+    "a": {
+      "stage": "development",
+      "case": "gaussian-hetero",
+      "row": 15,
+      "start": 92250001,
+      "end": 92250100
+    },
+    "b": {
+      "stage": "confirmation",
+      "case": "gaussian-weak",
+      "row": 5,
+      "start": 92250001,
+      "end": 92250500
+    },
+    "overlap_seed_count": 100,
+    "first": 92250001,
+    "last": 92250100
+  },
+  {
+    "a": {
+      "stage": "development",
+      "case": "gaussian-heavy",
+      "row": 16,
+      "start": 92260001,
+      "end": 92260100
+    },
+    "b": {
+      "stage": "confirmation",
+      "case": "gaussian-largen",
+      "row": 6,
+      "start": 92260001,
+      "end": 92260500
+    },
+    "overlap_seed_count": 100,
+    "first": 92260001,
+    "last": 92260100
+  },
+  {
+    "a": {
+      "stage": "development",
+      "case": "belloni-0",
+      "row": 17,
+      "start": 92270001,
+      "end": 92270100
+    },
+    "b": {
+      "stage": "confirmation",
+      "case": "gaussian-independent",
+      "row": 7,
+      "start": 92270001,
+      "end": 92270500
+    },
+    "overlap_seed_count": 100,
+    "first": 92270001,
+    "last": 92270100
+  },
+  {
+    "a": {
+      "stage": "confirmation",
+      "case": "gaussian-hetero",
+      "row": 15,
+      "start": 92350001,
+      "end": 92350500
+    },
+    "b": {
+      "stage": "campaign",
+      "case": "gaussian-weak",
+      "row": 5,
+      "start": 92350001,
+      "end": 92351000
+    },
+    "overlap_seed_count": 500,
+    "first": 92350001,
+    "last": 92350500
+  },
+  {
+    "a": {
+      "stage": "confirmation",
+      "case": "gaussian-heavy",
+      "row": 16,
+      "start": 92360001,
+      "end": 92360500
+    },
+    "b": {
+      "stage": "campaign",
+      "case": "gaussian-largen",
+      "row": 6,
+      "start": 92360001,
+      "end": 92361000
+    },
+    "overlap_seed_count": 500,
+    "first": 92360001,
+    "last": 92360500
+  }
+]

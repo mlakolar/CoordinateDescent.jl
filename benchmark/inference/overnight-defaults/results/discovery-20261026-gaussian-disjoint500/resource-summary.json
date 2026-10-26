@@ -1,0 +1,8 @@
+{
+  "workers": 160,
+  "cpu_seconds": 26562.711219000008,
+  "process_seconds_sum": 26841.84886878857,
+  "max_worker_rss_gib": 0.8906059265136719,
+  "job": "13455264",
+  "note": "64CPUs/128GiB over8nodes;160workers with16shards/design. Per-worker RSS,not simultaneous total. Earlier13-second allocation replacement separately retained in accounting."
+}

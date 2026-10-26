@@ -13,7 +13,9 @@ The initial estimator remains regularized. Selected-model refitting did not
 uniformly improve development coverage. Expert calls can supply refitted
 coefficients through `initial` and `initial_intercept`.
 
-This recipe was frozen before 500 fresh datasets in each of ten Gaussian
+The original validation stream blocks were later found to overlap across some designs and stages. Their per-design results remain recorded, but collection-wide independence claims are qualified. A source-frozen replacement used disjoint base1000000000 and physical-target projection streams. All5000fits/50000records were valid. Across ten designs, pooled active coverage was94.80–97.12% and typeI error2.08–5.68%; six active and four null role flags remain. See the overnight disjoint validation report.
+
+The earlier historical confirmation used 500 datasets in each of ten Gaussian
 designs. All 5,000 fits completed. Pooled active coverage ranged from 94.64%
 to 96.84%, and type I error from 2.32% to 4.20%. Requested-role active coverage
 ranged from 93.2% to 97.8%. Three roles had marginal Monte Carlo lower bounds

@@ -1,0 +1,478 @@
+[
+  {
+    "stage": "canary",
+    "case": "gaussian-moderate",
+    "row": 1,
+    "start": 92010001,
+    "end": 92010001
+  },
+  {
+    "stage": "canary",
+    "case": "gaussian-correlated",
+    "row": 2,
+    "start": 92020001,
+    "end": 92020001
+  },
+  {
+    "stage": "canary",
+    "case": "gaussian-benign",
+    "row": 3,
+    "start": 92030001,
+    "end": 92030001
+  },
+  {
+    "stage": "canary",
+    "case": "gaussian-random",
+    "row": 4,
+    "start": 92040001,
+    "end": 92040001
+  },
+  {
+    "stage": "canary",
+    "case": "gaussian-weak",
+    "row": 5,
+    "start": 92050001,
+    "end": 92050001
+  },
+  {
+    "stage": "canary",
+    "case": "gaussian-largen",
+    "row": 6,
+    "start": 92060001,
+    "end": 92060001
+  },
+  {
+    "stage": "canary",
+    "case": "gaussian-independent",
+    "row": 7,
+    "start": 92070001,
+    "end": 92070001
+  },
+  {
+    "stage": "canary",
+    "case": "binomial-moderate",
+    "row": 8,
+    "start": 92080001,
+    "end": 92080001
+  },
+  {
+    "stage": "canary",
+    "case": "binomial-correlated",
+    "row": 9,
+    "start": 92090001,
+    "end": 92090001
+  },
+  {
+    "stage": "canary",
+    "case": "binomial-benign",
+    "row": 10,
+    "start": 92100001,
+    "end": 92100001
+  },
+  {
+    "stage": "canary",
+    "case": "binomial-random",
+    "row": 11,
+    "start": 92110001,
+    "end": 92110001
+  },
+  {
+    "stage": "canary",
+    "case": "binomial-weak",
+    "row": 12,
+    "start": 92120001,
+    "end": 92120001
+  },
+  {
+    "stage": "canary",
+    "case": "binomial-largen",
+    "row": 13,
+    "start": 92130001,
+    "end": 92130001
+  },
+  {
+    "stage": "canary",
+    "case": "binomial-independent",
+    "row": 14,
+    "start": 92140001,
+    "end": 92140001
+  },
+  {
+    "stage": "canary",
+    "case": "gaussian-hetero",
+    "row": 15,
+    "start": 92150001,
+    "end": 92150001
+  },
+  {
+    "stage": "canary",
+    "case": "gaussian-heavy",
+    "row": 16,
+    "start": 92160001,
+    "end": 92160001
+  },
+  {
+    "stage": "canary",
+    "case": "belloni-0",
+    "row": 17,
+    "start": 92170001,
+    "end": 92170001
+  },
+  {
+    "stage": "canary",
+    "case": "belloni-0p2",
+    "row": 18,
+    "start": 92180001,
+    "end": 92180001
+  },
+  {
+    "stage": "canary",
+    "case": "binomial-sihr",
+    "row": 19,
+    "start": 92190001,
+    "end": 92190001
+  },
+  {
+    "stage": "development",
+    "case": "gaussian-moderate",
+    "row": 1,
+    "start": 92110001,
+    "end": 92110100
+  },
+  {
+    "stage": "development",
+    "case": "gaussian-correlated",
+    "row": 2,
+    "start": 92120001,
+    "end": 92120100
+  },
+  {
+    "stage": "development",
+    "case": "gaussian-benign",
+    "row": 3,
+    "start": 92130001,
+    "end": 92130100
+  },
+  {
+    "stage": "development",
+    "case": "gaussian-random",
+    "row": 4,
+    "start": 92140001,
+    "end": 92140100
+  },
+  {
+    "stage": "development",
+    "case": "gaussian-weak",
+    "row": 5,
+    "start": 92150001,
+    "end": 92150100
+  },
+  {
+    "stage": "development",
+    "case": "gaussian-largen",
+    "row": 6,
+    "start": 92160001,
+    "end": 92160100
+  },
+  {
+    "stage": "development",
+    "case": "gaussian-independent",
+    "row": 7,
+    "start": 92170001,
+    "end": 92170100
+  },
+  {
+    "stage": "development",
+    "case": "binomial-moderate",
+    "row": 8,
+    "start": 92180001,
+    "end": 92180100
+  },
+  {
+    "stage": "development",
+    "case": "binomial-correlated",
+    "row": 9,
+    "start": 92190001,
+    "end": 92190100
+  },
+  {
+    "stage": "development",
+    "case": "binomial-benign",
+    "row": 10,
+    "start": 92200001,
+    "end": 92200100
+  },
+  {
+    "stage": "development",
+    "case": "binomial-random",
+    "row": 11,
+    "start": 92210001,
+    "end": 92210100
+  },
+  {
+    "stage": "development",
+    "case": "binomial-weak",
+    "row": 12,
+    "start": 92220001,
+    "end": 92220100
+  },
+  {
+    "stage": "development",
+    "case": "binomial-largen",
+    "row": 13,
+    "start": 92230001,
+    "end": 92230100
+  },
+  {
+    "stage": "development",
+    "case": "binomial-independent",
+    "row": 14,
+    "start": 92240001,
+    "end": 92240100
+  },
+  {
+    "stage": "development",
+    "case": "gaussian-hetero",
+    "row": 15,
+    "start": 92250001,
+    "end": 92250100
+  },
+  {
+    "stage": "development",
+    "case": "gaussian-heavy",
+    "row": 16,
+    "start": 92260001,
+    "end": 92260100
+  },
+  {
+    "stage": "development",
+    "case": "belloni-0",
+    "row": 17,
+    "start": 92270001,
+    "end": 92270100
+  },
+  {
+    "stage": "development",
+    "case": "belloni-0p2",
+    "row": 18,
+    "start": 92280001,
+    "end": 92280100
+  },
+  {
+    "stage": "development",
+    "case": "binomial-sihr",
+    "row": 19,
+    "start": 92290001,
+    "end": 92290100
+  },
+  {
+    "stage": "confirmation",
+    "case": "gaussian-moderate",
+    "row": 1,
+    "start": 92210001,
+    "end": 92210500
+  },
+  {
+    "stage": "confirmation",
+    "case": "gaussian-correlated",
+    "row": 2,
+    "start": 92220001,
+    "end": 92220500
+  },
+  {
+    "stage": "confirmation",
+    "case": "gaussian-benign",
+    "row": 3,
+    "start": 92230001,
+    "end": 92230500
+  },
+  {
+    "stage": "confirmation",
+    "case": "gaussian-random",
+    "row": 4,
+    "start": 92240001,
+    "end": 92240500
+  },
+  {
+    "stage": "confirmation",
+    "case": "gaussian-weak",
+    "row": 5,
+    "start": 92250001,
+    "end": 92250500
+  },
+  {
+    "stage": "confirmation",
+    "case": "gaussian-largen",
+    "row": 6,
+    "start": 92260001,
+    "end": 92260500
+  },
+  {
+    "stage": "confirmation",
+    "case": "gaussian-independent",
+    "row": 7,
+    "start": 92270001,
+    "end": 92270500
+  },
+  {
+    "stage": "confirmation",
+    "case": "gaussian-hetero",
+    "row": 15,
+    "start": 92350001,
+    "end": 92350500
+  },
+  {
+    "stage": "confirmation",
+    "case": "gaussian-heavy",
+    "row": 16,
+    "start": 92360001,
+    "end": 92360500
+  },
+  {
+    "stage": "confirmation",
+    "case": "gaussian-hetero-target",
+    "row": 20,
+    "start": 92400001,
+    "end": 92400500
+  },
+  {
+    "stage": "campaign",
+    "case": "gaussian-moderate",
+    "row": 1,
+    "start": 92310001,
+    "end": 92311000
+  },
+  {
+    "stage": "campaign",
+    "case": "gaussian-correlated",
+    "row": 2,
+    "start": 92320001,
+    "end": 92321000
+  },
+  {
+    "stage": "campaign",
+    "case": "gaussian-benign",
+    "row": 3,
+    "start": 92330001,
+    "end": 92331000
+  },
+  {
+    "stage": "campaign",
+    "case": "gaussian-random",
+    "row": 4,
+    "start": 92340001,
+    "end": 92341000
+  },
+  {
+    "stage": "campaign",
+    "case": "gaussian-weak",
+    "row": 5,
+    "start": 92350001,
+    "end": 92351000
+  },
+  {
+    "stage": "campaign",
+    "case": "gaussian-largen",
+    "row": 6,
+    "start": 92360001,
+    "end": 92361000
+  },
+  {
+    "stage": "campaign",
+    "case": "gaussian-independent",
+    "row": 7,
+    "start": 92370001,
+    "end": 92371000
+  },
+  {
+    "stage": "campaign",
+    "case": "gaussian-hetero",
+    "row": 15,
+    "start": 92450001,
+    "end": 92451000
+  },
+  {
+    "stage": "campaign",
+    "case": "gaussian-heavy",
+    "row": 16,
+    "start": 92460001,
+    "end": 92461000
+  },
+  {
+    "stage": "campaign",
+    "case": "gaussian-hetero-target",
+    "row": 20,
+    "start": 92500001,
+    "end": 92501000
+  },
+  {
+    "stage": "new_validation",
+    "case": "gaussian-moderate",
+    "row": 1,
+    "start": 1000010001,
+    "end": 1000010500
+  },
+  {
+    "stage": "new_validation",
+    "case": "gaussian-correlated",
+    "row": 2,
+    "start": 1000020001,
+    "end": 1000020500
+  },
+  {
+    "stage": "new_validation",
+    "case": "gaussian-benign",
+    "row": 3,
+    "start": 1000030001,
+    "end": 1000030500
+  },
+  {
+    "stage": "new_validation",
+    "case": "gaussian-random",
+    "row": 4,
+    "start": 1000040001,
+    "end": 1000040500
+  },
+  {
+    "stage": "new_validation",
+    "case": "gaussian-weak",
+    "row": 5,
+    "start": 1000050001,
+    "end": 1000050500
+  },
+  {
+    "stage": "new_validation",
+    "case": "gaussian-largen",
+    "row": 6,
+    "start": 1000060001,
+    "end": 1000060500
+  },
+  {
+    "stage": "new_validation",
+    "case": "gaussian-independent",
+    "row": 7,
+    "start": 1000070001,
+    "end": 1000070500
+  },
+  {
+    "stage": "new_validation",
+    "case": "gaussian-hetero",
+    "row": 15,
+    "start": 1000150001,
+    "end": 1000150500
+  },
+  {
+    "stage": "new_validation",
+    "case": "gaussian-heavy",
+    "row": 16,
+    "start": 1000160001,
+    "end": 1000160500
+  },
+  {
+    "stage": "new_validation",
+    "case": "gaussian-hetero-target",
+    "row": 20,
+    "start": 1000200001,
+    "end": 1000200500
+  }
+]

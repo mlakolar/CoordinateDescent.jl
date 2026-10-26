@@ -1,0 +1,302 @@
+[
+  {
+    "case": "binomial-benign",
+    "rep": 4,
+    "level": 8,
+    "fold": 2,
+    "julia": 124.27786409343518,
+    "rcal": 124.165202707352,
+    "difference": 0.11266138608318954,
+    "relative": 0.0009065281810643922
+  },
+  {
+    "case": "liu-published",
+    "rep": 1,
+    "level": 8,
+    "fold": 4,
+    "julia": 50.99286758580138,
+    "rcal": 50.9398809357034,
+    "difference": 0.05298665009797787,
+    "relative": 0.0010390992428268861
+  },
+  {
+    "case": "binomial-benign",
+    "rep": 5,
+    "level": 8,
+    "fold": 1,
+    "julia": 34.34238180359611,
+    "rcal": 34.3102190011898,
+    "difference": 0.03216280240631164,
+    "relative": 0.0009365338312948277
+  },
+  {
+    "case": "liu-published",
+    "rep": 3,
+    "level": 8,
+    "fold": 1,
+    "julia": 31.65158191477269,
+    "rcal": 31.625984744599,
+    "difference": 0.02559717017369323,
+    "relative": 0.0008087169305666301
+  },
+  {
+    "case": "binomial-largen",
+    "rep": 1,
+    "level": 6,
+    "fold": 3,
+    "julia": 20.760066723374187,
+    "rcal": 20.735723176546,
+    "difference": 0.024343546828188067,
+    "relative": 0.0011726140938063154
+  },
+  {
+    "case": "liu-published",
+    "rep": 5,
+    "level": 8,
+    "fold": 1,
+    "julia": 25.35691298532713,
+    "rcal": 25.3363508223005,
+    "difference": 0.020562163026632163,
+    "relative": 0.000810909555060213
+  },
+  {
+    "case": "liu-published",
+    "rep": 1,
+    "level": 8,
+    "fold": 3,
+    "julia": 23.672150375464774,
+    "rcal": 23.6521664015943,
+    "difference": 0.019983973870473903,
+    "relative": 0.0008441976564658225
+  },
+  {
+    "case": "liu-published",
+    "rep": 1,
+    "level": 8,
+    "fold": 1,
+    "julia": 22.56012839600271,
+    "rcal": 22.5413202609474,
+    "difference": 0.018808135055309094,
+    "relative": 0.0008336891849711986
+  },
+  {
+    "case": "binomial-benign",
+    "rep": 5,
+    "level": 7,
+    "fold": 5,
+    "julia": 22.67373014263878,
+    "rcal": 22.6616913649837,
+    "difference": 0.0120387776550821,
+    "relative": 0.0005309570846678967
+  },
+  {
+    "case": "liu-published",
+    "rep": 2,
+    "level": 8,
+    "fold": 5,
+    "julia": 14.995861276482774,
+    "rcal": 14.9860842880766,
+    "difference": 0.00977698840617336,
+    "relative": 0.0006519791178320714
+  },
+  {
+    "case": "binomial-benign",
+    "rep": 3,
+    "level": 8,
+    "fold": 1,
+    "julia": 10.807618895607579,
+    "rcal": 10.7986177228102,
+    "difference": 0.009001172797379553,
+    "relative": 0.0008328543858109024
+  },
+  {
+    "case": "liu-published",
+    "rep": 5,
+    "level": 8,
+    "fold": 2,
+    "julia": 8.587371857837407,
+    "rcal": 8.58191717791437,
+    "difference": 0.0054546799230372756,
+    "relative": 0.0006351978245892509
+  },
+  {
+    "case": "binomial-largen",
+    "rep": 5,
+    "level": 5,
+    "fold": 1,
+    "julia": 6.047554422361664,
+    "rcal": 6.04264551793779,
+    "difference": 0.004908904423873928,
+    "relative": 0.0008117172795870309
+  },
+  {
+    "case": "liu-published",
+    "rep": 5,
+    "level": 8,
+    "fold": 4,
+    "julia": 6.225020678493945,
+    "rcal": 6.2225186445576,
+    "difference": 0.0025020339363450717,
+    "relative": 0.00040193182730927134
+  },
+  {
+    "case": "liu-published",
+    "rep": 5,
+    "level": 8,
+    "fold": 3,
+    "julia": 4.736468481057923,
+    "rcal": 4.73449240675876,
+    "difference": 0.001976074299162356,
+    "relative": 0.00041720414842093197
+  },
+  {
+    "case": "binomial-benign",
+    "rep": 4,
+    "level": 7,
+    "fold": 2,
+    "julia": 8.135230684305194,
+    "rcal": 8.13329902550145,
+    "difference": 0.0019316588037430193,
+    "relative": 0.00023744364219070656
+  },
+  {
+    "case": "binomial-largen",
+    "rep": 1,
+    "level": 6,
+    "fold": 4,
+    "julia": 3.0534113654568094,
+    "rcal": 3.05177457726813,
+    "difference": 0.0016367881886791835,
+    "relative": 0.0005360523011069325
+  },
+  {
+    "case": "liu-published",
+    "rep": 2,
+    "level": 8,
+    "fold": 3,
+    "julia": 4.4993110361648645,
+    "rcal": 4.49774645192476,
+    "difference": 0.0015645842401044163,
+    "relative": 0.0003477386265427075
+  },
+  {
+    "case": "liu-published",
+    "rep": 3,
+    "level": 7,
+    "fold": 2,
+    "julia": 6.485265835067069,
+    "rcal": 6.48374413884965,
+    "difference": 0.001521696217419155,
+    "relative": 0.0002346389887660508
+  },
+  {
+    "case": "binomial-benign",
+    "rep": 3,
+    "level": 8,
+    "fold": 2,
+    "julia": 4.57618126915477,
+    "rcal": 4.57467114089127,
+    "difference": 0.0015101282634999436,
+    "relative": 0.0003299974748987309
+  },
+  {
+    "case": "binomial-benign",
+    "rep": 5,
+    "level": 8,
+    "fold": 4,
+    "julia": 3.583983188577654,
+    "rcal": 3.58249204214832,
+    "difference": 0.0014911464293336785,
+    "relative": 0.00041605843299880475
+  },
+  {
+    "case": "liu-published",
+    "rep": 1,
+    "level": 8,
+    "fold": 2,
+    "julia": 3.926057806680837,
+    "rcal": 3.92470189261415,
+    "difference": 0.0013559140666870029,
+    "relative": 0.00034536273622351937
+  },
+  {
+    "case": "liu-published",
+    "rep": 1,
+    "level": 8,
+    "fold": 5,
+    "julia": 3.8855188734609816,
+    "rcal": 3.88420735571937,
+    "difference": 0.0013115177416116452,
+    "relative": 0.0003375399230639757
+  },
+  {
+    "case": "binomial-benign",
+    "rep": 3,
+    "level": 8,
+    "fold": 3,
+    "julia": 4.322947970154522,
+    "rcal": 4.32163757455091,
+    "difference": 0.0013103956036122355,
+    "relative": 0.00030312546268406647
+  },
+  {
+    "case": "liu-published",
+    "rep": 3,
+    "level": 7,
+    "fold": 4,
+    "julia": 5.101473242988201,
+    "rcal": 5.1002002780443,
+    "difference": 0.001272964943900945,
+    "relative": 0.00024952888768956915
+  },
+  {
+    "case": "binomial-benign",
+    "rep": 1,
+    "level": 8,
+    "fold": 4,
+    "julia": 4.446389259125411,
+    "rcal": 4.44513313694917,
+    "difference": 0.00125612217624127,
+    "relative": 0.00028250387067738303
+  },
+  {
+    "case": "liu-published",
+    "rep": 2,
+    "level": 8,
+    "fold": 1,
+    "julia": 3.852821946075551,
+    "rcal": 3.85156677044676,
+    "difference": 0.001255175628790628,
+    "relative": 0.0003257808552687306
+  },
+  {
+    "case": "binomial-benign",
+    "rep": 2,
+    "level": 8,
+    "fold": 4,
+    "julia": 3.6376142437872865,
+    "rcal": 3.63636127436144,
+    "difference": 0.0012529694258462953,
+    "relative": 0.0003444481305257293
+  },
+  {
+    "case": "binomial-largen",
+    "rep": 2,
+    "level": 6,
+    "fold": 1,
+    "julia": 2.0854896057670995,
+    "rcal": 2.08434441569305,
+    "difference": 0.0011451900740495624,
+    "relative": 0.0005491228874422179
+  },
+  {
+    "case": "binomial-moderate",
+    "rep": 4,
+    "level": 5,
+    "fold": 1,
+    "julia": 2.244863145999649,
+    "rcal": 2.24372201798256,
+    "difference": 0.0011411280170889881,
+    "relative": 0.0005083285451598601
+  }
+]
