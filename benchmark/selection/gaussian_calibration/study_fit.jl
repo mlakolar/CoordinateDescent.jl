@@ -26,7 +26,7 @@ open(input) do src
               z=SJ.slope(X,y;α=[1.0],λ=W[:,j],fit_intercept=false,centering=:none,scaling=:none,
                 tol=1e-8,max_it=100000,max_clusters=c.p+1,dev_change_tol=0.0,dev_ratio_tol=1.0)
               length(z.coefficients)==1 || error("truncated")
-              b=vec(Matrix(z.coefficients[1]));B[:,j]=vcat(b,yb-dot(xb,b));ok=true
+              b=vec(Matrix(z.coefficients[1]));B[:,j]=vcat(b,yb-dot(xb,b));ok="unavailable"
             end
           catch e
             err=replace(sprint(showerror,e),','=>';','\n'=>' ')

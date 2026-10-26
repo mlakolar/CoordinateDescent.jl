@@ -6,8 +6,7 @@ library(SLOPE)
 stopifnot(as.character(packageVersion('SLOPE'))=='2.1.1')
 src<-file(input,'rb');dst<-file(paste0(out,'.bin'),'wb');status<-file(paste0(out,'.csv'),'w')
 cat('seed,method,seconds,reported_converged,iterations,residual,error\n',file=status)
-# Float64 headers are used in fit records. Inputs use little-endian Int64,
-# read with numeric size8 then reinterpret via a small byte decoder.
+# Headers use little-endian Int64, read/written with an exact byte decoder.
 readi64<-function(con,n) {
   bytes<-readBin(con,'raw',8*n)
   if(!length(bytes)) return(numeric())
@@ -31,7 +30,7 @@ repeat {
       z<-SLOPE::SLOPE(Z,v,lambda=W[,j],alpha=1,gamma=1,intercept=FALSE,center='none',scale='none',
         tol=1e-8,max_passes=1000000,threads=1,tol_dev_ratio=1,tol_dev_change=0,max_variables=p+1,solver='auto')
       b<-as.matrix(coef(z,intercept=FALSE));stopifnot(ncol(b)==1)
-      B[,j]<-c(b,yb-sum(xb*b));ok<-TRUE
+      B[,j]<-c(b,yb-sum(xb*b));ok<-'unavailable'
     },error=function(e) err<<-gsub('[,\n]',';',conditionMessage(e)))
     cat(paste(c(seed,method,proc.time()[['elapsed']]-start,ok,-1,NaN,err),collapse=','),'\n',file=status,sep='');flush(status)
   }

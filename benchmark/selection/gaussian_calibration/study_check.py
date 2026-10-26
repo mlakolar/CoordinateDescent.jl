@@ -10,6 +10,22 @@ from scipy.special import ndtri
 
 ROOT = Path(os.environ['HDM_STUDY'])
 
+def r_quantile(prob):
+    # Pinned R SLOPE2.1.1 src/slope/qnorm.cpp rational approximation.
+    # https://github.com/jolars/SLOPE/blob/243741cb1b4161398d757adfdddc0caa472b9303/src/slope/qnorm.cpp
+    a = [-3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2,
+         1.383577518672690e2, -3.066479806614716e1, 2.506628277459239]
+    b = [-5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2,
+         6.680131188771972e1, -1.328068155288572e1, 1.]
+    c = [-7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838,
+         -2.549732539343734, 4.374664141464968, 2.938163982698783]
+    d = [7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996, 3.754408661907416, 1.]
+    q = np.sqrt(-2*np.log1p(-prob))
+    tail = -np.polyval(c, q)/np.polyval(d, q)
+    q = prob-.5
+    central = np.polyval(a, q*q)*q/np.polyval(b, q*q)
+    return np.where(prob > 1-.02425, tail, central)
+
 def read_array(f, dtype, count):
     a = np.fromfile(f, dtype=dtype, count=count)
     if len(a) != count:
@@ -47,6 +63,12 @@ def fits(path):
 def weights(p, n, sigma, intercept, rule):
     # Independent SciPy quantiles and recurrence, with one-based indexing.
     a = -ndtri(.1*np.arange(1, p+1)/(2*p))
+    if rule == 'R-native':
+        approx = r_quantile(1-.1*np.arange(1, p+1)/(2*p))
+        # Also compare the independent accurate quantile, with an explicitly
+        # bounded approximation difference, before applying the recurrence.
+        np.testing.assert_allclose(approx, a, rtol=5e-9, atol=1e-14)
+        a = approx
     if rule != 'bh':
         m = n-int(intercept)
         total = 0.
@@ -110,7 +132,7 @@ def check(sc, shard):
     expected_hash = Path(str(input_path)+'.sha256').read_text().split()[0]
     assert hashlib.sha256(input_path.read_bytes()).hexdigest() == expected_hash
     engine_iters = {e: fits(ROOT/'fits'/f'{e}-sc{sc}-shard{shard}.bin') for e in ('native','julia','R')}
-    output = ROOT/'checks'/f'sc{sc}-shard{shard}'
+    output = ROOT/os.environ.get('HDM_CHECK_DIR', 'checks')/f'sc{sc}-shard{shard}'
     output.parent.mkdir(exist_ok=True)
     rows, pairs = [], []
     auto_equal = True

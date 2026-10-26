@@ -110,3 +110,55 @@ up to32CPU128GiB4h is the initial compute-as-needed plan, not a submission
 receipt. Expected raw inputs are several GiB in112 scenario/shard files, with
 bounded row-wise result/certificate outputs. Preserve frozen inputs and failed
 receipts; no routine refitting, large archive audit, cleanup or merge.
+
+## Harness details fixed after disjoint pilot, before the main gate
+
+Statistical pilot13455149 generated32 rep0 inputs and completed all48 backend
+processes. The initial checker correctly stopped on R-native weights: R2.1.1
+uses the rational normal-quantile approximation in its pinned `qnorm.cpp`,
+whereas SciPy uses a more accurate quantile. The observed relative difference
+was about1.2e-9. Recheck13455171 reused every fit and passed352 independent
+certificates and192 common-weight pairs. The checker now independently ports
+that pinned R rational formula at the original2e-12 weight tolerance, and also
+compares its quantiles to SciPy with an explicit5e-9 approximation bound. All
+three COMMON sequences retain their original2e-12 comparison, and every fit
+retains the full1e-7 certificate. No solver setting or cohort was adjusted.
+
+Runtime inputs use disjoint seeds109400000+1000000*case+10000*rep+dataset;
+pilot seeds109000000+10000*case+100*rep+dataset. Each has ten coefficients.4
+on the first ten columns, independent unit Gaussian noise and no intercept.
+The four case dimensions/data laws are unchanged. The same binary floating
+data are read by all backends; sparse cases are converted identically to sparse
+storage before each public timer. Column normalization happens once in shared
+input generation. No random column is regenerated to avoid an adverse result.
+
+Native public/prepared controls return identical complete solution/path fields;
+the prepared control caches data preprocessing only and is a benchmark helper,
+not an added production API. Actual full-call allocation differences and all
+complete fields are checked outside timers. Default probes use both the native
+tol1e-7 and max_iter10000; unscreened tight paths are separate. Comparators'
+unexposed convergence flags are recorded as unavailable, not inferred from a
+successful return. Independent certificates determine accuracy for all backends.
+The original pilot CSV comparator true flags meant successful API return;
+their independent certificates, rather than those flags, establish accuracy.
+
+Runtime CPU profiles repeat untimed warmed calls for sampling coverage. The
+pilot uses native allocation sample probability.02. Wide native paths allocate
+hundreds of MiB cumulatively, so the main probability is.001 to bound profile
+I/O and observer overhead; exact warmed-call allocated bytes remain in timers.
+Stack text is buffered before its file write to avoid one NFS write per frame.
+R CPU profiles and allocations>=16384 bytes are separate untimed calls. Whole
+worker RSS includes imports/JIT/warmups/checks/profiles and is not fitted-state
+memory. Public fit/path timers include complete returned results and exclude
+coefficient extraction, profiling and independent checks; R uses a high
+resolution wall clock in the main cohort. Weight construction is timed separately.
+
+Main statistical allocation:16CPU64GiB1h; runtime allocation:16CPU64GiB2h,
+at most32CPU128GiB together, under the user's compute-as-needed authorization.
+The main gate still requires runtime adapter/certificate pilot completion.
+The statistical summary uses pointwise Student-t Monte Carlo intervals over
+independent datasets. Runtime paired log-ratio intervals first average the
+three input log-ratios within each process replication, then use Student-t
+uncertainty over the seven process replications. Report interval assumptions,
+all accuracy failures, adverse paired ratios and uncertainty without outcome
+based changes to sequences, signal design, cutoff or solver settings.
