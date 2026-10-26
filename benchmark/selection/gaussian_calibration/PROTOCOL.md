@@ -175,3 +175,18 @@ and appends only missing timing rounds. The last active profile is regenerated
 because it has no completion proof. Buffered profile output and probability.001
 are observer changes; no fit tolerance, signal, sequence or timing row is
 replaced. This is a disjoint canary, excluded from main independent replication.
+
+Stopping diagnosis13455366 completed in16s on the same12 rep0 runtime inputs:
+36 tol1e-8/max100000 paths,720 independently certified points, zero backend
+nonconvergence and maximum independent residual9.99e-9. Some original native
+1e-9 paths instead reach the100000-iteration cap and warn, with multi-second
+costs and GiB cumulative allocation. These adverse records remain in v1/v3.
+Before ANY main generation, the native runtime comparison control is therefore
+changed to tol1e-8/max100000 for public/prepared/unscreened calls, matching the
+comparators' declared1e-8 controls at the unchanged independent1e-7 certificate.
+A fresh native adapter canary at that control reuses the12 inputs and all saved
+Julia/R comparator workers; it is a different stopping-setting sensitivity,
+not an additional independent cohort or a replacement of old timings. Native
+statistical single-fit settings remain1e-9/max100000 as already certified.
+Public production tol1e-7/max10000 and screening defaults remain unchanged.
+Main generation still waits on the corrected runtime adapter canary gate.

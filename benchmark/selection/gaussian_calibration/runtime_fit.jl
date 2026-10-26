@@ -27,12 +27,12 @@ function cached_native(c,X,Z,v,xb,yb,scales,w,a,payload)
     lambda,info=H._slope_calibration(p,c.n,T;lambda=w,calibration=:bh,q=.1,sigma=1,intercept=false,standardize_x=false)
     f=(one(T)/c.n)*H.LeastSquaresLoss(v,Z);g=PB.SLOPE(lambda)
     if payload=="fit"
-        r=PS.solve!(beta,f,g,PS.SLOPEAPG(;maxiter=100000,tol=1e-9))
+        r=PS.solve!(beta,f,g,PS.SLOPEAPG(;maxiter=100000,tol=1e-8))
         beta ./= scales;b0=yb-dot(xb,beta)
         return H.SLOPESolution(beta,b0,false,Vector(c.y .- b0 .- X*beta),lambda,
             r.iterations,r.converged,r.kkt_residual,info)
     end
-    r=PS.solve_path(f,g,a,PS.SLOPEAPG(;maxiter=100000,tol=1e-9);x=beta,screening=true)
+    r=PS.solve_path(f,g,a,PS.SLOPEAPG(;maxiter=100000,tol=1e-8);x=beta,screening=true)
     bs=[b./scales for b in r.solutions];b0=[yb-dot(xb,b) for b in bs]
     H.SLOPEPath(a,lambda,bs,b0,false,c.n,r.converged,r.iterations,r.kkt_residuals,r.working_sizes,r.kkt_repairs,info)
 end
@@ -71,13 +71,13 @@ open(out*".bin",mode) do dst
         amax=maximum(cumsum(sort(abs.(X'*c.y/c.n);rev=true))./cumsum(w))
         factors=payload=="fit" ? [1.] : collect(exp.(range(log(amax),log(.2amax);length=20)))
         if engine=="native"
-          public=payload=="fit" ? (() -> H.slope(X,c.y,w;tol=1e-9,max_iter=100000)) :
-            (() -> H.SLOPEPath(X,c.y,factors;lambda=w,tol=1e-9,max_iter=100000))
+          public=payload=="fit" ? (() -> H.slope(X,c.y,w;tol=1e-8,max_iter=100000)) :
+            (() -> H.SLOPEPath(X,c.y,factors;lambda=w,tol=1e-8,max_iter=100000))
           prepared=() -> cached_native(c,X,Z,v,xb,yb,scales,w,factors,payload)
           default=payload=="fit" ? (() -> H.slope(X,c.y,w)) : (() -> H.SLOPEPath(X,c.y,factors;lambda=w))
           calls=[("public",public),("prepared",prepared),("default",default)]
           if payload=="path"
-            push!(calls,("unscreened",() -> H.SLOPEPath(X,c.y,factors;lambda=w,tol=1e-9,max_iter=100000,screening=false)))
+            push!(calls,("unscreened",() -> H.SLOPEPath(X,c.y,factors;lambda=w,tol=1e-8,max_iter=100000,screening=false)))
           end
           if !((c.seed,METHODS[j],payload) in existing_witness)
             za=public();zb=prepared();equal=output_equal(za,zb,payload)
