@@ -44,4 +44,4 @@ if mode=="optional"
   metadata["Knockoffs"]=string(pkgversion(backend))
   metadata["backend_utilities_sha256"]=bytes2hex(sha256(read(joinpath(dirname(pathof(backend)),"utilities.jl"))))
 end
-open(io->TOML.print(io,metadata),joinpath(root,"results","$mode-$version.toml"),"w")
+open(io->TOML.print(io,metadata),joinpath(root,"canary-v2-results","$mode-$version.toml"),"w")
