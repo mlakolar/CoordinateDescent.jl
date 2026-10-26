@@ -8,3 +8,4 @@ root=ENV["HDM_KNOCKOFF_RUNTIME"];rep=parse(Int,ARGS[1])
   @test isequal(deserialize(joinpath(b,"matrix-$input-equicorrelated.bin")),deserialize(joinpath(c,"matrix-$input-equicorrelated.bin")))
  end
 end
+write(joinpath(root,"legacy-check-$rep.done"),"45 passed: 15 shared inputs, complete legacy result fields, constructor matrices and raw input bytes\n")

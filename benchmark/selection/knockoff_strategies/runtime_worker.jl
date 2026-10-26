@@ -95,7 +95,19 @@ open(joinpath(out,"timings.csv"),"w") do timings
      for round in 1:3
       GC.gc();result=@timed call();value=result.value
       valid=true;res=NaN
-      if payload=="filter"
+      if payload=="diagonal"
+       returned=variant=="baseline" ? value : value.s
+       valid=returned==diagonal
+       H._knockoff_parameters(S,returned) # original joint/conditional feasibility
+      elseif payload=="raw-optimizer"
+       a=value./diag(S);scales=sqrt.(diag(S));R=S./(scales*scales')
+       G=Symmetric([R R-Diagonal(a);R-Diagonal(a) R]);Q=cholesky(G)\Matrix{Float64}(I,2p,2p)
+       P=strategy===:mvr ? Q*Q : Q
+       gradient=2diag(@view P[1:p,p+1:2p]);terms=diag(P)
+       res=maximum(abs.(gradient)./max.(1.,terms[1:p].+terms[p+1:2p]))
+       H._knockoff_parameters(S,value)
+       valid=res<=1e-6
+      elseif payload=="filter"
        valid=isequal(fields(value),fields(warm));K=value.Xk;A=hcat(X,K)
        fit=H.lasso(A,y,.04;order=:cyclic,opt_tol=1e-9,max_iter=100000)
        b=Vector(fit.x);g=A'*(A*b-y)/n;v=b-g;prox=sign.(v).*max.(abs.(v).-.04,0)
