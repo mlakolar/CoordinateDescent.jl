@@ -1,0 +1,38 @@
+$by.self
+                self.time self.pct total.time total.pct
+".Fortran"           0.15       60       0.15        60
+"La.svd"             0.04       16       0.04        16
+"rrpack::rrr"        0.01        4       0.24        96
+"ifelse"             0.01        4       0.02         8
+"%*%"                0.01        4       0.01         4
+"aperm.default"      0.01        4       0.01         4
+"sum"                0.01        4       0.01         4
+"which"              0.01        4       0.01         4
+
+$by.total
+                    total.time total.pct self.time self.pct
+"functions[[mode]]"       0.25       100      0.00        0
+"rrpack::rrr"             0.24        96      0.01        4
+"call_rrr"                0.24        96      0.00        0
+".Fortran"                0.15        60      0.15       60
+"qr.default"              0.11        44      0.00        0
+"qr"                      0.11        44      0.00        0
+"La.svd"                  0.04        16      0.04       16
+"svd"                     0.04        16      0.00        0
+"ifelse"                  0.02         8      0.01        4
+"qr.coef"                 0.02         8      0.00        0
+"qr.fitted"               0.02         8      0.00        0
+"%*%"                     0.01         4      0.01        4
+"aperm.default"           0.01         4      0.01        4
+"sum"                     0.01         4      0.01        4
+"which"                   0.01         4      0.01        4
+"aperm"                   0.01         4      0.00        0
+"prepare"                 0.01         4      0.00        0
+"sweep"                   0.01         4      0.00        0
+
+$sample.interval
+[1] 0.01
+
+$sampling.time
+[1] 0.25
+

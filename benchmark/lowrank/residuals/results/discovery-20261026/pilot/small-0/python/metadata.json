@@ -1,0 +1,38 @@
+{
+  "variant": "python",
+  "case": "small",
+  "rep": 0,
+  "python": "3.11.9 (main, Jun  4 2024, 14:22:24) [GCC 13.3.0]",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "threadpools": [
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home1/mkolar/juliaPkg/runs/20261025-cd81-optcomp/venv/lib/python3.11/site-packages/scipy.libs/libscipy_openblas-6cdc3b4a.so",
+      "version": "0.3.30",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home1/mkolar/juliaPkg/runs/20261025-cd81-optcomp/venv/lib/python3.11/site-packages/numpy.libs/libscipy_openblas64_-32a4b2a6.so",
+      "version": "0.3.31.188.0",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    }
+  ],
+  "warmed_current_rss": 63062016,
+  "warmed_peak_rss": 63062016,
+  "X_sha256": "36ca029444a981d02d38146254a82a2b947aaa6dd146b08a92245c3bedeecf5e",
+  "Y_sha256": "e887371655c6a392b7cf412a498408550183790e3e5ea5346970e98f29e30719",
+  "source_sha256": "e58a065c2affcf23bdbe35a57e04adbdf61c4473656e7d8403a4afdefb389e4a",
+  "peak_after_timing": 63787008,
+  "current_after_timing": 63787008,
+  "whole_worker_peak_rss": 63787008
+}
