@@ -56,6 +56,9 @@ using Random, LinearAlgebra, Statistics, SparseArrays
   @test coef(hc3) ≈ coef(r)
   @test hc3.influence ≈ direct atol=1e-10
   @test vcov(hc3) ≈ direct'direct / size(X,1)^2 atol=1e-10
+  hc1_32 = HighDimensionalModels._inference_influence(Float32.(X),Float32.(r.residuals),
+    Float32.(P.scores),Float32.(r.initial),true,1f0,:hc1)
+  @test eltype(hc1_32) == Float32
   @test_throws ArgumentError debiased_lasso(X,y,.1; robust=false,variance=:hc3)
   @test_throws ArgumentError debiased_lasso(X,y,.1; variance=:unknown)
   @test_throws ArgumentError debiased_lasso(X,Float64.(y .> median(y)),.1;family=:binomial,variance=:hc3)

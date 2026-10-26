@@ -420,7 +420,8 @@ function _inference_influence(A, residuals, scores, beta, intercept, sd, varianc
     k = size(M, 2)
     k < n && rank(M) == k || throw(ArgumentError("HC variance needs a full-rank initial selected design with residual degrees of freedom"))
     if variance == :hc1
-      adjusted = residuals .* sqrt(n / (n - k))
+      T = eltype(A)
+      adjusted = residuals .* sqrt(T(n) / T(n - k))
     else
       h = k == 0 ? zeros(eltype(A), n) : vec(sum(abs2, Matrix(qr(M).Q)[:, 1:k]; dims=2))
       all(x -> 0 <= x < 1 - 1e-8, h) || throw(ArgumentError("HC variance needs leverages below one"))
