@@ -186,3 +186,5 @@ end
     @test isinf(lowrank_ic(tied; df = :exact))
   end
 end
+
+include("lowrank_panoc_costs.jl")
