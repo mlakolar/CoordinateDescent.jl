@@ -28,3 +28,11 @@ Primary command `sbatch --parsable main-v1/full_main.sbatch`; R follow-up
 `sbatch --parsable r-tol-v1/run.sbatch`. The checked-in harness/README describes
 staging names; source and environment snapshots remain in that run. No local
 Julia computation, no merge, and no automatic cleanup were performed.
+
+Large JSON reports are stored as lossless `.json.gz` files to keep their
+certificate/profile arrays out of the review diff. Decompress with `gzip -dc`
+or a standard gzip reader. Compression was checked byte-for-byte; it changes
+no numerical value. Full uncompressed records also remain inside each reporting
+delivery and on Discovery. R-follow-up tables that contain only reused Julia
+results are kept in the primary directory; their exact duplicated forms remain
+in the follow-up delivery. Its new R comparisons and final decision stay plain.
