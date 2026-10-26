@@ -87,3 +87,22 @@ jobs:
       - uses: julia-actions/cache@v3
       - run: julia scripts/instantiate.jl examples
       - run: julia --project=examples examples/run_all.jl
+  knockoff-extension:
+    name: Knockoffs extension - Julia ${{ matrix.version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['lts', '1']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: ${{ matrix.version }}
+      - uses: julia-actions/cache@v3
+      - name: Test the optional diagonal optimizer and native sampling
+        run: julia --color=yes scripts/test_knockoff_extension.jl
+        env:
+          JULIA_NUM_THREADS: '1'
+          OPENBLAS_NUM_THREADS: '1'
