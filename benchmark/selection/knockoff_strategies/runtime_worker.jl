@@ -48,6 +48,10 @@ open(joinpath(out,"timings.csv"),"w") do timings
    open(joinpath(out,"input-$input.bin"),"w") do io
     write(io,Int64[n,p,seed]);write(io,X);write(io,y);write(io,Z);write(io,S)
    end
+   F=fixed ? X./sqrt.(sum(abs2,X;dims=1)) : nothing
+   if fixed
+    open(joinpath(out,"unitnorm-$input.bin"),"w") do io;write(io,F);end
+   end
    for index in circshift(collect(eachindex(strategies)),mod(rep+input,length(strategies)))
     strategy=strategies[index]
     diagonal=variant=="baseline" ? H.equicorrelated_s(S) : H.knockoff_diagonal(S;strategy).s
@@ -69,6 +73,10 @@ open(joinpath(out,"timings.csv"),"w") do timings
       (() -> H.knockoff_filter(X,y,.04;mu,Sigma=S,strategy,rng=Xoshiro(seed+7000),order=:cyclic,opt_tol=1e-9,max_iter=100000))
     end
     payloads=Any[("diagonal",factory),("sampling",sampling),("construct",construct),("filter",filter)]
+    if fixed && strategy===:equicorrelated
+     unit_construct=variant=="baseline" ? (() -> H.fixed_knockoffs(F)) : (() -> H.fixed_knockoffs(F;strategy))
+     push!(payloads,("construct-unitnorm",unit_construct))
+    end
     fixed || push!(payloads,("construct-rng",rng_construct))
     if variant!="baseline" && strategy!==:equicorrelated
      direct=() -> KJ.solve_s(Symmetric(copy(S)),strategy;opts...)
@@ -93,6 +101,9 @@ open(joinpath(out,"timings.csv"),"w") do timings
        b=Vector(fit.x);g=A'*(A*b-y)/n;v=b-g;prox=sign.(v).*max.(abs.(v).-.04,0)
        res=norm(b-prox,Inf)/max(1,norm(A'y/n,Inf));valid &= res<=1e-7
        W=abs.(b[1:p])-abs.(b[p+1:2p]);valid &= W==value.W
+      elseif payload=="construct-unitnorm"
+       valid=value==warm && isapprox(value'value,F'F;rtol=1e-9,atol=1e-9)
+       valid &= isapprox(F'value,F'F-Diagonal(H.equicorrelated_s(F'F));rtol=1e-9,atol=1e-9)
       elseif payload in ("sampling","construct","construct-rng")
        valid=value==warm
        if fixed
