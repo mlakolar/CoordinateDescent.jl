@@ -1,0 +1,8 @@
+{
+  "datasets": 20,
+  "linear_programs": 1000,
+  "successful_LPs": 1000,
+  "numerical_recession_witnesses": 196,
+  "native_uncertified_fixed_references": 3,
+  "uncertified_fixed_references_with_witness": 0
+}

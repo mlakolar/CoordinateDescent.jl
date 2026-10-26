@@ -1,0 +1,72 @@
+[
+  {
+    "case": "gaussian-benign",
+    "method": "gaussian_default_hc3",
+    "valid": 1000,
+    "planned": 1000,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "gaussian_default_hc3",
+    "valid": 1000,
+    "planned": 1000,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "gaussian_default_hc3",
+    "valid": 1000,
+    "planned": 1000,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "gaussian_default_hc3",
+    "valid": 1000,
+    "planned": 1000,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero-target",
+    "method": "gaussian_default_hc3",
+    "valid": 1000,
+    "planned": 1000,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "gaussian_default_hc3",
+    "valid": 1000,
+    "planned": 1000,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "gaussian_default_hc3",
+    "valid": 1000,
+    "planned": 1000,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "gaussian_default_hc3",
+    "valid": 1000,
+    "planned": 1000,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "gaussian_default_hc3",
+    "valid": 1000,
+    "planned": 1000,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "gaussian_default_hc3",
+    "valid": 1000,
+    "planned": 1000,
+    "missing_or_invalid": 0
+  }
+]

@@ -57,3 +57,64 @@ A further primary-source lead is Liu, Zhang and Zhou, *Double/debiased machine l
 A third-party implementation is https://github.com/sdamerdji/logistic_dml. Its ownership is distinct from the paper authors and its README contains a placeholder license. It is a code-inspection lead, not an independently certified author reference or code to copy into this package without resolving provenance/licensing. A second primary lead is Vazquez and Nan, *Debiased lasso after sample splitting for estimation and inference in high-dimensional generalized linear models*: https://pmc.ncbi.nlm.nih.gov/articles/PMC12128611/ (full text was temporarily blocked during this lookup). Investigate selected-submodel refined debiasing and repeated splits with the original estimand preserved; do not substitute ATE inference.
 
 Gaussian update: the frozen CV-min/restricted-LDPE/HC3 recipe passed its pooled prospective gate on500fresh datasets in each of ten designs, with zero fit failures. The package automatic Gaussian API reproduces20validation datasets exactly. See results/discovery-20261026-gaussian-confirmation500 for target-role flags, conservative coverage, low correlated-design power and resource receipts. Logistic and QP policies remain experimental. Separate family defaults are intentional.
+
+### Frozen Gaussian campaign, own policy arm
+
+The independent 1,000-per-design arm is complete: 10,000 datasets and 100,000
+marginal intervals, zero fit errors. See
+[the campaign report](results/discovery-20261026-gaussian-campaign1000/RESULTS.md).
+Pooled active coverage is 94.44–96.90%; null rejection is 2.64–4.24%. All ten
+prespecified pooled gates passed. The benign design's third active role has
+93.1% coverage (MCSE0.80 percentage points), with an unadjusted MC interval
+below95%. This role-level adverse result remains visible. It does not support
+claiming uniform nominal coverage. Correlated-case power is15.26%, with mean
+active interval length1.965. The model, variance policy and tuning were not
+changed after confirmation or this campaign.
+
+The expanded competitor comparison is still incomplete. A new canary uses
+exactly regenerated campaign inputs, checked against their original native
+Float64 SHA256 values, for Gaussian moderate/correlated/benign designs. It
+compares native hdi, EconML, sslasso, SIHR and hdm recipes, plus cold/warm calls
+to the new Julia Gaussian policy. This is an out-of-box pipeline comparison:
+hdi/EconML/sslasso infer all slopes; Julia/SIHR/hdm request ten targets. It is
+separate from the earlier matched-penalty, 500-row engine benchmark. A public
+API that cannot express restricted unpenalized projections and HC3 cannot be
+labeled an identical statistical recipe. Native convergence warnings and QP
+certificates must remain separate from finite returned intervals. The sslasso observer failed after writing native intervals; corrected observer
+bindings recovered the missing certificates. Original and recovered interval
+outputs match exactly. Failed native QP certificates remain visible.
+
+### Experimental calibrated logistic engine
+
+`calibration-loss.jl` defines the calibrated scalar loss through the existing
+GLM solver interfaces. It does not change a package default. Fixed-penalty
+checks compare native RCAL objective, KKT residuals, coefficients and predictors
+on twenty saved development datasets, with two penalties per dataset. Three
+native references were not certified; retain those failures. A second study
+compares actual target-specific calibrated CV losses and selected full fits
+on the same twenty datasets. This checks numerical compatibility and runtime,
+not inferential coverage. CV-level differences need investigation before
+substituting the solver in inference. The active native RCAL and DoubleML
+studies retain their original immutable sources.
+
+
+### Calibrated-loss feasibility finding
+
+Twenty saved datasets yielded1,000successful recession LPs and196 numerical
+negative-slope witnesses at actual calibration-CV levels. Three uncertified
+fixed-penalty RCAL fits did not have such a witness, so unboundedness does not
+explain every convergence problem. The original unguarded Julia path study was
+stopped after24minutes; it had18reported policy rows from nine datasets, with
+matching selected native indices, but large tail-CV discrepancies. Its failures
+and partial work are preserved.
+
+A new development variant rejects explicit unbounded-level witnesses and checks
+training KKT residuals at2e-5 before a fold contributes to CV. It passed an
+independent four-design/eight-policy numerical canary: all selected indices
+matched native RCAL, coefficient difference at most1.68e-5, objective difference
+1.05e-10 and Julia KKT residual below7e-8. A20-dataset expansion is running.
+This is not an inference coverage validation, author-code replication or
+logistic default promotion. The paper's HD experiment uses bootstrap intervals
+and larger n; the ongoing formula-based Wald adaptation remains distinct.
+The publisher's supplementary link currently returns its minimal article page;
+the advertised replication package has not been retrieved.

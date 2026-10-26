@@ -1,0 +1,34 @@
+{
+  "purpose": "Native/default Gaussian comparator arm for three prespecified core designs;not the complete ten-design defaults-and-matched competitor campaign",
+  "fitting_package": "Native R/Python existing pinned environments;Julia own arm already complete package-hc3-v1",
+  "case_names": [
+    "gaussian-moderate",
+    "gaussian-correlated",
+    "gaussian-benign"
+  ],
+  "datasets_per_case": 1000,
+  "methods": [
+    "hdi",
+    "EconML",
+    "sslasso",
+    "SIHR",
+    "hdm"
+  ],
+  "namespace": 92300000,
+  "reuse": "First20datasets/case native fits retained,including warnings and failed strict certificates; no statistical retuning after pilot",
+  "new_fits": 14700,
+  "targets": "Ten requested roles;hdi/EconML/sslasso compute all slopes (plus sslasso intercept in QP),SIHR/hdm ten pipelines",
+  "source_changes": "Observer lastM/G bindings fixed;native formulas/defaults unchanged;theta stored only first20,certificate rows retained for everyssl fit;SIHRstatusestracked",
+  "validation": "OwnGaussianpolicy500fresh/case pooled gatespassed before1000ownarm;own1000all10pooledgatespass with benignrole3 undercoverageflag. Native competitor outputs need not calibrate;preserve all.",
+  "data": "Exact own-arm923datasets;nativeFloat64 SHA256 checked before export;EconML rechecks column-major matrix and response hashes for everydataset",
+  "forecast": {
+    "consumed_cpu_hours": 141.9637132222222,
+    "planning_wall_hours_64cpu_50pct_margin": 3.4054155422251524,
+    "cpus": 64,
+    "memory_gib": 128,
+    "max_seconds": 18000,
+    "excludes": "Input generation,queue delay,analysis,sevenadditionaldesigns,new matched recipearms"
+  },
+  "storage": "Approximately4-6GB textinputs,18kinputfiles;~59knewresult/resourcefiles;no theta dumps beyondfirst20. Sitefilesystem currently91TBfree;per-userquota still governed bysitepolicy.",
+  "limitations": "Native convergence warnings may arise at unselectedCVlevels;strict warning rejection is conservative,not native model failure rate. Native ssLasso coarseQP certificatesfailed in40/60pilotfits. Its expanded intervals and pvalues are not dual. No logistic/QP default promotion;no automaticPRmerge."
+}

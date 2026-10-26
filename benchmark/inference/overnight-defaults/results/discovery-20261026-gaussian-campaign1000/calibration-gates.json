@@ -1,0 +1,82 @@
+[
+  {
+    "case": "gaussian-moderate",
+    "valid": 1000,
+    "planned": 1000,
+    "active_lower95_mc": 0.956055817567131,
+    "null_upper95_mc": 0.03134066050749109,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-correlated",
+    "valid": 1000,
+    "planned": 1000,
+    "active_lower95_mc": 0.9594942184660848,
+    "null_upper95_mc": 0.04823104638505295,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-benign",
+    "valid": 1000,
+    "planned": 1000,
+    "active_lower95_mc": 0.9375314738118051,
+    "null_upper95_mc": 0.04726622767561703,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-random",
+    "valid": 1000,
+    "planned": 1000,
+    "active_lower95_mc": 0.9641811005810681,
+    "null_upper95_mc": 0.03461608976958932,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-weak",
+    "valid": 1000,
+    "planned": 1000,
+    "active_lower95_mc": 0.952843414829953,
+    "null_upper95_mc": 0.045809796355069696,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-largen",
+    "valid": 1000,
+    "planned": 1000,
+    "active_lower95_mc": 0.9486091871932292,
+    "null_upper95_mc": 0.04817804926291461,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-independent",
+    "valid": 1000,
+    "planned": 1000,
+    "active_lower95_mc": 0.9592219770806921,
+    "null_upper95_mc": 0.030742082442348634,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-hetero",
+    "valid": 1000,
+    "planned": 1000,
+    "active_lower95_mc": 0.9610201505572873,
+    "null_upper95_mc": 0.042834768059054985,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-heavy",
+    "valid": 1000,
+    "planned": 1000,
+    "active_lower95_mc": 0.9555801957406662,
+    "null_upper95_mc": 0.040476712362413646,
+    "engineering_calibration_gate": true
+  },
+  {
+    "case": "gaussian-hetero-target",
+    "valid": 1000,
+    "planned": 1000,
+    "active_lower95_mc": 0.9612003377884937,
+    "null_upper95_mc": 0.04205567098164044,
+    "engineering_calibration_gate": true
+  }
+]

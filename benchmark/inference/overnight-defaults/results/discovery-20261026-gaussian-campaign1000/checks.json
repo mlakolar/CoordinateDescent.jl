@@ -1,0 +1,11 @@
+{
+  "stage": "campaign",
+  "planned_datasets": 10000,
+  "records": 100000,
+  "unique_records": 100000,
+  "missing_markers": [],
+  "fit_errors": 0,
+  "finite_records": true,
+  "max_noise_ratio": 1.499999649651281,
+  "max_leverage_trace_error": 2.842170943040401e-14
+}

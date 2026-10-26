@@ -1,0 +1,28 @@
+{
+  "three_core_native_methods": {
+    "datasets_per_case": 1000,
+    "cases": 3,
+    "tasks_per_dataset": 5,
+    "consumed_cpu_hours": 141.9637132222222,
+    "summed_process_hours": 145.2977298016065,
+    "ideal_process_wall_hours64cpu": 2.2702770281501015,
+    "planning_process_wall_hours64cpu_50pct_margin": 3.4054155422251524,
+    "cpus": 64,
+    "memory_gib": 128,
+    "max_observed_worker_rss_gib": 0.7496414184570312,
+    "note": "Conditional extrapolation from20datasets/case, excludes queue delay, future input generation, analysis and extra designs. Native tasks infer different numbers of slopes. Includes each measured process warmup. Expanded ten-design and matched-statistical campaigns are not forecast here."
+  },
+  "three_core_exact_seven_timing_tasks": {
+    "datasets_per_case": 1000,
+    "cases": 3,
+    "tasks_per_dataset": 7,
+    "consumed_cpu_hours": 193.17519991666668,
+    "summed_process_hours": 197.25300595925526,
+    "ideal_process_wall_hours64cpu": 3.0820782181133635,
+    "planning_process_wall_hours64cpu_50pct_margin": 4.623117327170045,
+    "cpus": 64,
+    "memory_gib": 128,
+    "max_observed_worker_rss_gib": 0.9223251342773438,
+    "note": "Conditional extrapolation from20datasets/case, excludes queue delay, future input generation, analysis and extra designs. Native tasks infer different numbers of slopes. Includes each measured process warmup. Expanded ten-design and matched-statistical campaigns are not forecast here."
+  }
+}

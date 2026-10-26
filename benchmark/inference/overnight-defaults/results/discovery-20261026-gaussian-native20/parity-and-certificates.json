@@ -1,0 +1,9 @@
+{
+  "own_benchmark_rows": 1200,
+  "max_own_campaign_difference": 0.0,
+  "sslasso_recovered_pairs": 60,
+  "max_sslasso_native_output_difference": 0.0,
+  "native_sslasso_qp_fits": 60,
+  "native_sslasso_all_rows_certified_fits": 20,
+  "note": "Observer recovery preserves native interval outputs; failed strict QP certificates are retained and not relabeled optimal."
+}

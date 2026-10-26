@@ -1,0 +1,27 @@
+{
+  "unadjusted_role_flags": [
+    {
+      "case": "gaussian-benign",
+      "method": "gaussian_default_hc3",
+      "target_slot": 3,
+      "target_column": "3",
+      "truth": "0.5",
+      "valid_datasets": 1000,
+      "planned_datasets": 1000,
+      "coverage": 0.931,
+      "coverage_mcse": 0.008018934050315124,
+      "rejection": 1.0,
+      "rejection_mcse": 0.0,
+      "length": 0.2210218279907337,
+      "length_mcse": 0.00040563609022688224,
+      "signed_z": 0.07452907575205826,
+      "signed_z_mcse": 0.03270259584851791,
+      "coverage_lower95_mc": 0.9152831780669806,
+      "rejection_upper95_mc": 1.0
+    }
+  ],
+  "role_coverage_range": [
+    0.931,
+    0.977
+  ]
+}
