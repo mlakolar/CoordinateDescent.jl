@@ -16,7 +16,7 @@ native equicorrelation, the MVR adapter, and the maximum-entropy adapter.
 The native filter performs no intercept fitting or column standardization.
 Changing the lasso statistic or selecting its penalty from y is outside this
 comparison. Main fitting controls are fixed after a separate pilot certificate
-gate and before any main inputs are generated. The independent Float64 relative
+gate and before any main inputs are generated (native cyclic order,tol1e-9,max100000; R glmnet5.1 thresh1e-16,max1000000, after pilot calibration). The independent Float64 relative
 proximal fixed-point residual must be <=1e-7; a backend convergence flag alone
 is insufficient. Failed constructions/fits remain explicit outcomes.
 
