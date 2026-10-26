@@ -1,8 +1,18 @@
 args<-commandArgs(TRUE);case<-as.integer(args[1]);rep<-as.integer(args[2]);root<-Sys.getenv('HDM_KNOCKOFF_RUNTIME')
-inputdir<-file.path(root,paste0('candidate-case-',case,'-rep-',rep));out<-file.path(root,paste0('R-case-',case,'-rep-',rep))
+prefix<-Sys.getenv('HDM_R_RUNTIME_PREFIX','R')
+inputdir<-file.path(root,paste0('candidate-case-',case,'-rep-',rep));out<-file.path(root,paste0(prefix,'-case-',case,'-rep-',rep))
 stopifnot(!dir.exists(out));dir.create(out)
 library(knockoff);stopifnot(as.character(packageVersion('knockoff'))=='0.3.6')
 readi64<-function(con,n){bytes<-readBin(con,'raw',8*n);stopifnot(length(bytes)==8*n);vapply(seq_len(n),function(i)sum(as.integer(bytes[(8*i-7):(8*i)])*256^(0:7)),numeric(1))}
+for(name in c('create_equicorrelated','normc'))writeLines(deparse(getFromNamespace(name,'knockoff')),file.path(out,paste0(name,'-source.txt')))
+fixed_check<-function(F,K){
+ G<-crossprod(F);delta<-G-crossprod(F,K);d<-diag(delta);ratio<-d/diag(G)
+ gram<-max(abs(crossprod(K)-G));cross<-max(abs(delta-diag(d)));constant<-max(abs(ratio-mean(ratio)))
+ minimum<-min(eigen(2*G-diag(d),symmetric=TRUE,only.values=TRUE)$values)
+ valid<-gram<1e-8&&cross<1e-8&&constant<1e-8&&min(d)> -1e-10&&minimum> -1e-8&&max(ratio)<=1+1e-8
+ list(valid=valid,gram=gram,cross=cross,diagonal=d,scalar=mean(ratio),joint_min=minimum,
+      solve_equi_difference=max(abs(d-knockoff::create.solve_equi(G))))
+}
 io<-file(file.path(out,'timings.csv'),'w');cat('case,rep,input,seed,payload,round,seconds\n',file=io)
 checks<-file(file.path(out,'checks.csv'),'w');cat('input,round,valid,gram_error,cross_error\n',file=checks)
 for(input in seq_len(3)){
@@ -37,16 +47,14 @@ for(input in seq_len(3)){
   seconds<-(proc.time()[['elapsed']]-start)/batch
   cat(paste(c(case,rep,input,seed,payload,round,seconds),collapse=','),'\n',file=io,sep='');flush(io)
   if(case==5){
-   K<-value$Xk;G<-crossprod(F);d<-knockoff::create.solve_equi(G)
-   gram<-max(abs(crossprod(K)-G));cross<-max(abs(crossprod(F,K)-(G-diag(d))));valid<-gram<1e-8&&cross<1e-8
+   audit<-fixed_check(F,value$Xk);gram<-audit$gram;cross<-audit$cross;valid<-audit$valid
+   write.csv(data.frame(scalar=audit$scalar,joint_min=audit$joint_min,solve_equi_difference=audit$solve_equi_difference),file.path(out,paste0('diagonal-',input,'-',round,'.csv')),row.names=FALSE)
   }else{gram<-NA;cross<-NA;valid<-all(is.finite(value))}
   cat(paste(c(input,round,valid,gram,cross),collapse=','),'\n',file=checks,sep='');flush(checks);stopifnot(valid)
 
  }
  if(case==5){
-  K<-warm$Xk;G<-crossprod(F);d<-knockoff::create.solve_equi(G)
-  gram<-max(abs(crossprod(K)-G));cross<-max(abs(crossprod(F,K)-(G-diag(d))))
-  valid<-gram<1e-8&&cross<1e-8
+  audit<-fixed_check(F,warm$Xk);gram<-audit$gram;cross<-audit$cross;valid<-audit$valid
  }else{gram<-NA;cross<-NA;valid<-all(is.finite(warm))}
  cat(paste(c(input,0,valid,gram,cross),collapse=','),'\n',file=checks,sep='');flush(checks);stopifnot(valid)
 }
