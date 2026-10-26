@@ -1,0 +1,5 @@
+# Prospective partialled-QP score confirmation
+
+Freeze before new inputs. Primary: CVmin regularized initializer, four X-only partialled controls, certified adaptiveQP universal*.8^(0:10),5000passes,opt_tol1e-8, fully solved target/intercept Gaussian moments, selected-initial-design HC3 root-residual sandwich. Conventional one-step HC3 is a prespecified secondary. Certificates belong to the residualized QP, not original JMconstraints. No expert refit candidate is selected from confirmation. Development100/case showed CVmin/full-score active coverage94.2–97.6% across ten designs; CV1SE/refit and conventional one-step failures remain retained.
+
+Use500fresh datasets per ten designs, disjoint Julia seed1300000000+original physical row*10000+rep. Primary pooled gate:>=99%complete,active lower95%dataset-MC bound>=92.5%,null rejection upper95%MC bound<=7.5%;review roles/power/length. No retuning against confirmation. This experimental method is not yet a production API/default, and no1000repQPcampaign is authorized by this screen alone.

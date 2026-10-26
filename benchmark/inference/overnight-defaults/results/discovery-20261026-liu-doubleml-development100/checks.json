@@ -1,0 +1,8 @@
+{
+  "planned_target_fits": 400,
+  "finite_target_records": 400,
+  "unique_records": 400,
+  "target_errors": 0,
+  "warning_entries": 30000,
+  "note": "Selected development expansion of favorable n1000,p201 regime; not fresh validation, not all-regime eligibility."
+}
