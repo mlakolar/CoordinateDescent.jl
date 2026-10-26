@@ -162,3 +162,13 @@ three input log-ratios within each process replication, then use Student-t
 uncertainty over the seven process replications. Report interval assumptions,
 all accuracy failures, adverse paired ratios and uncertainty without outcome
 based changes to sequences, signal design, cutoff or solver settings.
+
+Runtime pilot13455206 was stopped after12m17s because unbuffered native
+allocation-stack writes dominated the allocation. All Julia/R and native
+sparse workers completed; native dense/wide/correlated workers were partial.
+Stage recovery keeps the original directory immutable, reuses complete workers
+and provably closed profiles, preserves every paired binary/CSV timing row,
+and appends only missing timing rounds. The last active profile is regenerated
+because it has no completion proof. Buffered profile output and probability.001
+are observer changes; no fit tolerance, signal, sequence or timing row is
+replaced. This is a disjoint canary, excluded from main independent replication.
