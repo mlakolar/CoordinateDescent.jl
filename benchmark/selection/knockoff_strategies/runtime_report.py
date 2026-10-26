@@ -6,6 +6,7 @@ import numpy as np
 import tomllib
 
 root=Path(os.environ['HDM_KNOCKOFF_RUNTIME']);reps=[int(x) for x in sys.argv[1].split(',')]
+assert reps==list(range(1,8)), 'the main report requires exactly seven nonpilot process replications'
 case_names={1:'iid n600 p200',2:'AR(.4) n600 p200',3:'AR(.8) n400 p400',4:'wide AR(.4) n200 p600',5:'fixed AR(.4) n600 p200'}
 rows=[];checks=[];metadata=[];resources=[];profiles=[];rrows=[];rchecks=[];roots=[];source_hashes={}
 for rep in reps:
