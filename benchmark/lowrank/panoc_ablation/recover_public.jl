@@ -4,14 +4,15 @@ a=vec(readdlm(joinpath(folder,"dims.txt")));n,p,q=Int.(a[1:3]);λ=.1a[4]
 readarr(name,dims...)=open(f->reshape(read!(f,Vector{Float64}(undef,prod(dims))),dims...),joinpath(folder,name*".bin"))
 X,Y=readarr("X",n,p),readarr("Y",n,q)
 fit()=controlled(X,Y,λ,config)
-fit();z=nothing
+fit();result=Ref{Any}(nothing)
 open(joinpath(out,"timings.csv"),"w") do io
  println(io,"case,config,mode,round,seconds,bytes,iterations,converged")
  for rd in 1:3
-  GC.gc();tm=@timed fit();z=tm.value
+  GC.gc();tm=@timed fit();z=tm.value;result[]=z
   println(io,join((case,config,"public",rd,tm.time,tm.bytes,z.iterations,z.converged),','));flush(io)
  end
 end
+z=result[]
 @assert z.converged
 old=open(f->reshape(read!(f,Vector{Float64}(undef,p*q)),p,q),joinpath("results/pilot-v1",case,"$config-public.bin"))
 @assert z.B==old
