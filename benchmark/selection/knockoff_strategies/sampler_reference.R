@@ -6,7 +6,7 @@ for(name in c('create.gaussian','create.fixed','create.solve_equi')) {
 }
 for(case in seq_len(16)) {
  out<-file.path(root,paste0('case-',case));dir.create(out,recursive=TRUE,showWarnings=FALSE)
- S<-as.matrix(read.csv(file.path(base,'objective-suite-v1',paste0('case-',case),'covariance.csv'),header=FALSE));p<-nrow(S)
+ S<-unname(as.matrix(read.csv(file.path(base,'objective-suite-v1',paste0('case-',case),'covariance.csv'),header=FALSE)));p<-nrow(S)
  set.seed(106100+case);Z<-matrix(rnorm(p*p),p,p)
  set.seed(106100+case);K0<-knockoff::create.gaussian(matrix(0,p,p),rep(0,p),S,method='equi')
  set.seed(106100+case);K1<-knockoff::create.gaussian(diag(p),rep(0,p),S,method='equi')
