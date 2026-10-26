@@ -21,3 +21,5 @@ export HDM_PARALLEL=/apps/spack/2406/apps/linux-rocky8-x86_64_v3/gcc-13.3.0/para
 unset PARALLEL
 "$HDM_PARALLEL" --jobs 8 --halt soon,fail=1 --joblog "$HDM_KNOCKOFF_STUDY/generation-fit-joblog.tsv" --results "$HDM_KNOCKOFF_STUDY/fit-logs" srun --exclusive --exact -N1 -n1 -c1 --mem=3500M /home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$PWD/env-optional3-1.10" stat-v1-code/study_worker.jl ::: {1..16} ::: 0 ::: 2
 "$HDM_PARALLEL" --jobs 8 --halt soon,fail=1 --joblog "$HDM_KNOCKOFF_STUDY/check-joblog.tsv" --results "$HDM_KNOCKOFF_STUDY/check-logs" srun --exclusive --exact -N1 -n1 -c1 --mem=3500M /home1/mkolar/juliaPkg/runs/20261025-cd81-optcomp/venv/bin/python stat-v1-code/study_check.py ::: {1..16} ::: 0 ::: 2
+export HDM_CONSTRUCTION_SUITE="$PWD/objective-suite-v1"
+srun --exclusive --exact -N1 -n1 -c1 --mem=3500M /home1/mkolar/juliaPkg/runs/20261025-cd81-optcomp/venv/bin/python stat-v1-code/objective_report.py
