@@ -1,0 +1,3 @@
+Read-only paired reporting canary13453541 completed0:0 in5s. It read30 existing rep0 processes and660 independent certificates; source/input provenance, saved public/cached result comparisons, counters and paired tables passed. No fits or primary timing repetitions were added. Main report13453673 is queued after main13451665.
+
+All numerical aggregation ran under Slurm on Discovery. These rep0 records test reporting only and are excluded from the independent evaluation cohort. The adjacent archive contains generated CSV/JSON/Markdown reporting receipts. Original workers, failures and immutable source snapshots remain in the run registry. No replicated adoption/default-change claim follows from this canary.
