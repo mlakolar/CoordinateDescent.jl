@@ -18,6 +18,79 @@ function slope_bh(p::Integer; q::Real=0.1, sigma::Real=1, n::Integer=1)
   [sigma / sqrt(n) * sqrt(2) * erfcinv(q * j / p) for j in 1:p]
 end
 
+"""
+    slope_gaussian(p; n, q=0.1, sigma=1, intercept=false)
+
+Gaussian-adjusted SLOPE weights for loss `‖y - β₀ - Xβ‖²/(2n)`.
+With `m = n - Int(intercept)` and `b = slope_bh(p; q)`, compute
+`a[1] = b[1]` and `a[i] = b[i]*sqrt(1 + sum(a[1:i-1].^2)/(m-i))`.
+At the first nondecrease or nonpositive denominator, keep the preceding
+weight for the remaining entries. Return `sigma/sqrt(n) * a`.
+
+This is the Gaussian-design approximation of Bogdan et al. (2015), equations
+(26)–(27), with an explicit first-nondecrease truncation and an intercept
+dimension adjustment. It is not a finite-sample FDR guarantee for correlated
+designs, estimated noise, or selected path levels. The design should have
+independent Gaussian columns scaled to mean square one. `m` must be positive;
+if `p > 1`, require `m ≥ 2`. Wide designs are supported by the documented
+flat-tail rule, without evaluating the recurrence at a pole.
+
+The denominator is `m-i` in one-based indexing. SLOPE.jl 1.3.1 instead uses
+`max(1, n-i-1)`; its Gaussian weights are a distinct convention.
+"""
+slope_gaussian(p::Integer; n::Integer, q::Real=0.1, sigma::Real=1, intercept::Bool=false) =
+  first(_slope_gaussian(p, n, q, sigma, intercept))
+
+function _slope_gaussian(p, n, q, sigma, intercept)
+  # Form dimensionless weights before sigma scaling, including when sigma=0.
+  a = slope_bh(p; q, sigma=1)
+  isfinite(sigma) && sigma >= 0 || throw(ArgumentError("sigma must be finite and nonnegative"))
+  m = n - Int(intercept)
+  m > 0 && (p == 1 || m >= 2) ||
+    throw(ArgumentError("Gaussian calibration needs n-intercept ≥ 2 when p > 1 (≥ 1 when p = 1)"))
+  all(isfinite, a) || throw(ArgumentError("q is too small for finite Gaussian weights at this dimension"))
+  total = zero(eltype(a))
+  flat_from, reason = nothing, :none
+  for i in 2:p
+    total += abs2(a[i-1])
+    denominator = m - i
+    if denominator <= 0
+      a[i:end] .= a[i-1]
+      flat_from, reason = i, :dimension_boundary
+      break
+    end
+    next = a[i] * sqrt(1 + total / denominator)
+    if !isfinite(next) || next >= a[i-1]
+      a[i:end] .= a[i-1]
+      flat_from, reason = i, :first_nondecrease
+      break
+    end
+    a[i] = next
+  end
+  a .*= sigma / sqrt(n)
+  all(isfinite, a) || throw(ArgumentError("sigma gives nonfinite Gaussian weights"))
+  a, flat_from, reason
+end
+
+function _slope_calibration(p, n, ::Type{T}; lambda, calibration, q, sigma, intercept, standardize_x) where {T}
+  calibration in (:bh, :gaussian, :user) || throw(ArgumentError("calibration must be :bh, :gaussian, or :user"))
+  if lambda !== nothing
+    info = (method=:user, requested=calibration, q=nothing, sigma=nothing,
+            noise=:user_weights, n, effective_n=n-Int(intercept),
+            flat_from=nothing, flatten_reason=:none, standardize_x)
+    return _slope_lambda(lambda, p, T), info
+  end
+  calibration == :user && throw(ArgumentError("calibration=:user requires explicit lambda weights"))
+  if calibration == :bh
+    weights, flat_from, reason = slope_bh(p; q, sigma, n), nothing, :none
+  else
+    weights, flat_from, reason = _slope_gaussian(p, n, q, sigma, intercept)
+  end
+  info = (method=calibration, requested=calibration, q, sigma, noise=:supplied_sigma,
+          n, effective_n=n-Int(intercept), flat_from, flatten_reason=reason, standardize_x)
+  _slope_lambda(weights, p, T), info
+end
+
 # A sparse standardized design, centered by a rank-one correction. Scaling
 # touches stored entries once; centering never fills the implicit zeros.
 struct _SLOPESparseDesign{T,I,C} <: AbstractMatrix{T}
@@ -137,7 +210,12 @@ struct SLOPESolution{T}
   iterations::Int
   converged::Bool
   kkt_residual::T
+  calibration::NamedTuple
 end
+
+# Preserve the pre-calibration positional result constructor.
+SLOPESolution(x, b0, hasintercept, residuals, lambda, iterations, converged, residual) =
+  SLOPESolution(x, b0, hasintercept, residuals, lambda, iterations, converged, residual, (method=:unspecified,))
 
 function _slope_options(max_iter, tol)
   max_iter >= 2 || throw(ArgumentError("max_iter must be at least 2"))
@@ -146,23 +224,28 @@ end
 
 """
     slope(X, y, lambda; intercept=false, standardize_x=false, max_iter=10000, tol=1e-7)
-    slope(X, y; q=0.1, sigma=1, kwargs...)
+    slope(X, y; lambda=nothing, calibration=:bh, q=0.1, sigma=1, kwargs...)
 
 Minimize `‖y - β₀ - Xβ‖²/(2n) + ∑ⱼ lambda[j]*|β|₍ⱼ₎` by accelerated
 proximal gradient. `lambda` must be nonincreasing and nonnegative. The second
-form uses [`slope_bh`](@ref) with `n=size(X,1)`. With `standardize_x`, the
+form uses [`slope_bh`](@ref) by default; `calibration=:gaussian` selects
+[`slope_gaussian`](@ref). Explicit `lambda` weights always take precedence
+over either automatic rule; `calibration=:user` requires such weights.
+`sol.calibration` records the rule, supplied sigma convention and truncation.
+With `standardize_x`, the
 penalty applies to the coefficients of columns scaled to mean square one;
 returned coefficients are on the input scale. An intercept centers X and y.
 The design is copied to floating-point storage. `SparseMatrixCSC` inputs stay
 sparse, including with centering and standardization. Failure of the full
 optimality check gives `converged=false` and a warning.
 """
-function slope(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, lambda::AbstractVector{<:Real};
+function slope(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real};
+               lambda=nothing, calibration::Symbol=:bh, q::Real=0.1, sigma::Real=1,
                intercept::Bool=false, standardize_x::Bool=false, max_iter::Integer=10000, tol::Real=1e-7)
   _slope_options(max_iter, tol)
   Z, v, xb, yb, scales = _slope_data(X, y, intercept, standardize_x)
   β = zeros(eltype(Z), size(Z, 2))
-  λ = _slope_lambda(lambda, length(β), eltype(β))
+  λ, info = _slope_calibration(length(β), length(v), eltype(β); lambda, calibration, q, sigma, intercept, standardize_x)
   f = (one(eltype(Z)) / length(v)) * LeastSquaresLoss(v, Z)
   r = ProximalSolvers.solve!(β, f, ProximalBase.SLOPE(λ),
     ProximalSolvers.SLOPEAPG(; maxiter=max_iter, tol))
@@ -170,19 +253,21 @@ function slope(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, lambda::Abs
   ok || @warn "SLOPE did not meet its full optimality tolerance" residual iterations=it
   β ./= scales
   β0 = yb - dot(xb, β)
-  SLOPESolution(β, β0, intercept, Vector(y .- β0 .- X * β), λ, it, ok, residual)
+  SLOPESolution(β, β0, intercept, Vector(y .- β0 .- X * β), λ, it, ok, residual, info)
 end
 
-slope(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}; q::Real=0.1, sigma::Real=1, kwargs...) =
-  slope(X, y, slope_bh(size(X, 2); q, sigma, n=size(X, 1)); kwargs...)
+slope(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, lambda::AbstractVector{<:Real}; kwargs...) =
+  slope(X, y; lambda, kwargs...)
 
 """
-    SLOPEPath(X, y, factors=nothing; lambda=nothing, q=0.1, sigma=1,
+    SLOPEPath(X, y, factors=nothing; lambda=nothing, calibration=:bh, q=0.1, sigma=1,
               nλ=50, λmin_ratio=0.01, screening=true, intercept=false,
               standardize_x=false, max_iter=10000, tol=1e-7)
 
 Warm-started SLOPE fits with penalties `factor * lambda`. `lambda` defaults
-to [`slope_bh`](@ref). Supply positive, nonincreasing `factors`, or a geometric
+to [`slope_bh`](@ref); `calibration=:gaussian` selects [`slope_gaussian`](@ref).
+Explicit weights always take precedence. `path.calibration` records the actual
+rule and any truncation. Supply positive, nonincreasing `factors`, or a geometric
 path from the smallest factor with a zero fit to `λmin_ratio` times it.
 `screening` uses the strong rule of Larsson, Bogdan and Wallin (2020), with
 full proximal KKT checks and repairs. `screening=false` fits every column.
@@ -204,16 +289,20 @@ struct SLOPEPath{T}
   kkt_residuals::Vector{T}
   working_sizes::Vector{Int}
   kkt_repairs::Vector{Int}
+  calibration::NamedTuple
 end
 
+SLOPEPath(a, lambda, bs, b0, intercept, nobs, converged, iterations, residuals, sizes, repairs) =
+  SLOPEPath(a, lambda, bs, b0, intercept, nobs, converged, iterations, residuals, sizes, repairs, (method=:unspecified,))
+
 function SLOPEPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, factors=nothing;
-                   lambda=nothing, q::Real=0.1, sigma::Real=1, nλ::Integer=50, λmin_ratio::Real=0.01,
+                   lambda=nothing, calibration::Symbol=:bh, q::Real=0.1, sigma::Real=1, nλ::Integer=50, λmin_ratio::Real=0.01,
                    screening::Bool=true, intercept::Bool=false, standardize_x::Bool=false,
                    max_iter::Integer=10000, tol::Real=1e-7)
   _slope_options(max_iter, tol)
   Z, v, xb, yb, scales = _slope_data(X, y, intercept, standardize_x)
   T, p = eltype(Z), size(Z, 2)
-  λ = _slope_lambda(lambda === nothing ? slope_bh(p; q, sigma, n=length(y)) : lambda, p, T)
+  λ, info = _slope_calibration(p, length(y), T; lambda, calibration, q, sigma, intercept, standardize_x)
   β = zeros(T, p)
   f = (one(T) / length(v)) * LeastSquaresLoss(v, Z)
   g = ProximalBase.SLOPE(λ)
@@ -234,7 +323,7 @@ function SLOPEPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, factors
   b0 = [yb - dot(xb, b) for b in bs]
   all(r.converged) || @warn "some SLOPE path levels did not meet the full optimality tolerance"
   SLOPEPath(a, λ, bs, b0, intercept, length(y), r.converged, r.iterations,
-    r.kkt_residuals, r.working_sizes, r.kkt_repairs)
+    r.kkt_residuals, r.working_sizes, r.kkt_repairs, info)
 end
 
 StatsAPI.coef(s::SLOPESolution) = s.hasintercept ? [s.intercept; s.x] : copy(s.x)

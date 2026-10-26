@@ -55,6 +55,50 @@ contains scalar multipliers of `path.lambda`. Convergence, working sizes,
 repairs, iterations and full residuals are retained per level. Fits that miss
 the requested tolerance return `converged=false` with a warning.
 
+### Explicit calibration
+
+BH remains the compatibility default. `slope_gaussian(p; n, q, sigma,
+intercept=false)` exposes a Gaussian-design adjustment; single fits and paths
+accept `calibration=:gaussian`. `calibration=:user` requires explicit `lambda`
+weights. Positional or keyword weights always take precedence over an automatic
+rule; q/sigma are then unused and recorded as `nothing`. Unknown selectors are
+rejected even with supplied weights. No noise estimator is introduced: automatic
+weights use the caller's `sigma` (default 1), without verifying that it is known.
+The `calibration` field records the actual rule, noise convention, dimensions,
+standardization and any flat tail. Existing coefficient accessors are unchanged.
+
+For Gaussian weights let ``m=n-1`` with an intercept and ``m=n`` otherwise, and
+let ``b_i=\Phi^{-1}(1-qi/(2p))``. The dimensionless recurrence is
+
+```math
+a_1=b_1,\qquad a_i=b_i\sqrt{1+\frac{\sum_{j<i}a_j^2}{m-i}}.
+```
+
+The implementation stops at the first nondecrease and repeats the preceding
+weight; it also stops before a nonpositive denominator. Final weights are
+``\sigma a_i/\sqrt n`` because the loss is divided by n even after centering.
+This explicitly defined flat tail supports p≥n without a pole. It requires
+m≥2 for p>1, or m≥1 for p=1. Sigma zero yields zero weights, but an automatic
+path still requires a nonzero base sequence; supply path factors explicitly
+when using zero weights. Weights are finite, nonnegative and nonincreasing.
+
+The recurrence follows [Bogdan et al. (2015), equations (26)–(27)](https://arxiv.org/html/1407.3824),
+with a first-nondecrease stopping rule and an explicit intercept dimension
+adjustment. It is motivated by independent Gaussian columns. Columns should
+have mean square one, either in the supplied data or through `standardize_x`;
+the penalty then acts on standardized coefficients and the returned coefficients
+remain on the input scale. Correlated designs, estimated sigma, and choosing a
+path level have no general finite-sample FDR guarantee from this adjustment.
+Here q specifies the sequence; it must not be read as a proven FDR bound for
+those settings. The orthogonal known-noise BH theorem stated above is separate.
+
+[SLOPE.jl 1.3.1](https://github.com/jolars/SLOPE.jl/blob/14d2192879c72180a0fb92c661c61a064eedf572/src/regweights.jl)
+uses denominator `max(1,n-i-1)` with one-based i and applies a running minimum
+after the raw recurrence. [R SLOPE 2.1.1](https://github.com/jolars/SLOPE/blob/243741cb1b4161398d757adfdddc0caa472b9303/src/slope/regularization_sequence.cpp)
+uses `max(1,n-i)` after converting its zero-based loop to one-based indexing.
+These conventions are intentionally compared separately from common-weight
+solver agreement; exact native-weight identity is not an acceptance condition.
+
 ## Knockoff+
 
 ```julia
