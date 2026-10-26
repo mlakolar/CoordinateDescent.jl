@@ -75,9 +75,59 @@ exchangeability. The filter deliberately requires explicit parameters.
 Gram identities ``\widetilde X^T\widetilde X=X^TX`` and
 ``X^T\widetilde X=X^TX-\operatorname{diag}(s)``. Columns may have arbitrary
 positive norms. Both constructions use an equicorrelated solution computed on
-the correlation scale; no SDP dependency is needed. A user-supplied feasible
-`s` is also accepted by the constructors. Semidefinite conditional covariances
+the correlation scale by default; no optimizer dependency is needed. A
+user-supplied feasible `s` is also accepted by the constructors and filter. Semidefinite conditional covariances
 use an eigenvalue square root, clipping only roundoff-sized negative values.
+
+### Diagonal construction choices
+
+```julia
+# Optional dependency: install Knockoffs separately, then load it explicitly.
+using Knockoffs
+plan = knockoff_diagonal(Sigma; strategy=:mvr)
+K = gaussian_knockoffs(X, mu, Sigma; s=plan.s, noise=Z)
+fit = knockoff_filter(X, y, 0.04; mu, Sigma, noise=Z, strategy=:maxent,
+    construction_options=(niter=1000, tol=1e-10, λmin=1e-10),
+    order=:cyclic, opt_tol=1e-9)
+fit.method, fit.construction.strategy, fit.construction.diagnostics
+```
+
+`method` identifies the model (`:gaussian`, `:fixed`, `:provided`); `strategy`
+identifies the diagonal (`:equicorrelated`, `:mvr`, `:maxent`, `:user`). Omitting
+strategy selects equicorrelation, or user construction when `s` is supplied.
+Explicit `:user` requires `s`; the other strategies reject a supplied `s`.
+Provided knockoffs reject strategy, diagonal, innovations and construction
+options. These conflicts are checked before fitting. Legacy Gaussian parameters
+unused by the fixed/provided routes remain accepted for compatibility.
+
+`construction_options` is a named tuple separate from lasso `CDOptions`.
+Equicorrelation accepts `safety`; user diagonals accept no optimizer options.
+Optimized construction accepts `niter`, `tol`, `λmin`, `robust`, `verbose`, and
+`optimality_tol`. MVR and maximum entropy require the optional Knockoffs.jl
+extension. It supplies only the established diagonal optimizer; Gaussian and
+fixed-X sampling stay native. Its MIT license and pinned validation source are
+recorded in the benchmark protocol. Loading the extension does not change the
+equicorrelated default or existing seeded sampling arithmetic.
+
+Optimized diagonals minimize reconstructability or maximize entropy on the
+correlation scale, then return Float32/Float64 covariance/Gram units. The actual
+rounded diagonal must pass the original, unperturbed objective's stationarity
+check and both native scale-relative feasibility checks. Backend iterate-change
+tolerance alone is insufficient. Failure raises an error without switching
+strategy or projecting an infeasible diagonal. The backend returns neither an
+actual iteration count nor a convergence status; diagnostics mark those fields
+unavailable and report independent stationarity separately. Optimizer controls
+are provisional until the Discovery evidence report is complete.
+
+`KnockoffDiagonal` owns its diagonal and metadata. Passing `s=plan.s` explicitly
+records user construction; it validates that vector against the supplied
+covariance and does not reuse cached factors. `KnockoffResult.construction`
+records the actual strategy, owned diagonal and diagnostics. The existing
+seven-argument result constructors remain available with unspecified metadata.
+
+An optimized diagonal does not repair a misspecified covariance, a statistic
+without swap antisymmetry, or a fixed-X procedure without sufficiency. The
+population-model assumptions and fixed-X restrictions above still apply.
 
 The statistic is ``W_j=|\widehat\beta_j|-|\widehat\beta_{p+j}|`` from the
 joint lasso on ``[X\ \widetilde X]``. The filter fits without an intercept or
@@ -159,6 +209,6 @@ checks the listed finite simulation designs; it does not prove a guarantee.
 
 ```@autodocs
 Modules = [HighDimensionalModels]
-Pages = ["src/slope.jl", "src/knockoffs.jl", "src/stability.jl"]
+Pages = ["src/slope.jl", "src/knockoff_construction.jl", "src/knockoffs.jl", "src/stability.jl"]
 Private = false
 ```
