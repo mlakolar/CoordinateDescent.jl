@@ -7,7 +7,7 @@ root=ENV["HDM_KNOCKOFF_RUNTIME"];out=joinpath(root,"$variant-case-$case-rep-$rep
 ispath(out) && error("immutable runtime worker exists");mkpath(out)
 specs=[(600,200,0.),(600,200,.4),(400,400,.8),(200,600,.4),(600,200,.4)]
 n,p,rho=specs[case];fixed=case==5;S0=[rho^abs(i-j) for i in 1:p,j in 1:p]
-strategies=variant=="baseline" ? (:equicorrelated,) : (:equicorrelated,:mvr,:maxent)
+strategies=(variant=="baseline" || get(ENV,"HDM_KNOCKOFF_ORDER_CHECK","0")=="1") ? (:equicorrelated,) : (:equicorrelated,:mvr,:maxent)
 opts=(;niter=1000,tol=1e-10,λmin=1e-10,robust=false,verbose=false)
 fields(z)=(z.selected,z.W,z.threshold,z.Xk,z.q,z.lambda,z.method)
 function profile_call(call,path)
@@ -126,7 +126,7 @@ open(joinpath(out,"timings.csv"),"w") do timings
       println(checks,join((input,strategy,payload,round,valid,res,0),','));flush(checks)
       valid || error("runtime correctness failed $strategy $payload")
      end
-     witness=profile_call(call,joinpath(out,"profile-$input-$strategy-$payload"))
+     witness=get(ENV,"HDM_KNOCKOFF_ORDER_CHECK","0")=="1" ? 0 : profile_call(call,joinpath(out,"profile-$input-$strategy-$payload"))
      println(checks,join((input,strategy,payload,0,true,NaN,witness),','));flush(checks)
     end
    end
