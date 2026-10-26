@@ -1,6 +1,6 @@
 using HighDimensionalModels,ProximalAlgorithms,LinearAlgebra,DelimitedFiles,TOML,SHA
 BLAS.set_num_threads(1)
-root="results/prototype-canary-v1";mkpath(root);records=Any[]
+root="results/prototype-canary-v2";mkpath(root);records=Any[]
 for case in ("small","medium","responses","wide","ill","deficient")
  folder=joinpath("inputs/pilot-v1",case);a=vec(readdlm(joinpath(folder,"dims.txt")));n,p,q=Int.(a[1:3]);lm=a[4]
  readarr(name,dims...)=open(f->reshape(read!(f,Vector{Float64}(undef,prod(dims))),dims...),joinpath(folder,name*".bin"))

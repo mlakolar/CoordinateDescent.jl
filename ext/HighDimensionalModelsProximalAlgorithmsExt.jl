@@ -76,7 +76,7 @@ function nuclear_panoc(d, g, λ, start; max_iter, tol)
   residual = d.Y - d.X * B
   singular = svdvals(B)
   cutoff = min(size(B)...) * eps(T) * first(singular)
-  coefficient_rank = count(>(cutoff), singular)
+  coefficient_rank = Base.count(>(cutoff), singular)
   objective = sum(abs2, residual)/(2size(d.X, 1)) + T(λ)*sum(singular)
   CD._lr_solution(d, B, λ, iterations, converged, objective, :nuclear;
     coefficient_rank, residual)

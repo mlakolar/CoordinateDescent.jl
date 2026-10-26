@@ -1,6 +1,6 @@
 import pathlib,json,tomllib,numpy as np
 from scipy import linalg as la
-root=pathlib.Path('results/prototype-canary-v1');s=tomllib.loads((root/'fits.toml').read_text());checks=[]
+root=pathlib.Path('results/prototype-canary-v2');s=tomllib.loads((root/'fits.toml').read_text());checks=[]
 for r in s['records']:
  folder=pathlib.Path('inputs/pilot-v1')/r['case'];m=json.loads((folder/'meta.json').read_text());n,p,q=(m[k] for k in ['n','p','q'])
  X=np.fromfile(folder/'X.bin',dtype='<f8').reshape((n,p),order='F');Y=np.fromfile(folder/'Y.bin',dtype='<f8').reshape((n,q),order='F');X-=X.mean(0);Y-=Y.mean(0)
