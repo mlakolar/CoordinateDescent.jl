@@ -99,6 +99,25 @@ uses `max(1,n-i)` after converting its zero-based loop to one-based indexing.
 These conventions are intentionally compared separately from common-weight
 solver agreement; exact native-weight identity is not an acceptance condition.
 
+### Evidence and settings
+
+The [Discovery evidence report](https://github.com/mlakolar/HighDimensionalModels.jl/blob/codex/issue107-gaussian-slope/benchmark/selection/gaussian_calibration/results/discovery-20261026/RESULTS.md)
+compares 1,008 independent datasets per scenario, with separate estimated-noise
+and covariance stress cases. At known sigma=1/q=0.1 in its iid alternating-sign
+example, Gaussian adjustment reduces mean FDP from 0.1818 to 0.0733 and power
+from 0.9464 to 0.8570. Correlated and wide alternating-sign examples still have
+FDR above 0.1 after adjustment. In the exactly orthogonal control it sacrifices
+power relative to BH. These results support an explicit Gaussian option and
+retaining BH as the default; they do not extend the orthogonal BH theorem.
+
+Retain `tol=1e-7`, `max_iter=10000` and `screening=true`. Independent checks
+passed every default probe on 84 fresh runtime inputs; screening improved the
+declared 20-level path comparisons. Stricter research tolerances can hit an
+iteration cap and are not automatically better defaults. The benchmark
+coefficient cutoff 1e-6 defines its reported selections, not a new package
+selection guarantee. `sigma=1` remains a supplied-scale convention: the package
+does not establish that it is the true noise level or estimate it from `std(y)`.
+
 ## Knockoff+
 
 ```julia
