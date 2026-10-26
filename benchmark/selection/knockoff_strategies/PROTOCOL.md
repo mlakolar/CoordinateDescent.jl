@@ -142,3 +142,26 @@ remain on Discovery while needed. No routine whole-run archive or cleanup.
 A completed scheduler job is not evidence that scientific acceptance passed.
 The PR remains draft until independent correctness, replicated evidence and
 all final-head hosted CI/docs checks pass. Never merge or enable auto-merge.
+
+## Runtime controls frozen after the developmental pilot
+
+Native runtime fitting uses cyclic order,opt_tol1e-9,max_iter100000. Raw
+optimizer controls equal the adapter defaults and every timed raw result is
+checked outside timing using the full2p joint inverse/gradient and original
+feasibility. Seven process replications are the independent timing units:
+within-input medians over three rounds, then paired medians over three inputs
+within each replication. Report the median of seven replication ratios and
+10,000 process-cluster bootstrap resamples (fixed seed106999000), with the
+replication range retained. Do not treat rounds as independent inputs.
+
+Public R Gaussian constructors include RNG setup/draw, matched to the native
+construct-rng payload; RNG algorithms differ by language. Fullfilter shared
+innovations/accuracy comparisons use the native pipeline and separate matched
+R glmnet fits, not the defective Knockoffs.jl full sampler. R fixed construction
+receives the same binary unit-norm design as the native construct-unitnorm
+payload. R uses an unshrunk equicorrelated SVD boundary construction, whereas
+native safety1e-8 retains its current interior policy; record this difference
+and verify each procedure's actual Gram identities/feasible diagonal. The R
+Gaussian helper default also differs slightly from native; actual maps and
+installed source hashes are retained. These are valid public construction
+comparisons, not claims of identical output matrices or identical defaults.
