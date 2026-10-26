@@ -157,7 +157,10 @@ Main statistical allocation:16CPU64GiB1h; runtime allocation:16CPU64GiB2h,
 at most32CPU128GiB together, under the user's compute-as-needed authorization.
 The main gate still requires runtime adapter/certificate pilot completion.
 The statistical summary uses pointwise Student-t Monte Carlo intervals over
-independent datasets. Runtime paired log-ratio intervals first average the
+independent datasets, supplemented by conservative Hoeffding bounds for bounded
+FDP and exact Clopper-Pearson binomial intervals for global-null FDR. These
+avoid interpreting an all-zero sample's zero estimated MCSE as certainty.
+Runtime paired log-ratio intervals first average the
 three input log-ratios within each process replication, then use Student-t
 uncertainty over the seven process replications. Report interval assumptions,
 all accuracy failures, adverse paired ratios and uncertainty without outcome

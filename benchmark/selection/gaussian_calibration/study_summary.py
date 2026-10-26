@@ -5,7 +5,7 @@ import json
 import os
 from pathlib import Path
 import numpy as np
-from scipy.stats import t
+from scipy.stats import t, beta
 
 ROOT=Path(os.environ['HDM_STUDY'])
 SCENARIOS=['iid-alt','iid-same','ar04-alt','ar04-same','ar08-alt','ar08-same',
@@ -41,6 +41,15 @@ def main():
                declared=len(rs),valid=len(valid),failed=len(rs)-len(valid))
         for metric in ('fdp','power','selected','false'):
             for k,v in estimate([float(r[metric]) for r in valid]).items():d[f'{metric}_{k}']=v
+        # Nondegenerate conservative bounds supplement approximate MC intervals,
+        # including all-zero FDP samples. Each FDP lies in [0,1].
+        radius=np.sqrt(np.log(40)/(2*len(valid))) if valid else None
+        d['fdp_hoeffding_lo']=max(0.,d['fdp_mean']-radius) if valid else None
+        d['fdp_hoeffding_hi']=min(1.,d['fdp_mean']+radius) if valid else None
+        events=sum(int(r['selected'])>0 for r in valid)
+        N=len(valid)
+        d['null_exact_lo']=(0. if events==0 else float(beta.ppf(.025,events,N-events+1))) if sc==11 and N else None
+        d['null_exact_hi']=(1. if events==N else float(beta.ppf(.975,events+1,N-events))) if sc==11 and N else None
         summary.append(d)
     differences=[]
     for sc in range(1,17):
@@ -68,7 +77,7 @@ def main():
       max_residual=max(float(r['residual']) for r in rows),common_weight_agreement=agreement,
       native_reported_nonconvergence=sum(r['reported_converged']=='false' for r in api),
       api_errors=sum(bool(r['error']) for r in api),
-      intervals='pointwise approximate Student-t Monte Carlo intervals over independent datasets; no multiple-comparison adjustment; null power undefined',
+      intervals='pointwise approximate Student-t Monte Carlo intervals over independent datasets; FDP also has conservative Hoeffding bounds and global null has exact binomial Clopper-Pearson bounds; no multiple-comparison adjustment; null power undefined',
       interpretation='FDR=mean FDP. Do not use empirical FDR<=q as a correctness gate outside the known-noise orthogonal theorem. Invalid fits excluded with explicit counts; no substitution of zeros.')
     if os.environ.get('HDM_GATE')=='main':
         assert len(receipts)==112 and len(paired)==16*1008*3 and len(rows)==16*1008*11
