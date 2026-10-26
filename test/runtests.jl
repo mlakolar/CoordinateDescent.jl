@@ -5,6 +5,7 @@ using Aqua
 tests = [
   "coordinate_descent",
   "selection",
+  "knockoff_construction",
   "slope_sparse",
   "selection_golden",
   "naming",

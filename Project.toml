@@ -15,11 +15,13 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 
 [weakdeps]
+Knockoffs = "878bf26d-0c49-448a-9df5-b057c815d613"
 HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
 ProximalAlgorithms = "140ffc9f-1907-541a-a177-7475e0a401e9"
 StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 
 [extensions]
+HighDimensionalModelsKnockoffsExt = "Knockoffs"
 HighDimensionalModelsHiGHSExt = "HiGHS"
 HighDimensionalModelsProximalAlgorithmsExt = "ProximalAlgorithms"
 HighDimensionalModelsStatsModelsExt = "StatsModels"
@@ -30,6 +32,7 @@ ProximalBase = {path = "../ProximalBase.jl"}
 ProximalSolvers = {path = "../ProximalOPT.jl"}
 
 [compat]
+Knockoffs = "3.1.4"
 HiGHS = "1"
 Aqua = "0.8"
 DelimitedFiles = "1"
