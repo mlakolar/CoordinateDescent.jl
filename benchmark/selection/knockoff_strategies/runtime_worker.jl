@@ -13,14 +13,19 @@ fields(z)=(z.selected,z.W,z.threshold,z.Xk,z.q,z.lambda,z.method)
 function profile_call(call,path)
  Profile.clear();Profile.@profile begin
   deadline=time()+.12;calls=0
-  while calls==0 || (calls<50 && time()<deadline);call();calls+=1;end
+  while calls==0 || (calls<10000 && time()<deadline);call();calls+=1;end
  end
  data=Profile.fetch()
  buffer=IOBuffer();println(buffer,"raw_stack_words=",length(data));Profile.print(buffer;format=:flat,sortedby=:count)
  write(path*"-cpu.txt",String(take!(buffer)))
  Profile.Allocs.clear();Profile.Allocs.@profile sample_rate=.005 call()
  allocations=Profile.Allocs.fetch().allocs
- buffer=IOBuffer();println(buffer,"sampled_allocations=",length(allocations))
+ sample_rate=.005
+ if isempty(allocations)
+  Profile.Allocs.clear();Profile.Allocs.@profile sample_rate=1.0 call()
+  allocations=Profile.Allocs.fetch().allocs;sample_rate=1.0
+ end
+ buffer=IOBuffer();println(buffer,"sampled_allocations=",length(allocations));println(buffer,"sample_rate=",sample_rate)
  for a in sort!(collect(allocations);by=x->x.size,rev=true)[1:min(10,length(allocations))]
   println(buffer,"bytes=",a.size," type=",a.type," stack=",a.stacktrace)
  end
