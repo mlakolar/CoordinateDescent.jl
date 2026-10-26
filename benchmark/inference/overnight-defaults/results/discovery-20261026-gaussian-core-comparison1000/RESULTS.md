@@ -23,7 +23,7 @@ EMPIRICAL. Same3000response datasets and ten primary statistical targets per dat
 |gaussian-benign|SIHR|1000/1000|92.88 ±0.39|4.96 ±0.32|100.00|0.1935|
 |gaussian-benign|hdm|1000/1000|93.90 ±0.36|5.26 ±0.32|100.00|0.1904|
 
-Native coverage is conditional on finite returned intervals, including warned/uncertified fits. Strict availability separately rejects exposed convergence warnings and requires native sslassoQPcertificates. Warnings can concern unselectedCVlevels; strict rejection is conservative,not a final-model failure theorem. Native outputs/formulas were not repaired. A failed certificate cannot be ignored because coverage looks favorable. All target-role/dataset records remain retained.
+Native coverage is conditional on finite returned intervals, including warned/uncertified fits. Strict availability separately rejects exposed convergence warnings and requires native sslassoQPcertificates. Warnings can concern unselectedCVlevels; strict rejection is conservative,not a final-model failure theorem. Native outputs/formulas were not repaired. Native sslasso adds a bias allowance to intervals; its native pvalues need not be dual to those expanded intervals. A failed certificate cannot be ignored because coverage looks favorable. All target-role/dataset records remain retained.
 
 The first analyzer had a planned-fit denominator typo from an earlier seven-task timing protocol. Native-only five methods x3designs x1000 =15000,all present. The original checks are retained beside corrected checks. No method was dropped.
 
