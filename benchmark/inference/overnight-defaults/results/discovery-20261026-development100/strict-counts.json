@@ -1,0 +1,1794 @@
+[
+  {
+    "case": "belloni-0",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0",
+    "method": "SIHR_alter",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0",
+    "method": "cvds_1se",
+    "valid": 99,
+    "planned": 100,
+    "missing_or_invalid": 1
+  },
+  {
+    "case": "belloni-0",
+    "method": "cvds_min",
+    "valid": 73,
+    "planned": 100,
+    "missing_or_invalid": 27
+  },
+  {
+    "case": "belloni-0",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "SIHR_alter",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "cvds_min",
+    "valid": 62,
+    "planned": 100,
+    "missing_or_invalid": 38
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "SIHR_alter",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "cvds_min",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "full_mle",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "xia_refined",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "xia_refined_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "SIHR_alter",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "cvds_1se",
+    "valid": 98,
+    "planned": 100,
+    "missing_or_invalid": 2
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "cvds_min",
+    "valid": 73,
+    "planned": 100,
+    "missing_or_invalid": 27
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "SIHR_alter",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "cvds_1se",
+    "valid": 94,
+    "planned": 100,
+    "missing_or_invalid": 6
+  },
+  {
+    "case": "binomial-independent",
+    "method": "cvds_min",
+    "valid": 44,
+    "planned": 100,
+    "missing_or_invalid": 56
+  },
+  {
+    "case": "binomial-independent",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "SIHR_alter",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "cvds_min",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "xia_refined",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "xia_refined_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "SIHR_alter",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "cvds_1se",
+    "valid": 99,
+    "planned": 100,
+    "missing_or_invalid": 1
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "cvds_min",
+    "valid": 67,
+    "planned": 100,
+    "missing_or_invalid": 33
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "SIHR_alter",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "cvds_1se",
+    "valid": 95,
+    "planned": 100,
+    "missing_or_invalid": 5
+  },
+  {
+    "case": "binomial-random",
+    "method": "cvds_min",
+    "valid": 28,
+    "planned": 100,
+    "missing_or_invalid": 72
+  },
+  {
+    "case": "binomial-random",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "SIHR_alter",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "cvds_min",
+    "valid": 98,
+    "planned": 100,
+    "missing_or_invalid": 2
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "xia_refined",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "xia_refined_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "SIHR_alter",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "cvds_min",
+    "valid": 97,
+    "planned": 100,
+    "missing_or_invalid": 3
+  },
+  {
+    "case": "binomial-weak",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "cvds_min",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "full_mle",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "hdm_ds",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "hdm_ds_single",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "qp",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "qp_half",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "qp_half_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "qp_half_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "qp_half_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "qp_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "qp_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "qp_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "rldpe_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "rldpe_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "cvds_min",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "hdm_ds",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "hdm_ds_single",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "qp",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "qp_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "qp_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "qp_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "rldpe_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "rldpe_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "cvds_min",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "hdm_ds",
+    "valid": 99,
+    "planned": 100,
+    "missing_or_invalid": 1
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "hdm_ds_single",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "qp",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "qp_half",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "qp_half_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "qp_half_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "qp_half_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "qp_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "qp_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "qp_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "rldpe_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "rldpe_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "cvds_min",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "hdm_ds",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "hdm_ds_single",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "qp",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "qp_half",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "qp_half_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "qp_half_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "qp_half_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "qp_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "qp_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "qp_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "rldpe_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "rldpe_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "cvds_min",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "hdm_ds",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "hdm_ds_single",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "qp",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "qp_half",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "qp_half_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "qp_half_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "qp_half_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "qp_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "qp_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "qp_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "rldpe_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "rldpe_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "cvds_min",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "full_mle",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "hdm_ds",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "hdm_ds_single",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "qp",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "qp_half",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "qp_half_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "qp_half_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "qp_half_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "qp_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "qp_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "qp_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "rldpe_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "rldpe_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "cvds_min",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "hdm_ds",
+    "valid": 60,
+    "planned": 100,
+    "missing_or_invalid": 40
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "hdm_ds_single",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "qp",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "qp_half",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "qp_half_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "qp_half_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "qp_half_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "qp_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "qp_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "qp_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "rldpe_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "rldpe_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "cvds_min",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "hdm_ds",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "hdm_ds_single",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "qp",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "qp_half",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "qp_half_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "qp_half_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "qp_half_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "qp_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "qp_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "qp_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "rldpe_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "rldpe_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "SIHR",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "cvds_1se",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "cvds_min",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "hdm_ds",
+    "valid": 25,
+    "planned": 100,
+    "missing_or_invalid": 75
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "hdm_ds_single",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "hdm_no_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "hdm_post",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "qp",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "qp_half",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "qp_half_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "qp_half_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "qp_half_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "qp_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "qp_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "qp_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "rldpe",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "rldpe_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "rldpe_refit",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "rldpe_refit_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  }
+]

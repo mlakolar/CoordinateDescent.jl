@@ -21,7 +21,7 @@ checks=dict(stage=stage,planned_datasets=len(cases)*maxrep,records=len(records),
 for name,obj in [('checks',checks),('errors',errors)]: (dest/(name+'.json')).write_text(json.dumps(obj,indent=2)+'\n')
 print(json.dumps(checks))
 if missing or not records or len(keys)!=len(set(keys)) or not checks['finite_records']:raise SystemExit(1)
-sys.argv=['summarize-slots.py',stage,'frozen',str(maxrep),casefile]
+sys.argv=['summarize-slots.py',stage,'gaussian',str(maxrep),casefile]
 runpy.run_path('../gaussian-campaign-v1/summarize-slots.py',run_name='__main__')
 summary=json.loads((dest/'strict-summary.json').read_text());counts=json.loads((dest/'strict-counts.json').read_text())
 gates=[]

@@ -1,0 +1,10 @@
+{
+  "planned_datasets": 12,
+  "planned_rows": 48,
+  "rows": 0,
+  "unique_rows": 0,
+  "errors": 48,
+  "warnings": 0,
+  "missing_markers": [],
+  "max_se_parity": null
+}

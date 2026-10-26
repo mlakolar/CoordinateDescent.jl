@@ -1,0 +1,10 @@
+{
+  "prefix": "development100",
+  "workers": 152,
+  "nonzero_process_exits": 0,
+  "cpu_seconds": 107821.52314599996,
+  "worker_process_seconds_sum": 108771.18374580285,
+  "max_worker_rss_gib": 1.2869606018066406,
+  "median_worker_rss_gib": 1.1783275604248047,
+  "note": "Linux child-process peak RSS per worker, not simultaneous total job memory. Worker process seconds include startup/compilation and multiple datasets where sharded. CPU sum is consumed worker CPU, not allocated CPU walltime."
+}

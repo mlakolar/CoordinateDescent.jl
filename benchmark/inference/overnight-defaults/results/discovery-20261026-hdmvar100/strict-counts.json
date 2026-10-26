@@ -1,0 +1,212 @@
+[
+  {
+    "case": "belloni-0",
+    "method": "hdm_glm_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0",
+    "method": "hdm_glm_model",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0",
+    "method": "hdm_max_fullmodel",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "hdm_glm_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "hdm_glm_model",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "belloni-0p2",
+    "method": "hdm_max_fullmodel",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "hdm_glm_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "hdm_glm_model",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-benign",
+    "method": "hdm_max_fullmodel",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "hdm_glm_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "hdm_glm_model",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-correlated",
+    "method": "hdm_max_fullmodel",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "hdm_glm_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "hdm_glm_model",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-independent",
+    "method": "hdm_max_fullmodel",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "hdm_glm_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "hdm_glm_model",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-largen",
+    "method": "hdm_max_fullmodel",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "hdm_glm_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "hdm_glm_model",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-moderate",
+    "method": "hdm_max_fullmodel",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "hdm_glm_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "hdm_glm_model",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-random",
+    "method": "hdm_max_fullmodel",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "hdm_glm_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "hdm_glm_model",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-sihr",
+    "method": "hdm_max_fullmodel",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "hdm_glm_hc1",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "hdm_glm_model",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "binomial-weak",
+    "method": "hdm_max_fullmodel",
+    "valid": 100,
+    "planned": 100,
+    "missing_or_invalid": 0
+  }
+]
