@@ -1,0 +1,82 @@
+{
+  "receipts": 4,
+  "inputs": 12,
+  "certificates": 13500,
+  "primary_failed_certificates": 0,
+  "default_failed_certificates": 0,
+  "max_residual": 7.499628884095083e-08,
+  "public_prepared_bitwise": true,
+  "positive_allocation_witnesses": 72,
+  "cpu_profiles": 288,
+  "empty_cpu_profiles": [],
+  "allocation_profiles": 288,
+  "worker_resources": [
+    {
+      "returncode": 0,
+      "wall_seconds": 21.717479486949742,
+      "user_seconds": 20.513167,
+      "system_seconds": 0.756489,
+      "max_rss_bytes": 699854848,
+      "scope": "whole child process tree including imports/JIT/warmup/timers/profiles; Linux maxrss KiB"
+    },
+    {
+      "returncode": 0,
+      "wall_seconds": 21.72193679213524,
+      "user_seconds": 20.398312,
+      "system_seconds": 0.632693,
+      "max_rss_bytes": 730783744,
+      "scope": "whole child process tree including imports/JIT/warmup/timers/profiles; Linux maxrss KiB"
+    },
+    {
+      "returncode": 0,
+      "wall_seconds": 9.774498449638486,
+      "user_seconds": 8.632368,
+      "system_seconds": 0.328121,
+      "max_rss_bytes": 223715328,
+      "scope": "whole child process tree including imports/JIT/warmup/timers/profiles; Linux maxrss KiB"
+    },
+    {
+      "returncode": 0,
+      "wall_seconds": 22.40871630096808,
+      "user_seconds": 21.157463,
+      "system_seconds": 0.660253,
+      "max_rss_bytes": 732872704,
+      "scope": "whole child process tree including imports/JIT/warmup/timers/profiles; Linux maxrss KiB"
+    },
+    {
+      "returncode": 0,
+      "wall_seconds": 22.25709712319076,
+      "user_seconds": 20.886276,
+      "system_seconds": 0.705476,
+      "max_rss_bytes": 747397120,
+      "scope": "whole child process tree including imports/JIT/warmup/timers/profiles; Linux maxrss KiB"
+    },
+    {
+      "returncode": 0,
+      "wall_seconds": 9.9156289040111,
+      "user_seconds": 9.147554,
+      "system_seconds": 0.2726,
+      "max_rss_bytes": 222728192,
+      "scope": "whole child process tree including imports/JIT/warmup/timers/profiles; Linux maxrss KiB"
+    },
+    {
+      "returncode": 0,
+      "wall_seconds": 9.153400663752109,
+      "user_seconds": 8.15902,
+      "system_seconds": 0.27938199999999996,
+      "max_rss_bytes": 219799552,
+      "scope": "whole child process tree including imports/JIT/warmup/timers/profiles; Linux maxrss KiB"
+    },
+    {
+      "returncode": 0,
+      "wall_seconds": 9.696845852769911,
+      "user_seconds": 8.772326,
+      "system_seconds": 0.308288,
+      "max_rss_bytes": 227803136,
+      "scope": "whole child process tree including imports/JIT/warmup/timers/profiles; Linux maxrss KiB"
+    }
+  ],
+  "interval": "paired log-ratios, average three independent input logs within each fresh process replication; pointwise Student-t across seven process replications",
+  "timers": "complete returned fit/path before coefficient extraction; native prepared-data control caches preprocessing only and returns the same complete fields; public/default/unscreened costs separate; R high-resolution wall timer",
+  "validation": "every timed returned point independently checked; inaccurate fits excluded by input/workload; failed/default counts retained; no coefficient-only comparisons"
+}
