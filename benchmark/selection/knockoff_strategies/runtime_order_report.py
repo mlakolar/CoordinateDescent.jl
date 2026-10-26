@@ -30,7 +30,7 @@ for name,data in [('paired-ratios.csv',rows),('replication-ratios.csv',replicate
     with (root/name).open('w') as f:w=csv.DictWriter(f,fieldnames=list(data[0]));w.writeheader();w.writerows(data)
 summary=dict(purpose='alternating-order sensitivity prompted by primary variant-phase confounding; primary results preserved',
  inputs_reused=105,extra_independent_datasets=0,fresh_processes=70,successful_resource_receipts=len(resources),legacy_assertions=315,
- certificates=len(allchecks),max_filter_residual=max(float(r['residual']) for r in allchecks if r['payload']=='filter' and r['round']!='0'),comparisons=rows)
+ check_rows=len(allchecks),timed_check_rows=sum(r['round']!='0' for r in allchecks),filter_certificates=sum(r['payload']=='filter' and r['round']!='0' for r in allchecks),profiles_repeated=0,max_filter_residual=max(float(r['residual']) for r in allchecks if r['payload']=='filter' and r['round']!='0'),comparisons=rows)
 (root/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
 lines=['# Alternating-order sensitivity','',summary['purpose']+'. The same105 primary inputs are reused in70 fresh processes; this is not another independent data cohort. Baseline/candidate order alternates by(case+rep)parity, both run serially on the same allocated CPU per pair. Only equicorrelation is measured. Three rounds per input/three inputs per process, seven independent process pairs, bootstrap10000 seed106999001. Primary data and all primary timing rows are retained separately. No profiling is repeated.','',
  '| Case | Payload | Candidate / baseline | 95% process interval | Process range |','|---|---|---:|---|---|']

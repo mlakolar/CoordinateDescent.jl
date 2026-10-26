@@ -11,6 +11,13 @@ assert s['inputs']==16128 and s['valid_certificates']==48384 and s['R_valid']==1
 assert t['shared_fresh_inputs']==105 and t['CPU_profiles']==t['allocation_profiles']==2268
 assert o['inputs_reused']==105 and o['extra_independent_datasets']==0 and o['fresh_processes']==70
 assert o['legacy_assertions']==315
+order_checks=[row for path in order.glob('*-case-*-rep-*/checks.csv') for row in csv.DictReader(path.open())]
+o['check_rows']=o.pop('certificates',len(order_checks))
+o['timed_check_rows']=sum(row['round']!='0' for row in order_checks)
+o['filter_certificates']=sum(row['payload']=='filter' and row['round']!='0' for row in order_checks)
+o['profiles_repeated']=0
+assert o['check_rows']==4200 and o['timed_check_rows']==3150 and o['filter_certificates']==630
+
 
 for source,name in [(stat/'TABLES.md','STATISTICS.md'),(runtime/'TABLES.md','RUNTIME.md'),(order/'TABLES.md','ORDER-SENSITIVITY.md'),
  (base/'objective-suite-v1'/'ASSESSMENT.md','OBJECTIVES.md')]:
@@ -62,7 +69,7 @@ lines+=['','Same-sign power losses are substantial and remain in the recommendat
  'The independent conditional-map study passes16/16 native and16/16 R samplers (maximum root errors4.020e-12 and1.702e-12). The pinned Knockoffs.jl full sampler passes only1/16; its orientation defect remains,with maximum relative root error.999624 on this unequal-scale suite. It is excluded from valid FDR rankings. Its diagonal optimizer remains usable with the independently validated native sampler. R Gaussian defaults differ slightly from native (maximum measured diagonal difference1.012e-6); R fixed uses an unshrunk SVD boundary diagonal while native retains safety1e-8. Actual maps,Gram identities and installed source hashes are retained.','',
  '## Runtime and memory','',
  f'The primary runtime cohort has105 fresh shared inputs,seven process replications,three inputs per process and three warmed rounds:70 native and35 R workers,6,804 native and315 R timing rows. All1,260 runtime filter certificates pass (max{t["max_filter_residual"]:.6g}); all630 timed raw optimizer fulljoint certificates pass (max{t["max_raw_fulljoint_residual"]:.6g}). There are2,268 nonempty CPU and2,268 nonempty allocation reports,2,268 positive direct allocation witnesses,70 actual Julia/CPU/thread metadata records and105 successful resource receipts.','',
- 'The primary launch placed baseline workers before candidate workers. All primary observations are preserved. A separately declared alternating-order sensitivity reuses the same105 inputs in70 fresh processes,without pooling them as another data cohort. Each process pair runs both variants serially on the same allocated CPU and alternates which runs first. Both studies preserve all315 complete legacy input/matrix/result-field assertions. Use ORDER-SENSITIVITY.md when assessing small before/after differences; method/payload order within candidate workers was already rotated for the primary strategy comparisons.','',
+ 'The primary launch placed baseline workers before candidate workers. All primary observations are preserved. A separately declared alternating-order sensitivity reuses the same105 inputs in70 fresh processes,without pooling them as another data cohort. Each process pair runs both variants serially on the same allocated CPU and alternates which runs first. Both studies preserve complete legacy results on105 shared inputs(315 combined input/matrix/result assertions). Use ORDER-SENSITIVITY.md when assessing small before/after differences; method/payload order within candidate workers was already rotated for the primary strategy comparisons.','',
  '| Runtime case | MVR / equicorrelated full filter | Maximum entropy / equicorrelated full filter |','|---|---:|---:|']
 ratios=list(csv.DictReader((runtime/'paired-ratios.csv').open()))
 for case in range(1,6):
