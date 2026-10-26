@@ -47,6 +47,11 @@ function PA.prox!(Y,g::ControlledPenalty,X,gamma)
  g.pb ? PB.value_and_prox!(Y,g.penalty,X,gamma) : PC.prox!(Y,g.penalty,X,gamma)
 end
 function controlled(X,Y,λ,config;cached=nothing,start=nothing,stats=nothing)
+ if config in ("native","apg") && cached===nothing && start===nothing
+  solver=config=="native" ? :panoc : :apg
+  sol=nuclear_regression(X,Y,λ;solver,max_iter=20000,tol=1e-8)
+  return (;B=sol.B,iterations=sol.iterations,converged=sol.converged,solution=sol)
+ end
  d=cached===nothing ? H._lr_data(X,Y,true) : cached.d
  g=cached===nothing ? H._lr_gradient(d) : cached.g
  B0=start===nothing ? zeros(eltype(d.X),size(X,2),size(Y,2)) : start
