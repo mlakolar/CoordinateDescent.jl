@@ -11,12 +11,12 @@ runs under Slurm; local work is source preparation and artifact transfer only.
 
 The primary contrast changes only the Gaussian knockoff diagonal, keeping the
 population covariance, X, y, independent normal innovations, native conditional
-sampler, joint-lasso engine, penalty .04 and knockoff+ target .1 fixed. Compare
+sampler, joint-lasso engine, penalty.04 and knockoff+ target.1 fixed. Compare
 native equicorrelation, the MVR adapter, and the maximum-entropy adapter.
 The native filter performs no intercept fitting or column standardization.
 Changing the lasso statistic or selecting its penalty from y is outside this
 comparison. Main fitting controls are fixed after a separate pilot certificate
-gate and before any main inputs are generated (native cyclic order,tol1e-9,max100000; R glmnet5.1 thresh1e-16,max1000000, after pilot calibration). The independent Float64 relative
+gate and before any main inputs are generated (native cyclic order, tol=1e-9, max 100000; R glmnet 5.1 thresh1e-16, max 1000000, after pilot calibration). The independent Float64 relative
 proximal fixed-point residual must be <=1e-7; a backend convergence flag alone
 is insufficient. Failed constructions/fits remain explicit outcomes.
 
@@ -34,8 +34,8 @@ actual backend iteration count/status explicitly unavailable.
 Each scenario has seven independent worker/process shards with 144 independent
 datasets per shard: 1,008 per scenario. The 13 main scenarios are iid, AR(.4),
 AR(.8), weak AR(.4), and wide AR(.4), each with alternating and same-sign
-signals, plus iid/AR(.4)/AR(.8) global nulls. Ordinary n=300,p=100; wide
-n=180,p=300. Non-null support is predictors 1:20. Coefficients have magnitude
+signals, plus iid/AR(.4)/AR(.8) global nulls. Ordinary n=300, p=100; wide
+n=180, p=300. Non-null support is predictors 1: 20. Coefficients have magnitude
 4.5/sqrt(n), except weak 3/sqrt(n); alternating signs start positive. Rows
 are independent Gaussian with mean zero and the named population covariance;
 noise is independent Gaussian with known standard deviation one. Global-null
@@ -122,9 +122,9 @@ whole-process peak RSS also contains imports/observer state. Keep their scopes
 explicit and avoid unjustified fitted-state memory rankings. No caching/factor
 fast path is introduced here; those belong to issue108.
 
-Equicorrelation and safety1e-8 remain the compatibility defaults. The provisional
-optimized controls (niter1000,tol1e-10,lambda_min1e-10,robustfalse,independent
-relative stationarity <=max(1e-6,100eps(T))) are investigated on a fixed matrix
+Equicorrelation and safety 1e-8 remain the compatibility defaults. The provisional
+optimized controls (niter=1000, tol=1e-10, lambda_min=1e-10, robust=false, independent
+relative stationarity <=max(1e-6, 100eps(T))) are investigated on a fixed matrix
 suite before the main cohort. Retain package-default, robust-update and tighter
 sensitivity results. A failure must be explicit; do not choose controls per
 main dataset. Statistical results can justify scoped usage guidance without
@@ -145,13 +145,13 @@ all final-head hosted CI/docs checks pass. Never merge or enable auto-merge.
 
 ## Runtime controls frozen after the developmental pilot
 
-Native runtime fitting uses cyclic order,opt_tol1e-9,max_iter100000. Raw
+Native runtime fitting uses cyclic order, opt_tol1e-9, max_iter100000. Raw
 optimizer controls equal the adapter defaults and every timed raw result is
 checked outside timing using the full2p joint inverse/gradient and original
 feasibility. Seven process replications are the independent timing units:
 within-input medians over three rounds, then paired medians over three inputs
 within each replication. Report the median of seven replication ratios and
-10,000 process-cluster bootstrap resamples (fixed seed106999000), with the
+10,000 process-cluster bootstrap resamples (fixed seed=106999000), with the
 replication range retained. Do not treat rounds as independent inputs.
 
 Public R Gaussian constructors include RNG setup/draw, matched to the native
@@ -160,7 +160,7 @@ innovations/accuracy comparisons use the native pipeline and separate matched
 R glmnet fits, not the defective Knockoffs.jl full sampler. R fixed construction
 receives the same binary unit-norm design as the native construct-unitnorm
 payload. R uses an unshrunk equicorrelated SVD boundary construction, whereas
-native safety1e-8 retains its current interior policy; record this difference
+native safety 1e-8 retains its current interior policy; record this difference
 and verify each procedure's actual Gram identities/feasible diagonal. The R
 Gaussian helper default also differs slightly from native; actual maps and
 installed source hashes are retained. These are valid public construction

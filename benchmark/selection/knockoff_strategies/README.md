@@ -28,18 +28,18 @@ unchanged throughout the main studies. Freeze sibling packages at:
 
 Restore the source archives and actual Project/Manifest files from the
 reporting bundle into a new immutable run directory, remapping frozen path
-dependencies deliberately. Scientific fitting uses Julia1.10.12 on EPYC7513,
+dependencies deliberately. Scientific fitting uses Julia 1.10.12 on EPYC7513,
 one Julia/BLAS/OpenMP thread. Release/LTS correctness additionally uses
-Julia1.13.2. The comparison environment pins Knockoffs3.1.4; its source is
-`d23942e9af9103f93be9a20e47ae6f7cad685aa5`, MIT licensed. R4.5.3 uses
-knockoff0.3.6 and glmnet5.1, with actual session/source receipts. Python
+Julia 1.13.2. The comparison environment pins Knockoffs3.1.4; its source is
+`d23942e9af9103f93be9a20e47ae6f7cad685aa5`, MIT licensed. R 4.5.3 uses
+knockoff 0.3.6 and glmnet 5.1, with actual session/source receipts. Python
 NumPy/SciPy/CVXPY/CLARABEL versions are retained in the objective summary.
 
 The main statistical source archive is `study-main-v1.tar`, SHA256
 `09f3ef6d127b465455bde39780fc8278ab1c67b4a21cf824823fdddd9068ebf4`.
 Run `study_main.sbatch` after a separate shard-zero pilot and comparator
-accuracy gate. This generates16,128 inputs,48,384 native fits/certificates,
-and1,008 R fits on336 of those same inputs. It writes its own summary/tables.
+accuracy gate. This generates16,128 inputs, 48,384 native fits/certificates,
+and 1,008 R fits on 336 of those same inputs. It writes its own summary/tables.
 Generation seeds and draw order are in the protocol; never count the R subset
 as additional independent data. Raw X/y/innovations and coefficients remain
 available on Discovery and can be regenerated from the pinned recipe.
@@ -47,13 +47,13 @@ available on Discovery and can be regenerated from the pinned recipe.
 The primary runtime archive is `runtime-main-v1.tar`, SHA256
 `7a19cefb5fde6445b0e015371e0f7ccfef0d9835243075aba5288a99642908a9`.
 Run `runtime_main.sbatch`, then `runtime_report.sbatch`. It uses105 fresh
-shared inputs,70 native and35 R workers,three warmed rounds per input and
+shared inputs, 70 native and 35 R workers, three warmed rounds per input and
 separate profiles. The primary launch had baseline/candidate phase grouping;
 its before/after results remain explicitly qualified. The order sensitivity
 archive is `runtime-order-check-v1.tar`, SHA256
 `df614fd53aea735eabb028a89aa9b6c201e87fbb3a680fa337e357e8432601f1`.
-It reuses those105 inputs in70 fresh processes,alternates variant order per
-case/rep pair on the same CPU,and does not pool its timings with the primary.
+It reuses those105 inputs in 70 fresh processes, alternates variant order per
+case/rep pair on the same CPU, and does not pool its timings with the primary.
 
 Use the exact GNU Parallel Spack `x86_64_v3` path in launchers; it is a platform
 path, not a run-version label. Workers use exclusive one-CPU srun steps.

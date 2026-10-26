@@ -1,0 +1,617 @@
+case,comparison,rep,ratio
+1,candidate/baseline:construct,1,1.1508740345213202
+1,candidate/baseline:construct,2,0.9420428233833814
+1,candidate/baseline:construct,3,0.9764147293577866
+1,candidate/baseline:construct,4,1.0065826233555315
+1,candidate/baseline:construct,5,0.9272277518321982
+1,candidate/baseline:construct,6,0.9511965201191036
+1,candidate/baseline:construct,7,0.9288552812649198
+1,candidate/baseline:construct-rng,1,1.0420659778479595
+1,candidate/baseline:construct-rng,2,0.886753949359538
+1,candidate/baseline:construct-rng,3,0.9407361102169733
+1,candidate/baseline:construct-rng,4,0.9930998755534196
+1,candidate/baseline:construct-rng,5,0.9323683024470426
+1,candidate/baseline:construct-rng,6,0.98968045405059
+1,candidate/baseline:construct-rng,7,0.9498211997341558
+1,candidate/baseline:diagonal,1,4.944844047781333
+1,candidate/baseline:diagonal,2,3.207654971553131
+1,candidate/baseline:diagonal,3,3.3740831179269217
+1,candidate/baseline:diagonal,4,4.405882082210017
+1,candidate/baseline:diagonal,5,3.2502160856513074
+1,candidate/baseline:diagonal,6,4.351506011094084
+1,candidate/baseline:diagonal,7,3.2312777618774082
+1,candidate/baseline:filter,1,1.115180879063728
+1,candidate/baseline:filter,2,0.9055666453740757
+1,candidate/baseline:filter,3,0.9604777532160211
+1,candidate/baseline:filter,4,0.9845239527860219
+1,candidate/baseline:filter,5,0.9762982730670196
+1,candidate/baseline:filter,6,0.949177916413985
+1,candidate/baseline:filter,7,0.9595271746239886
+1,candidate/baseline:sampling,1,1.0239563708823034
+1,candidate/baseline:sampling,2,0.9540065378104982
+1,candidate/baseline:sampling,3,0.9658022306083075
+1,candidate/baseline:sampling,4,1.0028122279909355
+1,candidate/baseline:sampling,5,0.9323132855056285
+1,candidate/baseline:sampling,6,0.9651441648653873
+1,candidate/baseline:sampling,7,0.891575157388668
+1,mvr/equicorrelated:diagonal,1,1.1811044624821352
+1,mvr/equicorrelated:diagonal,2,1.153628125192862
+1,mvr/equicorrelated:diagonal,3,1.1879561384401929
+1,mvr/equicorrelated:diagonal,4,1.1691271031849935
+1,mvr/equicorrelated:diagonal,5,1.1814240954103143
+1,mvr/equicorrelated:diagonal,6,1.153702207948333
+1,mvr/equicorrelated:diagonal,7,1.1764146376676208
+1,mvr/equicorrelated:sampling,1,1.062689827105095
+1,mvr/equicorrelated:sampling,2,1.001052485402729
+1,mvr/equicorrelated:sampling,3,0.940123022277053
+1,mvr/equicorrelated:sampling,4,1.0041118418462278
+1,mvr/equicorrelated:sampling,5,0.9974724103064472
+1,mvr/equicorrelated:sampling,6,1.0116242542473237
+1,mvr/equicorrelated:sampling,7,0.98428959521616
+1,mvr/equicorrelated:construct,1,1.0951808591855192
+1,mvr/equicorrelated:construct,2,1.083334581396306
+1,mvr/equicorrelated:construct,3,1.0467556443521646
+1,mvr/equicorrelated:construct,4,1.1276718185707049
+1,mvr/equicorrelated:construct,5,1.0989934328323827
+1,mvr/equicorrelated:construct,6,1.101614131797845
+1,mvr/equicorrelated:construct,7,1.0956525729835378
+1,mvr/equicorrelated:filter,1,1.0754831392983821
+1,mvr/equicorrelated:filter,2,1.0844829861748875
+1,mvr/equicorrelated:filter,3,1.098896623298628
+1,mvr/equicorrelated:filter,4,1.0784699543774234
+1,mvr/equicorrelated:filter,5,1.033910724107313
+1,mvr/equicorrelated:filter,6,1.0941096536120394
+1,mvr/equicorrelated:filter,7,1.071399084103507
+1,mvr/equicorrelated:construct-rng,1,1.0954888358176669
+1,mvr/equicorrelated:construct-rng,2,1.1009417757491564
+1,mvr/equicorrelated:construct-rng,3,1.09612351925315
+1,mvr/equicorrelated:construct-rng,4,1.0843008201743893
+1,mvr/equicorrelated:construct-rng,5,1.0956562090163058
+1,mvr/equicorrelated:construct-rng,6,1.106120906042927
+1,mvr/equicorrelated:construct-rng,7,1.079582307192393
+1,mvr validated-factory/raw-optimizer,1,5.087117404025048
+1,mvr validated-factory/raw-optimizer,2,6.37230425690609
+1,mvr validated-factory/raw-optimizer,3,6.844669837157747
+1,mvr validated-factory/raw-optimizer,4,6.22684569463755
+1,mvr validated-factory/raw-optimizer,5,6.445163400166896
+1,mvr validated-factory/raw-optimizer,6,6.569500811808118
+1,mvr validated-factory/raw-optimizer,7,6.662485975605362
+1,maxent/equicorrelated:diagonal,1,1.5061198817708539
+1,maxent/equicorrelated:diagonal,2,1.5343252401782221
+1,maxent/equicorrelated:diagonal,3,1.554744776323916
+1,maxent/equicorrelated:diagonal,4,1.5556989913558243
+1,maxent/equicorrelated:diagonal,5,1.5690732752376433
+1,maxent/equicorrelated:diagonal,6,1.565557075958055
+1,maxent/equicorrelated:diagonal,7,1.5407959240273006
+1,maxent/equicorrelated:sampling,1,1.0704788298879169
+1,maxent/equicorrelated:sampling,2,0.97787118652106
+1,maxent/equicorrelated:sampling,3,0.9066869569868732
+1,maxent/equicorrelated:sampling,4,1.008779320969669
+1,maxent/equicorrelated:sampling,5,1.0350848837987023
+1,maxent/equicorrelated:sampling,6,1.0453762945045573
+1,maxent/equicorrelated:sampling,7,0.9845522804659574
+1,maxent/equicorrelated:construct,1,1.3522384629826945
+1,maxent/equicorrelated:construct,2,1.3392410929334937
+1,maxent/equicorrelated:construct,3,1.2809104930342166
+1,maxent/equicorrelated:construct,4,1.3562781232485521
+1,maxent/equicorrelated:construct,5,1.359758367222462
+1,maxent/equicorrelated:construct,6,1.4021471709267916
+1,maxent/equicorrelated:construct,7,1.354290573845237
+1,maxent/equicorrelated:filter,1,1.3032799323230302
+1,maxent/equicorrelated:filter,2,1.3011437781046686
+1,maxent/equicorrelated:filter,3,1.2891328660904708
+1,maxent/equicorrelated:filter,4,1.3225667662156395
+1,maxent/equicorrelated:filter,5,1.2651642538488284
+1,maxent/equicorrelated:filter,6,1.2920800165722297
+1,maxent/equicorrelated:filter,7,1.304188400820829
+1,maxent/equicorrelated:construct-rng,1,1.3233249162542275
+1,maxent/equicorrelated:construct-rng,2,1.3603960884240558
+1,maxent/equicorrelated:construct-rng,3,1.3737681253272307
+1,maxent/equicorrelated:construct-rng,4,1.3659908447173625
+1,maxent/equicorrelated:construct-rng,5,1.369367211763148
+1,maxent/equicorrelated:construct-rng,6,1.3750169587767709
+1,maxent/equicorrelated:construct-rng,7,1.3264519315232155
+1,maxent validated-factory/raw-optimizer,1,2.485073325609462
+1,maxent validated-factory/raw-optimizer,2,2.6746867931479748
+1,maxent validated-factory/raw-optimizer,3,2.7714009931880814
+1,maxent validated-factory/raw-optimizer,4,2.760837520589562
+1,maxent validated-factory/raw-optimizer,5,2.776955167201801
+1,maxent validated-factory/raw-optimizer,6,2.8469378407867802
+1,maxent validated-factory/raw-optimizer,7,2.7346716226027206
+1,R/candidate:construct-rng,1,1.390808333167209
+1,R/candidate:construct-rng,2,1.6195859771387342
+1,R/candidate:construct-rng,3,1.6386105945482246
+1,R/candidate:construct-rng,4,1.5728474108637882
+1,R/candidate:construct-rng,5,1.6687171863452477
+1,R/candidate:construct-rng,6,1.6738302136262635
+1,R/candidate:construct-rng,7,1.6033452194658937
+2,candidate/baseline:construct,1,0.9617937346893766
+2,candidate/baseline:construct,2,0.9466593348399341
+2,candidate/baseline:construct,3,0.9870031340704136
+2,candidate/baseline:construct,4,1.1045020882808512
+2,candidate/baseline:construct,5,0.9892796620807393
+2,candidate/baseline:construct,6,1.0694676129400502
+2,candidate/baseline:construct,7,1.1533785131086043
+2,candidate/baseline:construct-rng,1,0.9430350437737158
+2,candidate/baseline:construct-rng,2,0.9685140863116878
+2,candidate/baseline:construct-rng,3,1.0335904495948118
+2,candidate/baseline:construct-rng,4,1.0390477756251622
+2,candidate/baseline:construct-rng,5,1.020488824291344
+2,candidate/baseline:construct-rng,6,1.0480163693645708
+2,candidate/baseline:construct-rng,7,1.0640649818244727
+2,candidate/baseline:diagonal,1,5.49790527518957
+2,candidate/baseline:diagonal,2,4.227546460506045
+2,candidate/baseline:diagonal,3,5.628795742818651
+2,candidate/baseline:diagonal,4,4.94676976400564
+2,candidate/baseline:diagonal,5,5.839583997570789
+2,candidate/baseline:diagonal,6,4.541969474904926
+2,candidate/baseline:diagonal,7,6.935312600834108
+2,candidate/baseline:filter,1,0.9721056428863184
+2,candidate/baseline:filter,2,0.9622366405443151
+2,candidate/baseline:filter,3,1.0655687447923587
+2,candidate/baseline:filter,4,0.981952041581682
+2,candidate/baseline:filter,5,1.0675824408290282
+2,candidate/baseline:filter,6,1.0796102620454644
+2,candidate/baseline:filter,7,1.0640635773427074
+2,candidate/baseline:sampling,1,0.993896463257431
+2,candidate/baseline:sampling,2,0.9600498311954847
+2,candidate/baseline:sampling,3,1.1133819634203679
+2,candidate/baseline:sampling,4,1.0726528951025536
+2,candidate/baseline:sampling,5,1.044015930860838
+2,candidate/baseline:sampling,6,1.1010444900069085
+2,candidate/baseline:sampling,7,1.1226845388762081
+2,mvr/equicorrelated:diagonal,1,7.718681523431773
+2,mvr/equicorrelated:diagonal,2,7.735724523765489
+2,mvr/equicorrelated:diagonal,3,7.173901443404628
+2,mvr/equicorrelated:diagonal,4,7.230202526438052
+2,mvr/equicorrelated:diagonal,5,7.053345967310429
+2,mvr/equicorrelated:diagonal,6,7.373271269490081
+2,mvr/equicorrelated:diagonal,7,6.751594557059467
+2,mvr/equicorrelated:sampling,1,1.084367911185777
+2,mvr/equicorrelated:sampling,2,1.054143793589172
+2,mvr/equicorrelated:sampling,3,1.0714178202124298
+2,mvr/equicorrelated:sampling,4,1.0123623013652099
+2,mvr/equicorrelated:sampling,5,1.1489238267044357
+2,mvr/equicorrelated:sampling,6,1.066160369574649
+2,mvr/equicorrelated:sampling,7,1.0411642540370454
+2,mvr/equicorrelated:construct,1,6.011546934135931
+2,mvr/equicorrelated:construct,2,5.953564768732394
+2,mvr/equicorrelated:construct,3,6.014980341782362
+2,mvr/equicorrelated:construct,4,5.36039565231226
+2,mvr/equicorrelated:construct,5,6.247110204583154
+2,mvr/equicorrelated:construct,6,5.68163773885211
+2,mvr/equicorrelated:construct,7,5.694864191520476
+2,mvr/equicorrelated:filter,1,4.747066961985801
+2,mvr/equicorrelated:filter,2,5.146677830189443
+2,mvr/equicorrelated:filter,3,4.432832661659699
+2,mvr/equicorrelated:filter,4,4.809310631512977
+2,mvr/equicorrelated:filter,5,4.138075954940107
+2,mvr/equicorrelated:filter,6,4.728216665927242
+2,mvr/equicorrelated:filter,7,4.829133562596342
+2,mvr/equicorrelated:construct-rng,1,5.870463222992903
+2,mvr/equicorrelated:construct-rng,2,5.80841515489717
+2,mvr/equicorrelated:construct-rng,3,5.490539641675984
+2,mvr/equicorrelated:construct-rng,4,5.572919673867438
+2,mvr/equicorrelated:construct-rng,5,5.962770519823181
+2,mvr/equicorrelated:construct-rng,6,5.678944104749958
+2,mvr/equicorrelated:construct-rng,7,5.3467062496209685
+2,mvr validated-factory/raw-optimizer,1,1.1719291274944321
+2,mvr validated-factory/raw-optimizer,2,1.175823110985736
+2,mvr validated-factory/raw-optimizer,3,1.14719774766328
+2,mvr validated-factory/raw-optimizer,4,1.2185014632381241
+2,mvr validated-factory/raw-optimizer,5,1.1070741271509599
+2,mvr validated-factory/raw-optimizer,6,1.1945620032551394
+2,mvr validated-factory/raw-optimizer,7,1.1499608643708268
+2,maxent/equicorrelated:diagonal,1,5.4382602524266055
+2,maxent/equicorrelated:diagonal,2,5.421985103507386
+2,maxent/equicorrelated:diagonal,3,5.268656363525271
+2,maxent/equicorrelated:diagonal,4,5.234941999215145
+2,maxent/equicorrelated:diagonal,5,5.249776651339331
+2,maxent/equicorrelated:diagonal,6,5.039966438731368
+2,maxent/equicorrelated:diagonal,7,4.681417874464645
+2,maxent/equicorrelated:sampling,1,1.0475666703283113
+2,maxent/equicorrelated:sampling,2,1.0609269453402912
+2,maxent/equicorrelated:sampling,3,1.088390776701955
+2,maxent/equicorrelated:sampling,4,1.0453820407700343
+2,maxent/equicorrelated:sampling,5,1.015403118177052
+2,maxent/equicorrelated:sampling,6,1.020529534200008
+2,maxent/equicorrelated:sampling,7,1.037760490637275
+2,maxent/equicorrelated:construct,1,4.230698516018683
+2,maxent/equicorrelated:construct,2,4.321602714681334
+2,maxent/equicorrelated:construct,3,4.272567848462911
+2,maxent/equicorrelated:construct,4,4.15389912714461
+2,maxent/equicorrelated:construct,5,4.271359579376426
+2,maxent/equicorrelated:construct,6,4.20569264176698
+2,maxent/equicorrelated:construct,7,4.132933348823744
+2,maxent/equicorrelated:filter,1,3.5326983049706184
+2,maxent/equicorrelated:filter,2,3.7641618916957307
+2,maxent/equicorrelated:filter,3,3.5132755464539507
+2,maxent/equicorrelated:filter,4,3.6057970258979446
+2,maxent/equicorrelated:filter,5,3.098514992317086
+2,maxent/equicorrelated:filter,6,3.181094599693257
+2,maxent/equicorrelated:filter,7,3.463324243705878
+2,maxent/equicorrelated:construct-rng,1,4.219251166888844
+2,maxent/equicorrelated:construct-rng,2,4.179151748083058
+2,maxent/equicorrelated:construct-rng,3,4.059457463456984
+2,maxent/equicorrelated:construct-rng,4,4.055872969331658
+2,maxent/equicorrelated:construct-rng,5,4.1471978999221735
+2,maxent/equicorrelated:construct-rng,6,3.837126983709989
+2,maxent/equicorrelated:construct-rng,7,4.195978364142002
+2,maxent validated-factory/raw-optimizer,1,1.2441295808373287
+2,maxent validated-factory/raw-optimizer,2,1.2355570834753387
+2,maxent validated-factory/raw-optimizer,3,1.3062078846915937
+2,maxent validated-factory/raw-optimizer,4,1.3589873581052965
+2,maxent validated-factory/raw-optimizer,5,1.248620494005378
+2,maxent validated-factory/raw-optimizer,6,1.1896171335736245
+2,maxent validated-factory/raw-optimizer,7,1.2430624303478253
+2,R/candidate:construct-rng,1,5.785801831658646
+2,R/candidate:construct-rng,2,5.525079587207793
+2,R/candidate:construct-rng,3,4.91161324574773
+2,R/candidate:construct-rng,4,4.878684154448085
+2,R/candidate:construct-rng,5,5.212038510867484
+2,R/candidate:construct-rng,6,4.834534852070521
+2,R/candidate:construct-rng,7,5.198150613526146
+3,candidate/baseline:construct,1,0.9307991164901487
+3,candidate/baseline:construct,2,0.9976511325507853
+3,candidate/baseline:construct,3,0.9282628029535333
+3,candidate/baseline:construct,4,1.0525913578147676
+3,candidate/baseline:construct,5,0.9127975118842608
+3,candidate/baseline:construct,6,0.9525014095549746
+3,candidate/baseline:construct,7,0.9456650964716484
+3,candidate/baseline:construct-rng,1,0.9175423362419755
+3,candidate/baseline:construct-rng,2,1.065874452894749
+3,candidate/baseline:construct-rng,3,0.8826694096196115
+3,candidate/baseline:construct-rng,4,0.8925310472001621
+3,candidate/baseline:construct-rng,5,0.9446776745081075
+3,candidate/baseline:construct-rng,6,0.9732592034560711
+3,candidate/baseline:construct-rng,7,0.9972513332429501
+3,candidate/baseline:diagonal,1,5.758236031299433
+3,candidate/baseline:diagonal,2,6.024363438479704
+3,candidate/baseline:diagonal,3,5.447190095943475
+3,candidate/baseline:diagonal,4,4.765325471702613
+3,candidate/baseline:diagonal,5,5.780225255702086
+3,candidate/baseline:diagonal,6,5.4693238489498945
+3,candidate/baseline:diagonal,7,5.39757516558593
+3,candidate/baseline:filter,1,0.9700512924495773
+3,candidate/baseline:filter,2,0.9902534024113676
+3,candidate/baseline:filter,3,0.9674340481707041
+3,candidate/baseline:filter,4,0.9112590642304614
+3,candidate/baseline:filter,5,0.9824012550734339
+3,candidate/baseline:filter,6,0.9560310640586049
+3,candidate/baseline:filter,7,0.9783407227472943
+3,candidate/baseline:sampling,1,0.9461626035012666
+3,candidate/baseline:sampling,2,0.9945545467719833
+3,candidate/baseline:sampling,3,0.9598876113928444
+3,candidate/baseline:sampling,4,0.8742596154348229
+3,candidate/baseline:sampling,5,0.9858336860733029
+3,candidate/baseline:sampling,6,0.8982411984330813
+3,candidate/baseline:sampling,7,0.9810961622885795
+3,mvr/equicorrelated:diagonal,1,10.5048386342602
+3,mvr/equicorrelated:diagonal,2,10.048221750119058
+3,mvr/equicorrelated:diagonal,3,10.880652482427374
+3,mvr/equicorrelated:diagonal,4,10.141614592782688
+3,mvr/equicorrelated:diagonal,5,10.122014583557633
+3,mvr/equicorrelated:diagonal,6,10.261238929688915
+3,mvr/equicorrelated:diagonal,7,10.189710144581467
+3,mvr/equicorrelated:sampling,1,1.071341808742529
+3,mvr/equicorrelated:sampling,2,1.0576623111612866
+3,mvr/equicorrelated:sampling,3,1.0615554798329407
+3,mvr/equicorrelated:sampling,4,1.0757223598810792
+3,mvr/equicorrelated:sampling,5,1.0696083170561845
+3,mvr/equicorrelated:sampling,6,1.05615026361218
+3,mvr/equicorrelated:sampling,7,1.0682017048993353
+3,mvr/equicorrelated:construct,1,9.165546704858805
+3,mvr/equicorrelated:construct,2,8.659133802228718
+3,mvr/equicorrelated:construct,3,9.37012500045736
+3,mvr/equicorrelated:construct,4,8.335279106642352
+3,mvr/equicorrelated:construct,5,8.929966248447736
+3,mvr/equicorrelated:construct,6,8.796042775894117
+3,mvr/equicorrelated:construct,7,8.84045490536265
+3,mvr/equicorrelated:filter,1,7.873463818629086
+3,mvr/equicorrelated:filter,2,7.943956936502362
+3,mvr/equicorrelated:filter,3,8.37426307131583
+3,mvr/equicorrelated:filter,4,7.889254818111537
+3,mvr/equicorrelated:filter,5,7.969222949909289
+3,mvr/equicorrelated:filter,6,7.863423726762669
+3,mvr/equicorrelated:filter,7,7.803454911635089
+3,mvr/equicorrelated:construct-rng,1,8.81793448940594
+3,mvr/equicorrelated:construct-rng,2,8.568238360539448
+3,mvr/equicorrelated:construct-rng,3,9.03317914043116
+3,mvr/equicorrelated:construct-rng,4,8.807450349280217
+3,mvr/equicorrelated:construct-rng,5,8.766078096946089
+3,mvr/equicorrelated:construct-rng,6,8.885940784268824
+3,mvr/equicorrelated:construct-rng,7,8.752960985511928
+3,mvr validated-factory/raw-optimizer,1,1.1180914920451013
+3,mvr validated-factory/raw-optimizer,2,1.0955217054647335
+3,mvr validated-factory/raw-optimizer,3,1.1053028267882963
+3,mvr validated-factory/raw-optimizer,4,1.1235805896412476
+3,mvr validated-factory/raw-optimizer,5,1.0994754848670618
+3,mvr validated-factory/raw-optimizer,6,1.1001542992303572
+3,mvr validated-factory/raw-optimizer,7,1.1066999508526245
+3,maxent/equicorrelated:diagonal,1,7.927919680119051
+3,maxent/equicorrelated:diagonal,2,7.640280438457697
+3,maxent/equicorrelated:diagonal,3,8.782863713146448
+3,maxent/equicorrelated:diagonal,4,7.788834300189397
+3,maxent/equicorrelated:diagonal,5,7.950090770128457
+3,maxent/equicorrelated:diagonal,6,7.989948490616114
+3,maxent/equicorrelated:diagonal,7,7.905920334248346
+3,maxent/equicorrelated:sampling,1,1.0843317585861134
+3,maxent/equicorrelated:sampling,2,1.0795763356211774
+3,maxent/equicorrelated:sampling,3,1.0538737260097402
+3,maxent/equicorrelated:sampling,4,1.06433715296658
+3,maxent/equicorrelated:sampling,5,1.068600481179174
+3,maxent/equicorrelated:sampling,6,1.059489298545194
+3,maxent/equicorrelated:sampling,7,1.0700722767051551
+3,maxent/equicorrelated:construct,1,6.880472182858498
+3,maxent/equicorrelated:construct,2,6.84182390112591
+3,maxent/equicorrelated:construct,3,7.184544198430538
+3,maxent/equicorrelated:construct,4,6.572420555976279
+3,maxent/equicorrelated:construct,5,6.994423678833522
+3,maxent/equicorrelated:construct,6,6.864943220883045
+3,maxent/equicorrelated:construct,7,6.743855345246288
+3,maxent/equicorrelated:filter,1,6.1036510387626235
+3,maxent/equicorrelated:filter,2,6.20297771360963
+3,maxent/equicorrelated:filter,3,6.50600124203855
+3,maxent/equicorrelated:filter,4,6.103206065139501
+3,maxent/equicorrelated:filter,5,6.157234882388055
+3,maxent/equicorrelated:filter,6,6.165288805494192
+3,maxent/equicorrelated:filter,7,6.141722770093947
+3,maxent/equicorrelated:construct-rng,1,7.032206382727186
+3,maxent/equicorrelated:construct-rng,2,6.560033989690336
+3,maxent/equicorrelated:construct-rng,3,6.983865119617916
+3,maxent/equicorrelated:construct-rng,4,6.89644279317035
+3,maxent/equicorrelated:construct-rng,5,6.96891888021299
+3,maxent/equicorrelated:construct-rng,6,6.91471696969022
+3,maxent/equicorrelated:construct-rng,7,6.766063210180385
+3,maxent validated-factory/raw-optimizer,1,1.1458941431178102
+3,maxent validated-factory/raw-optimizer,2,1.0989586966892448
+3,maxent validated-factory/raw-optimizer,3,1.1263312051361019
+3,maxent validated-factory/raw-optimizer,4,1.1931148969765055
+3,maxent validated-factory/raw-optimizer,5,1.150032309733039
+3,maxent validated-factory/raw-optimizer,6,1.173268274000145
+3,maxent validated-factory/raw-optimizer,7,1.1499154728397023
+3,R/candidate:construct-rng,1,24.724753290272123
+3,R/candidate:construct-rng,2,23.485451627143263
+3,R/candidate:construct-rng,3,25.705786573754057
+3,R/candidate:construct-rng,4,25.854814934517467
+3,R/candidate:construct-rng,5,26.095237964557718
+3,R/candidate:construct-rng,6,27.111046178481995
+3,R/candidate:construct-rng,7,26.279182646950368
+4,candidate/baseline:construct,1,0.9558528944357831
+4,candidate/baseline:construct,2,0.9587612295691461
+4,candidate/baseline:construct,3,0.9136386414832389
+4,candidate/baseline:construct,4,0.8879490852218287
+4,candidate/baseline:construct,5,0.9086929573646864
+4,candidate/baseline:construct,6,0.9282234695801596
+4,candidate/baseline:construct,7,0.9467984804457346
+4,candidate/baseline:construct-rng,1,0.9262285810139225
+4,candidate/baseline:construct-rng,2,0.950859999649795
+4,candidate/baseline:construct-rng,3,0.8738131896042624
+4,candidate/baseline:construct-rng,4,0.9539428922348807
+4,candidate/baseline:construct-rng,5,0.9903043292554332
+4,candidate/baseline:construct-rng,6,0.8068122583727901
+4,candidate/baseline:construct-rng,7,0.915377453314251
+4,candidate/baseline:diagonal,1,5.351570292130253
+4,candidate/baseline:diagonal,2,5.412114465187459
+4,candidate/baseline:diagonal,3,5.202753655761353
+4,candidate/baseline:diagonal,4,5.182661587053426
+4,candidate/baseline:diagonal,5,5.553851396874406
+4,candidate/baseline:diagonal,6,4.903119360001212
+4,candidate/baseline:diagonal,7,5.12395734480905
+4,candidate/baseline:filter,1,0.964555447139361
+4,candidate/baseline:filter,2,0.9782700908588697
+4,candidate/baseline:filter,3,0.879635411530912
+4,candidate/baseline:filter,4,0.9270468453556046
+4,candidate/baseline:filter,5,0.9386748377396814
+4,candidate/baseline:filter,6,0.887839428060274
+4,candidate/baseline:filter,7,0.9572659279207916
+4,candidate/baseline:sampling,1,0.9606212355298379
+4,candidate/baseline:sampling,2,0.9216033935483556
+4,candidate/baseline:sampling,3,0.9137079478972768
+4,candidate/baseline:sampling,4,0.9220945809746391
+4,candidate/baseline:sampling,5,0.861109370425408
+4,candidate/baseline:sampling,6,0.8680113417095431
+4,candidate/baseline:sampling,7,0.8949243524391126
+4,mvr/equicorrelated:diagonal,1,10.702361008326758
+4,mvr/equicorrelated:diagonal,2,10.640356410906042
+4,mvr/equicorrelated:diagonal,3,10.86929686343737
+4,mvr/equicorrelated:diagonal,4,10.802413425180683
+4,mvr/equicorrelated:diagonal,5,10.375948905104737
+4,mvr/equicorrelated:diagonal,6,10.128457839355818
+4,mvr/equicorrelated:diagonal,7,10.936738256795214
+4,mvr/equicorrelated:sampling,1,1.049132432469859
+4,mvr/equicorrelated:sampling,2,1.0519754459544568
+4,mvr/equicorrelated:sampling,3,1.0548318639859111
+4,mvr/equicorrelated:sampling,4,1.0472285427813721
+4,mvr/equicorrelated:sampling,5,1.056008835383506
+4,mvr/equicorrelated:sampling,6,0.9753702711671698
+4,mvr/equicorrelated:sampling,7,1.0418348768403074
+4,mvr/equicorrelated:construct,1,10.048246566847663
+4,mvr/equicorrelated:construct,2,9.985552884633732
+4,mvr/equicorrelated:construct,3,10.153147907967831
+4,mvr/equicorrelated:construct,4,10.175057289060364
+4,mvr/equicorrelated:construct,5,10.049926244952935
+4,mvr/equicorrelated:construct,6,9.631384281432327
+4,mvr/equicorrelated:construct,7,9.992358617234226
+4,mvr/equicorrelated:filter,1,8.550106097540734
+4,mvr/equicorrelated:filter,2,8.896356305695585
+4,mvr/equicorrelated:filter,3,9.37139535015782
+4,mvr/equicorrelated:filter,4,8.99545109858924
+4,mvr/equicorrelated:filter,5,9.6266721697248
+4,mvr/equicorrelated:filter,6,9.408163017995063
+4,mvr/equicorrelated:filter,7,9.279792336507526
+4,mvr/equicorrelated:construct-rng,1,10.047473286965124
+4,mvr/equicorrelated:construct-rng,2,10.003236606790212
+4,mvr/equicorrelated:construct-rng,3,10.0964512342421
+4,mvr/equicorrelated:construct-rng,4,10.1018192742842
+4,mvr/equicorrelated:construct-rng,5,9.692103113294953
+4,mvr/equicorrelated:construct-rng,6,10.31160922482844
+4,mvr/equicorrelated:construct-rng,7,10.264842341869011
+4,mvr validated-factory/raw-optimizer,1,1.1073039317373132
+4,mvr validated-factory/raw-optimizer,2,1.1082837367839056
+4,mvr validated-factory/raw-optimizer,3,1.1121663233870092
+4,mvr validated-factory/raw-optimizer,4,1.1115724146476267
+4,mvr validated-factory/raw-optimizer,5,1.110169690049505
+4,mvr validated-factory/raw-optimizer,6,1.100935258748254
+4,mvr validated-factory/raw-optimizer,7,1.1341469947393268
+4,maxent/equicorrelated:diagonal,1,7.3602603754070275
+4,maxent/equicorrelated:diagonal,2,7.3248129136292
+4,maxent/equicorrelated:diagonal,3,7.326692833636408
+4,maxent/equicorrelated:diagonal,4,7.476204538573627
+4,maxent/equicorrelated:diagonal,5,7.1666376455361
+4,maxent/equicorrelated:diagonal,6,6.9634967207859635
+4,maxent/equicorrelated:diagonal,7,7.596598659165374
+4,maxent/equicorrelated:sampling,1,1.0578653968596499
+4,maxent/equicorrelated:sampling,2,1.0637309735362304
+4,maxent/equicorrelated:sampling,3,1.0718555883581826
+4,maxent/equicorrelated:sampling,4,1.0543616884712896
+4,maxent/equicorrelated:sampling,5,1.097869054791344
+4,maxent/equicorrelated:sampling,6,1.0364006947393989
+4,maxent/equicorrelated:sampling,7,1.1125153963722163
+4,maxent/equicorrelated:construct,1,6.933563205722006
+4,maxent/equicorrelated:construct,2,6.956663857351696
+4,maxent/equicorrelated:construct,3,6.9039393816448005
+4,maxent/equicorrelated:construct,4,6.929562296561279
+4,maxent/equicorrelated:construct,5,6.653299822676218
+4,maxent/equicorrelated:construct,6,6.531801045243351
+4,maxent/equicorrelated:construct,7,7.191418201801109
+4,maxent/equicorrelated:filter,1,6.1186940622642005
+4,maxent/equicorrelated:filter,2,6.245479255746368
+4,maxent/equicorrelated:filter,3,6.4817442044490665
+4,maxent/equicorrelated:filter,4,6.23083954271987
+4,maxent/equicorrelated:filter,5,6.395814834478313
+4,maxent/equicorrelated:filter,6,6.605518266538581
+4,maxent/equicorrelated:filter,7,6.215089963629728
+4,maxent/equicorrelated:construct-rng,1,6.9685108903324995
+4,maxent/equicorrelated:construct-rng,2,6.897265865680838
+4,maxent/equicorrelated:construct-rng,3,6.937235595419883
+4,maxent/equicorrelated:construct-rng,4,6.875817197614318
+4,maxent/equicorrelated:construct-rng,5,6.8392598968103355
+4,maxent/equicorrelated:construct-rng,6,7.054781005583924
+4,maxent/equicorrelated:construct-rng,7,7.1329780887938306
+4,maxent validated-factory/raw-optimizer,1,1.1642190850109613
+4,maxent validated-factory/raw-optimizer,2,1.1599123912310265
+4,maxent validated-factory/raw-optimizer,3,1.1616659880070679
+4,maxent validated-factory/raw-optimizer,4,1.172096995067784
+4,maxent validated-factory/raw-optimizer,5,1.1423555220669999
+4,maxent validated-factory/raw-optimizer,6,1.1655601754563762
+4,maxent validated-factory/raw-optimizer,7,1.1575294328743382
+4,R/candidate:construct-rng,1,6.104068963350177
+4,R/candidate:construct-rng,2,5.924451395800749
+4,R/candidate:construct-rng,3,5.908284315925738
+4,R/candidate:construct-rng,4,5.742014387702983
+4,R/candidate:construct-rng,5,5.384840210427692
+4,R/candidate:construct-rng,6,5.665043553818483
+4,R/candidate:construct-rng,7,5.840422924887348
+5,candidate/baseline:construct,1,0.9609673331591192
+5,candidate/baseline:construct,2,0.9381997387222332
+5,candidate/baseline:construct,3,1.0606730562287623
+5,candidate/baseline:construct,4,1.1035168847242223
+5,candidate/baseline:construct,5,1.0227771361771458
+5,candidate/baseline:construct,6,0.9879124829345873
+5,candidate/baseline:construct,7,0.9584118696024553
+5,candidate/baseline:construct-unitnorm,1,0.9066248953577105
+5,candidate/baseline:construct-unitnorm,2,0.9335327695140563
+5,candidate/baseline:construct-unitnorm,3,1.0921633359823792
+5,candidate/baseline:construct-unitnorm,4,1.0479768041983921
+5,candidate/baseline:construct-unitnorm,5,0.983046255293804
+5,candidate/baseline:construct-unitnorm,6,0.9781832495926203
+5,candidate/baseline:construct-unitnorm,7,0.9135484510103802
+5,candidate/baseline:diagonal,1,4.2882789811523825
+5,candidate/baseline:diagonal,2,4.990364075511347
+5,candidate/baseline:diagonal,3,6.567608918880479
+5,candidate/baseline:diagonal,4,6.557247671594047
+5,candidate/baseline:diagonal,5,5.098232777485765
+5,candidate/baseline:diagonal,6,4.946235527523616
+5,candidate/baseline:diagonal,7,4.784708808976084
+5,candidate/baseline:filter,1,0.9161872077628584
+5,candidate/baseline:filter,2,0.9649445685713937
+5,candidate/baseline:filter,3,1.012603772407694
+5,candidate/baseline:filter,4,1.0197705865748095
+5,candidate/baseline:filter,5,1.0308356287525131
+5,candidate/baseline:filter,6,0.9811256263551917
+5,candidate/baseline:filter,7,0.9173139209675423
+5,candidate/baseline:sampling,1,0.9921522754173755
+5,candidate/baseline:sampling,2,0.9345337656348616
+5,candidate/baseline:sampling,3,1.08161675054576
+5,candidate/baseline:sampling,4,1.044296016532552
+5,candidate/baseline:sampling,5,1.0861668363392043
+5,candidate/baseline:sampling,6,0.9817052796544192
+5,candidate/baseline:sampling,7,0.9073182863039426
+5,mvr/equicorrelated:diagonal,1,13.300708151201205
+5,mvr/equicorrelated:diagonal,2,13.898930893926037
+5,mvr/equicorrelated:diagonal,3,13.93465690351487
+5,mvr/equicorrelated:diagonal,4,13.445054955433788
+5,mvr/equicorrelated:diagonal,5,14.543995738028402
+5,mvr/equicorrelated:diagonal,6,12.826043712342697
+5,mvr/equicorrelated:diagonal,7,14.970095901865532
+5,mvr/equicorrelated:sampling,1,1.0264267090340726
+5,mvr/equicorrelated:sampling,2,1.0865816951245544
+5,mvr/equicorrelated:sampling,3,1.0404289279279901
+5,mvr/equicorrelated:sampling,4,1.0026675147483053
+5,mvr/equicorrelated:sampling,5,0.9445938099172265
+5,mvr/equicorrelated:sampling,6,1.0472892848939324
+5,mvr/equicorrelated:sampling,7,1.0445335824831465
+5,mvr/equicorrelated:construct,1,7.553833986493071
+5,mvr/equicorrelated:construct,2,6.764455350857949
+5,mvr/equicorrelated:construct,3,7.752792287602037
+5,mvr/equicorrelated:construct,4,6.817702491188221
+5,mvr/equicorrelated:construct,5,7.133294052473846
+5,mvr/equicorrelated:construct,6,7.407183577607155
+5,mvr/equicorrelated:construct,7,7.713001467097176
+5,mvr/equicorrelated:filter,1,7.0296236612141065
+5,mvr/equicorrelated:filter,2,6.48001779505936
+5,mvr/equicorrelated:filter,3,7.1161672219400165
+5,mvr/equicorrelated:filter,4,6.540517794796843
+5,mvr/equicorrelated:filter,5,6.371018913938128
+5,mvr/equicorrelated:filter,6,6.7844520057713495
+5,mvr/equicorrelated:filter,7,6.978359131236316
+5,mvr validated-factory/raw-optimizer,1,1.1172536861492945
+5,mvr validated-factory/raw-optimizer,2,1.1253402624867803
+5,mvr validated-factory/raw-optimizer,3,1.0808137381935676
+5,mvr validated-factory/raw-optimizer,4,1.1197730749027253
+5,mvr validated-factory/raw-optimizer,5,1.0843183440619752
+5,mvr validated-factory/raw-optimizer,6,1.1175386626672748
+5,mvr validated-factory/raw-optimizer,7,1.0842406837053438
+5,maxent/equicorrelated:diagonal,1,30.51179014768657
+5,maxent/equicorrelated:diagonal,2,24.540048132760663
+5,maxent/equicorrelated:diagonal,3,27.059421382853127
+5,maxent/equicorrelated:diagonal,4,25.035533209021487
+5,maxent/equicorrelated:diagonal,5,26.861775664895
+5,maxent/equicorrelated:diagonal,6,21.894814351264834
+5,maxent/equicorrelated:diagonal,7,27.660913838003832
+5,maxent/equicorrelated:sampling,1,1.0163540172687417
+5,maxent/equicorrelated:sampling,2,1.022967953244115
+5,maxent/equicorrelated:sampling,3,0.9979211466122996
+5,maxent/equicorrelated:sampling,4,0.9986425048540968
+5,maxent/equicorrelated:sampling,5,0.9211042113453014
+5,maxent/equicorrelated:sampling,6,1.0999040251140795
+5,maxent/equicorrelated:sampling,7,0.9792365828000343
+5,maxent/equicorrelated:construct,1,14.903705674454391
+5,maxent/equicorrelated:construct,2,11.993463456042262
+5,maxent/equicorrelated:construct,3,15.005442602019173
+5,maxent/equicorrelated:construct,4,12.13015435066686
+5,maxent/equicorrelated:construct,5,13.100167129668723
+5,maxent/equicorrelated:construct,6,11.913988623482949
+5,maxent/equicorrelated:construct,7,14.245463928103586
+5,maxent/equicorrelated:filter,1,13.640441506639458
+5,maxent/equicorrelated:filter,2,11.118816746487452
+5,maxent/equicorrelated:filter,3,12.00691088556591
+5,maxent/equicorrelated:filter,4,10.482059998310886
+5,maxent/equicorrelated:filter,5,11.787874304936107
+5,maxent/equicorrelated:filter,6,11.078982736854703
+5,maxent/equicorrelated:filter,7,12.35612677650646
+5,maxent validated-factory/raw-optimizer,1,1.1137185477663127
+5,maxent validated-factory/raw-optimizer,2,1.0507343346918603
+5,maxent validated-factory/raw-optimizer,3,1.1119535578635154
+5,maxent validated-factory/raw-optimizer,4,1.1033966550828598
+5,maxent validated-factory/raw-optimizer,5,1.0569184216917746
+5,maxent validated-factory/raw-optimizer,6,1.0827173290323546
+5,maxent validated-factory/raw-optimizer,7,1.076422069875703
+5,R/candidate:construct-unitnorm,1,3.3247762458834287
+5,R/candidate:construct-unitnorm,2,3.54413185201509
+5,R/candidate:construct-unitnorm,3,3.499207859147178
+5,R/candidate:construct-unitnorm,4,3.357449697009928
+5,R/candidate:construct-unitnorm,5,3.412984405774865
+5,R/candidate:construct-unitnorm,6,3.332925383266422
+5,R/candidate:construct-unitnorm,7,3.5599311673616745
