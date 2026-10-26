@@ -1,0 +1,82 @@
+[
+  {
+    "case": "gaussian-moderate",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9409240998965265,
+    "null_upper95_mc": 0.031530040903691305,
+    "passed": true
+  },
+  {
+    "case": "gaussian-correlated",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9745169404875258,
+    "null_upper95_mc": 0.016453185102747785,
+    "passed": true
+  },
+  {
+    "case": "gaussian-benign",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9427393122538542,
+    "null_upper95_mc": 0.049727103304444846,
+    "passed": true
+  },
+  {
+    "case": "gaussian-random",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9510398115180513,
+    "null_upper95_mc": 0.04026778550185009,
+    "passed": true
+  },
+  {
+    "case": "gaussian-weak",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.95392816841609,
+    "null_upper95_mc": 0.04420650659164514,
+    "passed": true
+  },
+  {
+    "case": "gaussian-largen",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9342635317579702,
+    "null_upper95_mc": 0.06137106598868012,
+    "passed": true
+  },
+  {
+    "case": "gaussian-independent",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9504599192186276,
+    "null_upper95_mc": 0.03760274492169705,
+    "passed": true
+  },
+  {
+    "case": "gaussian-hetero",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9447615428305045,
+    "null_upper95_mc": 0.04827113724401362,
+    "passed": true
+  },
+  {
+    "case": "gaussian-heavy",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.9564746445321832,
+    "null_upper95_mc": 0.03520110025775476,
+    "passed": true
+  },
+  {
+    "case": "gaussian-hetero-target",
+    "valid": 500,
+    "planned": 500,
+    "active_lower95_mc": 0.948817193525663,
+    "null_upper95_mc": 0.04369617373073885,
+    "passed": true
+  }
+]

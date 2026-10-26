@@ -1,0 +1,242 @@
+[
+  {
+    "case": "gaussian-moderate",
+    "engine": "hdi",
+    "n": 1000,
+    "targets": 500,
+    "fit_seconds": {
+      "mean": 192.547947,
+      "mcse": 0.3886842425576365
+    },
+    "process_seconds": {
+      "mean": 194.98786839230684,
+      "mcse": 0.39349249363668437
+    },
+    "cpu_hours": 53.657943025,
+    "max_worker_rss_gib": 0.42655181884765625
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "EconML",
+    "n": 1000,
+    "targets": 500,
+    "fit_seconds": {
+      "mean": 57.69532252121298,
+      "mcse": 0.11327220046700648
+    },
+    "process_seconds": {
+      "mean": 60.14216046091728,
+      "mcse": 0.11944420797634978
+    },
+    "cpu_hours": 16.45616119222222,
+    "max_worker_rss_gib": 0.2593803405761719
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "sslasso",
+    "n": 1000,
+    "targets": 500,
+    "fit_seconds": {
+      "mean": 48.023032,
+      "mcse": 0.0916331493895252
+    },
+    "process_seconds": {
+      "mean": 50.15505676156795,
+      "mcse": 0.0961596965769016
+    },
+    "cpu_hours": 13.746984430277784,
+    "max_worker_rss_gib": 0.3641853332519531
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "SIHR",
+    "n": 1000,
+    "targets": 10,
+    "fit_seconds": {
+      "mean": 20.761015,
+      "mcse": 0.06324352957265911
+    },
+    "process_seconds": {
+      "mean": 22.9281807481288,
+      "mcse": 0.06749305856508947
+    },
+    "cpu_hours": 6.251502949166667,
+    "max_worker_rss_gib": 0.7525634765625
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "hdm",
+    "n": 1000,
+    "targets": 10,
+    "fit_seconds": {
+      "mean": 3.244641,
+      "mcse": 0.01513738314529587
+    },
+    "process_seconds": {
+      "mean": 5.115355831656605,
+      "mcse": 0.019120675551761807
+    },
+    "cpu_hours": 1.349613771666666,
+    "max_worker_rss_gib": 0.2601356506347656
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "hdi",
+    "n": 1000,
+    "targets": 500,
+    "fit_seconds": {
+      "mean": 54.211222,
+      "mcse": 0.09588162678569379
+    },
+    "process_seconds": {
+      "mean": 56.54303902833117,
+      "mcse": 0.09946790343806086
+    },
+    "cpu_hours": 15.504593112500002,
+    "max_worker_rss_gib": 0.4110870361328125
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "EconML",
+    "n": 1000,
+    "targets": 500,
+    "fit_seconds": {
+      "mean": 22.34871323323995,
+      "mcse": 0.0345991794312059
+    },
+    "process_seconds": {
+      "mean": 24.66685890616011,
+      "mcse": 0.03793369559668885
+    },
+    "cpu_hours": 6.704438756944446,
+    "max_worker_rss_gib": 0.2575187683105469
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "sslasso",
+    "n": 1000,
+    "targets": 500,
+    "fit_seconds": {
+      "mean": 18.407193,
+      "mcse": 0.027752757940866422
+    },
+    "process_seconds": {
+      "mean": 20.428380786850116,
+      "mcse": 0.031031003040590616
+    },
+    "cpu_hours": 5.570045212222225,
+    "max_worker_rss_gib": 0.2683830261230469
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "SIHR",
+    "n": 1000,
+    "targets": 10,
+    "fit_seconds": {
+      "mean": 11.806969,
+      "mcse": 0.031262321935707396
+    },
+    "process_seconds": {
+      "mean": 13.873890592892653,
+      "mcse": 0.033633753024533815
+    },
+    "cpu_hours": 3.764910361944437,
+    "max_worker_rss_gib": 0.7006607055664062
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "hdm",
+    "n": 1000,
+    "targets": 10,
+    "fit_seconds": {
+      "mean": 9.378558,
+      "mcse": 0.08961995884656307
+    },
+    "process_seconds": {
+      "mean": 11.17669513665419,
+      "mcse": 0.08998681051721723
+    },
+    "cpu_hours": 3.025588844722224,
+    "max_worker_rss_gib": 0.24849700927734375
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "hdi",
+    "n": 1000,
+    "targets": 100,
+    "fit_seconds": {
+      "mean": 7.686298,
+      "mcse": 0.013974050066865772
+    },
+    "process_seconds": {
+      "mean": 9.976053581047337,
+      "mcse": 0.017260436132532638
+    },
+    "cpu_hours": 2.6848229622222184,
+    "max_worker_rss_gib": 0.2795524597167969
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "EconML",
+    "n": 1000,
+    "targets": 100,
+    "fit_seconds": {
+      "mean": 0.8757088580382988,
+      "mcse": 0.0011793199576134732
+    },
+    "process_seconds": {
+      "mean": 3.0594331163247115,
+      "mcse": 0.006443782682848859
+    },
+    "cpu_hours": 0.7708786916666667,
+    "max_worker_rss_gib": 0.24871444702148438
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "sslasso",
+    "n": 1000,
+    "targets": 100,
+    "fit_seconds": {
+      "mean": 0.14710800000000002,
+      "mcse": 0.0012122614874332657
+    },
+    "process_seconds": {
+      "mean": 2.095124097654596,
+      "mcse": 0.0036242928117998087
+    },
+    "cpu_hours": 0.5206896555555562,
+    "max_worker_rss_gib": 0.21978378295898438
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "SIHR",
+    "n": 1000,
+    "targets": 10,
+    "fit_seconds": {
+      "mean": 16.742366,
+      "mcse": 0.027410295152083354
+    },
+    "process_seconds": {
+      "mean": 18.782270095282236,
+      "mcse": 0.029960461562283398
+    },
+    "cpu_hours": 5.103390487499994,
+    "max_worker_rss_gib": 0.7758941650390625
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "hdm",
+    "n": 1000,
+    "targets": 10,
+    "fit_seconds": {
+      "mean": 0.448119,
+      "mcse": 0.0009148397514159356
+    },
+    "process_seconds": {
+      "mean": 2.216121218874119,
+      "mcse": 0.003771532054808621
+    },
+    "cpu_hours": 0.556265912222223,
+    "max_worker_rss_gib": 0.24766159057617188
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "planned_target_fits": 2000,
+  "finite_target_records": 2000,
+  "unique_records": 2000,
+  "target_errors": 0,
+  "warning_entries": 150000,
+  "note": "Fresh source-frozen n1000,p201 reference confirmation,base1200000000;not all-regime eligibility."
+}

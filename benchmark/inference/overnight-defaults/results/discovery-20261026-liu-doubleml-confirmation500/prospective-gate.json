@@ -1,0 +1,7 @@
+{
+  "valid": 500,
+  "planned": 500,
+  "active_lower95_mc": 0.9404003019069977,
+  "null_upper95_mc": 0.05719346585087601,
+  "passed": true
+}

@@ -1,0 +1,142 @@
+[
+  {
+    "case": "gaussian-benign",
+    "method": "partialled_adaptive_cvmin_one_step_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-benign",
+    "method": "partialled_adaptive_cvmin_score_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "partialled_adaptive_cvmin_one_step_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-correlated",
+    "method": "partialled_adaptive_cvmin_score_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "partialled_adaptive_cvmin_one_step_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-heavy",
+    "method": "partialled_adaptive_cvmin_score_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "partialled_adaptive_cvmin_one_step_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero",
+    "method": "partialled_adaptive_cvmin_score_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero-target",
+    "method": "partialled_adaptive_cvmin_one_step_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-hetero-target",
+    "method": "partialled_adaptive_cvmin_score_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "partialled_adaptive_cvmin_one_step_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-independent",
+    "method": "partialled_adaptive_cvmin_score_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "partialled_adaptive_cvmin_one_step_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-largen",
+    "method": "partialled_adaptive_cvmin_score_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "partialled_adaptive_cvmin_one_step_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-moderate",
+    "method": "partialled_adaptive_cvmin_score_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "partialled_adaptive_cvmin_one_step_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-random",
+    "method": "partialled_adaptive_cvmin_score_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "partialled_adaptive_cvmin_one_step_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  },
+  {
+    "case": "gaussian-weak",
+    "method": "partialled_adaptive_cvmin_score_hc3",
+    "valid": 500,
+    "planned": 500,
+    "missing_or_invalid": 0
+  }
+]

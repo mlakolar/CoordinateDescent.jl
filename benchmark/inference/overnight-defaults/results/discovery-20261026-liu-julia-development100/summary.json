@@ -1,0 +1,58 @@
+[
+  {
+    "method": "julia_logistic_default",
+    "role": "active",
+    "valid": 100,
+    "planned": 100,
+    "coverage": 0.92,
+    "coverage_mcse": 0.027265992434429072,
+    "rejection": 1.0,
+    "rejection_mcse": 0.0,
+    "length": 0.29687223434733906,
+    "length_mcse": 0.0006882799881569068,
+    "seconds": 0.82379451935,
+    "seconds_mcse": 0.09925688983863046
+  },
+  {
+    "method": "julia_logistic_default",
+    "role": "null",
+    "valid": 100,
+    "planned": 100,
+    "coverage": 0.94,
+    "coverage_mcse": 0.023868325657594204,
+    "rejection": 0.06,
+    "rejection_mcse": 0.023868325657594204,
+    "length": 0.27623613895364424,
+    "length_mcse": 0.0007138809199755454,
+    "seconds": 0.82379451935,
+    "seconds_mcse": 0.09925688983863046
+  },
+  {
+    "method": "julia_logistic_restricted_expert",
+    "role": "active",
+    "valid": 100,
+    "planned": 100,
+    "coverage": 0.94,
+    "coverage_mcse": 0.023868325657594204,
+    "rejection": 1.0,
+    "rejection_mcse": 0.0,
+    "length": 0.34447367078491303,
+    "length_mcse": 0.0008561858442347858,
+    "seconds": 0.48808212625,
+    "seconds_mcse": 0.01563203319951344
+  },
+  {
+    "method": "julia_logistic_restricted_expert",
+    "role": "null",
+    "valid": 100,
+    "planned": 100,
+    "coverage": 0.99,
+    "coverage_mcse": 0.01,
+    "rejection": 0.01,
+    "rejection_mcse": 0.01,
+    "length": 0.308509558163858,
+    "length_mcse": 0.0008481373809592534,
+    "seconds": 0.48808212625,
+    "seconds_mcse": 0.01563203319951344
+  }
+]

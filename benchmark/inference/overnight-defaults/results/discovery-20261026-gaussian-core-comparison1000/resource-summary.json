@@ -1,0 +1,7 @@
+{
+  "native_worker_cpu_hours": 135.66782936583323,
+  "native_max_worker_rss_gib": 0.7758941650390625,
+  "current_own_worker_cpu_hours": 2.291301599444445,
+  "current_own_max_worker_rss_gib": 0.91290283203125,
+  "note": "Native resources include reused first20/case;failed observer attempts/recoveries accounted separately. Individual-worker RSS,not simultaneous total. Native job13452003 elapsed7708s64CPU128GiB;current-source own13455533 separate."
+}

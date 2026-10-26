@@ -10,3 +10,5 @@ EMPIRICAL. The favorable published-regime control n1000,p201 is expanded from20t
 |doubleml_sparse_nuisance_space|null|100/100|96.00 ± 1.97|4.00 ± 1.97|0.2874|
 
 Boundary-aware Wilson Monte Carlo bounds are in summary.json; availability is separate from conditional coverage. No logistic default is changed and no large logistic campaign is eligible from this selected development extension alone.
+
+Native numerical checks: SEparity5.55e-17, maximum normal-pvalue error1.67e-16, score residual1.69e-17. Actual workerCPU0.823hours, maximum individual-workerRSS0.238GiB. Warning categories:{'FutureWarning': 30000}. See resource-summary.json and exact-job accounting.

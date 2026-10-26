@@ -16,5 +16,5 @@ if rows:
  with (D/'records.csv').open('w') as f:w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
 for name,obj in [('checks',dict(records=len(rows),unique_records=len({(r['case'],r['rep'],r['method'],r['target']) for r in rows}),missing=missing,errors=len(errors),search_warnings=len(warnings))),('errors',errors)]: (D/(name+'.json')).write_text(json.dumps(obj,indent=2)+'\n')
 assert not missing and rows
-sys.argv=['summarize-slots.py',stage,'qphc3',str(n),'../gaussian-hc3-v1/confirmation-cases.csv'];runpy.run_path('../summarize-slots-v1.py',run_name='__main__')
+sys.argv=['summarize-slots.py',stage,'qphc3',str(n),'../gaussian-hc3-v1/confirmation-cases.csv'];runpy.run_path('../gaussian-campaign-v1/summarize-slots.py',run_name='__main__')
 if stage=='canary':assert not errors and len(rows)==80

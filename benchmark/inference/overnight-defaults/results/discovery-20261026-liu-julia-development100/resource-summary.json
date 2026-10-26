@@ -1,0 +1,5 @@
+{
+  "workers": 8,
+  "cpu_seconds": 271.857368,
+  "max_worker_rss_gib": 0.9400520324707031
+}

@@ -1,0 +1,572 @@
+[
+  {
+    "case": "gaussian-moderate",
+    "engine": "hdi",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.17779999999999999,
+      "mcse": 0.00652301385171837
+    },
+    "rejection": {
+      "mean": -0.03779999999999999,
+      "mcse": 0.003016663763209327
+    },
+    "length": {
+      "mean": 0.1965046950381559,
+      "mcse": 0.0008373781777508778
+    }
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "hdi",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.0162,
+      "mcse": 0.003179255835516806
+    },
+    "rejection": {
+      "mean": -0.016200000000000003,
+      "mcse": 0.0031792558355168065
+    },
+    "length": {
+      "mean": 0.1923614719087734,
+      "mcse": 0.0007645562195885995
+    }
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "EconML",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.2576,
+      "mcse": 0.007425454691625112
+    },
+    "rejection": {
+      "mean": -0.039799999999999995,
+      "mcse": 0.0030174600353716475
+    },
+    "length": {
+      "mean": 0.2348038426367518,
+      "mcse": 0.0009376591773935677
+    }
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "EconML",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.006799999999999999,
+      "mcse": 0.002932978411506358
+    },
+    "rejection": {
+      "mean": -0.0068000000000000005,
+      "mcse": 0.002932978411506359
+    },
+    "length": {
+      "mean": 0.23064256396229596,
+      "mcse": 0.0008824253438424108
+    }
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "sslasso",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.1986,
+      "mcse": 0.006770811168824891
+    },
+    "rejection": {
+      "mean": -0.04139999999999999,
+      "mcse": 0.0030356638903632355
+    },
+    "length": {
+      "mean": 0.19945906385459017,
+      "mcse": 0.0008766251853416919
+    }
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "sslasso",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": -0.010999999999999998,
+      "mcse": 0.002400992454124911
+    },
+    "rejection": {
+      "mean": -0.0212,
+      "mcse": 0.003168690676068051
+    },
+    "length": {
+      "mean": 0.19507942263420155,
+      "mcse": 0.000788153796158601
+    }
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "SIHR",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.2434,
+      "mcse": 0.007481471273246487
+    },
+    "rejection": {
+      "mean": -0.039799999999999995,
+      "mcse": 0.00293676430524899
+    },
+    "length": {
+      "mean": 0.22871830683012953,
+      "mcse": 0.001147081484786676
+    }
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "SIHR",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.0003999999999999996,
+      "mcse": 0.002654597311625039
+    },
+    "rejection": {
+      "mean": -0.0004,
+      "mcse": 0.0026545973116250394
+    },
+    "length": {
+      "mean": 0.22475479888011568,
+      "mcse": 0.0010385634529652885
+    }
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "hdm",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.1488,
+      "mcse": 0.006373317752880299
+    },
+    "rejection": {
+      "mean": -0.034199999999999994,
+      "mcse": 0.003162334637630932
+    },
+    "length": {
+      "mean": 0.18130171498407463,
+      "mcse": 0.0009812968482213098
+    }
+  },
+  {
+    "case": "gaussian-moderate",
+    "engine": "hdm",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.027599999999999996,
+      "mcse": 0.0036402598109876016
+    },
+    "rejection": {
+      "mean": -0.027600000000000003,
+      "mcse": 0.0036402598109876024
+    },
+    "length": {
+      "mean": 0.1607809001326504,
+      "mcse": 0.0010479372714127845
+    }
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "hdi",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.1518,
+      "mcse": 0.005959217421127733
+    },
+    "rejection": {
+      "mean": -0.1656,
+      "mcse": 0.00675146074729182
+    },
+    "length": {
+      "mean": 1.1372215775966605,
+      "mcse": 0.005981281433126805
+    }
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "hdi",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.031599999999999996,
+      "mcse": 0.003946772987773304
+    },
+    "rejection": {
+      "mean": -0.0316,
+      "mcse": 0.003946772987773304
+    },
+    "length": {
+      "mean": 1.2195651497486566,
+      "mcse": 0.006125274937037727
+    }
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "EconML",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.2198,
+      "mcse": 0.007267790639580971
+    },
+    "rejection": {
+      "mean": -0.1512,
+      "mcse": 0.006503911197184419
+    },
+    "length": {
+      "mean": 1.202338916869763,
+      "mcse": 0.005956450918840869
+    }
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "EconML",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.023199999999999995,
+      "mcse": 0.003851830291769952
+    },
+    "rejection": {
+      "mean": -0.023200000000000002,
+      "mcse": 0.003851830291769953
+    },
+    "length": {
+      "mean": 1.279154237959366,
+      "mcse": 0.006067062548009214
+    }
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "sslasso",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.9162,
+      "mcse": 0.0038875021122402836
+    },
+    "rejection": {
+      "mean": -0.1004,
+      "mcse": 0.007826947112450747
+    },
+    "length": {
+      "mean": 1.4896828751577749,
+      "mcse": 0.006906125975886188
+    }
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "sslasso",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": -0.025399999999999995,
+      "mcse": 0.0033654369948293733
+    },
+    "rejection": {
+      "mean": -0.10200000000000001,
+      "mcse": 0.0067795252018088975
+    },
+    "length": {
+      "mean": 1.5816081230497574,
+      "mcse": 0.007018861182193578
+    }
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "SIHR",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.18159999999999998,
+      "mcse": 0.007581485271298686
+    },
+    "rejection": {
+      "mean": -0.0522,
+      "mcse": 0.005505040005800636
+    },
+    "length": {
+      "mean": 1.1261860785738274,
+      "mcse": 0.00579991823410211
+    }
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "SIHR",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": -0.0058,
+      "mcse": 0.0032889477309889213
+    },
+    "rejection": {
+      "mean": 0.0058000000000000005,
+      "mcse": 0.0032889477309889217
+    },
+    "length": {
+      "mean": 1.21528533757994,
+      "mcse": 0.005851135479772443
+    }
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "hdm",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.021599999999999998,
+      "mcse": 0.003912639613962516
+    },
+    "rejection": {
+      "mean": -0.18760000000000002,
+      "mcse": 0.007556675416037356
+    },
+    "length": {
+      "mean": 0.7000304076703348,
+      "mcse": 0.004220033787667519
+    }
+  },
+  {
+    "case": "gaussian-correlated",
+    "engine": "hdm",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.0224,
+      "mcse": 0.004078587362663067
+    },
+    "rejection": {
+      "mean": -0.0224,
+      "mcse": 0.004078587362663068
+    },
+    "length": {
+      "mean": 0.7013454098056642,
+      "mcse": 0.004482570436073501
+    }
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "hdi",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.0326,
+      "mcse": 0.004112682111974393
+    },
+    "rejection": {
+      "mean": 0,
+      "mcse": 0.0
+    },
+    "length": {
+      "mean": 0.026788621317260237,
+      "mcse": 0.0001751951338000861
+    }
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "hdi",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.008599999999999998,
+      "mcse": 0.0029076613445335226
+    },
+    "rejection": {
+      "mean": -0.0086,
+      "mcse": 0.002907661344533523
+    },
+    "length": {
+      "mean": 0.026867476968875446,
+      "mcse": 0.00017571002488681777
+    }
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "EconML",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.029199999999999997,
+      "mcse": 0.003704197764844782
+    },
+    "rejection": {
+      "mean": 0,
+      "mcse": 0.0
+    },
+    "length": {
+      "mean": 0.03524699699493904,
+      "mcse": 0.00017714622177137905
+    }
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "EconML",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.010399999999999998,
+      "mcse": 0.0026793691457167707
+    },
+    "rejection": {
+      "mean": -0.010400000000000001,
+      "mcse": 0.002679369145716771
+    },
+    "length": {
+      "mean": 0.03521018360076,
+      "mcse": 0.00017123630580490414
+    }
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "sslasso",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.006999999999999999,
+      "mcse": 0.0021343747458109495
+    },
+    "rejection": {
+      "mean": 0,
+      "mcse": 0.0
+    },
+    "length": {
+      "mean": 0.009282125134102993,
+      "mcse": 0.000617121029347481
+    }
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "sslasso",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.005799999999999999,
+      "mcse": 0.0018573663639168793
+    },
+    "rejection": {
+      "mean": -0.0058000000000000005,
+      "mcse": 0.0018573663639168798
+    },
+    "length": {
+      "mean": 0.008433546214897347,
+      "mcse": 0.0006126007443045414
+    }
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "SIHR",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.0156,
+      "mcse": 0.0023837622201726247
+    },
+    "rejection": {
+      "mean": 0,
+      "mcse": 0.0
+    },
+    "length": {
+      "mean": 0.025428474191841317,
+      "mcse": 0.00017460591352997282
+    }
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "SIHR",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.008,
+      "mcse": 0.002004998758109346
+    },
+    "rejection": {
+      "mean": -0.008,
+      "mcse": 0.002004998758109346
+    },
+    "length": {
+      "mean": 0.025003394802147916,
+      "mcse": 0.00017538767332418118
+    }
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "hdm",
+    "role": "active",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.0053999999999999986,
+      "mcse": 0.0030099667605971827
+    },
+    "rejection": {
+      "mean": 0,
+      "mcse": 0.0
+    },
+    "length": {
+      "mean": 0.028551109795376128,
+      "mcse": 0.000132688476286441
+    }
+  },
+  {
+    "case": "gaussian-benign",
+    "engine": "hdm",
+    "role": "null",
+    "paired_datasets": 1000,
+    "scope": "Julia minus finite native,includingwarned/uncertifiednative;strictavailabilityseparate",
+    "coverage": {
+      "mean": 0.010999999999999998,
+      "mcse": 0.002815479875070487
+    },
+    "rejection": {
+      "mean": -0.011000000000000001,
+      "mcse": 0.0028154798750704875
+    },
+    "length": {
+      "mean": 0.02756492683648992,
+      "mcse": 0.00013080064641996596
+    }
+  }
+]
