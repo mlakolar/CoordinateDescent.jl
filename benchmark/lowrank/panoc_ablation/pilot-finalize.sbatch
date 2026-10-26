@@ -12,4 +12,4 @@
 #SBATCH --output=pilot-report-v1-%j.out
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
-python3 code/pilot_finalize.py
+/home1/mkolar/juliaPkg/runs/20261025-cd81-optcomp/venv/bin/python code/pilot_finalize.py
