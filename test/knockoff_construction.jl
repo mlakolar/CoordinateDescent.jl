@@ -16,7 +16,7 @@ const H = HighDimensionalModels
     @test gaussian_knockoffs(Xt,mut,St;noise=Zt)==expected
     @test gaussian_knockoffs(Xt,mut,St;noise=Zt,strategy=:equicorrelated)==expected
     @test plan.diagnostics.feasibility==:validated
-    supplied=T.(.5.*diag(St));p=knockoff_diagonal(St;s=supplied)
+    supplied=T.(0.5 .* diag(St));p=knockoff_diagonal(St;s=supplied)
     @test p.strategy==:user && p.s==supplied && p.s!==supplied
     supplied[1]=0
     @test p.s[1]>0
