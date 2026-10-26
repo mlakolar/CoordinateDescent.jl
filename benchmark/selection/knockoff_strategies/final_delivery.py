@@ -111,7 +111,19 @@ for pattern in ('*.csv','*.json','*.toml','*source.txt','*session.txt'):
 for directory in base.glob('*results'):
     for pattern in ('*.log','*.toml'):
         for path in directory.glob(pattern):include(path)
-for path in base.glob('*.out'):include(path)
+for directory in (base/'runtime-pilot-v1',base/'runtime-pilot-v2'):
+    for pattern in ('*.json','*.tsv'):
+        for path in directory.glob(pattern):include(path)
+    for work in directory.glob('*-case-*-rep-*'):
+        for pattern in ('timings.csv','checks.csv','metadata.toml','session.txt','root-identity.csv','diagonal-*.csv','*-source.txt'):
+            for path in work.glob(pattern):include(path)
+for directory in (base/'runtime-pilot-v1',base/'runtime-pilot-v2',base/'stat-pilot-v1'):
+    for logdir in directory.glob('*logs'):
+        for name in ('stdout','stderr'):
+            for path in logdir.rglob(name):include(path)
+include(base/'registry-snapshot-before-delivery.json')
+for path in base.glob('*.out'):
+    if not path.name.startswith('final-delivery'):include(path)
 for path in base.glob('*.tar'):include(path,'source-archives/'+path.name)
 for env in base.glob('env-*'):
     for name in ('Project.toml','Manifest.toml'):include(env/name)
