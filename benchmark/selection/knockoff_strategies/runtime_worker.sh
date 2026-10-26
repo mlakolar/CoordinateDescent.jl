@@ -8,4 +8,4 @@ if [[ $variant == candidate ]];then
 else
  environment="$PWD/env-runtime-baseline-1.10"
 fi
-/usr/bin/time -v -o "$HDM_KNOCKOFF_RUNTIME/resource-$variant-$case-$rep.txt" /home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$environment" "$HDM_KNOCKOFF_CODE/runtime_worker.jl" "$variant" "$case" "$rep"
+python3 "$HDM_KNOCKOFF_CODE/resource_wrapper.py" "$HDM_KNOCKOFF_RUNTIME/resource-$variant-$case-$rep.json" /home1/mkolar/juliaPkg/julia-1.10.12/bin/julia --startup-file=no --project="$environment" "$HDM_KNOCKOFF_CODE/runtime_worker.jl" "$variant" "$case" "$rep"
