@@ -216,6 +216,8 @@ end
 # Preserve the pre-calibration positional result constructor.
 SLOPESolution(x, b0, hasintercept, residuals, lambda, iterations, converged, residual) =
   SLOPESolution(x, b0, hasintercept, residuals, lambda, iterations, converged, residual, (method=:unspecified,))
+SLOPESolution{T}(x, b0, hasintercept, residuals, lambda, iterations, converged, residual) where {T} =
+  SLOPESolution{T}(x, b0, hasintercept, residuals, lambda, iterations, converged, residual, (method=:unspecified,))
 
 function _slope_options(max_iter, tol)
   max_iter >= 2 || throw(ArgumentError("max_iter must be at least 2"))
@@ -294,6 +296,8 @@ end
 
 SLOPEPath(a, lambda, bs, b0, intercept, nobs, converged, iterations, residuals, sizes, repairs) =
   SLOPEPath(a, lambda, bs, b0, intercept, nobs, converged, iterations, residuals, sizes, repairs, (method=:unspecified,))
+SLOPEPath{T}(a, lambda, bs, b0, intercept, nobs, converged, iterations, residuals, sizes, repairs) where {T} =
+  SLOPEPath{T}(a, lambda, bs, b0, intercept, nobs, converged, iterations, residuals, sizes, repairs, (method=:unspecified,))
 
 function SLOPEPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, factors=nothing;
                    lambda=nothing, calibration::Symbol=:bh, q::Real=0.1, sigma::Real=1, nλ::Integer=50, λmin_ratio::Real=0.01,
