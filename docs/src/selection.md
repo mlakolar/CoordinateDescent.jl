@@ -67,6 +67,14 @@ weights use the caller's `sigma` (default 1), without verifying that it is known
 The `calibration` field records the actual rule, noise convention, dimensions,
 standardization and any flat tail. Existing coefficient accessors are unchanged.
 
+```julia
+sol = slope(X, y; calibration=:gaussian, sigma=1.0, intercept=true)
+path = SLOPEPath(X, y; calibration=:gaussian)
+sol.calibration.method
+sol.calibration.flat_from
+sol.calibration.flatten_reason
+```
+
 For Gaussian weights let ``m=n-1`` with an intercept and ``m=n`` otherwise, and
 let ``b_i=\Phi^{-1}(1-qi/(2p))``. The dimensionless recurrence is
 
@@ -101,22 +109,25 @@ solver agreement; exact native-weight identity is not an acceptance condition.
 
 ### Evidence and settings
 
-The [Discovery evidence report](https://github.com/mlakolar/HighDimensionalModels.jl/blob/codex/issue107-gaussian-slope/benchmark/selection/gaussian_calibration/results/discovery-20261026/RESULTS.md)
-compares 1,008 independent datasets per scenario, with separate estimated-noise
-and covariance stress cases. At known sigma=1/q=0.1 in its iid alternating-sign
-example, Gaussian adjustment reduces mean FDP from 0.1818 to 0.0733 and power
-from 0.9464 to 0.8570. Correlated and wide alternating-sign examples still have
-FDR above 0.1 after adjustment. In the exactly orthogonal control it sacrifices
-power relative to BH. These results support an explicit Gaussian option and
-retaining BH as the default; they do not extend the orthogonal BH theorem.
+The [replicated study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/dbcad2b4a084b4dcecc7d160c496f4cb9166b370/benchmark/selection/gaussian_calibration)
+provides historical evidence measured on an earlier dependency stack; it was
+not rerun at this revision. The study compared 1,008 independent datasets per
+scenario, with separate estimated-noise and covariance stress cases. Its summary
+tables reported that, at known sigma=1/q=0.1 in the iid alternating-sign example,
+Gaussian adjustment reduced mean FDP from 0.1818 to 0.0733 and power from 0.9464
+to 0.8570. Correlated and wide alternating-sign examples still had FDR above
+q=0.1 after adjustment. In the exactly orthogonal control it sacrificed power
+relative to BH. These historical findings support an explicit Gaussian option
+and retaining BH as the default; they do not extend the orthogonal BH theorem.
 
-Retain `tol=1e-7`, `max_iter=10000` and `screening=true`. Independent checks
-passed every default probe on 84 fresh runtime inputs; screening improved the
-declared 20-level path comparisons. Stricter research tolerances can hit an
-iteration cap and are not automatically better defaults. The benchmark
-coefficient cutoff 1e-6 defines its reported selections, not a new package
-selection guarantee. `sigma=1` remains a supplied-scale convention: the package
-does not establish that it is the true noise level or estimate it from `std(y)`.
+The study supported retaining `tol=1e-7`, `max_iter=10000` and `screening=true`.
+Its independent checks passed every default probe on 84 fresh runtime inputs;
+screening improved the declared 20-level path comparisons. Stricter research
+tolerances could hit an iteration cap and did not establish better defaults.
+The study's coefficient cutoff 1e-6 defined its reported selections, not a new
+package selection guarantee. Its `sigma=1` setting was a supplied-scale
+convention: the package does not establish that it is the true noise level or
+estimate it from `std(y)`.
 
 ## Knockoff+
 
@@ -216,7 +227,7 @@ replace q in the guarantee. No unimodality or r-concavity improvement is assumed
 - [Meinshausen and Bühlmann (2010), stability selection](https://doi.org/10.1111/j.1467-9868.2010.00740.x).
 - [Shah and Samworth (2013), complementary pairs](https://doi.org/10.1111/j.1467-9868.2011.01034.x).
 
-The R golden-data generator, replicated Discovery benchmark/profile harness,
+The R golden-data generator, replicated benchmark/profile harness,
 and Monte Carlo recipe are in `benchmark/selection`. Monte Carlo evidence
 checks the listed finite simulation designs; it does not prove a guarantee.
 

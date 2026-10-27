@@ -1,6 +1,0 @@
-engine,setting,point_pairs,max_relative_objective,selected_set_disagreements
-R,public,15876,7.102538886403056e-15,0
-julia,public,15876,6.26623361974872e-15,0
-native,default,15876,6.274818400600079e-14,0
-native,prepared,15876,0.0,0
-native,unscreened,15120,1.1706087860784728e-15,0

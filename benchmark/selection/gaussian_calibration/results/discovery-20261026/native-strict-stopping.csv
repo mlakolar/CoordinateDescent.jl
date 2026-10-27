@@ -1,6 +1,0 @@
-file,seed,method,seconds,reported_converged,iterations,residual,error
-native-sc10-shard2.csv,117420134,paper,5.55765653,false,99999,1.1864543070227995e-8,
-native-sc10-shard2.csv,117420134,automatic,5.057564922,false,99999,1.1864543070227995e-8,
-native-sc16-shard5.csv,123450111,bh,2.249131143,false,99999,1.7349280012624035e-8,
-native-sc8-shard3.csv,115430044,julia,2.383983524,false,99999,7.364136328513737e-9,
-native-sc8-shard7.csv,115470024,julia,2.395803319,false,100000,1.3430726780727653e-8,
