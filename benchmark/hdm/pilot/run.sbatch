@@ -1,16 +1,12 @@
 #!/bin/bash
-#SBATCH --account=mladen
-#SBATCH --qos=normal
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=16G
-#SBATCH --time=01:45:00
 #SBATCH --output=logs/%x-%j.out
 #SBATCH --open-mode=append
 
 set -euo pipefail
 : "${RUNTAG:?Set RUNTAG and pass --job-name and --comment at submission}"
 : "${TASKS:?Set TASKS to the task-list file}"
-JULIA=${JULIA:-$HOME/.local/bin/julia}
+: "${SLURM_MEM_PER_NODE:?Submit with --mem so each worker step gets a share of the job memory}"
+JULIA=${JULIA:-julia}
 OUTDIR=${OUTDIR:-$PWD/outputs/$RUNTAG}
 export JULIA OUTDIR
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 JULIA_NUM_THREADS=1 JULIA_PKG_SERVER="" JULIA_PKG_OFFLINE=true
