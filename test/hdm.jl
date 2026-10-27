@@ -260,4 +260,37 @@ end
   end
 end
 
+@testset "OLS generic BigFloat refit" begin
+  rng = Xoshiro(118222)
+  n, S = 30, [1, 3, 4]
+  A = randn(rng, n, 4) .+ [0.5 -1.0 1.5 2.0]
+  target = 0.7 .+ A[:, S] * [1.2, -0.8, 0.5] .+ 0.1 .* randn(rng, n)
+  b64, e64, rank64 = HighDimensionalModels._ols(
+    A, target, S, vec(mean(A; dims = 1)), mean(target))
+
+  setprecision(BigFloat, 256) do
+    Ab, yb = BigFloat.(A), BigFloat.(target)
+    xbar, ybar = vec(mean(Ab; dims = 1)), mean(yb)
+    b, e, rnk = HighDimensionalModels._ols(Ab, yb, S, xbar, ybar)
+    # Well-scaled, full-rank data: 1e-10 covers Float64 QR/centering roundoff.
+    @test b ≈ b64 atol = 1e-10 rtol = 0
+    @test e ≈ e64 atol = 1e-10 rtol = 0
+    @test eltype(b) == eltype(e) == BigFloat
+    @test rnk == rank64 == length(S)
+
+    Z = [ones(BigFloat, n) Ab[:, S]]
+    explicit = Z \ yb
+    # At 256-bit precision (~77 decimal digits), 1e-60 leaves ample room
+    # for accumulated QR roundoff while testing the centered refit tightly.
+    tight = BigFloat("1e-60")
+    @test b ≈ explicit[2:end] atol = tight rtol = 0
+    @test e ≈ yb - Z * explicit atol = tight rtol = 0
+
+    empty_b, empty_e, empty_rank = HighDimensionalModels._ols(Ab, yb, Int[], xbar, ybar)
+    @test empty_b isa Vector{BigFloat} && isempty(empty_b)
+    @test empty_e == yb .- ybar
+    @test empty_rank == 0
+  end
+end
+
 end
