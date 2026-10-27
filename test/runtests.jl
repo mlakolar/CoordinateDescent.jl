@@ -24,6 +24,7 @@ tests = [
   "multiresponse",
   "lowrank",
   "hdm",
+  "hdm_golden",
   "varying",
   "statsapi",
   "formula",

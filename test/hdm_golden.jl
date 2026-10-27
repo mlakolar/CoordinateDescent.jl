@@ -1,0 +1,193 @@
+module HDMGoldenTest
+
+using HighDimensionalModels, DelimitedFiles, LinearAlgebra, Random, Statistics, Test
+
+const ROOT = joinpath(@__DIR__, "data", "hdm")
+const DATASETS = ("hetero", "highdim", "forced", "nearthreshold", "empty")
+
+# Absolute tolerances, with no implicit relative allowance. Baselines protect
+# the current Julia implementation to 1e-12. Cross-package post=true results
+# only use OLS after identical selection, hence a 1e-11 roundoff allowance.
+# For post=false, hdm stops shooting at L1 step <1e-5, versus Julia's relative
+# coordinate step 1e-7, with different starts; both outer loops stop at 1e-5.
+# Use 1e-5 for coefficients. Propagate this through e=y-b0-Xb using the
+# observed design, rather than silently increasing the residual tolerance.
+const BASELINE_ATOL = 1e-12
+const OLS_ATOL = 1e-11
+const SHOOTING_ATOL = 1e-5
+
+readmat(dir, file) = readdlm(joinpath(dir, file * ".csv"), ',', Float64)
+readvec(dir, file) = vec(readmat(dir, file))
+
+function readfixture(path)
+  rows, header = readdlm(path, ',', Any; header = true)
+  @assert vec(header) == ["fit", "field", "index", "value"]
+  result = Dict{Tuple{String, String}, Vector{Float64}}()
+  for row in eachrow(rows)
+    key = (String(row[1]), String(row[2]))
+    index, value = Int(row[3]), Float64(row[4])
+    @assert isfinite(value)
+    if index == 0
+      @assert key[2] in ("selected", "index") && value == 0 && !haskey(result, key)
+      result[key] = Float64[]
+    else
+      values = get!(result, key, Float64[])
+      @assert index == length(values) + 1
+      push!(values, value)
+    end
+  end
+  result
+end
+
+maxdiff(x, y) = isempty(x) && isempty(y) ? 0.0 : maximum(abs, x .- y)
+
+function baselinecheck(baseline, name, field, value; integer = false)
+  actual = value isa Number ? [value] : collect(value)
+  expected = baseline[name, field]
+  @test length(actual) == length(expected)
+  if integer
+    @test all(isinteger, expected)
+    @test actual == expected
+  else
+    @test maxdiff(actual, expected) <= BASELINE_ATOL
+  end
+end
+
+@testset "hdm U1 golden references and unchanged Julia baseline" begin
+  for (k, dataset) in enumerate(DATASETS)
+    @testset "$dataset" begin
+      dir = joinpath(ROOT, dataset)
+      X, y, d = readmat(dir, "X"), readvec(dir, "y"), readvec(dir, "d")
+      n, p = size(X)
+      forced = dataset == "forced" ? Int.(readvec(dir, "forced")) : Int[]
+      baseline = readfixture(joinpath(dir, "baseline-julia.csv"))
+      reference = readfixture(joinpath(dir, "reference-r.csv"))
+      metadata, header = readdlm(joinpath(dir, "metadata.csv"), ',', String; header = true)
+      meta = Dict(row[1] => row[2] for row in eachrow(metadata))
+      @test vec(header) == ["key", "value"]
+      @test startswith(meta["R"], "R version 4.5.1")
+      @test meta["hdm"] == "0.3.2" && meta["sandwich"] == "3.1.1"
+      @test meta["hdm_archive_sha256"] == "3354b22752f0aa0c0d9c8c12b38810202b6380f2587e539be11d9a358412fe6a"
+      @test meta["data_script"] == "benchmark/hdm/golden_data.jl"
+      @test meta["reference_script"] == "benchmark/hdm/golden.R"
+      @test meta["baseline_script"] == "benchmark/hdm/baseline.jl"
+
+      # Load all final-stage reference fields now, without testing any future
+      # core covariance implementation or substituting a covariance for hdm's SE.
+      for method in (:doubleselection, :partialling)
+        name, final = "effect_$method", "final_$method"
+        for field in ("alpha", "se", "t", "pval")
+          @test length(reference[name, field]) == 1
+        end
+        @test all(isinteger, reference[name, "index"])
+        @test length(reference[name, "epsilon"]) == n
+        @test length(reference[name, "v"]) == n
+        for field in ("coefficient", "vcov", "HC0", "HC1", "HC2", "HC3")
+          @test length(reference[final, field]) == 1
+        end
+        @test length(reference[final, "hatvalues"]) == n
+        if method == :partialling
+          @test length(reference[final, "yr"]) == n
+          @test length(reference[final, "dr"]) == n
+        end
+      end
+
+      coeferr, residerr, loadingerr, lambdaerr = 0.0, 0.0, 0.0, 0.0
+      for (j, (post, response)) in enumerate(((true, :y), (true, :d), (false, :y), (false, :d)))
+        target = response == :y ? y : d
+        Random.seed!(11900 + 10k + j)
+        r = rlasso(X, target; post)
+        name = "rlasso_$(response)_$post"
+        baselinecheck(baseline, name, "selected", r.selected; integer = true)
+        baselinecheck(baseline, name, "iterations", r.iterations; integer = true)
+        baselinecheck(baseline, name, "intercept", r.intercept)
+        baselinecheck(baseline, name, "coefficients", Vector(r.x))
+        baselinecheck(baseline, name, "residuals", r.residuals)
+        baselinecheck(baseline, name, "loadings", r.loadings)
+        baselinecheck(baseline, name, "lambda0", r.λ0)
+        baselinecheck(baseline, name, "sigma", r.σ)
+
+        @test length(reference[name, "coefficients"]) == p + 1
+        @test length(reference[name, "intercept"]) == 1
+        @test length(reference[name, "residuals"]) == n
+        @test length(reference[name, "loadings"]) == p
+        @test length(reference[name, "lambda0"]) == 1
+        @test length(reference[name, "iter"]) == 1
+        @test all(isinteger, reference[name, "index"])
+        @test isinteger(only(reference[name, "iter"]))
+        Rsel = Int.(reference[name, "index"])
+        dc = maxdiff([r.intercept; Vector(r.x)], reference[name, "coefficients"])
+        de = maxdiff(r.residuals, reference[name, "residuals"])
+        dl = maxdiff(r.loadings, reference[name, "loadings"])
+        dλ = abs(r.λ0 - only(reference[name, "lambda0"]) / (2n))
+        coeferr, residerr = max(coeferr, dc), max(residerr, de)
+        loadingerr, lambdaerr = max(loadingerr, dl), max(lambdaerr, dλ)
+        @test dλ <= 1e-15
+        if dataset == "nearthreshold"
+          # Orthogonal, centered design: only coordinate 2 differs, in every
+          # nuisance fit, for both post values. hdm discards it at 1e-6.
+          @test Rsel == [1]
+          @test r.selected == [1, 2]
+          @test setdiff(r.selected, Rsel) == [2]
+          @test 0 < abs(r.x[2]) < 1e-6
+          @test reference[name, "coefficients"][3] == 0
+          if post
+            @test abs(r.x[2] - (response == :y ? 8e-7 : 6e-7)) <= 1e-15
+          end
+        else
+          @test r.selected == Rsel
+          coefficient_tol = post ? OLS_ATOL : SHOOTING_ATOL
+          residual_tol = post ? OLS_ATOL : SHOOTING_ATOL * (1 + maximum(sum(abs, X[:, Rsel]; dims = 2)))
+          @test dc <= coefficient_tol
+          @test de <= residual_tol
+          if dataset == "forced"
+            @test isempty(intersect(forced, r.selected))
+          elseif dataset == "empty"
+            @test isempty(r.selected)
+            @test r.iterations == 1
+          end
+        end
+      end
+
+      alphaerr, seerr, terr, perr = 0.0, 0.0, 0.0, 0.0
+      for (j, method) in enumerate((:doubleselection, :partialling))
+        force = method == :doubleselection ? forced : Int[]
+        Random.seed!(11900 + 10k + 4 + j)
+        r = double_selection(y, d, X; method, forced = force)
+        name = "effect_$method"
+        for field in (:estimate, :se, :t, :pvalue, :ci, :selected)
+          baselinecheck(baseline, name, string(field), getproperty(r, field); integer = field == :selected)
+        end
+        da = abs(r.estimate - only(reference[name, "alpha"]))
+        ds = abs(r.se - only(reference[name, "se"]))
+        dt = abs(r.t - only(reference[name, "t"]))
+        dp = abs(r.pvalue - only(reference[name, "pval"]))
+        alphaerr, seerr = max(alphaerr, da), max(seerr, ds)
+        terr, perr = max(terr, dt), max(perr, dp)
+        if dataset == "nearthreshold"
+          @test r.selected == [1, 2]
+          @test reference[name, "index"] == [1]
+          @test abs(r.estimate - 0.5) <= OLS_ATOL
+          @test abs(only(reference[name, "alpha"]) - 0.8) <= OLS_ATOL
+        else
+          @test r.selected == Int.(reference[name, "index"])
+          @test da <= OLS_ATOL
+          @test ds <= OLS_ATOL
+          @test dt <= OLS_ATOL
+          @test dp <= OLS_ATOL
+          if dataset == "forced"
+            @test method == :doubleselection ? issubset(forced, r.selected) : isempty(intersect(forced, r.selected))
+          end
+        end
+      end
+      println("hdm $dataset max_abs: coefficients=$coeferr residuals=$residerr loadings=$loadingerr lambda0=$lambdaerr alpha=$alphaerr se=$seerr t=$terr pval=$perr")
+      if dataset == "forced"
+        for file in ("X", "y", "d")
+          @test read(joinpath(dir, file * ".csv")) == read(joinpath(ROOT, "hetero", file * ".csv"))
+        end
+      end
+    end
+  end
+end
+
+end
