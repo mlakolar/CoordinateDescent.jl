@@ -1,6 +1,48 @@
 using Test, Random, LinearAlgebra, SparseArrays, StatsAPI, Statistics
 import ProximalBase
 
+# Test-local FastProxSL1 (Bogdan et al., Algorithm 4), using block sums and lengths.
+function _gaussian_calibration_sorted_l1_prox(u, λ)
+  order = sortperm(abs.(u);rev=true)
+  z = abs.(u[order]) .- λ
+  sums, lengths = similar(z),Vector{Int}(undef,length(z))
+  top = 0
+  for value in z
+    top += 1
+    sums[top], lengths[top] = value,1
+    while top>1 && sums[top]/lengths[top]>=sums[top-1]/lengths[top-1]
+      sums[top-1] += sums[top]
+      lengths[top-1] += lengths[top]
+      top -= 1
+    end
+  end
+  result = similar(z)
+  first = 1
+  for block in 1:top
+    value = max(sums[block]/lengths[block],zero(eltype(z)))
+    for j in first:first+lengths[block]-1
+      i = order[j]
+      result[i] = sign(u[i])*value
+    end
+    first += lengths[block]
+  end
+  result
+end
+
+@testset "Gaussian SLOPE test-local proximal map" begin
+  rng = Xoshiro(10704)
+  cases = [(randn(rng,n),sort!(rand(rng,n);rev=true)) for n in (1,7,16)]
+  push!(cases, ([2.,-2.,0.,1.,-1.,2.],[1.8,1.6,1.4,1.2,.6,.2]),
+               ([-3.,.25,2.,-1.5,0.,1.],[1.5,1.2,.9,.6,.3,.1]),
+               ([.2,-.4,.1,0.],ones(4)))
+  for (u,λ) in cases
+    expected = similar(u)
+    ProximalBase.prox!(expected,ProximalBase.SLOPE(λ),u,1.)
+    @test _gaussian_calibration_sorted_l1_prox(u,λ) ≈ expected atol=1e-12 rtol=0
+  end
+  @test all(iszero,_gaussian_calibration_sorted_l1_prox(cases[end]...))
+end
+
 @testset "Gaussian SLOPE calibration" begin
   # Independent normal quantiles and the two-term published recurrence.
   b1, b2 = 1.959963984540054, 1.6448536269514722
@@ -198,8 +240,7 @@ end
     Z ./= transpose(scales)
     point = fit.x .* scales
     grad = Z'*(Z*point-v)/length(v)
-    trial = similar(point)
-    ProximalBase.prox!(trial,ProximalBase.SLOPE(fit.lambda),point-grad,1.)
+    trial = _gaussian_calibration_sorted_l1_prox(point-grad,fit.lambda)
     scale = max(1.,norm(Z'*v/length(v),Inf))
     @test norm(point-trial,Inf)/scale <= 1e-7
     r = y .- fit.intercept .- X*fit.x
