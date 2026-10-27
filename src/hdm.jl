@@ -489,6 +489,20 @@ function _effect_refit_options(method, forced, refit)
   nothing
 end
 
+function _effect_forced(forced, p)
+  eltype(forced) <: Integer || throw(ArgumentError(
+    "forced=$forced has element type $(eltype(forced)); pass integer column indices."))
+  (eltype(forced) <: Bool || any(j -> j isa Bool, forced)) && throw(ArgumentError(
+    "forced=$forced: pass column indices, not a Bool mask."))
+  seen = Set{Int}()
+  for j in forced
+    1 <= j <= p || throw(ArgumentError("forced index=$j must be in 1:$p."))
+    j in seen && throw(ArgumentError("duplicate forced index=$j in forced=$forced."))
+    push!(seen, j)
+  end
+  nothing
+end
+
 function _partialling_residuals(response, X, fit, refit::Bool)
   refit == fit.post && return fit.residuals
   refit && return _effect_project(response, _effect_basis(X, fit.selected))
@@ -551,13 +565,21 @@ descent and `rng` supplies both fits' random orders. Double selection fits d
 then y; partialling fits y then d. `intercept=false`, weights, and offsets are
 unsupported.
 
-Double selection uses the sorted union of both supports and `forced`. Its
+Double selection uses the sorted union of the d-on-X and y-on-X supports
+(the latter is the reduced form) and `forced`. Forced controls enter only the
+final regression, as hdm's I3, without changing either nuisance fit. `forced`
+must be an `AbstractVector` with an integer element type, excluding Bool,
+unique indices in `1:p`, and no Bool elements. Invalid values raise
+`ArgumentError` before fitting; pass column indices, not a Bool mask. The
 control basis W contains an intercept and centered selected controls. With
 `τ = max(1e-7, sqrt(eps(T)))`, a centered column of norm at most τ times its raw
 norm is aliased with the intercept. Remaining columns are scaled to unit norm;
 pivoted QR retains the `r` directions with `abs(R[j,j]) > τ`. Projection gives
 `v = M_W d`, `w = M_W y`, base leverages `h_W`, `k = r+2`, and nominal control
-count `s`. This rule differs from R's dqrdc2 and from the nuisance QR solve.
+count `s`, including forced and aliased columns. Rank-deficient controls are
+allowed when the treatment is identified; the target remains the original
+coefficient of d, and selection does not establish true-support recovery.
+This rule differs from R's dqrdc2 and from the nuisance QR solve.
 Partialling centers the chosen nuisance residuals to obtain v and w, with
 `h_W = 1/n`, `k = 2`, and `s = 0`. `refit::Union{Nothing,Bool}=nothing` defaults
 to the fits' `post`. If `refit == post`, their native residuals are used without
@@ -607,13 +629,14 @@ Nuisance non-convergence is retained in the result and displayed by `show`.
 """
 function double_selection(y::AbstractVector{<:Real}, d::AbstractVector{<:Real}, X::AbstractMatrix{<:Real};
                          method = :doubleselection, vcov = :hdm, level::Real = 0.95,
-                         forced::AbstractVector{<:Integer} = Int[], post::Bool = true,
+                         forced::AbstractVector = Int[], post::Bool = true,
                          refit::Union{Nothing, Bool} = nothing,
                          options::CDOptions = CDOptions(), rng::AbstractRNG = default_rng(),
                          intercept = true, kwargs...)
   intercept === true || throw(ArgumentError("intercept must be true, but it is $intercept."))
   y, d, X = _effect_data(y, d, X, method, vcov, level)
   _effect_refit_options(method, forced, refit)
+  method === :doubleselection && _effect_forced(forced, size(X, 2))
   if method === :doubleselection
     fit_d = rlasso(X, d, options; post, rng, kwargs...)
     fit_y = rlasso(X, y, options; post, rng, kwargs...)
@@ -628,8 +651,9 @@ function double_selection(y::AbstractVector{<:Real}, d::AbstractVector{<:Real}, 
                           fit_y::RLassoSolution, fit_d::RLassoSolution;
                           method = :doubleselection, vcov = :hdm,
                           refit::Union{Nothing, Bool} = nothing,
-                          forced::AbstractVector{<:Integer} = Int[], level::Real = 0.95)
+                          forced::AbstractVector = Int[], level::Real = 0.95)
   y, d, X = _effect_data(y, d, X, method, vcov, level)
   _effect_refit_options(method, forced, refit)
+  method === :doubleselection && _effect_forced(forced, size(X, 2))
   _effect_from_fits(y, d, X, fit_y, fit_d, method, vcov, forced, level, refit)
 end

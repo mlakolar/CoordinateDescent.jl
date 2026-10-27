@@ -1,5 +1,10 @@
 # Unreleased
 
+- Double selection supports `vcov` choices, final-stage diagnostics and
+  precomputed nuisance fits. Forced controls are validated before fitting;
+  invalid `forced` now raises `ArgumentError` instead of `BoundsError`.
+  The positional constructors of `TreatmentEffect` and `RLassoSolution` changed.
+
 - Partialling-out supports controlled nuisance `refit` modes and robust variance
   choices through `vcov`; it now rejects nonempty `forced` and `intercept=false`.
 

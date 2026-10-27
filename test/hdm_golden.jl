@@ -74,8 +74,8 @@ end
       @test meta["reference_script"] == "benchmark/hdm/golden.R"
       @test meta["baseline_script"] == "benchmark/hdm/baseline.jl"
 
-      # Load both layouts' references; partialling's final stage is checked
-      # below on hdm's own nuisance residuals, independently of Julia selection.
+      # Load both layouts' references; their final stages are checked below
+      # on hdm's own residuals or selection, independently of Julia selection.
       for method in (:doubleselection, :partialling)
         name, final = "effect_$method", "final_$method"
         for field in ("alpha", "se", "t", "pval")
@@ -95,6 +95,39 @@ end
       end
 
       if dataset != "nearthreshold"
+        @testset "hdm double-selection final stage" begin
+          S = Int.(reference["effect_doubleselection", "index"])
+          # This internal layout only reads selected. Feed it hdm's full
+          # union, including I3, rather than fitting Julia nuisances again.
+          layout = HighDimensionalModels._effect_layout(y, d, X, (; selected = S),
+            (; selected = Int[]), :doubleselection, Int[], nothing)
+          @test layout.selected == S && layout.s == length(S)
+          @test issubset(forced, S)
+          varerr, haterr, alphaerr, epsilonerr, verr = 0.0, 0.0, 0.0, 0.0, 0.0
+          for type in (:homoskedastic, :hdm, :HC0, :HC1, :HC2, :HC3)
+            core = HighDimensionalModels._effect_final(layout.v, layout.w, layout.h_W,
+              layout.k, layout.s, type, :doubleselection;
+              target_norm = norm(d .- mean(d)), outcome_norm = norm(y .- mean(y)))
+            V = if type === :hdm
+              only(reference["effect_doubleselection", "se"])^2
+            else
+              only(reference["final_doubleselection", type === :homoskedastic ? "vcov" : string(type)])
+            end
+            epsilon = core.residuals .* sqrt(n / (n - layout.s - 1))
+            @test core.variance ≈ V rtol = 1e-10 atol = 0
+            @test core.leverage ≈ reference["final_doubleselection", "hatvalues"] atol = 1e-10 rtol = 0
+            @test core.estimate ≈ only(reference["final_doubleselection", "coefficient"]) atol = 1e-10 rtol = 0
+            @test epsilon ≈ reference["effect_doubleselection", "epsilon"] atol = 1e-10 rtol = 0
+            @test layout.v ≈ reference["effect_doubleselection", "v"] atol = 1e-10 rtol = 0
+            varerr = max(varerr, abs(core.variance / V - 1))
+            haterr = max(haterr, maxdiff(core.leverage, reference["final_doubleselection", "hatvalues"]))
+            alphaerr = max(alphaerr, abs(core.estimate - only(reference["final_doubleselection", "coefficient"])))
+            epsilonerr = max(epsilonerr, maxdiff(epsilon, reference["effect_doubleselection", "epsilon"]))
+            verr = max(verr, maxdiff(layout.v, reference["effect_doubleselection", "v"]))
+          end
+          println("hdm $dataset double-selection final max_relative_variance=$varerr max_abs_leverage=$haterr max_abs_alpha=$alphaerr max_abs_epsilon=$epsilonerr max_abs_v=$verr")
+        end
+
         @testset "hdm partialling final stage" begin
           u = reference["final_partialling", "yr"]
           v = reference["final_partialling", "dr"]

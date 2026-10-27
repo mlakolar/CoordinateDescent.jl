@@ -420,9 +420,86 @@ intentional in that test. The default Julia partialling results otherwise
 retain the native hdm variance convention and nuisance residual path; non-native
 `refit` modes and robust `vcov` choices are explicit alternatives.
 
+R's `lm` handles aliased columns using its own pivoting tolerance. This package
+uses the pinned, centered and unit-scaled projection rule described above.
+The rules can give different numerical ranks near aliases; the pinned rule
+does not reproduce R's `dqrdc2` rank decision.
+
 ### Double selection
 
-<!-- Reserved for U5: double-selection algorithm, forced controls and examples. -->
+[`double_selection`](@ref)`(y, d, X; method=:doubleselection)` implements
+post-double-selection for the same prespecified ``\alpha_0`` in the model above:
+
+1. Fit `rlasso(X, d)` and retain its selected controls ``S_d``.
+2. Fit `rlasso(X, y)` and retain ``S_y``. This is the reduced-form regression
+   of the outcome on the controls, as in hdm.
+3. Form ``S=S_d\cup S_y\cup F``, where ``F`` contains the `forced` indices.
+4. Fit the final OLS regression of ``y`` on ``[1, d, X_S]``. Its coefficient
+   on ``d`` is the treatment-effect estimate.
+
+The implementation computes this last regression by Frisch--Waugh--Lovell
+projection with the shared pinned basis. For ``W=[1,X_S]``, let
+``v=M_Wd`` and ``w=M_Wy``; then ``\hat\alpha=v^\top w/(v^\top v)``.
+The target remains the original coefficient of ``d``, rather than a parameter
+defined by a selected model. Neither ``S_y`` nor ``S_d`` is evidence that the
+true support was recovered. The sparsity, moment and penalty conditions above
+are part of the inferential justification.
+
+Forced controls enter only the final regression, as hdm's `I3`; they do not
+alter either nuisance selection step. Pass an `AbstractVector` with an integer
+element type, unique indices in `1:size(X,2)`, and no Bool elements. Bool masks
+are rejected: pass column indices instead. Unsorted indices are accepted;
+the result's `forced` and union `selected` are sorted. Non-integer element
+types, Bool masks, out-of-range indices and duplicates raise `ArgumentError`
+with the offending value before fitting or consuming RNG draws. Partialling
+rejects nonempty `forced`.
+
+Rank-deficient control sets are allowed when treatment variation remains after
+projection. The pinned rule drops duplicate or intercept-aliased directions
+from the basis, and `rank` reports ``\operatorname{rank}(W)=r+1``. The final
+parameter count is ``k=r+2`` and `dof_residual` is ``n-k``. If the treatment
+lies in the control span, including when it is a linear combination of forced
+controls, the residualized-target guard raises `ArgumentError`. The numerical
+rules in the failure section also apply near collinearity and saturation.
+
+The default `vcov=:hdm` uses
+
+```math
+\widehat{\operatorname{Var}}_{\mathrm{hdm}}(\hat\alpha)
+=\mathrm{HC0}\,\frac{n}{n-s-1},\qquad s=|S|.
+```
+
+The nominal ``s`` counts forced controls and aliases, even when they add no
+rank. With full-rank controls, ``k=s+2``: the hdm denominator counts one
+parameter fewer than HC1's ``n-k=n-s-2``. This is a distinct convention;
+`vcov=:HC1` uses the rank-based parameter count, as do the other rank-based
+variance formulas in the table. In particular, an aliased set can satisfy
+``k<n`` while violating hdm's additional requirement ``n-s-1\ge1``.
+The final OLS is part of the estimator for either `post` flag, so double
+selection accepts only `refit=nothing`.
+
+Precomputed fits allow a matched comparison across the two methods and several
+variance choices, without changing nuisance tuning or making new random draws:
+
+```julia
+using HighDimensionalModels, Random
+
+rng = Xoshiro(119)
+fit_d = rlasso(X, d; post=true, rng)
+fit_y = rlasso(X, y; post=true, rng)
+effects = Dict()
+for method in (:doubleselection, :partialling), covariance in (:hdm, :HC0, :HC1, :HC3)
+    effects[(method, covariance)] = double_selection(y, d, X, fit_y, fit_d;
+        method, vcov=covariance)
+end
+```
+
+Every result retains the same nuisance objects, supports, penalties and
+loadings. The final layouts and their variance conventions remain
+method-specific. Inspect `selected_y`, `selected_d`, `forced` and `selected`
+to see how the union was formed, and the saved fits' `tuning`, `converged` and
+`solver_converged` fields to assess the nuisance computations. These are
+diagnostics, not evidence that the inferential assumptions hold.
 
 ## Observation weights and offsets
 

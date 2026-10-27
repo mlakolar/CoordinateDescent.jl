@@ -230,7 +230,7 @@ end
       rejects(() -> call(fy; refit), "refit")
       rejects(() -> double_selection(y, d, X; refit, rng = Xoshiro(118309)), "refit")
     end
-    @test_throws BoundsError call(fy; forced = [p + 10])
+    rejects(() -> call(fy; forced = [p + 10]), "forced index=$(p + 10)")
   end
 
   @testset "input and final-stage guards" begin
@@ -306,6 +306,119 @@ end
     @test !te.nuisance_y.solver_converged && !te.nuisance_d.solver_converged
     @test occursin("nuisance non-convergence: y, d", sprint(show, te))
     @test_throws ArgumentError confint(te; level = 0)
+  end
+
+  @testset "double-selection forced validation and metadata" begin
+    options = CDOptions(opt_tol = 1e-10)
+    rng = Xoshiro(119501)
+    fd = rlasso(X, d, options; rng)
+    fy = rlasso(X, y, options; rng)
+    for (forced, message) in (([1.0], "forced=[1.0]"), (Any[1], "element type Any"),
+                              (Bool[true, false], "pass column indices, not a Bool mask"),
+                              (Bool[], "pass column indices, not a Bool mask"),
+                              (Integer[true], "pass column indices, not a Bool mask"),
+                              ([0], "forced index=0"), ([p + 1], "forced index=$(p + 1)"),
+                              ([1, 1], "duplicate forced index=1"))
+      for precomputed in (false, true)
+        state = copy(Random.default_rng())
+        rejects(() -> precomputed ? double_selection(y, d, X, fy, fd; forced) :
+                                   double_selection(y, d, X; forced), message)
+        @test copy(Random.default_rng()) == state
+      end
+    end
+    # Unsorted, non-Int integer indices are valid and enter only the last fit.
+    forced = UInt8[7, 2]
+    originals = (deepcopy(fy), deepcopy(fd), copy(forced))
+    te = double_selection(y, d, X, fy, fd; forced)
+    convenience = double_selection(y, d, X; forced, options, rng = Xoshiro(119501))
+    unforced = double_selection(y, d, X; options, rng = Xoshiro(119501))
+    @test same(te, convenience)
+    @test te.nuisance_y === fy && te.nuisance_d === fd
+    @test same(te.nuisance_y, unforced.nuisance_y) && same(te.nuisance_d, unforced.nuisance_d)
+    @test te.selected_y == fy.selected && te.selected_d == fd.selected
+    @test te.forced == [2, 7]
+    @test isempty(intersect(te.forced, union(te.selected_y, te.selected_d)))
+    @test te.selected == sort(union(te.selected_y, te.selected_d, te.forced))
+    @test te.nuisance_y.tuning.options === options && te.nuisance_d.tuning.options === options
+    @test te.nuisance_y.tuning.c == te.nuisance_d.tuning.c == 1.1
+    for fit in (te.nuisance_y, te.nuisance_d)
+      @test fit.converged isa Bool && fit.solver_converged isa Bool
+      @test fit.tuning.max_iter == 15 && fit.tuning.tol == 1e-5
+    end
+    @test same(fy, originals[1]) && same(fd, originals[2]) && forced == originals[3]
+  end
+
+  @testset "double-selection aliases and empty controls" begin
+    A = [X[:, 1:3] X[:, 1]]
+    rank_errors, empty_errors = zeros(3), zeros(3)
+    for (Sy, Sd, forced) in ((Int[], Int[], [4, 2, 1]), ([1], [2], [4]),
+                              (Int[], Int[], Int[]))
+      fy, fd = record(A, y, Sy), record(A, d, Sd)
+      S = sort(union(Sy, Sd, forced))
+      empty = isempty(S)
+      independent = empty ? Int[] : [1, 2]
+      for type in VCOVS
+        # The explicit reference drops the duplicated fourth column. Its
+        # inverse bread and hat matrix therefore use a full-rank design.
+        ref = dense(y, d, A, record(A, y), record(A, d), :doubleselection,
+                    independent, type === :hdm ? :HC0 : type)
+        V = type === :hdm ? ref.variance * n / (n - length(S) - 1) : ref.variance
+        te = double_selection(y, d, A, fy, fd; forced, vcov = type)
+        layout = HDM._effect_layout(y, d, A, fy, fd, :doubleselection, forced, nothing)
+        core = HDM._effect_final(layout.v, layout.w, layout.h_W, layout.k, layout.s, type, :doubleselection)
+        @test te.estimate ≈ ref.estimate atol = 1e-10 rtol = 0
+        @test te.se^2 ≈ V rtol = 1e-10 atol = 0
+        @test core.leverage ≈ ref.h atol = 1e-10 rtol = 0
+        @test core.residuals ≈ y - [ones(n) d A[:, independent]] *
+                                    ([ones(n) d A[:, independent]] \ y) atol = 1e-10 rtol = 0
+        @test te.rank == (empty ? 1 : 3)
+        @test te.dof_residual == n - te.rank - 1
+        @test te.selected == S && layout.s == length(S)
+        if type === :hdm
+          hc0 = double_selection(y, d, A, fy, fd; forced, vcov = :HC0)
+          @test te.estimate == hc0.estimate
+          @test te.se^2 ≈ hc0.se^2 * n / (n - length(S) - 1) rtol = 1e-12 atol = 0
+        end
+        errors = empty ? empty_errors : rank_errors
+        errors[1] = max(errors[1], abs(te.estimate - ref.estimate))
+        errors[2] = max(errors[2], abs(te.se^2 / V - 1))
+        errors[3] = max(errors[3], maximum(abs, core.leverage - ref.h))
+      end
+    end
+    for (name, errors) in (("rank-deficient", rank_errors), ("empty", empty_errors))
+      a, v, h = errors
+      println("double-selection $name max_abs_alpha=$a max_relative_variance=$v max_abs_leverage=$h")
+    end
+  end
+
+  @testset "double-selection target and saturation boundaries" begin
+    for dd in (copy(X[:, 1]), 0.3 .+ 2 .* X[:, 1] .- 0.4 .* X[:, 2])
+      rejects(() -> double_selection(y, dd, X, record(X, y), record(X, dd);
+        forced = [1, 2], vcov = :HC0), "residualized target norm=")
+    end
+    rng = Xoshiro(119502)
+    # The indicator makes leverage exactly one even with one residual df.
+    W = [Float64[1, 0, 0, 0, 0, 0] randn(rng, 6, 3)]
+    yy, dd = randn(rng, 6), randn(rng, 6)
+    fy, fd = record(W, yy), record(W, dd)
+    for type in VCOVS
+      rejects(() -> double_selection(yy, dd, W, fy, fd;
+        forced = collect(1:4), vcov = type), "k=6")
+      if type in (:HC2, :HC3)
+        rejects(() -> double_selection(yy, dd, W, fy, fd;
+          forced = [1, 2, 3], vcov = type), "max leverage=")
+      else
+        te = double_selection(yy, dd, W, fy, fd; forced = [1, 2, 3], vcov = type)
+        @test te.dof_residual == 1 && te.rank == 4 && isfinite(te.se)
+      end
+    end
+    A = repeat(X[1:6, 1:1], 1, 5)
+    fy, fd = record(A, yy), record(A, dd)
+    rejects(() -> double_selection(yy, dd, A, fy, fd; forced = collect(1:5)), "n-s-1=0")
+    for type in (:homoskedastic, :HC0, :HC1, :HC2, :HC3)
+      te = double_selection(yy, dd, A, fy, fd; forced = collect(1:5), vcov = type)
+      @test te.rank == 2 && te.dof_residual == 3 && isfinite(te.se)
+    end
   end
 
   @testset "original-unit transformations" begin
