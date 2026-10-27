@@ -82,9 +82,10 @@ options of their lasso fits.
 - **Momentum.** With a random order, each pass over the active set starts from
   a point extrapolated from the last two (Nesterov momentum). It is on by
   default with a random order, a `SparseIterate` and the built-in losses. On
-  the designs of the package's benchmarks it computes 50-level paths 2.7 to
-  6.5 times faster than the plain random order, including designs whose
-  columns share a common factor; short solves take about as long either way.
+  the designs of [`order_anderson_bench.jl`](https://github.com/mlakolar/HighDimensionalModels.jl/blob/abddaf56a790b86178de376b175a1185020c8381/benchmark/order_anderson_bench.jl)
+  in the benchmark snapshot it computes 50-level paths 2.7 to 6.5 times faster
+  than the plain random order, including designs whose columns share a common
+  factor; short solves take about as long either way.
   `momentum = false` turns it off.
 - **Anderson acceleration.** `anderson = 5`, with `order = :cyclic`,
   extrapolates from the last passes. It is faster than momentum when few passes
@@ -127,4 +128,6 @@ observations (rows) and ``p`` predictors (columns):
 At one ``\lambda`` the Gram matrix was slower in 93 of 94 cases, by up to 42
 times. The default, `gram = :auto`, therefore uses it for paths on a dense
 ``X`` with ``n \ge p`` and ``p \le 2000``, and never at one ``\lambda``. The script
-`benchmark/gram_bench.jl` of the repository measures these times.
+[`gram_bench.jl`](https://github.com/mlakolar/HighDimensionalModels.jl/blob/abddaf56a790b86178de376b175a1185020c8381/benchmark/gram_bench.jl) of the benchmark snapshot measured
+these times; the `lasso` group of the [benchmark harness](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/benchmark/README.md) measures
+the current fits.

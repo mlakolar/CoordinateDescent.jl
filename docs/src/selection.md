@@ -153,9 +153,12 @@ replace q in the guarantee. No unimodality or r-concavity improvement is assumed
 - [Meinshausen and Bühlmann (2010), stability selection](https://doi.org/10.1111/j.1467-9868.2010.00740.x).
 - [Shah and Samworth (2013), complementary pairs](https://doi.org/10.1111/j.1467-9868.2011.01034.x).
 
-The R golden-data generator, replicated Discovery benchmark/profile harness,
-and Monte Carlo recipe are in `benchmark/selection`. Monte Carlo evidence
-checks the listed finite simulation designs; it does not prove a guarantee.
+The R golden-data generator is `test/data/selection/golden.R`. The replicated
+benchmark and profile harness and the Monte Carlo recipe are in the
+[selection study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/abddaf56a790b86178de376b175a1185020c8381/benchmark/selection);
+the `selection` group of the [benchmark harness](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/benchmark/README.md)
+measures the current fits. Monte Carlo evidence checks the listed finite
+simulation designs; it does not prove a guarantee.
 
 ```@autodocs
 Modules = [HighDimensionalModels]

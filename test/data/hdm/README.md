@@ -9,15 +9,20 @@ the estimators. Do not refresh the Julia baseline to accommodate those changes.
 From the repository root, with the master test environment built by
 `julia scripts/test_master.jl --setup-only` and an R library `$RLIB` holding
 hdm 0.3.2 (`R CMD INSTALL -l $RLIB hdm_0.3.2.tar.gz`, from the CRAN archive
-with the SHA256 below) next to sandwich 3.1.1, run in order:
+with the SHA256 below, after hdm's CRAN dependencies) next to sandwich 3.1.1
+(`remotes::install_version("sandwich", "3.1.1")` with `R_LIBS=$RLIB`), run in
+order; each script writes into `test/data/hdm`, or into the directory given as
+its argument:
 
 ```sh
-julia --startup-file=no --project=.master-test-env/v1.13 benchmark/hdm/golden_data.jl
-R_LIBS=$RLIB Rscript benchmark/hdm/golden.R
-julia --startup-file=no --project=.master-test-env/v1.13 benchmark/hdm/baseline.jl
+julia --startup-file=no --project=.master-test-env/v1.13 test/data/hdm/golden_data.jl
+R_LIBS=$RLIB Rscript test/data/hdm/golden.R
+julia --startup-file=no --project=.master-test-env/v1.13 test/data/hdm/baseline.jl
 ```
 
-Each takes a few seconds with one BLAS thread. The focused tests:
+Each takes a few seconds with one BLAS thread. `baseline.jl` reproduces the
+frozen `baseline-julia.csv` only with the package at commit
+`d6174f5c148ed7e08a4732c915aa691ecb83cb8a`. The focused tests:
 
 ```sh
 julia --startup-file=no --project=.master-test-env/v1.13 -e 'using Test; include("test/hdm.jl"); include("test/hdm_golden.jl")'
@@ -36,7 +41,7 @@ Each directory has headerless `X.csv` (observations by controls), `y.csv`, and
 its other inputs are byte-identical to `hetero`. These controls are absent from
 both nuisance supports, for both post choices, in both packages.
 
-Equations, draw order, and Xoshiro seeds are in `benchmark/hdm/golden_data.jl`:
+Equations, draw order, and Xoshiro seeds are in `golden_data.jl`:
 hetero/forced 11801, highdim 11802, nearthreshold 11803, empty 12138. Empty has
 centered noise responses and selects nothing, even with post=false. Centering
 avoids hdm's empty-fit quirk: its coefficient vector has zero intercept while

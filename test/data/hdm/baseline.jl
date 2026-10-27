@@ -10,7 +10,7 @@
 
 using HighDimensionalModels, DelimitedFiles, LinearAlgebra, Printf, Random
 BLAS.set_num_threads(1)
-root = isempty(ARGS) ? joinpath(@__DIR__, "..", "..", "test", "data", "hdm") : only(ARGS)
+root = isempty(ARGS) ? (@__DIR__) : only(ARGS)
 
 for (k, dataset) in enumerate(("hetero", "highdim", "forced", "nearthreshold", "empty"))
   dir = joinpath(root, dataset)

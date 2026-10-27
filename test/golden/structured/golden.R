@@ -1,4 +1,5 @@
-# Independent reference fixtures. Run only under Slurm on Discovery.
+# Independent reference fixtures: Rscript test/golden/structured/golden.R OUT,
+# after setup.R; see README.md.
 library(genlasso)
 stopifnot(as.character(packageVersion("genlasso")) == "1.6.1")
 stopifnot(as.character(packageVersion("glmgen")) == "0.0.3")

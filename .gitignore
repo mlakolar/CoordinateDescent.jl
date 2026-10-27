@@ -5,6 +5,8 @@
 /test/Manifest*.toml
 /examples/Manifest*.toml
 /benchmark/Manifest*.toml
+/benchmark/results/
+/benchmark/__pycache__/
 /docs/build/
 .vscode/
 /docs/Manifest*.toml

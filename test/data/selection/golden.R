@@ -1,5 +1,6 @@
-# R references are generated on Discovery; shared X, normal draws and pairs
-# remove cross-language RNG differences. No performance measurements here.
+# Rscript test/data/selection/golden.R OUT, after setup.R; see README.md.
+# Shared X, normal draws and pairs remove cross-language RNG differences.
+# No performance measurements here.
 args <- commandArgs(TRUE); out <- args[1]
 dir.create(out,recursive=TRUE,showWarnings=FALSE)
 .libPaths(c(Sys.getenv('SELECTION_RLIB'),.libPaths()))

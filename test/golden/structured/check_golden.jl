@@ -1,3 +1,3 @@
-# Same independent golden tests as CI, against fixtures generated in this run.
+# Same independent golden tests as CI, against the fixtures in ARGS[1].
 ENV["CD_STRUCTURED_GOLDEN"] = abspath(ARGS[1])
-include(joinpath(@__DIR__, "..", "..", "test", "structured_golden.jl"))
+include(joinpath(@__DIR__, "..", "..", "structured_golden.jl"))

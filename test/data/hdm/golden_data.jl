@@ -71,4 +71,4 @@ function generate(root)
   write_data(root, "empty", X, y, d)
 end
 
-generate(isempty(ARGS) ? joinpath(@__DIR__, "..", "..", "test", "data", "hdm") : only(ARGS))
+generate(isempty(ARGS) ? (@__DIR__) : only(ARGS))

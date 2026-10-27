@@ -72,9 +72,9 @@ for (dataset in c("hetero", "highdim", "forced", "nearthreshold", "empty")) {
   metadata <- c(R = R.version.string, hdm = as.character(packageVersion("hdm")),
                 sandwich = as.character(packageVersion("sandwich")),
                 hdm_archive_sha256 = "3354b22752f0aa0c0d9c8c12b38810202b6380f2587e539be11d9a358412fe6a",
-                data_script = "benchmark/hdm/golden_data.jl",
-                reference_script = "benchmark/hdm/golden.R",
-                baseline_script = "benchmark/hdm/baseline.jl")
+                data_script = "test/data/hdm/golden_data.jl",
+                reference_script = "test/data/hdm/golden.R",
+                baseline_script = "test/data/hdm/baseline.jl")
   writeLines(c("key,value", paste(names(metadata), metadata, sep = ",")),
              file.path(dir, "metadata.csv"))
   cat(dataset, "references written\n")
