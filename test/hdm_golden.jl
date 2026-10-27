@@ -5,8 +5,9 @@ using HighDimensionalModels, DelimitedFiles, LinearAlgebra, Random, Statistics, 
 const ROOT = joinpath(@__DIR__, "data", "hdm")
 const DATASETS = ("hetero", "highdim", "forced", "nearthreshold", "empty")
 
-# Absolute tolerances, with no implicit relative allowance. Baselines protect
-# the current Julia implementation to 1e-12. Cross-package post=true results
+# Julia baselines use 1e-12 * max(1, abs(expected)) elementwise, allowing one-ulp
+# cross-platform differences at the nearthreshold design's 1e6 loading scale.
+# Cross-package comparisons use absolute tolerances. Post=true results
 # only use OLS after identical selection, hence a 1e-11 roundoff allowance.
 # For post=false, hdm stops shooting at L1 step <1e-5, versus Julia's relative
 # coordinate step 1e-7, with different starts; both outer loops stop at 1e-5.
@@ -49,7 +50,8 @@ function baselinecheck(baseline, name, field, value; integer = false)
     @test all(isinteger, expected)
     @test actual == expected
   else
-    @test maxdiff(actual, expected) <= BASELINE_ATOL
+    @test all(i -> abs(actual[i] - expected[i]) <= BASELINE_ATOL * max(1, abs(expected[i])),
+              eachindex(expected))
   end
 end
 

@@ -72,8 +72,11 @@ selection has exactly one sentinel row with index=0,value=0; it is not control 0
 
 ## Frozen comparison tolerances
 
-All comparisons use absolute error and no relative allowance. Julia baselines
-use 1e-12; selections and iteration counts are exact. Parity selections are
+Julia baselines use the elementwise bound
+`abs(actual - expected) <= 1e-12 * max(1, abs(expected))`, allowing one-ulp
+cross-platform differences at the nearthreshold design's 1e6 loading scale.
+Other comparisons use absolute error with no relative allowance. Selections
+and iteration counts are exact. Parity selections are
 exact for all four nuisances and both effects on hetero/highdim/forced/empty.
 
 Post=true coefficients/residuals and effect alpha/se/t/pval use 1e-11 for OLS
@@ -84,7 +87,7 @@ outer loops use 1e-5 on residual standard deviation. This is a solver precision
 budget, not a proved optimizer-error bound. The observed maximum is 1.79e-6.
 Residual tolerances propagate that coefficient budget:
 `1e-5 * (1 + maximum(sum(abs, X[:, selected]; dims=2)))`.
-Normalized lambda0 uses 1e-15. Loadings have a Julia baseline check to 1e-12.
+Normalized lambda0 uses 1e-15. Loadings use the same scale-aware Julia baseline bound.
 The test prints per-dataset maximum differences for all compared quantities.
 
 Nearthreshold intentionally violates parity. Its centered orthogonal second
