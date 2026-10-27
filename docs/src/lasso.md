@@ -237,18 +237,192 @@ chooses the initial residuals. The examples use
 [`rlasso`](@ref)`(X, y)` is the lasso with data-driven penalty loadings as R's
 hdm computes it (Belloni, Chen, Chernozhukov and Hansen, 2012): the level
 [`theory_lambda`](@ref)`(n, p)` ``= c\,\Phi^{-1}(1 - \gamma/(2p))/\sqrt{n}``
-with hdm's defaults for ``c`` and ``\gamma``, loadings from the residuals of a
-first fit, and with `post` least squares on the selected columns after each
-lasso, until the residuals settle. [`post_lasso`](@ref)`(X, y, sol)` refits
-least squares on the columns a lasso selected and gives
-heteroskedasticity-robust (HC1) standard errors. [`double_selection`](@ref)`(y, d, X)`
-estimates the effect ``\alpha`` of a treatment ``d`` in
-``y = \alpha d + X\beta + \varepsilon`` with many controls, as hdm's
-`rlassoEffect` does: by double selection (Belloni, Chernozhukov and Hansen,
-2014), the regression of ``y`` on ``d`` and the union of the controls that
-predict ``y`` and those that predict ``d``, or by partialling out. It returns
-the estimate, its standard error, the ``t`` statistic, the ``p``-value and a
-confidence interval.
+with loadings initialized from least squares on the five most correlated
+controls. With `post=true`, each lasso is followed by least squares on its
+selected controls; the loadings are updated until the residual standard
+deviation settles or `max_iter` is exhausted. The first post-lasso solve uses
+half the nominal penalty.
+The defaults are ``c=1.1`` with `post=true` and ``c=0.5`` with `post=false`.
+The solution keeps the final penalized coefficients, intercept, penalty and
+loadings in `lasso`, `lasso_intercept`, `lasso_λ0` and `lasso_loadings`, separately
+from the returned coefficients and updated loadings.
+[`post_lasso`](@ref)`(X, y, sol)` refits least squares on selected controls and
+gives heteroskedasticity-robust (HC1) standard errors for that regression.
+
+### Model and orthogonal score
+
+[`double_selection`](@ref)`(y, d, X; method=:partialling)` estimates the
+prespecified coefficient ``\alpha_0`` in original outcome and treatment units:
+
+```math
+y_i = \mu + \alpha_0 d_i + x_i^\top\beta_0 + \varepsilon_i,
+\qquad d_i = m_0(x_i) + v_i.
+```
+
+An intercept is always included. Choose the treatment before inspecting
+estimated effects; these intervals do not account for choosing a target by its
+estimated significance. Write ``g_0(x)=\mathbb E[y\mid x]`` and
+``m_0(x)=\mathbb E[d\mid x]``. The partialling score is
+
+```math
+\psi_i(\alpha,g,m)
+= \{d_i-m(x_i)\}\{y_i-g(x_i)-\alpha[d_i-m(x_i)]\}.
+```
+
+At the true nuisance functions its expectation is zero, and its first
+derivatives in either nuisance direction vanish. Its Jacobian in
+``\alpha`` is ``-\mathbb E[v_i^2]`` and its influence function is
+``v_i\varepsilon_i/\mathbb E[v_i^2]``. These properties explain why accurate
+nuisance prediction can support inference without exact support recovery.
+
+The asymptotic justification follows the high-dimensional partially linear
+framework of [Belloni, Chernozhukov and Hansen (2014)](https://doi.org/10.1093/restud/rdt044).
+Working assumptions include iid observations;
+``\mathbb E[\varepsilon_i\mid d_i,x_i]=0`` and
+``\mathbb E[v_i\mid x_i]=0``; ``\mathbb E[v_i^2]`` and
+``\mathbb E[v_i^2\varepsilon_i^2]`` bounded away from zero; bounded fourth
+moments of the relevant normalized variables; and sparse eigenvalues bounded
+away from zero and infinity on the relevant sparse sets. Both nuisance
+functions must have sparse approximations, with approximation errors small
+enough for the score remainder to be ``o_p(n^{-1/2})``. A representative
+non-cross-fitted sparsity regime is
+
+```math
+\frac{s^2\log^2(p\vee n)}{n}\longrightarrow 0.
+```
+
+Additional empirical-moment regularity is needed for the particular nuisance
+fits; the reference states precise conditions. The actual lasso penalties,
+including loadings, must dominate the nuisance
+scores with high probability, and optimization error must be negligible for
+the nuisance rates and the final score expansion. The function does not test
+these assumptions. In particular, selecting a covariance correction or
+receiving a convergence flag does not establish valid coverage, and native
+`post=false` tuning is not automatically a score-dominating penalty choice.
+
+### Post-Lasso partialling-out
+
+Fit the outcome and treatment separately on the controls, in that order.
+Choose residuals ``\tilde u`` and ``\tilde v``, center each, and regress
+``\tilde u`` on an intercept and ``\tilde v``. The intercept in the last
+regression is retained even when nuisance residual means are numerically zero.
+The `refit` keyword chooses the residuals while leaving the fitted nuisance
+records intact:
+
+| `post` in the fits | `refit` | Residuals |
+|:--|:--|:--|
+| either | `nothing` | Native residuals; effective `refit=post` |
+| `true` | `true` | Native post-lasso OLS residuals |
+| `true` | `false` | `response - lasso_intercept - X*lasso` from the stored final solve |
+| `false` | `false` | Native penalized residuals |
+| `false` | `true` | OLS residuals on each fit's own selected controls and an intercept |
+
+For non-native OLS refits, the control basis uses the same pinned projection
+as the shared final stage: center controls; discard intercept aliases whose
+centered norm is at most ``\tau`` times their raw norm; scale remaining columns
+to unit norm; then use pivoted QR and retain the first ``r`` directions, where
+``r=\#\{j:|R_{jj}|>\tau\}`` and ``\tau=\max(10^{-7},\sqrt{\operatorname{eps}(T)})``.
+This rule is distinct from the solve-based rank inside `rlasso` and from R's
+`dqrdc2`. Each nuisance uses its own selected set, including when the sets differ.
+
+Precomputed fits provide a controlled comparison at a fixed penalty and
+support:
+
+```julia
+using HighDimensionalModels, Random
+
+fit_y = rlasso(X, y; post=true, rng=Xoshiro(118))
+fit_d = rlasso(X, d; post=true, rng=Xoshiro(119))
+ols = double_selection(y, d, X, fit_y, fit_d;
+    method=:partialling, refit=true, vcov=:HC1)
+penalized = double_selection(y, d, X, fit_y, fit_d;
+    method=:partialling, refit=false, vcov=:HC1)
+```
+
+Both results retain the same `nuisance_y` and `nuisance_d` objects, including
+`selected`, `lasso_λ0` and `lasso_loadings`. Comparing them isolates refitting
+at the stored penalty. Running native `post=false` fits is a different
+comparison: it also changes the default ``c`` from 1.1 to 0.5 and the sequence
+of loading updates. The precomputed interface checks dimensions, element
+types, intercepts, matching `post` flags, supports and residual consistency.
+These are consistency checks; they do not establish provenance. Calls preserve
+both fits and consume no RNG draws.
+
+### Variance and diagnostics
+
+Let ``v`` and ``w`` be the centered final-stage treatment and outcome residuals,
+``A=v^\top v``, ``\hat\alpha=v^\top w/A``, and ``e=w-\hat\alpha v``. The
+estimated influence values are ``\hat\phi_i=nv_i e_i/A`` and final leverages
+are ``h_i=h_{W,i}+v_i^2/A``. For partialling, ``h_{W,i}=1/n`` and ``k=2``.
+Thus its HC corrections count only the final intercept and treatment;
+they do not subtract either nuisance's selected-control count or rank.
+For the shared double-selection variance formulas, ``k=\operatorname{rank}(W)+1``
+and ``s`` is its nominal selected-control count, including aliases.
+
+| `vcov` | Estimated variance of ``\hat\alpha`` |
+|:--|:--|
+| `:homoskedastic` | ``(e^\top e)/(n-k)/A`` |
+| `:HC0` | ``\sum_i v_i^2e_i^2/A^2=\sum_i\hat\phi_i^2/n^2`` |
+| `:HC1` | ``\mathrm{HC0}\,n/(n-k)`` |
+| `:HC2` | ``\sum_i v_i^2e_i^2/(1-h_i)/A^2`` |
+| `:HC3` | ``\sum_i v_i^2e_i^2/(1-h_i)^2/A^2`` |
+| `:hdm`, partialling (default) | Homoskedastic variance with ``k=2`` |
+| `:hdm`, double selection | ``\mathrm{HC0}\,n/(n-s-1)`` |
+
+The `:hdm` conventions match hdm 0.3.2, including its classical final-stage
+variance for partialling. For general heteroskedasticity use HC0--HC3; the
+classical partialling variance needs an additional homoskedasticity restriction
+for its usual inferential interpretation. Intervals and two-sided p-values use
+the normal
+distribution. `confint(result; level=...)` can change the interval level.
+
+On a common nuisance support with the same OLS projection, partialling gives
+the same coefficient, regression residuals and HC0 variance as double selection.
+This includes well-conditioned common supports; different numerical rank rules
+can matter on nearly aliased designs. With ``r`` centered
+control directions, the double-selection homoskedastic and HC1 variances are
+``(n-2)/(n-r-2)`` times the partialling variances. HC2, HC3 and the two `:hdm`
+conventions generally differ because they use different leverage or variance
+corrections.
+
+The result records `post`, effective `refit`, `vcov_type`, `selected_y`,
+`selected_d`, their union `selected`, `nuisance_y` and `nuisance_d`. For
+partialling, `rank=1` and `dof_residual=n-2` refer to the final regression.
+`target_variation` is ``v^\top v/\sum_i(d_i-\bar d)^2``; small values indicate
+little remaining treatment variation. Passing the numerical threshold does
+not establish strong identification. `max_leverage` and `influence` describe
+the final regression. `show` flags nuisance non-convergence without making it
+fatal; inspect both `converged` and `solver_converged` on the saved fits.
+
+### Failure behavior
+
+Partialling rejects nonempty `forced`, although native hdm silently ignores
+I3 for partialling. Use an intercept throughout; `intercept=false`, observation
+weights and offsets are unsupported. With effective `refit=true`, each nuisance
+must satisfy ``|S|+1<n`` even if selected columns are aliased. Double selection
+accepts only `refit=nothing`, since its final OLS is part of that estimator.
+
+Inputs must be finite, with ``n\ge3``, ``p\ge1``, ``0<\texttt{level}<1``, and
+nonconstant outcome and treatment. The shared final stage requires ``k<n``;
+hdm double selection also requires ``n-s-1\ge1``. It rejects
+``\|v\|\le\tau\|d-\bar d\|``, ``\|e\|\le\tau\|y-\bar y\|`` and, for HC2/HC3,
+``\max_i h_i>1-\tau``. Numerical and option errors raise `ArgumentError` with
+the quantity and its value; dimension errors raise `DimensionMismatch`.
+
+### Differences from native hdm
+
+hdm zeroes raw coefficients below the absolute threshold ``10^{-6}``, which is
+not invariant to control units. Julia retains such nonzero coordinates. In
+`test/data/hdm/nearthreshold`, scaling a control by ``10^6`` puts its nuisance
+coefficients below that cutoff: native hdm drops it and the effect estimate
+moves from 0.5 to 0.8. The Julia estimate remains 0.5. The discrepancy is
+intentional in that test. The default Julia partialling results otherwise
+retain the native hdm variance convention and nuisance residual path; non-native
+`refit` modes and robust `vcov` choices are explicit alternatives.
+
+### Double selection
+
+<!-- Reserved for U5: double-selection algorithm, forced controls and examples. -->
 
 ## Observation weights and offsets
 

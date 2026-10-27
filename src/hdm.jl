@@ -308,8 +308,8 @@ coefficient in original units. The positional constructor is internal.
 normal statistic, two-sided normal p-value, and interval at the requested
 level. `selected` is the union of the nuisance supports and, for double
 selection, the forced controls. `method`, `n`, `vcov_type`, and `post` record
-the procedure. `refit` equals `post` for partialling and is `nothing` for double
-selection. `selected_y`, `selected_d`, and `forced` record the separate supports
+the procedure. `refit` records whether partialling used OLS nuisance residuals
+and is `nothing` for double selection. `selected_y`, `selected_d`, and `forced` record the separate supports
 and the controls forced into double selection (empty for partialling).
 
 `rank` is the rank of the intercept and selected-control basis (1 for
@@ -456,45 +456,82 @@ function _effect_final(v::AbstractVector{T}, w::AbstractVector{T}, h_W::Abstract
   (; estimate = α, residuals = e, influence, leverage, variance, jacobian = -vv / n)
 end
 
-function _effect_layout(y::Vector{T}, d, X, fit_y, fit_d, method, forced) where {T}
-  n = length(y)
-  S = sort!(union(fit_y.selected, fit_d.selected, method === :doubleselection ? Int.(forced) : Int[]))
-  if method === :partialling
-    return (; v = fit_d.residuals .- mean(fit_d.residuals),
-              w = fit_y.residuals .- mean(fit_y.residuals),
-              h_W = fill(inv(T(n)), n), k = 2, s = 0, rank = 1, selected = S)
-  end
+# The pinned, unit-scaled control basis, shared by double selection and
+# non-native OLS nuisance refits. The intercept is handled by centering.
+function _effect_basis(X::AbstractMatrix{T}, S) where {T}
+  n = size(X, 1)
   τ = _effect_tau(T)
   Z = X[:, S] .- mean(X[:, S]; dims = 1)
   norms = [norm(view(Z, :, j)) for j in eachindex(S)]
   keep = [j for j in eachindex(S) if norms[j] > τ * norm(view(X, :, S[j]))]
-  Q = if isempty(keep)
+  if isempty(keep)
     zeros(T, n, 0)
   else
     F = qr(Z[:, keep] ./ transpose(norms[keep]), ColumnNorm())
     r = count(>(τ), abs.(diag(F.R)))
     Matrix(F.Q)[:, 1:r]
   end
-  dc, yc = d .- mean(d), y .- mean(y)
+end
+
+function _effect_project(response, Q)
+  centered = response .- mean(response)
+  centered .- Q * (Q' * centered)
+end
+
+function _effect_refit_options(method, forced, refit)
+  if method === :partialling
+    isempty(forced) || throw(ArgumentError(
+      "forced=$forced is unsupported for partialling; native hdm ignores I3 for this method."))
+  else
+    refit === nothing || throw(ArgumentError(
+      "refit=$refit is unsupported for double selection: its final OLS is part of the estimator."))
+  end
+  nothing
+end
+
+function _partialling_residuals(response, X, fit, refit::Bool)
+  refit == fit.post && return fit.residuals
+  refit && return _effect_project(response, _effect_basis(X, fit.selected))
+  response .- fit.lasso_intercept .- X * fit.lasso
+end
+
+function _effect_layout(y::Vector{T}, d, X, fit_y, fit_d, method, forced, refit) where {T}
+  n = length(y)
+  S = sort!(union(fit_y.selected, fit_d.selected, method === :doubleselection ? Int.(forced) : Int[]))
+  if method === :partialling
+    u = _partialling_residuals(y, X, fit_y, refit)
+    v = _partialling_residuals(d, X, fit_d, refit)
+    return (; v = v .- mean(v), w = u .- mean(u),
+              h_W = fill(inv(T(n)), n), k = 2, s = 0, rank = 1, selected = S)
+  end
+  Q = _effect_basis(X, S)
   r = size(Q, 2)
-  (; v = dc .- Q * (Q' * dc), w = yc .- Q * (Q' * yc),
+  (; v = _effect_project(d, Q), w = _effect_project(y, Q),
      h_W = inv(T(n)) .+ vec(sum(abs2, Q; dims = 2)),
      k = r + 2, s = length(S), rank = r + 1, selected = S)
 end
 
-function _effect_from_fits(y::Vector{T}, d, X, fit_y, fit_d, method, vcov_type, forced, level) where {T}
+function _effect_from_fits(y::Vector{T}, d, X, fit_y, fit_d, method, vcov_type, forced, level, refit) where {T}
   _effect_fit(fit_y, y, X, "fit_y")
   _effect_fit(fit_d, d, X, "fit_d")
   fit_y.post == fit_d.post || throw(ArgumentError(
     "fit_y.post=$(fit_y.post) and fit_d.post=$(fit_d.post) must agree."))
-  layout = _effect_layout(y, d, X, fit_y, fit_d, method, forced)
+  effective_refit = method === :partialling ? something(refit, fit_y.post) : nothing
+  if effective_refit === true
+    for (name, fit) in (("fit_y", fit_y), ("fit_d", fit_d))
+      s, n = length(fit.selected), length(y)
+      s + 1 < n || throw(ArgumentError(
+        "$name refit requires |S|+1<n, but |S|=$s and n=$n."))
+    end
+  end
+  layout = _effect_layout(y, d, X, fit_y, fit_d, method, forced, effective_refit)
   result = _effect_final(layout.v, layout.w, layout.h_W, layout.k, layout.s, vcov_type, method;
                          target_norm = norm(d .- mean(d)), outcome_norm = norm(y .- mean(y)))
   α, se = result.estimate, sqrt(result.variance)
   t = α / se
   z = _qnorm(1 - (1 - T(level)) / 2)
   TreatmentEffect{T}(α, se, t, 2 * _pnorm(-abs(t)), (α - z * se, α + z * se), layout.selected, method,
-    length(y), vcov_type, fit_y.post, method === :partialling ? fit_y.post : nothing,
+    length(y), vcov_type, fit_y.post, effective_refit,
     copy(fit_y.selected), copy(fit_d.selected), method === :doubleselection ? sort!(unique(Int.(forced))) : Int[],
     layout.rank, length(y) - layout.k, dot(layout.v, layout.v) / sum(abs2, d .- mean(d)),
     maximum(result.leverage), result.influence, fit_y, fit_d)
@@ -502,9 +539,9 @@ end
 
 """
     double_selection(y, d, X; method = :doubleselection, vcov = :hdm, post = true,
-                     forced = Int[], level = 0.95, options = CDOptions(), rng = default_rng(), kwargs...)
+                     refit = nothing, forced = Int[], level = 0.95, options = CDOptions(), rng = default_rng(), kwargs...)
     double_selection(y, d, X, fit_y::RLassoSolution, fit_d::RLassoSolution;
-                     method = :doubleselection, vcov = :hdm, forced = Int[], level = 0.95)
+                     method = :doubleselection, vcov = :hdm, refit = nothing, forced = Int[], level = 0.95)
 
 Inference for the prespecified coefficient `α` in `y = μ + αd + Xβ + ε`, in
 original units, with an intercept throughout. This procedure does not justify
@@ -521,8 +558,22 @@ norm is aliased with the intercept. Remaining columns are scaled to unit norm;
 pivoted QR retains the `r` directions with `abs(R[j,j]) > τ`. Projection gives
 `v = M_W d`, `w = M_W y`, base leverages `h_W`, `k = r+2`, and nominal control
 count `s`. This rule differs from R's dqrdc2 and from the nuisance QR solve.
-Partialling centers the native nuisance residuals to obtain v and w, with
-`h_W = 1/n`, `k = 2`, and `s = 0`; `forced` is ignored for this method.
+Partialling centers the chosen nuisance residuals to obtain v and w, with
+`h_W = 1/n`, `k = 2`, and `s = 0`. `refit::Union{Nothing,Bool}=nothing` defaults
+to the fits' `post`. If `refit == post`, their native residuals are used without
+recomputation. With `post=true, refit=false`, residuals use the stored final
+penalized solve: `response - lasso_intercept - X*lasso`. With `post=false,
+refit=true`, OLS residuals use the same pinned projection rule as double
+selection, separately on each nuisance's selected controls. These modes keep
+the fits, supports, penalty levels and loadings fixed. Passing precomputed
+fits permits controlled comparisons; changing native `post` also changes the
+default penalty constant from 1.1 to 0.5.
+
+Partialling rejects nonempty `forced` (native hdm ignores I3 here). When
+effective `refit=true`, each nuisance must have `length(selected)+1<n`, even
+if some columns are aliases. Double selection only accepts `refit=nothing`;
+its final OLS is part of the estimator. HC corrections for partialling always
+use k=2; they do not count the nuisance controls as final-stage parameters.
 
 In both layouts, `α̂ = dot(v,w)/dot(v,v)`, `e = w - α̂v`,
 `φᵢ = n*vᵢ*eᵢ/dot(v,v)`, and `hᵢ = h_Wᵢ + vᵢ²/dot(v,v)`. The variance is:
@@ -557,10 +608,12 @@ Nuisance non-convergence is retained in the result and displayed by `show`.
 function double_selection(y::AbstractVector{<:Real}, d::AbstractVector{<:Real}, X::AbstractMatrix{<:Real};
                          method = :doubleselection, vcov = :hdm, level::Real = 0.95,
                          forced::AbstractVector{<:Integer} = Int[], post::Bool = true,
+                         refit::Union{Nothing, Bool} = nothing,
                          options::CDOptions = CDOptions(), rng::AbstractRNG = default_rng(),
                          intercept = true, kwargs...)
   intercept === true || throw(ArgumentError("intercept must be true, but it is $intercept."))
   y, d, X = _effect_data(y, d, X, method, vcov, level)
+  _effect_refit_options(method, forced, refit)
   if method === :doubleselection
     fit_d = rlasso(X, d, options; post, rng, kwargs...)
     fit_y = rlasso(X, y, options; post, rng, kwargs...)
@@ -568,13 +621,15 @@ function double_selection(y::AbstractVector{<:Real}, d::AbstractVector{<:Real}, 
     fit_y = rlasso(X, y, options; post, rng, kwargs...)
     fit_d = rlasso(X, d, options; post, rng, kwargs...)
   end
-  _effect_from_fits(y, d, X, fit_y, fit_d, method, vcov, forced, level)
+  _effect_from_fits(y, d, X, fit_y, fit_d, method, vcov, forced, level, refit)
 end
 
 function double_selection(y::AbstractVector{<:Real}, d::AbstractVector{<:Real}, X::AbstractMatrix{<:Real},
                           fit_y::RLassoSolution, fit_d::RLassoSolution;
                           method = :doubleselection, vcov = :hdm,
+                          refit::Union{Nothing, Bool} = nothing,
                           forced::AbstractVector{<:Integer} = Int[], level::Real = 0.95)
   y, d, X = _effect_data(y, d, X, method, vcov, level)
-  _effect_from_fits(y, d, X, fit_y, fit_d, method, vcov, forced, level)
+  _effect_refit_options(method, forced, refit)
+  _effect_from_fits(y, d, X, fit_y, fit_d, method, vcov, forced, level, refit)
 end

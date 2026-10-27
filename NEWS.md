@@ -1,5 +1,8 @@
 # Unreleased
 
+- Partialling-out supports controlled nuisance `refit` modes and robust variance
+  choices through `vcov`; it now rejects nonempty `forced` and `intercept=false`.
+
 - `rlasso` accepts an `rng` keyword and retains the final penalized coefficients,
   their penalty/loadings and intercept, convergence flags, selected-design rank,
   and effective tuning in `RLassoSolution`.

@@ -82,6 +82,41 @@ function dense(y, d, X, fy, fd, method, forced, type)
   (; estimate = b[2], variance = V, h, v, w, h_W = diag(P), k, s)
 end
 
+function dense_partial(u, v, type)
+  n = length(u)
+  Z = [ones(n) v]
+  b = Z \ u
+  e = u - Z * b
+  A = inv(Z' * Z)
+  h = diag(Z * A * Z')
+  V = if type in (:hdm, :homoskedastic)
+    sum(abs2, e) / (n - 2) * A[2, 2]
+  else
+    q = type === :HC2 ? 1 : type === :HC3 ? 2 : 0
+    M = A * (Z' * Diagonal(e .^ 2 ./ (1 .- h) .^ q) * Z) * A
+    M[2, 2] * (type === :HC1 ? n / (n - 2) : 1.0)
+  end
+  (; estimate = b[2], variance = V, residuals = e, h)
+end
+
+function kkt(fit, response, X)
+  Xc = X .- mean(X; dims = 1)
+  residual = (response .- mean(response)) - Xc * fit.lasso
+  g = Xc' * residual / length(response)
+  penalty = fit.lasso_λ0 .* fit.lasso_loadings
+  S, off = fit.selected, setdiff(axes(X, 2), fit.selected)
+  on_error = isempty(S) ? 0.0 : maximum(abs, g[S] - penalty[S] .* sign.(fit.lasso[S]))
+  off_error = isempty(off) ? 0.0 : max(0.0, maximum(abs.(g[off]) - penalty[off]))
+  max(on_error, off_error)
+end
+
+function rescaled(fit, a, b = 0.0)
+  changed(fit; x = a .* fit.x, intercept = a * fit.intercept + b,
+    residuals = a .* fit.residuals, σ = abs(a) * fit.σ, loadings = abs(a) .* fit.loadings,
+    lasso = a .* fit.lasso, lasso_intercept = a * fit.lasso_intercept + b,
+    lasso_loadings = abs(a) .* fit.lasso_loadings)
+end
+
 @testset "shared treatment-effect final stage" begin
   X, y, d = design()
   n, p = size(X)
@@ -96,7 +131,8 @@ end
         core = HDM._effect_final(ref.v, ref.w, ref.h_W, ref.k, ref.s, type, method;
           target_norm = norm(d .- mean(d)), outcome_norm = norm(y .- mean(y)))
         @test (ref.v, ref.w, ref.h_W) == originals
-        te = double_selection(y, d, X, fy, fd; method, vcov = type, forced, level = 0.9)
+        force = method == :doubleselection ? forced : Int[]
+        te = double_selection(y, d, X, fy, fd; method, vcov = type, forced = force, level = 0.9)
         @test core.estimate ≈ ref.estimate atol = 1e-10 rtol = 0
         @test core.variance ≈ ref.variance rtol = 1e-10 atol = 0
         @test te.estimate ≈ ref.estimate atol = 1e-10 rtol = 0
@@ -188,8 +224,12 @@ end
     for S in ([3, 1], [1, 1], [p + 1], Int[])
       rejects(() -> call(changed(fy; selected = S)), "fit_y.selected")
     end
-    # Partialling continues to ignore forced controls, including invalid ones.
-    @test same(call(fy; method = :partialling), call(fy; method = :partialling, forced = [p + 10]))
+    rejects(() -> call(fy; method = :partialling, forced = [p + 10]), "native hdm ignores I3")
+    rejects(() -> double_selection(y, d, X; method = :partialling, forced = [1], rng = Xoshiro(118308)), "forced")
+    for refit in (true, false)
+      rejects(() -> call(fy; refit), "refit")
+      rejects(() -> double_selection(y, d, X; refit, rng = Xoshiro(118309)), "refit")
+    end
     @test_throws BoundsError call(fy; forced = [p + 10])
   end
 
@@ -272,18 +312,159 @@ end
     a, b, c = -2.5, 3.7, -0.4
     for method in METHODS, type in VCOVS, post in (true, false)
       fy, fd = record(X, y, [1, 3]; post), record(X, d, [3, 5]; post)
-      base = double_selection(y, d, X, fy, fd; method, vcov = type, forced = [7])
+      forced = method == :doubleselection ? [7] : Int[]
+      base = double_selection(y, d, X, fy, fd; method, vcov = type, forced)
       yy = a .* y .+ b
-      r = double_selection(yy, d, X, record(X, yy, [1, 3]; post), fd; method, vcov = type, forced = [7])
+      r = double_selection(yy, d, X, record(X, yy, [1, 3]; post), fd; method, vcov = type, forced)
       @test r.estimate ≈ a * base.estimate atol = 1e-10 rtol = 0
       @test r.se ≈ abs(a) * base.se rtol = 1e-10
       dd = c .* d
-      r = double_selection(y, dd, X, fy, record(X, dd, [3, 5]; post); method, vcov = type, forced = [7])
+      r = double_selection(y, dd, X, fy, record(X, dd, [3, 5]; post); method, vcov = type, forced)
       @test r.estimate ≈ base.estimate / c atol = 1e-10 rtol = 0
       @test r.se ≈ base.se / abs(c) rtol = 1e-10
       @test r.target_variation ≈ base.target_variation rtol = 1e-10
       @test r.max_leverage ≈ base.max_leverage atol = 1e-10 rtol = 0
     end
+  end
+
+  @testset "controlled partialling refit modes" begin
+    options = CDOptions(opt_tol = 1e-10)
+    direct_errors = Dict(true => zeros(3), false => zeros(3))
+    for post in (true, false), empty in (false, true)
+      c = empty ? 100.0 : post ? 1.1 : 0.5
+      fy = rlasso(X, y, options; post, c, rng = Xoshiro(118401))
+      fd = rlasso(X, d, options; post, c, rng = Xoshiro(118402))
+      before_y, before_d = deepcopy(fy), deepcopy(fd)
+      if empty
+        @test isempty(fy.selected) && isempty(fd.selected)
+      else
+        @test fy.selected != fd.selected
+      end
+      # The same U2 1e-8 score allowance applies to 1e-10 CD steps.
+      kkt_error = max(kkt(fy, y, X), kkt(fd, d, X))
+      @test kkt_error <= 1e-8
+      refit = !post
+      u, v = if refit
+        Zy, Zd = [ones(n) X[:, fy.selected]], [ones(n) X[:, fd.selected]]
+        (y - Zy * (Zy \ y), d - Zd * (Zd \ d))
+      else
+        (y .- fy.lasso_intercept .- X * fy.lasso, d .- fd.lasso_intercept .- X * fd.lasso)
+      end
+      used_u = HDM._partialling_residuals(y, X, fy, refit)
+      used_v = HDM._partialling_residuals(d, X, fd, refit)
+      @test used_u ≈ u atol = 1e-10 rtol = 0
+      @test used_v ≈ v atol = 1e-10 rtol = 0
+      if !refit
+        @test used_u == u && used_v == v
+      end
+      @test HDM._partialling_residuals(y, X, fy, post) === fy.residuals
+      @test HDM._partialling_residuals(d, X, fd, post) === fd.residuals
+      state = copy(Random.default_rng())
+      for type in VCOVS
+        te = double_selection(y, d, X, fy, fd; method = :partialling, refit, vcov = type)
+        native = double_selection(y, d, X, fy, fd; method = :partialling, vcov = type)
+        @test same(native, double_selection(y, d, X, fy, fd; method = :partialling, refit = post, vcov = type))
+        @test te.nuisance_y === native.nuisance_y === fy
+        @test te.nuisance_d === native.nuisance_d === fd
+        @test te.refit === refit && te.post === post
+        @test te.selected_y == fy.selected && te.selected_d == fd.selected
+        @test te.nuisance_y.lasso_λ0 == fy.lasso_λ0 && te.nuisance_d.lasso_λ0 == fd.lasso_λ0
+        @test te.nuisance_y.lasso_loadings === fy.lasso_loadings
+        @test te.nuisance_d.lasso_loadings === fd.lasso_loadings
+        ref = dense_partial(u, v, type)
+        @test te.estimate ≈ ref.estimate atol = 1e-10 rtol = 0
+        @test te.se^2 ≈ ref.variance rtol = 1e-10 atol = 0
+        @test te.max_leverage ≈ maximum(ref.h) atol = 1e-10 rtol = 0
+        layout = HDM._effect_layout(y, d, X, fy, fd, :partialling, Int[], refit)
+        core = HDM._effect_final(layout.v, layout.w, layout.h_W, 2, 0, type, :partialling)
+        @test core.residuals ≈ ref.residuals atol = 1e-10 rtol = 0
+        err = direct_errors[post]
+        err[1] = max(err[1], abs(te.estimate - ref.estimate))
+        err[2] = max(err[2], abs(te.se^2 / ref.variance - 1))
+        err[3] = max(err[3], maximum(abs, core.leverage - ref.h))
+        if !empty
+          @test abs(te.estimate - native.estimate) > 1e-8
+        end
+        # Unit changes transform the same fitted record, keeping its support
+        # and penalty problem fixed apart from the corresponding unit changes.
+        a, b, scale_d = -2.5, 3.7, -0.4
+        ty = double_selection(a .* y .+ b, d, X, rescaled(fy, a, b), fd;
+          method = :partialling, refit, vcov = type)
+        td = double_selection(y, scale_d .* d, X, fy, rescaled(fd, scale_d);
+          method = :partialling, refit, vcov = type)
+        @test ty.estimate ≈ a * te.estimate atol = 1e-10 rtol = 0
+        @test ty.se ≈ abs(a) * te.se rtol = 1e-10
+        @test td.estimate ≈ te.estimate / scale_d atol = 1e-10 rtol = 0
+        @test td.se ≈ te.se / abs(scale_d) rtol = 1e-10
+      end
+      @test copy(Random.default_rng()) == state
+      @test same(fy, before_y) && same(fd, before_d)
+      if !empty
+        native = double_selection(y, d, X, fy, fd; method = :partialling)
+        other = double_selection(y, d, X, fy, fd; method = :partialling, refit)
+        println("partialling controlled post=$post selected_y=$(fy.selected) selected_d=$(fd.selected) KKT=$kkt_error native_alpha=$(native.estimate) refit_$(refit)_alpha=$(other.estimate)")
+      end
+    end
+    for post in (true, false)
+      a, v, h = direct_errors[post]
+      println("partialling non-native post=$post max_abs_alpha=$a max_relative_variance=$v max_abs_leverage=$h")
+    end
+  end
+
+  @testset "equal-support identity and degrees of freedom" begin
+    S = [1, 3, 5]
+    r = size(HDM._effect_basis(X, S), 2)
+    expected_ratio = (n - 2) / (n - r - 2)
+    for post in (true, false)
+      fy, fd = record(X, y, S; post), record(X, d, S; post)
+      po = HDM._effect_layout(y, d, X, fy, fd, :partialling, Int[], true)
+      ds = HDM._effect_layout(y, d, X, fy, fd, :doubleselection, Int[], nothing)
+      cp = HDM._effect_final(po.v, po.w, po.h_W, po.k, po.s, :HC0, :partialling)
+      cd = HDM._effect_final(ds.v, ds.w, ds.h_W, ds.k, ds.s, :HC0, :doubleselection)
+      @test cp.estimate ≈ cd.estimate atol = 1e-10 rtol = 0
+      @test cp.residuals ≈ cd.residuals atol = 1e-10 rtol = 0
+      @test cp.variance ≈ cd.variance rtol = 1e-10 atol = 0
+      for type in VCOVS
+        a = double_selection(y, d, X, fy, fd; method = :partialling, refit = true, vcov = type)
+        b = double_selection(y, d, X, fy, fd; method = :doubleselection, vcov = type)
+        @test a.estimate ≈ b.estimate atol = 1e-10 rtol = 0
+        ratio = b.se^2 / a.se^2
+        if type in (:homoskedastic, :HC1)
+          @test ratio ≈ expected_ratio rtol = 1e-10 atol = 0
+          println("partialling identity post=$post vcov=$type DS_over_PO=$ratio expected=$expected_ratio r=$r")
+        elseif type === :HC0
+          @test ratio ≈ 1 rtol = 1e-10 atol = 0
+        else
+          @test !isapprox(b.se^2, a.se^2; rtol = 1e-10, atol = 0)
+        end
+      end
+    end
+  end
+
+  @testset "refit bounds and weak target diagnostic" begin
+    rng = Xoshiro(118403)
+    W, yy, dd = randn(rng, 6, 5), randn(rng, 6), randn(rng, 6)
+    for post in (true, false)
+      fy, fd = record(W, yy, collect(1:5); post), record(W, dd; post)
+      rejects(() -> double_selection(yy, dd, W, fy, fd; method = :partialling, refit = true), "fit_y refit")
+      rejects(() -> double_selection(yy, dd, W, record(W, yy; post), record(W, dd, collect(1:5); post);
+        method = :partialling, refit = true), "fit_d refit")
+      if post
+        rejects(() -> double_selection(yy, dd, W, fy, fd; method = :partialling), "|S|=5 and n=6")
+      end
+    end
+    Z = [ones(n) X[:, 1]]
+    noise = randn(rng, n)
+    v = noise - Z * (Z \ noise)
+    v .*= norm(X[:, 1] .- mean(X[:, 1])) / norm(v)
+    delta = 1e-5
+    dd = X[:, 1] .+ delta .* v
+    yy = 0.5 .* dd .+ X[:, 1] .+ randn(rng, n)
+    te = double_selection(yy, dd, X, record(X, yy, [1]), record(X, dd, [1]); method = :partialling)
+    @test HDM._effect_tau(Float64)^2 < te.target_variation < 1e-8
+    # Cancellation in a 1e-5 residual permits a 1e-8 relative diagnostic error.
+    @test te.target_variation ≈ delta^2 / (1 + delta^2) rtol = 1e-8 atol = 0
+    println("partialling weak target_variation=$(te.target_variation) expected=$(delta^2/(1+delta^2))")
   end
 end
 

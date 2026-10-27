@@ -74,8 +74,8 @@ end
       @test meta["reference_script"] == "benchmark/hdm/golden.R"
       @test meta["baseline_script"] == "benchmark/hdm/baseline.jl"
 
-      # Load all final-stage reference fields now, without testing any future
-      # core covariance implementation or substituting a covariance for hdm's SE.
+      # Load both layouts' references; partialling's final stage is checked
+      # below on hdm's own nuisance residuals, independently of Julia selection.
       for method in (:doubleselection, :partialling)
         name, final = "effect_$method", "final_$method"
         for field in ("alpha", "se", "t", "pval")
@@ -91,6 +91,34 @@ end
         if method == :partialling
           @test length(reference[final, "yr"]) == n
           @test length(reference[final, "dr"]) == n
+        end
+      end
+
+      if dataset != "nearthreshold"
+        @testset "hdm partialling final stage" begin
+          u = reference["final_partialling", "yr"]
+          v = reference["final_partialling", "dr"]
+          u, v = u .- mean(u), v .- mean(v)
+          varerr, haterr, alphaerr = 0.0, 0.0, 0.0
+          homovariance = NaN
+          for type in (:homoskedastic, :hdm, :HC0, :HC1, :HC2, :HC3)
+            core = HighDimensionalModels._effect_final(v, u, fill(1/n, n), 2, 0, type, :partialling;
+              target_norm = norm(d .- mean(d)), outcome_norm = norm(y .- mean(y)))
+            field = type in (:homoskedastic, :hdm) ? "vcov" : string(type)
+            V = only(reference["final_partialling", field])
+            @test core.variance ≈ V rtol = 1e-10 atol = 0
+            @test core.leverage ≈ reference["final_partialling", "hatvalues"] atol = 1e-10 rtol = 0
+            @test core.estimate ≈ only(reference["final_partialling", "coefficient"]) atol = 1e-10 rtol = 0
+            if type === :homoskedastic
+              homovariance = core.variance
+            elseif type === :hdm
+              @test core.variance == homovariance
+            end
+            varerr = max(varerr, abs(core.variance / V - 1))
+            haterr = max(haterr, maxdiff(core.leverage, reference["final_partialling", "hatvalues"]))
+            alphaerr = max(alphaerr, abs(core.estimate - only(reference["final_partialling", "coefficient"])))
+          end
+          println("hdm $dataset partialling final max_relative_variance=$varerr max_abs_leverage=$haterr max_abs_alpha=$alphaerr")
         end
       end
 
