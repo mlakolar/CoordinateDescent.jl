@@ -241,8 +241,9 @@ Result returned by [`multitask_lasso`](@ref).
 - `intercept::Vector`: the unpenalized intercepts of the tasks, zero unless
   `intercept = true`
 - `λ`: the penalty level
-- `activerows::Vector{Int}`: the predictors with nonzero coefficients, the same
-  for all the tasks
+- `activerows::Vector{Int}`: the selected predictors, the rows of `B` with a
+  nonzero coefficient; a selected row is still zero in the tasks where its
+  column is zero or, with an intercept, constant
 - `iterations::Int`, `converged::Bool`: the passes of coordinate descent over
   the rows and whether it met its stopping rule
 - `hasintercept::Bool`: whether the solver fitted intercepts
@@ -468,9 +469,10 @@ Result returned by [`CVMultitaskLassoPath`](@ref)`(Xs, ys)`.
 - `path::MultitaskLassoPath`: the path on all the data
 - `λpath::Vector`: its levels, the grid of every fold
 - `cvm::Vector`, `cvse::Vector`: the cross-validated prediction error at each
-  level, and its standard error
+  level, and its standard error (`NaN` at the levels that no fold reaches, and
+  `cvse` also where only one does)
 - `cvm_task::Matrix`: the held-out mean squared error of each task (a row) at
-  each level (a column)
+  each level (a column), `NaN` where no fold reaches the level
 - `nrows::Vector{Int}`: the number of nonzero rows of `path` at each level
 - `λmin`, `λ1se`: the level with the smallest `cvm`, and the largest level
   whose `cvm` is within one standard error of it
@@ -499,7 +501,8 @@ same options and keywords, such as `intercept`, `standardize_x`, `task_weights`,
 `penalty_factors` and `max_rows`), as [`CVLassoPath`](@ref) does for one task:
 the path on all the data gives the levels, each fold's path is computed on the
 other folds at those levels, and the error on the held-out fold estimates the
-prediction error at each level.
+prediction error at each level. The levels are the automatic grid, so the
+penalty factors must be positive.
 
 The folds are drawn within each task: the observations of every task are
 assigned to the `K = nfolds` folds in a balanced random way, drawn from `rng`
@@ -517,14 +520,16 @@ The error of fold `k` at a level is
 
 where the inner sum runs over the `mₜₖ` observations of task `t` in fold `k`, and
 `cₜ` and `nₜ` are those of all the data. `cvm` is the average of the fold errors
-weighted by the `wₖ`, which is `∑ₜ cₜ MSEₜ / ∑ₜ cₜ` for the held-out mean squared
-errors `MSEₜ` of the tasks (`cvm_task`, whose folds are weighted by the
-`mₜₖ`), the held-out counterpart of the loss; `cvse` is its standard error,
-`sqrt(∑ₖ wₖ (eₖ - cvm)² / ∑ₖ wₖ / (K - 1))`. With one task they are those of
-[`CVLassoPath`](@ref). `λmin` minimizes `cvm`, and `λ1se` is the largest level
-whose `cvm` is within `cvse` of the minimum (the one-standard-error rule). A
-fold path that stops early (`max_rows`) leaves the remaining levels out of the
-averages.
+weighted by the `wₖ`, and `cvse` its standard error,
+`sqrt(∑ₖ wₖ (eₖ - cvm)² / ∑ₖ wₖ / (K - 1))`; with one task they are those of
+[`CVLassoPath`](@ref). `cvm_task` holds the held-out mean squared errors `MSEₜ`
+of the tasks, whose folds are weighted by the `mₜₖ`; at the levels that every
+fold reaches, `cvm = ∑ₜ cₜ MSEₜ / ∑ₜ cₜ`, the held-out counterpart of the loss.
+`λmin` minimizes `cvm`, and `λ1se` is the largest level whose `cvm` is within
+`cvse` of the minimum (the one-standard-error rule). A fold path that stops
+early (`max_rows`) leaves the remaining levels out of the averages; the levels
+that no fold reaches have `NaN` in `cvm`, `cvse` and `cvm_task`, and are not
+candidates for `λmin` and `λ1se`.
 
 With `threads`, the folds run in parallel on the available threads; each fold
 draws its random coordinate orders from a generator seeded from `rng`, so that
@@ -549,6 +554,10 @@ function CVMultitaskLassoPath(Xs::AbstractVector{<:AbstractMatrix}, ys::Abstract
       throw(ArgumentError("fold $k leaves $(n[t] - mt[t, k]) training observations in task $t, but a fit$(intercept ? " with an intercept" : "") needs at least $(1 + intercept)."))
   end
 
+  pf = get(kwargs, :penalty_factors, nothing)
+  pf === nothing || !any(iszero, pf) ||
+    throw(ArgumentError("cross-validation needs positive penalty factors, since its penalty levels are an automatic grid."))
+
   seeds = rand(rng, UInt64, K + 1)
   path = MultitaskLassoPath(Xs, ys, options; nλ, λminratio, intercept, rng = Xoshiro(seeds[end]), kwargs...)
   λs = path.λpath
@@ -566,12 +575,17 @@ function CVMultitaskLassoPath(Xs::AbstractVector{<:AbstractMatrix}, ys::Abstract
   end
   _runfolds(fold!, K, threads)
 
+  # the fold paths stop in order, so the levels that some fold reached are 1:Lr
+  Lr = something(findlast(j -> any(k -> !isnan(sse[1, k, j]), 1:K), 1:L), 0)
+  Lr >= 1 || throw(ArgumentError("no fold path reached the first level of the path."))
   c = path.task_weights
   wk = T[sum(c[t] * mt[t, k] / n[t] for t in 1:q) for k in 1:K]
-  errs = T[isnan(sse[1, k, j]) ? T(NaN) : sum(c[t] / n[t] * sse[t, k, j] for t in 1:q) / wk[k] for k in 1:K, j in 1:L]
-  cvm, cvse, jmin, j1se = _cvsummary(errs, wk)
-  cvm_task = Matrix{T}(undef, q, L)
-  for t in 1:q, j in 1:L
+  errs = T[isnan(sse[1, k, j]) ? T(NaN) : sum(c[t] / n[t] * sse[t, k, j] for t in 1:q) / wk[k] for k in 1:K, j in 1:Lr]
+  cvr, cvser, jmin, j1se = _cvsummary(errs, wk)
+  cvm, cvse = fill(T(NaN), L), fill(T(NaN), L)
+  cvm[1:Lr], cvse[1:Lr] = cvr, cvser
+  cvm_task = fill(T(NaN), q, L)
+  for t in 1:q, j in 1:Lr
     ok = [k for k in 1:K if !isnan(sse[t, k, j])]
     cvm_task[t, j] = sum(sse[t, ok, j]) / sum(mt[t, ok])
   end

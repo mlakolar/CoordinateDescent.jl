@@ -145,33 +145,56 @@ function weighted_threshold(b̂, c, κ)
   c .* b̂ ./ (c .+ κ / r)
 end
 
-# the held-out errors of the folds of cv, recomputed from fold paths fitted by
-# MultitaskLassoPath on the training rows alone: e_k = ∑ₜ (cₜ/nₜ) SSEₜₖ / w_k,
-# w_k = ∑ₜ cₜ mₜₖ / nₜ, and their weighted mean, its standard error, and the
-# held-out mean squared error of each task
-function cv_recompute(cv, Xs, ys, c, tw; kwargs...)
+# The held-out errors of the folds of cv, recomputed from fold paths fitted by
+# MultitaskLassoPath on the training rows alone, with options and the keywords
+# given: e_k = ∑ₜ (cₜ/nₜ) SSEₜₖ / w_k, w_k = ∑ₜ cₜ mₜₖ / nₜ, at the levels the
+# path of fold k reached. Returns, at each level, their mean weighted by the w_k
+# over the folds that reached it, its standard error (NaN for one fold), and the
+# held-out mean squared error of each task over those folds, all NaN at a level
+# no fold reached; and the number of levels each fold path reached.
+function cv_recompute(cv, Xs, ys, c, tw, options = TIGHT; kwargs...)
   q, L = length(Xs), length(cv.λpath)
   K = maximum(maximum, cv.folds)
   ns = length.(ys)
-  errs, wk, sse = zeros(K, L), zeros(K), zeros(q, L)
+  errs, wk, Lk = fill(NaN, K, L), zeros(K), zeros(Int, K)
+  sse, mt = zeros(q, K, L), zeros(q, K)
   for k in 1:K
     train = [findall(!=(k), f) for f in cv.folds]
     test = [findall(==(k), f) for f in cv.folds]
-    fp = MultitaskLassoPath([Xs[t][train[t], :] for t in 1:q], [ys[t][train[t]] for t in 1:q], cv.λpath, TIGHT;
+    fp = MultitaskLassoPath([Xs[t][train[t], :] for t in 1:q], [ys[t][train[t]] for t in 1:q], cv.λpath, options;
                             task_weights = tw, kwargs...)
     Ŷ = predict(fp, [Xs[t][test[t], :] for t in 1:q])
-    wk[k] = sum(c[t] * length(test[t]) / ns[t] for t in 1:q)
+    Lk[k] = length(fp.λpath)
     for t in 1:q
-      e = vec(sum(abs2, ys[t][test[t]] .- Ŷ[t]; dims = 1))
-      errs[k, :] .+= c[t] / ns[t] .* e
-      sse[t, :] .+= e
+      mt[t, k] = length(test[t])
+      sse[t, k, 1:Lk[k]] = sum(abs2, ys[t][test[t]] .- Ŷ[t]; dims = 1)
     end
-    errs[k, :] ./= wk[k]
+    wk[k] = sum(c[t] * mt[t, k] / ns[t] for t in 1:q)
+    errs[k, 1:Lk[k]] = [sum(c[t] / ns[t] * sse[t, k, j] for t in 1:q) / wk[k] for j in 1:Lk[k]]
   end
-  cvm = vec(sum(wk .* errs; dims = 1)) ./ sum(wk)
-  cvse = [sqrt(sum(wk .* abs2.(errs[:, j] .- cvm[j])) / sum(wk) / (K - 1)) for j in 1:L]
-  cvm, cvse, sse ./ ns
+  cvm, cvse, cvm_task = fill(NaN, L), fill(NaN, L), fill(NaN, q, L)
+  for j in 1:L
+    ok = findall(>=(j), Lk)
+    isempty(ok) && continue
+    w = wk[ok]
+    cvm[j] = sum(w .* errs[ok, j]) / sum(w)
+    length(ok) > 1 && (cvse[j] = sqrt(sum(w .* abs2.(errs[ok, j] .- cvm[j])) / sum(w) / (length(ok) - 1)))
+    cvm_task[:, j] = [sum(sse[t, ok, j]) / sum(mt[t, ok]) for t in 1:q]
+  end
+  cvm, cvse, cvm_task, Lk
 end
+
+# λmin and λ1se of the summaries cvm and cvse: the level that minimizes cvm
+# among those with a finite cvm, and the first level within cvse of it
+function cv_levels(λs, cvm, cvse)
+  ok = findall(!isnan, cvm)
+  jmin = ok[argmin(cvm[ok])]
+  bound = cvm[jmin] + (isnan(cvse[jmin]) ? 0.0 : cvse[jmin])
+  λs[jmin], λs[findfirst(j -> cvm[j] <= bound, 1:jmin)]
+end
+
+# a ≈ b at rtol, with NaN in the same places
+nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan, a), filter(!isnan, b); rtol)
 
 @testset "multitask_lasso, MultitaskLassoPath and CVMultitaskLassoPath" begin
 
@@ -210,6 +233,14 @@ end
     cases = ((fill(X, q), true), ([copy(X) for _ in 1:q], true), (fill(X, q), false), (fill(sparse(X), q), true))
     fitwith(Xs, shared, λ; kw...) = shared ? multitask_lasso(Xs, ys, λ, TIGHT; kw...) :
       HighDimensionalModels._multitask_fit(Xs, ys, λ, TIGHT; shared, kw...)
+    # the shared-design model (no stacked design Z) is taken for the same dense
+    # matrix or equal copies with equal weights, and the stacked design otherwise
+    data(Xs, tw = :equal; shared = true) =
+      HighDimensionalModels._MultitaskData(Xs, ys; intercept = true, standardize_x = true, task_weights = tw, shared)
+    @test data(fill(X, q)).Z === nothing && data([copy(X) for _ in 1:q]).Z === nothing
+    @test data(fill(X, q), fill(2.0, q)).Z === nothing
+    @test data(fill(sparse(X), q)).Z !== nothing && data(fill(X, q), [1.0, 2.0, 3.0]).Z !== nothing
+    @test data(fill(X, q); shared = false).Z !== nothing
     for (intercept, standardize_x) in ((true, true), (false, false))
       ms = multi_lasso(X, Y, 0.2, TIGHT; intercept, standardize_x)
       @test 0 < length(ms.activerows) < p
@@ -270,6 +301,13 @@ end
               objective(Xs, ys, ref.β0, ref.B, λ, c, ωt, S) atol = 1e-6
         # the optimality conditions of the documented objective
         @test kkt(Xs, ys, sol.intercept, sol.B, λ, c, ωt, S; intercept) < 1e-6
+        # the scales, weights, residuals and objective of the data layer
+        d = HighDimensionalModels._MultitaskData(Xs, ys; intercept, standardize_x, task_weights = tw)
+        @test d.S ≈ S && d.c ≈ c
+        @test HighDimensionalModels._task_residuals(d, sol.B, sol.intercept) ≈
+              [ys[t] .- sol.intercept[t] .- Xs[t] * sol.B[:, t] for t in 1:q]
+        @test HighDimensionalModels._task_objective(d, sol.B, sol.intercept, λ, ωt) ≈
+              objective(Xs, ys, sol.intercept, sol.B, λ, c, ωt, S)
       end
     end
   end
@@ -330,6 +368,8 @@ end
     for (intercept, standardize_x) in ((true, true), (true, false), (false, true))
       S = scales(Xs, intercept, standardize_x)
       @test S[2, :] == zeros(q) && S[5, 2] == 0 && (S[3, 1] == 0) == intercept
+      d = HighDimensionalModels._MultitaskData(Xs, ys; intercept, standardize_x, task_weights = :equal)
+      @test (d.S .== 0) == (S .== 0) && d.S ≈ S
       λ = 0.05 * lambda_max(Xs, ys, ones(q), ones(p), S; intercept)
       sol = multitask_lasso(Xs, ys, λ, TIGHT; intercept, standardize_x)
       @test all(isfinite, sol.B) && all(isfinite, sol.intercept)
@@ -404,6 +444,21 @@ end
     s32 = multitask_lasso([Xi[1], Float32.(Xi[2]), Xi[3]], yi, 1)
     @test s32.B isa SparseMatrixCSC{Float32, Int} && s32.intercept isa Vector{Float32}
     @test Matrix(s32.B) ≈ Matrix(sf.B) atol = 1e-4
+    # Float32 paths: with the default gap rule, ProximalSolvers 0.2.0 has no
+    # method of its gap check for the stacked model in Float32 (a MethodError);
+    # with gaptol = 0 they run. The Float32 grid differs from the Float64 one
+    # by the factor 1 + √eps(T) of λmax, so the Float64 path is fitted on it.
+    X32, y32 = [Float32.(X) for X in Xi], [Float32.(y) for y in yi]
+    @test_broken (MultitaskLassoPath(X32, y32; nλ = 10); true)
+    @test_broken (CVMultitaskLassoPath(X32, y32; nfolds = 3, nλ = 10); true)
+    p32 = MultitaskLassoPath(X32, y32, CDOptions(; gaptol = 0); nλ = 10)
+    @test p32.λpath isa Vector{Float32} && p32.Bpath isa Vector{SparseMatrixCSC{Float32, Int}} && all(p32.converged)
+    λs64 = MultitaskLassoPath(Xi, yi; nλ = 10).λpath
+    @test p32.λpath ./ (1 + sqrt(eps(Float32))) ≈ λs64 ./ (1 + sqrt(eps())) rtol = 1e-5
+    p64 = MultitaskLassoPath(Xi, yi, Float64.(p32.λpath), TIGHT)
+    @test all(norm(p32.Bpath[k] - p64.Bpath[k]) < 1e-4 for k in 1:10)
+    cv32 = CVMultitaskLassoPath(X32, y32, CDOptions(; gaptol = 0); nfolds = 3, nλ = 10, rng = Xoshiro(2))
+    @test cv32.cvm isa Vector{Float32} && all(isfinite, cv32.cvm)
 
     # a zero penalty factor: allowed with an explicit level or grid, where the
     # predictor stays in the model, and rejected with an automatic grid
@@ -516,13 +571,50 @@ end
       full = MultitaskLassoPath(Xs, ys, TIGHT; nλ = 20, task_weights = tw)
       @test cv.λpath ≈ full.λpath rtol = 1e-12
       @test all(norm(cv.path.Bpath[k] - full.Bpath[k]) < 1e-5 for k in 1:L)
-      cvm, cvse, cvm_task = cv_recompute(cv, Xs, ys, c, tw)
+      cvm, cvse, cvm_task, Lk = cv_recompute(cv, Xs, ys, c, tw)
+      @test Lk == fill(L, 5)
       @test cv.cvm ≈ cvm rtol = 1e-6
       @test cv.cvse ≈ cvse rtol = 1e-6
       @test cv.cvm_task ≈ cvm_task rtol = 1e-6
       jmin = argmin(cv.cvm)
       @test cv.λmin == cv.λpath[jmin]
       @test cv.λ1se == cv.λpath[findfirst(j -> cv.cvm[j] <= cv.cvm[jmin] + cv.cvse[jmin], 1:jmin)]
+    end
+    # fold paths that stop early (max_rows): a level is averaged over the folds
+    # that reached it; here two of the five stop one level before the last
+    cv = CVMultitaskLassoPath(Xs, ys, TIGHT; folds, nλ = 20, max_rows = 4, rng = Xoshiro(7))
+    L = length(cv.λpath)
+    cvm, cvse, cvm_task, Lk = cv_recompute(cv, Xs, ys, ones(q), :equal; max_rows = 4)
+    @test L < 20 && minimum(Lk) < L == maximum(Lk)
+    @test all(isfinite, cv.cvm) && all(isfinite, cv.cvm_task)
+    @test nan_approx(cv.cvm, cvm)
+    @test nan_approx(cv.cvse, cvse)
+    @test nan_approx(cv.cvm_task, cvm_task)
+    @test (cv.λmin, cv.λ1se) == cv_levels(cv.λpath, cv.cvm, cv.cvse)
+    # no fold path reaches the last levels of the full path: NaN there, the
+    # same lengths, and λmin and λ1se among the levels reached
+    rng = Xoshiro(1)
+    nb, pb = (20, 30, 40), 40
+    Bb = zeros(pb, 3); Bb[1:15, :] .= randn(rng, 15, 3)
+    Xb = [randn(rng, n, pb) for n in nb]
+    yb = [Xb[t] * Bb[:, t] .+ randn(rng, nb[t]) for t in 1:3]
+    for options in (CDOptions(), TIGHT)
+      cv = CVMultitaskLassoPath(Xb, yb, options; nfolds = 3, nλ = 40, max_rows = 6, rng = Xoshiro(1))
+      L = length(cv.λpath)
+      cvm, cvse, cvm_task, Lk = cv_recompute(cv, Xb, yb, ones(3), :equal, options; max_rows = 6)
+      reached = maximum(Lk)
+      @test reached < L
+      @test length(cv.cvm) == length(cv.cvse) == length(cv.nrows) == L && size(cv.cvm_task) == (3, L)
+      @test all(isnan, cv.cvm[reached+1:L]) && all(isnan, cv.cvse[reached+1:L])
+      @test all(isnan, cv.cvm_task[:, reached+1:L])
+      @test all(isfinite, cv.cvm[1:reached]) && all(isfinite, cv.cvm_task[:, 1:reached])
+      @test cv.λmin in cv.λpath[1:reached] && cv.λ1se in cv.λpath[1:reached]
+      @test (cv.λmin, cv.λ1se) == cv_levels(cv.λpath, cv.cvm, cv.cvse)
+      if options === TIGHT
+        @test nan_approx(cv.cvm, cvm)
+        @test nan_approx(cv.cvse, cvse)
+        @test nan_approx(cv.cvm_task, cvm_task)
+      end
     end
     # one task with the same folds: CVLassoPath
     cvl = CVLassoPath(Xs[3], ys[3], TIGHT; folds = folds[3], nλ = 20, intercept = true, standardize_x = true,

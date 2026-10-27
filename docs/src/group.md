@@ -136,7 +136,7 @@ Taskar and Jordan, 2010). The coefficients are returned on the original scale.
   finite and nonnegative, with at least one positive. A zero factor leaves a
   predictor unpenalized. It is allowed with levels of your own only: no level
   makes the coefficients of an unpenalized predictor zero, so the automatic
-  grid below needs positive factors.
+  grid below, and hence cross-validation, needs positive factors.
 - **Intercepts.** Each task has an unpenalized intercept
   ``\beta_{0t} = \bar y_t - \bar x_t^\top b_t`` (`intercept = true`, the
   default); with `intercept = false` they are zero and nothing is centered.
@@ -146,8 +146,8 @@ Taskar and Jordan, 2010). The coefficients are returned on the original scale.
   every task has the same design ``X`` and all the weights are ``c``,
   ``s_{tj} = s_j`` and, with the default penalty factors, the problem is
   [`multi_lasso`](@ref)`(X, Y, λ / c)` with ``Y = [y_1 \cdots y_q]``; a dense
-  shared design is fitted with the model of `multi_lasso`. Its `nobs` is then ``qn``, where `multi_lasso` reports
-  ``n``.
+  shared design is fitted with the model of `multi_lasso`. Its `nobs` is then
+  ``qn``, where `multi_lasso` reports ``n``.
 - **Method.** The tasks are centered and standardized each on its own, the
   rows of task ``t`` are scaled by ``\sqrt{N c_t / n_t}``, and the blocks are
   placed on the diagonal of a sparse ``N \times pq`` design over
@@ -155,8 +155,8 @@ Taskar and Jordan, 2010). The coefficients are returned on the original scale.
   coordinate descent solves the least-squares problem on it, with coordinate
   orders drawn from `rng`. The columns of different tasks are orthogonal, so
   the curvature over a row is diagonal. With standardization and equal weights
-  it is the identity and each block step is exact; otherwise a step minimizes
-  a majorization, and convergence takes more passes.
+  it is a multiple of the identity and each block step is exact; otherwise a
+  step minimizes a majorization, and convergence takes more passes.
 - **Sparse designs.** A sparse ``X_t`` stays sparse without an intercept. With
   an intercept, centering fills it in: its block in the stacked design is
   dense, about ``n_t p`` stored entries.
@@ -207,9 +207,11 @@ w_k = \sum_{t=1}^q \frac{c_t\, m_{tk}}{n_t},
 ```
 
 with ``m_{tk}`` the number of observations of task ``t`` in fold ``k``, and
-``c_t``, ``n_t`` those of the full data. `cvm` averages the ``e_k`` with the weights ``w_k``,
-and `cvse`, `λmin` and `λ1se` follow as for `CVLassoPath`; a fold path that
-stops early leaves the remaining levels out of the averages. At the levels
+``c_t``, ``n_t`` those of the full data. `cvm` averages the ``e_k`` with the
+weights ``w_k``, and `cvse`, `λmin` and `λ1se` follow as for `CVLassoPath`. A
+fold path that stops early leaves the remaining levels out of the averages,
+and the levels that no fold reaches have `NaN` in `cvm`, `cvse` and
+`cvm_task` and are not candidates for `λmin` and `λ1se`. At the levels
 every fold reaches, `cvm` is ``\sum_t c_t \mathrm{MSE}_t / \sum_t c_t``, the
 held-out counterpart of the training loss, where ``\mathrm{MSE}_t``, the
 held-out mean squared error of task ``t``, is `cvm_task[t, :]`. With one task
