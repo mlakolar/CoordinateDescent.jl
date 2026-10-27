@@ -25,6 +25,7 @@ tests = [
   "lowrank",
   "hdm",
   "hdm_golden",
+  "hdm_effect",
   "varying",
   "statsapi",
   "formula",

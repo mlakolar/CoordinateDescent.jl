@@ -301,12 +301,27 @@ post_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, sol; kwargs...)
 """
     TreatmentEffect
 
-Result returned by [`double_selection`](@ref): the `estimate` of the effect of
-the treatment, its standard error `se`, the `t` statistic and the two-sided
-`pvalue` against zero (normal approximation), the confidence interval `ci` at
-the requested level, the `selected` controls, the `method` and the number of
-observations `n`. `coef`, `stderror`, `vcov` and `confint` (at any `level`)
-give the estimate as a model with one coefficient, and `nobs` is `n`.
+Result returned by [`double_selection`](@ref) for the prespecified treatment
+coefficient in original units. The positional constructor is internal.
+
+`estimate`, `se`, `t`, `pvalue`, and `ci` give the estimate, standard error,
+normal statistic, two-sided normal p-value, and interval at the requested
+level. `selected` is the union of the nuisance supports and, for double
+selection, the forced controls. `method`, `n`, `vcov_type`, and `post` record
+the procedure. `refit` equals `post` for partialling and is `nothing` for double
+selection. `selected_y`, `selected_d`, and `forced` record the separate supports
+and the controls forced into double selection (empty for partialling).
+
+`rank` is the rank of the intercept and selected-control basis (1 for
+partialling); `dof_residual` is the final regression's residual degrees of
+freedom. `target_variation` is the fraction of centered treatment variation
+remaining after projection. `max_leverage` and the observation-level `influence`
+refer to the final regression. `nuisance_y` and `nuisance_d` retain the
+[`RLassoSolution`](@ref)s, including their outer and solver convergence flags.
+Non-convergence is reported, without rejecting the effect estimate.
+
+`coef`, `stderror`, `vcov` and `confint` (at any `level`) give the estimate as
+a model with one coefficient; `nobs` is `n`.
 """
 struct TreatmentEffect{T}
   estimate::T
@@ -317,69 +332,249 @@ struct TreatmentEffect{T}
   selected::Vector{Int}
   method::Symbol
   n::Int
+  vcov_type::Symbol
+  post::Bool
+  refit::Union{Nothing, Bool}
+  selected_y::Vector{Int}
+  selected_d::Vector{Int}
+  forced::Vector{Int}
+  rank::Int
+  dof_residual::Int
+  target_variation::T
+  max_leverage::T
+  influence::Vector{T}
+  nuisance_y::RLassoSolution{T}
+  nuisance_d::RLassoSolution{T}
 end
 
 function Base.show(io::IO, r::TreatmentEffect)
-  print(io, "TreatmentEffect (", r.method, "): ", round(r.estimate; sigdigits = 4), " (se ",
+  print(io, "TreatmentEffect (", r.method, ", ", r.vcov_type, "): ", round(r.estimate; sigdigits = 4), " (se ",
         round(r.se; sigdigits = 3), ", p = ", round(r.pvalue; sigdigits = 3), "), ",
         length(r.selected), " controls selected")
+  failed = String[]
+  r.nuisance_y.converged && r.nuisance_y.solver_converged || push!(failed, "y")
+  r.nuisance_d.converged && r.nuisance_d.solver_converged || push!(failed, "d")
+  isempty(failed) || print(io, "; nuisance non-convergence: ", join(failed, ", "))
 end
 
-"""
-    double_selection(y, d, X; method = :doubleselection, level = 0.95, forced = Int[], post = true, kwargs...)
+_effect_tau(::Type{T}) where {T} = max(T(1e-7), sqrt(eps(T)))
 
-Inference on the effect `α` of a treatment `d` in `y = αd + Xβ + ε` with many
-controls `X`, after selecting them by [`rlasso`](@ref) (`kwargs` go to it), as
-R's hdm `rlassoEffect` computes it:
+function _effect_types(method, vcov_type)
+  method isa Symbol && method in (:doubleselection, :partialling) ||
+    throw(ArgumentError("method must be :doubleselection or :partialling, but it is $method."))
+  vcov_type isa Symbol && vcov_type in (:hdm, :homoskedastic, :HC0, :HC1, :HC2, :HC3) ||
+    throw(ArgumentError("vcov must be :hdm, :homoskedastic, :HC0, :HC1, :HC2 or :HC3, but it is $vcov_type."))
+  nothing
+end
 
-- `method = :doubleselection` (Belloni, Chernozhukov and Hansen, 2014): select
-  the controls that predict `y` and those that predict `d`, then regress `y` on
-  `d`, the union of both (and the `forced` controls) and an intercept. The
-  standard error is the robust one of hdm,
-  `√(mean(v² ξ²) / (n mean(v²)²))`, with `ξ` the residuals of that regression
-  scaled by `√(n/(n - s - 1))` for `s` selected controls, and `v` the residuals
-  of `d` on the selected controls and an intercept.
-- `method = :partialling`: regress the residuals of `rlasso` of `y` on `X` on
-  those of `d` on `X`, with an intercept; the standard error is that of least
-  squares, as in hdm.
+function _effect_finite(a, name)
+  i = findfirst(x -> !isfinite(x), a)
+  i === nothing || throw(ArgumentError("$name[$i] must be finite, but it is $(a[i])."))
+  nothing
+end
 
-The confidence interval is `estimate ± z se` with the normal quantile `z` at
-`level`. Returns a [`TreatmentEffect`](@ref).
-"""
-function double_selection(y::AbstractVector{T}, d::AbstractVector{T}, X::AbstractMatrix{T};
-                         method::Symbol = :doubleselection, level::Real = 0.95,
-                         forced::AbstractVector{<:Integer} = Int[], post::Bool = true,
-                         kwargs...) where {T<:AbstractFloat}
-  n = length(y)
-  length(d) == n && size(X, 1) == n || throw(DimensionMismatch("y, d and X must have the same number of observations"))
-  0 < level < 1 || throw(ArgumentError("level must be in (0, 1), but it is $level."))
-  if method === :doubleselection
-    Sd = rlasso(X, d; post, kwargs...).selected
-    Sy = rlasso(X, y; post, kwargs...).selected
-    S = sort!(union(Sd, Sy, Int.(forced)))
-    Z = [ones(T, n) d X[:, S]]
-    coef = qr(Z, ColumnNorm()) \ y
-    α = coef[2]
-    ξ = (y .- Z * coef) .* sqrt(T(n) / (n - length(S) - 1))
-    v = isempty(S) ? d .- mean(d) : (W = [ones(T, n) X[:, S]]; d .- W * (qr(W, ColumnNorm()) \ d))
-    mv2 = mean(abs2, v)
-    se = sqrt(mean(abs2.(v) .* abs2.(ξ)) / mv2^2 / n)
-  elseif method === :partialling
-    ry, rd = rlasso(X, y; post, kwargs...), rlasso(X, d; post, kwargs...)
-    S = sort!(union(ry.selected, rd.selected))
-    u, w = ry.residuals, rd.residuals .- mean(rd.residuals)
-    α = dot(w, u .- mean(u)) / dot(w, w)
-    res = (u .- mean(u)) .- α .* w
-    se = sqrt(sum(abs2, res) / (n - 2) / dot(w, w))
-  else
-    throw(ArgumentError("method must be :doubleselection or :partialling, but it is :$method."))
+function _effect_data(y, d, X, method, vcov_type, level)
+  n, p = size(X)
+  length(y) == length(d) == n || throw(DimensionMismatch(
+    "length(y)=$(length(y)), length(d)=$(length(d)), size(X,1)=$n must agree"))
+  _effect_types(method, vcov_type)
+  n >= 3 || throw(ArgumentError("n must be at least 3, but it is $n."))
+  p >= 1 || throw(ArgumentError("p must be positive, but it is $p."))
+  0 < level < 1 || throw(ArgumentError("level must be in (0,1), but it is $level."))
+  _effect_finite(y, "y"); _effect_finite(d, "d"); _effect_finite(X, "X")
+  T = float(promote_type(eltype(y), eltype(d), eltype(X)))
+  yf, df, Xf = convert(Vector{T}, y), convert(Vector{T}, d), convert(Matrix{T}, X)
+  for (name, a) in (("d", df), ("y", yf))
+    variation = norm(a .- mean(a))
+    variation > 0 && !all(==(first(a)), a) || throw(ArgumentError(
+      "centered $name norm=$variation; $name must be nonconstant."))
   end
+  yf, df, Xf
+end
+
+function _effect_fit(fit::RLassoSolution, response::Vector{T}, X, name) where {T}
+  n, p = size(X)
+  length(fit.residuals) == n || throw(DimensionMismatch(
+    "$name residual length=$(length(fit.residuals)), expected n=$n"))
+  for field in (:x, :lasso, :loadings, :lasso_loadings)
+    length(getfield(fit, field)) == p || throw(DimensionMismatch(
+      "$name.$field length=$(length(getfield(fit, field))), expected p=$p"))
+  end
+  fit.hasintercept || throw(ArgumentError("$name.hasintercept must be true, but it is $(fit.hasintercept)."))
+  eltype(fit.x) === T || throw(ArgumentError("$name eltype=$(eltype(fit.x)), expected $T."))
+  S = fit.selected
+  issorted(S) && allunique(S) && all(j -> 1 <= j <= p, S) && S == findall(!iszero, fit.lasso) ||
+    throw(ArgumentError("$name.selected=$S must be sorted, unique, in 1:$p, and equal the lasso support."))
+  error = norm(fit.residuals .- (response .- fit.intercept .- X * fit.x), Inf)
+  bound = sqrt(eps(T)) * (norm(response, Inf) + abs(fit.intercept) + maximum(abs.(X) * abs.(fit.x)))
+  isfinite(error) && isfinite(bound) && error <= bound || throw(ArgumentError(
+    "$name residual consistency error=$error exceeds bound=$bound."))
+  nothing
+end
+
+# Pure final stage. Original-response norms are supplied by the public path to
+# make the relative degeneracy rules refer to the data's original units.
+function _effect_final(v::AbstractVector{T}, w::AbstractVector{T}, h_W::AbstractVector{T},
+                       k::Int, s::Int, vcov_type, method;
+                       target_norm::Real = norm(v), outcome_norm::Real = norm(w)) where {T<:AbstractFloat}
+  n = length(v)
+  n >= 3 || throw(ArgumentError("n must be at least 3, but it is $n."))
+  length(w) == length(h_W) == n || throw(DimensionMismatch(
+    "final-stage lengths v=$n, w=$(length(w)), h_W=$(length(h_W)) must agree"))
+  _effect_types(method, vcov_type)
+  τ = _effect_tau(T)
+  nv = norm(v)
+  nv > τ * target_norm || throw(ArgumentError(
+    "residualized target norm=$nv must exceed tau*centered d norm=$(τ * target_norm)."))
+  k < n || throw(ArgumentError("k=$k must be less than n=$n."))
+  if vcov_type === :hdm && method === :doubleselection
+    n - s - 1 >= 1 || throw(ArgumentError("n-s-1=$(n-s-1) must be at least 1 (n=$n, s=$s)."))
+  end
+  vv = dot(v, v)
+  α = dot(v, w) / vv
+  e = w .- α .* v
+  ne = norm(e)
+  ne > τ * outcome_norm || throw(ArgumentError(
+    "residual norm=$ne must exceed tau*centered y norm=$(τ * outcome_norm)."))
+  influence = (T(n) / vv) .* v .* e
+  leverage = h_W .+ abs2.(v) ./ vv
+  if vcov_type in (:HC2, :HC3)
+    maximum(leverage) <= 1 - τ || throw(ArgumentError(
+      "max leverage=$(maximum(leverage)) must be at most 1-tau=$(1-τ)."))
+  end
+  variance = if vcov_type === :homoskedastic || (vcov_type === :hdm && method === :partialling)
+    sum(abs2, e) / (n - (vcov_type === :hdm ? 2 : k)) / vv
+  else
+    meat = abs2.(v) .* abs2.(e)
+    if vcov_type in (:HC2, :HC3)
+      meat ./= (1 .- leverage) .^ (vcov_type === :HC2 ? 1 : 2)
+    end
+    hc0 = sum(meat) / vv^2
+    vcov_type === :HC1 ? hc0 * n / (n - k) :
+      vcov_type === :hdm ? hc0 * n / (n - s - 1) : hc0
+  end
+  (; estimate = α, residuals = e, influence, leverage, variance, jacobian = -vv / n)
+end
+
+function _effect_layout(y::Vector{T}, d, X, fit_y, fit_d, method, forced) where {T}
+  n = length(y)
+  S = sort!(union(fit_y.selected, fit_d.selected, method === :doubleselection ? Int.(forced) : Int[]))
+  if method === :partialling
+    return (; v = fit_d.residuals .- mean(fit_d.residuals),
+              w = fit_y.residuals .- mean(fit_y.residuals),
+              h_W = fill(inv(T(n)), n), k = 2, s = 0, rank = 1, selected = S)
+  end
+  τ = _effect_tau(T)
+  Z = X[:, S] .- mean(X[:, S]; dims = 1)
+  norms = [norm(view(Z, :, j)) for j in eachindex(S)]
+  keep = [j for j in eachindex(S) if norms[j] > τ * norm(view(X, :, S[j]))]
+  Q = if isempty(keep)
+    zeros(T, n, 0)
+  else
+    F = qr(Z[:, keep] ./ transpose(norms[keep]), ColumnNorm())
+    r = count(>(τ), abs.(diag(F.R)))
+    Matrix(F.Q)[:, 1:r]
+  end
+  dc, yc = d .- mean(d), y .- mean(y)
+  r = size(Q, 2)
+  (; v = dc .- Q * (Q' * dc), w = yc .- Q * (Q' * yc),
+     h_W = inv(T(n)) .+ vec(sum(abs2, Q; dims = 2)),
+     k = r + 2, s = length(S), rank = r + 1, selected = S)
+end
+
+function _effect_from_fits(y::Vector{T}, d, X, fit_y, fit_d, method, vcov_type, forced, level) where {T}
+  _effect_fit(fit_y, y, X, "fit_y")
+  _effect_fit(fit_d, d, X, "fit_d")
+  fit_y.post == fit_d.post || throw(ArgumentError(
+    "fit_y.post=$(fit_y.post) and fit_d.post=$(fit_d.post) must agree."))
+  layout = _effect_layout(y, d, X, fit_y, fit_d, method, forced)
+  result = _effect_final(layout.v, layout.w, layout.h_W, layout.k, layout.s, vcov_type, method;
+                         target_norm = norm(d .- mean(d)), outcome_norm = norm(y .- mean(y)))
+  α, se = result.estimate, sqrt(result.variance)
   t = α / se
   z = _qnorm(1 - (1 - T(level)) / 2)
-  TreatmentEffect{T}(α, se, t, 2 * _pnorm(-abs(t)), (α - z * se, α + z * se), S, method, n)
+  TreatmentEffect{T}(α, se, t, 2 * _pnorm(-abs(t)), (α - z * se, α + z * se), layout.selected, method,
+    length(y), vcov_type, fit_y.post, method === :partialling ? fit_y.post : nothing,
+    copy(fit_y.selected), copy(fit_d.selected), method === :doubleselection ? sort!(unique(Int.(forced))) : Int[],
+    layout.rank, length(y) - layout.k, dot(layout.v, layout.v) / sum(abs2, d .- mean(d)),
+    maximum(result.leverage), result.influence, fit_y, fit_d)
 end
 
-function double_selection(y::AbstractVector{<:Real}, d::AbstractVector{<:Real}, X::AbstractMatrix{<:Real}; kwargs...)
-  T = float(promote_type(eltype(y), eltype(d), eltype(X)))
-  double_selection(convert(Vector{T}, y), convert(Vector{T}, d), convert(Matrix{T}, X); kwargs...)
+"""
+    double_selection(y, d, X; method = :doubleselection, vcov = :hdm, post = true,
+                     forced = Int[], level = 0.95, options = CDOptions(), rng = default_rng(), kwargs...)
+    double_selection(y, d, X, fit_y::RLassoSolution, fit_d::RLassoSolution;
+                     method = :doubleselection, vcov = :hdm, forced = Int[], level = 0.95)
+
+Inference for the prespecified coefficient `α` in `y = μ + αd + Xβ + ε`, in
+original units, with an intercept throughout. This procedure does not justify
+choosing the target after inspecting estimated effects. `kwargs` (`c`, `γ`,
+`max_iter`, `tol`) go to [`rlasso`](@ref); `options` controls its coordinate
+descent and `rng` supplies both fits' random orders. Double selection fits d
+then y; partialling fits y then d. `intercept=false`, weights, and offsets are
+unsupported.
+
+Double selection uses the sorted union of both supports and `forced`. Its
+control basis W contains an intercept and centered selected controls. With
+`τ = max(1e-7, sqrt(eps(T)))`, a centered column of norm at most τ times its raw
+norm is aliased with the intercept. Remaining columns are scaled to unit norm;
+pivoted QR retains the `r` directions with `abs(R[j,j]) > τ`. Projection gives
+`v = M_W d`, `w = M_W y`, base leverages `h_W`, `k = r+2`, and nominal control
+count `s`. This rule differs from R's dqrdc2 and from the nuisance QR solve.
+Partialling centers the native nuisance residuals to obtain v and w, with
+`h_W = 1/n`, `k = 2`, and `s = 0`; `forced` is ignored for this method.
+
+In both layouts, `α̂ = dot(v,w)/dot(v,v)`, `e = w - α̂v`,
+`φᵢ = n*vᵢ*eᵢ/dot(v,v)`, and `hᵢ = h_Wᵢ + vᵢ²/dot(v,v)`. The variance is:
+
+| `vcov` | Variance |
+|:--|:--|
+| `:homoskedastic` | `sum(e²)/(n-k)/dot(v,v)` |
+| `:HC0` | `sum(v² .* e²)/dot(v,v)^2` |
+| `:HC1` | `HC0*n/(n-k)` |
+| `:HC2` | `sum(v² .* e² ./ (1-h))/dot(v,v)^2` |
+| `:HC3` | `sum(v² .* e² ./ (1-h).^2)/dot(v,v)^2` |
+| `:hdm`, partialling | homoskedastic variance with k=2 |
+| `:hdm`, double selection | `HC0*n/(n-s-1)`, with nominal s including aliases |
+
+The default preserves hdm 0.3.2's variance conventions. Intervals are
+`α̂ ± z*se`; t statistics and two-sided p-values use the standard normal.
+
+Inputs must be finite, with n≥3, p≥1, 0<level<1, and nonconstant y and d.
+All variances require k<n; hdm double selection also requires n-s-1≥1.
+Reject `norm(v) ≤ τ*norm(d-mean(d))`, `norm(e) ≤ τ*norm(y-mean(y))`, and, for
+HC2/HC3, `maximum(h) > 1-τ`. Invalid quantities raise `ArgumentError` with
+their values; incompatible dimensions raise `DimensionMismatch`.
+
+The precomputed method consumes no RNG and does not mutate either fit. It
+checks dimensions, promoted element type, intercepts, matching post flags,
+sorted unique lasso supports, and residual consistency with y/d and X to a
+budget `sqrt(eps(T)) * (norm(response,Inf) + abs(b0) + maximum(abs.(X)*abs.(x)))`
+for `norm(residuals - (response - b0 - X*x), Inf)`. These checks establish consistency, not
+provenance: they cannot establish which data or algorithm produced a record.
+Nuisance non-convergence is retained in the result and displayed by `show`.
+"""
+function double_selection(y::AbstractVector{<:Real}, d::AbstractVector{<:Real}, X::AbstractMatrix{<:Real};
+                         method = :doubleselection, vcov = :hdm, level::Real = 0.95,
+                         forced::AbstractVector{<:Integer} = Int[], post::Bool = true,
+                         options::CDOptions = CDOptions(), rng::AbstractRNG = default_rng(),
+                         intercept = true, kwargs...)
+  intercept === true || throw(ArgumentError("intercept must be true, but it is $intercept."))
+  y, d, X = _effect_data(y, d, X, method, vcov, level)
+  if method === :doubleselection
+    fit_d = rlasso(X, d, options; post, rng, kwargs...)
+    fit_y = rlasso(X, y, options; post, rng, kwargs...)
+  else
+    fit_y = rlasso(X, y, options; post, rng, kwargs...)
+    fit_d = rlasso(X, d, options; post, rng, kwargs...)
+  end
+  _effect_from_fits(y, d, X, fit_y, fit_d, method, vcov, forced, level)
+end
+
+function double_selection(y::AbstractVector{<:Real}, d::AbstractVector{<:Real}, X::AbstractMatrix{<:Real},
+                          fit_y::RLassoSolution, fit_d::RLassoSolution;
+                          method = :doubleselection, vcov = :hdm,
+                          forced::AbstractVector{<:Integer} = Int[], level::Real = 0.95)
+  y, d, X = _effect_data(y, d, X, method, vcov, level)
+  _effect_from_fits(y, d, X, fit_y, fit_d, method, vcov, forced, level)
 end
