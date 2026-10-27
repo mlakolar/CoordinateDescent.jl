@@ -42,32 +42,70 @@ function feasible_lasso!(x::SparseIterate{T}, X::AbstractMatrix{<:Real}, y::Abst
 end
 
 # least squares of y on the columns S of X, centered at xbar (and y at ȳ), by a
-# pivoted QR; returns the coefficients and the residuals
+# pivoted QR; returns the coefficients, residuals, and the solve's rank decision
 function _ols(X::AbstractMatrix{T}, y::AbstractVector{T}, S::Vector{Int}, xbar::Vector{T}, ȳ::T) where {T}
   Z = X[:, S] .- transpose(xbar[S])
-  b = isempty(S) ? T[] : qr(Z, ColumnNorm()) \ (y .- ȳ)
-  b, (y .- ȳ) .- Z * b
+  if isempty(S)
+    b, rnk = T[], 0
+  else
+    F = qr(Z, ColumnNorm())
+    if eltype(F) <: LinearAlgebra.BlasFloat
+      # The same ldiv! used by pivoted-QR backslash also returns its rank.
+      # rank(F) uses a different, diagonal-based threshold.
+      rhs = zeros(eltype(F), max(size(Z)...), 1)
+      rhs[1:size(X, 1), 1] .= y .- ȳ
+      _, rnk = LinearAlgebra.ldiv!(F, rhs, min(size(F)...) * eps(real(eltype(F))))
+      b = rhs[1:length(S), 1]
+    else
+      # Julia's generic QRPivoted backslash assumes full rank.
+      b, rnk = F \ (y .- ȳ), min(size(F)...)
+    end
+  end
+  b, (y .- ȳ) .- Z * b, rnk
 end
 
 """
     RLassoSolution
 
-Result returned by [`rlasso`](@ref).
+Result returned by [`rlasso`](@ref). Its positional constructor is internal;
+obtain a solution by calling `rlasso`.
 
 # Fields
 - `x::SparseVector`: the coefficients, refitted by least squares on the
   selected columns when `post` is true (as hdm's `rlasso` returns them), the
   lasso coefficients otherwise
 - `intercept`: the intercept, zero without one
-- `selected::Vector{Int}`: the selected columns
-- `λ0`, `loadings::Vector`: the penalty `λ0 ∑ⱼ Γⱼ |βⱼ|` of the last lasso fit,
-  on the scale of [`feasible_lasso!`](@ref), and the loadings `Γⱼ` updated from
-  its residuals (hdm's `lambda` is `2n λ0 Γ`)
+- `selected::Vector{Int}`: the selected columns, equal to
+  `findall(!iszero, lasso)`
+- `λ0`, `loadings::Vector`: the nominal penalty level on the scale of
+  [`feasible_lasso!`](@ref), and the loadings updated from the final residuals
+  (unchanged on an empty-selection return; hdm's `lambda` is `2n λ0 Γ`)
 - `residuals::Vector`, `σ`: the residuals of the final coefficients and their
   standard deviation
 - `iterations::Int`: the lasso fits of the procedure
 - `post::Bool`
 - `hasintercept::Bool`: whether the procedure fitted an intercept
+- `lasso::SparseVector`, `lasso_intercept`: a copy of the penalized coefficients
+  of the final coordinate-descent solve, and their intercept (zero without one)
+- `lasso_λ0`, `lasso_loadings::Vector`: the penalty level and a copy of the
+  loadings actually used by that solve, before the residual-based update;
+  `lasso_λ0 == λ0/2` if the final solve was the first one and `post` is true,
+  and `lasso_λ0 == λ0` otherwise
+- `converged::Bool`: the outer standard-deviation stopping criterion was met;
+  an empty-selection return also counts as converged
+- `solver_converged::Bool`: every coordinate-descent solve converged,
+  including the solve preceding an empty-selection return
+- `rank::Int`: the numerical rank of the selected columns after centering
+  when fitting an intercept, zero for no selected columns. For BLAS floating
+  types this is the rank returned by the pivoted-QR least-squares solve used
+  by `_ols`: incremental estimates of the smallest/largest singular values
+  of leading R blocks, with `rcond = min(n, length(selected)) * eps(T)`.
+  A block is rejected when `smax * rcond > smin`. This is not the diagonal
+  threshold used by `rank(::QRPivoted)`. Other floating types follow Julia's
+  generic pivoted-QR solve, which assumes full rank on a successful solve.
+- `tuning::NamedTuple`: `(c, γ, max_iter, tol, options)` as used by the fit.
+  `max_iter` limits the outer loadings loop; `options.max_iter` limits the
+  coordinate-descent passes of each solve
 
 [`coef`](@ref), [`predict`](@ref), [`residuals`](@ref), [`nobs`](@ref),
 [`dof`](@ref) and [`deviance`](@ref) apply to it.
@@ -83,11 +121,19 @@ struct RLassoSolution{T}
   iterations::Int
   post::Bool
   hasintercept::Bool
+  lasso::SparseVector{T, Int}
+  lasso_intercept::T
+  lasso_λ0::T
+  lasso_loadings::Vector{T}
+  converged::Bool
+  solver_converged::Bool
+  rank::Int
+  tuning::NamedTuple
 end
 
 """
     rlasso(X, y, options = CDOptions(); post = true, intercept = true, c = post ? 1.1 : 0.5,
-           γ = 0.1 / log(n), max_iter = 15, tol = 1e-5)
+           γ = 0.1 / log(n), max_iter = 15, tol = 1e-5, rng = default_rng())
 
 The lasso with data-driven penalty loadings as R's hdm computes it
 (`rlasso` with its defaults: heteroskedastic and X-independent penalty), the
@@ -106,12 +152,21 @@ procedure of Belloni, Chen, Chernozhukov and Hansen (2012):
 The coefficients returned are the refitted ones when `post` is true. With
 `intercept`, the columns and `y` are centered and `β₀ = ȳ - x̄'β`. Each lasso
 is solved by coordinate descent with `options`, warm started from the previous
-one. Returns an [`RLassoSolution`](@ref). See also [`post_lasso`](@ref) and
-[`double_selection`](@ref).
+one. Random coordinate orders are drawn from `rng::AbstractRNG`; a private
+generator leaves the default RNG unchanged. The default preserves the stream
+of calls seeded with `Random.seed!`.
+
+Returns an [`RLassoSolution`](@ref), retaining both the final penalized solve
+(`lasso`, `lasso_intercept`, `lasso_λ0`, `lasso_loadings`) and the returned
+coefficients/residuals, together with outer/solver convergence, selected-design
+rank, and effective tuning. The outer `max_iter` limits loadings iterations;
+`options.max_iter` limits coordinate-descent passes per solve. See also
+[`post_lasso`](@ref) and [`double_selection`](@ref).
 """
 function rlasso(X::AbstractMatrix{T}, y::AbstractVector{T}, options::CDOptions = CDOptions();
                 post::Bool = true, intercept::Bool = true, c::Real = post ? 1.1 : 0.5,
-                γ::Real = 0.1 / log(size(X, 1)), max_iter::Union{Nothing, Integer} = nothing, tol::Real = 1e-5, kwargs...) where {T<:AbstractFloat}
+                γ::Real = 0.1 / log(size(X, 1)), max_iter::Union{Nothing, Integer} = nothing, tol::Real = 1e-5,
+                rng::AbstractRNG = default_rng(), kwargs...) where {T<:AbstractFloat}
   max_iter, kwargs = _legacy_keyword(max_iter, kwargs, Val(:maxIter), Val(:max_iter), 15)
   max_iter::Integer
   _check_keywords(CDOptions, (), kwargs)
@@ -122,44 +177,61 @@ function rlasso(X::AbstractMatrix{T}, y::AbstractVector{T}, options::CDOptions =
   xbar = intercept ? _column_means(X) : zeros(T, p)
   ȳ = intercept ? mean(y) : zero(T)
   λ0 = T(theory_lambda(n, p; c, γ))
+  tuning = (; c, γ, max_iter, tol, options)
 
   # hdm's init_values: least squares on the five columns most correlated with y
   sd = vec(std(X; dims = 1))
   cors = [sd[j] > 0 ? abs(cor(view(X, :, j), y)) : zero(T) for j in 1:p]
   S0 = partialsortperm(cors, 1:min(5, p); rev = true)
-  _, e = _ols(X, y, collect(S0), xbar, ȳ)
+  _, e, _ = _ols(X, y, collect(S0), xbar, ȳ)
   Γ = _get_loadings!(Vector{T}(undef, p), X, e, xbar)
 
   m = CDLeastSquaresLoss(y, X; intercept)
-  solver = _solver(options)
+  solver = _solver(options; rng)
   x = SparseIterate(T, p)
   s0 = std(y)
   b, S, iterations = T[], Int[], 0
+  lasso_λ0, lasso_loadings = λ0, T[]
+  converged, solver_converged, selected_rank = false, true, 0
   for it in 1:max_iter
     iterations = it
-    solve!(x, m, NormL1(it == 1 && post ? λ0 / 2 : λ0, copy(Γ)), solver)
+    lasso_λ0 = it == 1 && post ? λ0 / 2 : λ0
+    lasso_loadings = copy(Γ)
+    result = solve!(x, m, NormL1(lasso_λ0, copy(Γ)), solver)
+    solver_converged &= result.converged
     S = sort!([k for k in activecoordinates(x) if !iszero(x[k])])
     if isempty(S)          # nothing selected: the intercept only, as hdm returns it
       e = y .- ȳ
-      return RLassoSolution{T}(spzeros(T, p), ȳ, Int[], λ0, Γ, e, std(e), it, post, intercept)
+      return RLassoSolution{T}(spzeros(T, p), ȳ, Int[], λ0, Γ, e, std(e), it, post, intercept,
+                               spzeros(T, p), ȳ, lasso_λ0, lasso_loadings, true, solver_converged, 0, tuning)
     end
     if post
-      b, e = _ols(X, y, S, xbar, ȳ)
+      b, e, selected_rank = _ols(X, y, S, xbar, ȳ)
     else
       b, e = T[x[k] for k in S], copy(ProximalSolvers.residuals(m))
     end
     s1 = std(e)
     _get_loadings!(Γ, X, e, xbar)
-    abs(s0 - s1) < tol && break
+    if abs(s0 - s1) < tol
+      converged = true
+      break
+    end
     s0 = s1
   end
   β = sparsevec(S, b, p)
-  RLassoSolution{T}(β, ȳ - dot(xbar, β), S, λ0, Γ, e, std(e), iterations, post, intercept)
+  lasso = sparsevec(S, T[x[k] for k in S], p)
+  if !post
+    _, _, selected_rank = _ols(X, y, S, xbar, ȳ)
+  end
+  RLassoSolution{T}(β, ȳ - dot(xbar, β), S, λ0, Γ, e, std(e), iterations, post, intercept,
+                   lasso, intercept ? ȳ - dot(xbar, lasso) : zero(T), lasso_λ0, lasso_loadings,
+                   converged, solver_converged, selected_rank, tuning)
 end
 
-function rlasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, options::CDOptions = CDOptions(); kwargs...)
+function rlasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, options::CDOptions = CDOptions();
+                rng::AbstractRNG = default_rng(), kwargs...)
   T, Xf, yf = _float_data(X, y)
-  rlasso(Xf, yf, options; kwargs...)
+  rlasso(Xf, yf, options; rng, kwargs...)
 end
 
 """

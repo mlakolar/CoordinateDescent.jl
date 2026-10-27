@@ -1,5 +1,9 @@
 # Unreleased
 
+- `rlasso` accepts an `rng` keyword and retains the final penalized coefficients,
+  their penalty/loadings and intercept, convergence flags, selected-design rank,
+  and effective tuning in `RLassoSolution`.
+
 Low-rank nuclear fits and paths accept `solver = :panoc` after loading the
 optional ProximalAlgorithms dependency. Row-sparse fits and paths accept
 `block_solver = :fista`; both options propagate through cross-validation.

@@ -93,6 +93,7 @@ end
       end
 
       coeferr, residerr, loadingerr, lambdaerr = 0.0, 0.0, 0.0, 0.0
+      loadingerr_by_post = Dict(true => 0.0, false => 0.0)
       for (j, (post, response)) in enumerate(((true, :y), (true, :d), (false, :y), (false, :d)))
         target = response == :y ? y : d
         Random.seed!(11900 + 10k + j)
@@ -122,6 +123,7 @@ end
         dλ = abs(r.λ0 - only(reference[name, "lambda0"]) / (2n))
         coeferr, residerr = max(coeferr, dc), max(residerr, de)
         loadingerr, lambdaerr = max(loadingerr, dl), max(lambdaerr, dλ)
+        loadingerr_by_post[post] = max(loadingerr_by_post[post], dl)
         @test dλ <= 1e-15
         if dataset == "nearthreshold"
           # Orthogonal, centered design: only coordinate 2 differs, in every
@@ -140,6 +142,19 @@ end
           residual_tol = post ? OLS_ATOL : SHOOTING_ATOL * (1 + maximum(sum(abs, X[:, Rsel]; dims = 2)))
           @test dc <= coefficient_tol
           @test de <= residual_tol
+          if post || isempty(Rsel)
+            # OLS on common supports (or common initialization for the empty
+            # first fit): only floating-point roundoff enters the loadings.
+            @test dl <= OLS_ATOL
+          else
+            # Reverse triangle inequality for Γ_j=||Xc_j .* e||₂/sqrt(n):
+            # |ΔΓ_j| <= ||Xc_j .* Δe||₂/sqrt(n). Propagate U1's frozen
+            # coefficient/intercept budget pointwise through the raw design.
+            Xc = X .- mean(X; dims = 1)
+            residual_budget = SHOOTING_ATOL .* (1 .+ vec(sum(abs, X[:, Rsel]; dims = 2)))
+            loading_budget = vec(sqrt.(mean(abs2.(Xc .* residual_budget); dims = 1)))
+            @test all(abs.(r.loadings - reference[name, "loadings"]) .<= loading_budget)
+          end
           if dataset == "forced"
             @test isempty(intersect(forced, r.selected))
           elseif dataset == "empty"
@@ -181,6 +196,7 @@ end
         end
       end
       println("hdm $dataset max_abs: coefficients=$coeferr residuals=$residerr loadings=$loadingerr lambda0=$lambdaerr alpha=$alphaerr se=$seerr t=$terr pval=$perr")
+      println("hdm $dataset loadings max_abs by post: true=$(loadingerr_by_post[true]) false=$(loadingerr_by_post[false])")
       if dataset == "forced"
         for file in ("X", "y", "d")
           @test read(joinpath(dir, file * ".csv")) == read(joinpath(ROOT, "hetero", file * ".csv"))

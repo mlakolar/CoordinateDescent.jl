@@ -93,8 +93,12 @@ logistic(z) = 1 / (1 + exp(-z))
     gq = fit(GroupLassoPath, @formula(y ~ x1 + g + x2), data, λs, CDOptions(; opt_tol = 1e-10, gaptol = 0))
     @test gq.model.λpath == λs && gq.model.groups == [[1], [2, 3], [4]]
 
-    r = rlasso(@formula(y ~ x1 + x2 + g), data)
+    r = rlasso(@formula(y ~ x1 + x2 + g), data; rng = Xoshiro(4))
     @test r.model isa HighDimensionalModels.RLassoSolution && predict(r, data) ≈ y .- residuals(r)
+    matrix_r = rlasso(X, y; rng = Xoshiro(4))
+    for field in fieldnames(typeof(matrix_r))
+      @test getfield(r.model, field) == getfield(matrix_r, field)
+    end
   end
 
   @testset "errors" begin
