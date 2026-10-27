@@ -48,6 +48,19 @@ selects response loadings. `LowRankPath`, `CVLowRankPath` and `lowrank_ic`
 provide rank/penalty grids, fold-specific tuning, and information criteria.
 The methods support intercepts, rank-deficient designs, and StatsAPI.
 
+## Multitask regression with task-specific designs
+
+Add `multitask_lasso`, `MultitaskLassoPath` and `CVMultitaskLassoPath`, the row
+ℓ1/ℓ2 penalty on `B = [b_1 … b_q]` when each task has its own design and
+response, with the same predictors and possibly unequal sample sizes. Task
+weights count each task once (`task_weights = :equal`, the default) or each
+observation once (`:observations`); the columns are standardized within each
+task, and the coefficients are returned on the original scale. With one task
+the fit is `lasso`, and with a shared design and equal weights it is
+`multi_lasso`. Cross-validation draws the folds within each task, refits on the
+training observations alone, and reports the held-out error of each task
+(`cvm_task`).
+
 ## Paths stop on a certified duality gap
 
 With ProximalSolvers' gap stopping (ProximalSolvers #86), the paths (`LassoPath`, `CVLassoPath`,

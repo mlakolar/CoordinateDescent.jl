@@ -22,6 +22,7 @@ tests = [
   "group",
   "sparsegroup",
   "multiresponse",
+  "multitask",
   "lowrank",
   "hdm",
   "hdm_golden",
