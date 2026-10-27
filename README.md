@@ -1,7 +1,8 @@
 # HighDimensionalModels.jl
 
 Previously CoordinateDescent.jl. Load the package with `using HighDimensionalModels`;
-the package UUID and version are unchanged by this rename.
+HighDimensionalModels starts at version 0.1.0 with a new package UUID.
+Registered CoordinateDescent releases retain their original identity.
 
 [![Docs: dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://mlakolar.github.io/HighDimensionalModels.jl/dev/)
 [![CI](https://github.com/mlakolar/HighDimensionalModels.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/mlakolar/HighDimensionalModels.jl/actions/workflows/CI.yml?query=branch%3Amaster)
@@ -52,12 +53,12 @@ ProximalSolvers; to write your own algorithm, ProximalBase.
 
 ## Installation
 
-Use the master checkout and prepare its dependency master checkouts:
+Before the first registration, use a checkout with registered dependencies:
 
 ```sh
 git clone --branch master https://github.com/mlakolar/HighDimensionalModels.jl.git
 cd HighDimensionalModels.jl
-julia scripts/instantiate.jl
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
 julia --project=.
 ```
 
@@ -127,16 +128,16 @@ the [documentation](https://mlakolar.github.io/HighDimensionalModels.jl/dev/) sh
 them with their output. Run them from the root of the repository:
 
 ```
-julia scripts/instantiate.jl examples
+julia scripts/instantiate_release.jl examples
 julia --project=examples examples/01_lasso.jl
 julia --project=examples examples/run_all.jl      # all of them, about 20 seconds
 ```
 
-The environment loads this package and its workspace dependencies from local
-master checkouts. The bootstrap prepares transitive dependencies on Julia 1.10
-and newer.
+The environment uses this checkout and registered runtime dependencies.
+KernelSmoothing, used by two integration examples, is fetched at a pinned commit
+until it is registered. The bootstrap supports Julia 1.10 and newer.
 
-## Naming and the 0.8 transition
+## Naming and migration from CoordinateDescent
 
 Types use `UpperCamelCase`; functions, fields and keywords use lowercase with
 underscores between words. For example, use `sqrt_lasso`, `coordinate_descent!`,
@@ -166,9 +167,10 @@ zero-penalty refits and the distinction between exact and smoothed scores.
 From the repository root, run:
 
 ```sh
-julia scripts/test_master.jl
+julia scripts/test_registered.jl
 ```
 
-The script prepares an isolated test environment using dependency master
-checkouts and test extras on Julia 1.10 and newer. See
+This runs ordinary `Pkg.test()` with registered dependencies and deprecations
+as errors. For integration with dependency master checkouts, run
+`julia scripts/test_master.jl` in a separate checkout. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for the naming policy and environment setup.
