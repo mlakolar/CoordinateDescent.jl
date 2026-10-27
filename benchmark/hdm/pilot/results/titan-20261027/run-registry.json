@@ -1,0 +1,99 @@
+{
+  "run_id": "20261027-hdm-pilot-118-119",
+  "kind": "development",
+  "status": "completed",
+  "purpose": "Descriptive coverage pilot for #118 (post-Lasso partialling-out) and #119 (post-double-selection) on PR #129: 8 frozen Gaussian designs x 500 datasets, 5 arms on shared nuisance fits, 6 variance choices. Not a validation campaign; defaults unchanged.",
+  "cluster": {
+    "name": "Titan",
+    "ssh_alias": "titan",
+    "account": "mladen",
+    "qos": "normal",
+    "partition": "cpu (auto, no --gres)",
+    "note": "The issues name Discovery; Discovery (discovery.usc.edu) was unreachable from the MBZUAI network, and the maintainer chose Titan on 2026-10-27."
+  },
+  "authorized_resources": {
+    "reference": "slurm-workflow standing CPU allowance (titan-workflow CPU-only rules)",
+    "max_slurm_cpus": 8,
+    "physical_cores": 4,
+    "max_memory_gb": 16,
+    "max_running_minutes": 120
+  },
+  "recreation": {
+    "cwd": "/shared/home/mladen.kolar/hdm-pilot-20261027/HighDimensionalModels.jl/benchmark/hdm/pilot",
+    "source": {
+      "HighDimensionalModels.jl": "46db8659c3a61017463e3cd309f1f0a389a457d9",
+      "ProximalBase.jl": "9c5a43b (v0.5.4)",
+      "ProximalSolvers.jl": "f7e3f28026a8e83e0fa18203b39839cf57a1c949 (v0.2.0)"
+    },
+    "layout": "sibling clones under /shared/home/mladen.kolar/hdm-pilot-20261027/ resolved through benchmark/hdm/pilot/Project.toml [sources]",
+    "environment": "Julia 1.13.3 (~/.local/bin/julia); JULIA_PKG_SERVER='' Pkg.instantiate() on the login node; JULIA_PKG_OFFLINE=true in jobs",
+    "commands": [
+      "julia --project=. make-tasks.jl tasks",
+      "sbatch --parsable --job-name=RUNTAG --comment=RUNTAG --export=ALL,RUNTAG=...,TASKS=... run.sbatch",
+      "julia --project=. analyze.jl OUTDIR RESULTSDIR"
+    ],
+    "seeds": "data Xoshiro(1_400_000_000 + 1_000_000 case + rep); solver Xoshiro(1_500_000_000 + 10_000_000 case + 10_000 rep + 10 slot + stream); disjoint from PR #86 blocks (max ~1.3002e9)"
+  },
+  "jobs": [
+    {
+      "stage": "canary (case 1 moderate, reps 1-2, 1 worker; also precompiles)",
+      "job_id": "62863",
+      "command": "sbatch --parsable --job-name=hdm118-canary-20261027 --comment=hdm118-canary-20261027 --cpus-per-task=2 --mem=4G --time=00:20:00 --export=ALL,RUNTAG=hdm118-canary-20261027,TASKS=$PWD/tasks/canary.txt,OUTDIR=$PWD/outputs/hdm118-canary-20261027 run.sbatch",
+      "resources": "2 Slurm CPUs (1 core), 4 GB, 20 min",
+      "submitted_utc": "2026-10-27T17:44:17Z",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "start_utc": "2026-10-27T17:43:55",
+      "elapsed": "00:02:28",
+      "node": "mbz-titan-2",
+      "max_rss": "877504K (worker step)",
+      "outcome": "100/100 arm records ok, 0 NaN se; 0.4865 s/rep (moderate, incl. convenience timings), warm-up 4.93 s; most elapsed time was precompilation"
+    },
+    {
+      "stage": "main pilot (80 tasks = 8 cases x 10 chunks of 50 reps)",
+      "job_id": "62871",
+      "command": "sbatch --parsable --job-name=hdm118-pilot-20261027 --comment=hdm118-pilot-20261027 --export=ALL,RUNTAG=hdm118-pilot-20261027,TASKS=$PWD/tasks/tasks.txt,OUTDIR=$PWD/outputs/hdm118-pilot-20261027 run.sbatch",
+      "resources": "8 Slurm CPUs (4 workers x 1 core), 16 GB, 1h45m limit",
+      "submitted_utc": "2026-10-27T17:48:10Z",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "start_utc": "2026-10-27T17:47:51",
+      "elapsed": "00:10:51",
+      "node": "mbz-titan-2",
+      "max_rss_worker": "595948K",
+      "outcome": "80/80 tasks completed (80 worker steps COMPLETED); 180000/180000 arm records; zero exceptions"
+    },
+    {
+      "stage": "analysis (analyze.jl)",
+      "job_id": "62892",
+      "command": "sbatch --parsable --job-name=hdm118-analysis-20261027 --comment=hdm118-analysis-20261027 --account=mladen --qos=normal --cpus-per-task=2 --mem=4G --time=00:15:00 --wrap='... srun --exact -n1 -c2 julia --project=. analyze.jl outputs/hdm118-pilot-20261027 results-titan-20261027'",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "elapsed": "00:00:20",
+      "outcome": "analysis records=180000 summary_rows=32120"
+    }
+  ],
+  "created_utc": "2026-10-27T17:28:48Z",
+  "updated_utc": "2026-10-27T18:02:50Z",
+  "actual_resources": {
+    "running_union_minutes": 13.65,
+    "allocated_slurm_cpu_hours": 1.54,
+    "physical_core_hours": 0.77,
+    "peak_allocated_slurm_cpus": 8,
+    "peak_allocated_memory_gb": 16,
+    "max_worker_rss_gb": 0.88,
+    "note": "Within the standing allowance (120 min, 8 Slurm CPUs, 16 GB)."
+  },
+  "outputs": {
+    "committed": [
+      "RESULTS.md",
+      "summary.csv",
+      "run-registry.json"
+    ],
+    "raw_records": "Titan /shared/home/mladen.kolar/hdm-pilot-20261027/HighDimensionalModels.jl/benchmark/hdm/pilot/outputs/hdm118-pilot-20261027 (80 record CSVs + 8 timing CSVs, 52 MB); archive /shared/home/mladen.kolar/hdm-pilot-20261027/pilot-outputs.tgz sha256 93036dbbe2d345583dd832d84d2f18e2dc0a89e9752e0e487d2fca7d354b4864 (outputs, canary, logs, results, tasks); also copied to the orchestrator's local run evidence"
+  },
+  "validation": {
+    "checks": "sacct exit codes for all steps; record count 180000/180000 and zero exception rows (analysis); canary record sanity (100/100 ok, no NaN se); downloaded archive sha256 equals the cluster copy",
+    "not_performed": "No independent refit of individual records; the statistical code paths were verified by unit tests and R golden comparisons in U1-U5."
+  }
+}

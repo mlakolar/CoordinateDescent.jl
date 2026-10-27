@@ -7,6 +7,18 @@ ProximalSolvers 0.2 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- Double selection supports `vcov` choices, final-stage diagnostics and
+  precomputed nuisance fits. Forced controls are validated before fitting;
+  invalid `forced` now raises `ArgumentError` instead of `BoundsError`.
+  The positional constructors of `TreatmentEffect` and `RLassoSolution` changed.
+
+- Partialling-out supports controlled nuisance `refit` modes and robust variance
+  choices through `vcov`; it now rejects nonempty `forced` and `intercept=false`.
+
+- `rlasso` accepts an `rng` keyword and retains the final penalized coefficients,
+  their penalty/loadings and intercept, convergence flags, selected-design rank,
+  and effective tuning in `RLassoSolution`.
+
 Low-rank nuclear fits and paths accept `solver = :panoc` after loading the
 optional ProximalAlgorithms dependency. Row-sparse fits and paths accept
 `block_solver = :fista`; both options propagate through cross-validation.
