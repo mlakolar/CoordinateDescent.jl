@@ -1,0 +1,53 @@
+calls=20
+         2560 function calls in 0.082 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       20    0.000    0.000    0.082    0.004 python_worker.py:35(coefficient_fit)
+       20    0.019    0.001    0.081    0.004 common.py:14(factors)
+       40    0.000    0.000    0.057    0.001 _util.py:1149(wrapper)
+       40    0.055    0.001    0.056    0.001 _decomp_svd.py:16(svd)
+       80    0.000    0.000    0.005    0.000 {method 'mean' of 'numpy.ndarray' objects}
+       80    0.000    0.000    0.005    0.000 _methods.py:115(_mean)
+      160    0.004    0.000    0.004    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+       20    0.001    0.000    0.001    0.000 common.py:22(coefficient)
+       40    0.000    0.000    0.001    0.000 _util.py:423(_asarray_validated)
+       40    0.000    0.000    0.001    0.000 _function_base_impl.py:603(asarray_chkfinite)
+       40    0.000    0.000    0.000    0.000 lapack.py:1028(_compute_lwork)
+       40    0.000    0.000    0.000    0.000 _aliases.py:70(asarray)
+       80    0.000    0.000    0.000    0.000 _methods.py:73(_count_reduce_items)
+       40    0.000    0.000    0.000    0.000 {method 'all' of 'numpy.ndarray' objects}
+       40    0.000    0.000    0.000    0.000 _methods.py:64(_all)
+       40    0.000    0.000    0.000    0.000 {method 'sum' of 'numpy.ndarray' objects}
+       40    0.000    0.000    0.000    0.000 _methods.py:47(_sum)
+       40    0.000    0.000    0.000    0.000 {built-in method numpy.array}
+      280    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+       40    0.000    0.000    0.000    0.000 getlimits.py:412(__init__)
+       40    0.000    0.000    0.000    0.000 blas.py:395(getter)
+       40    0.000    0.000    0.000    0.000 _sparse.py:10(issparse)
+       40    0.000    0.000    0.000    0.000 lapack.py:1062(_check_work_float)
+       40    0.000    0.000    0.000    0.000 _helpers.py:683(_check_device)
+       40    0.000    0.000    0.000    0.000 <frozen abc>:117(__instancecheck__)
+       40    0.000    0.000    0.000    0.000 enum.py:193(__get__)
+       80    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+       80    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
+      100    0.000    0.000    0.000    0.000 {built-in method builtins.max}
+       40    0.000    0.000    0.000    0.000 {built-in method _abc._abc_instancecheck}
+       40    0.000    0.000    0.000    0.000 getlimits.py:436(max)
+       40    0.000    0.000    0.000    0.000 core.py:6669(isMaskedArray)
+      160    0.000    0.000    0.000    0.000 {built-in method builtins.issubclass}
+       80    0.000    0.000    0.000    0.000 {built-in method numpy.lib.array_utils.normalize_axis_index}
+       20    0.000    0.000    0.000    0.000 {built-in method builtins.min}
+       40    0.000    0.000    0.000    0.000 {built-in method numpy.asarray}
+       40    0.000    0.000    0.000    0.000 _array_api_override.py:69(array_namespace)
+       80    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+       80    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       40    0.000    0.000    0.000    0.000 {built-in method builtins.any}
+       80    0.000    0.000    0.000    0.000 {built-in method numpy.asanyarray}
+       40    0.000    0.000    0.000    0.000 enum.py:1257(value)
+       19    0.000    0.000    0.000    0.000 {built-in method time.perf_counter}
+       40    0.000    0.000    0.000    0.000 _misc.py:181(_datacopied)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+

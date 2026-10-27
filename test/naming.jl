@@ -1,5 +1,7 @@
 module NamingTest
-using HighDimensionalModels, ProximalBase, ProximalSolvers, Test, Random, LinearAlgebra, KernelSmoothing
+include("kernels.jl")
+using .TestKernels
+using HighDimensionalModels, ProximalBase, ProximalSolvers, Test, Random, LinearAlgebra
 
 struct DefaultScaleLoss <: CoordinateDifferentiableFunction end
 

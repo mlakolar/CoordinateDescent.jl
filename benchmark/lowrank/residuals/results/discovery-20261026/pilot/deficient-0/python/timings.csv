@@ -1,0 +1,13 @@
+variant,case,rep,mode,round,seconds,bytes,gctime
+python,deficient,0,public_path,1,0.0036682961508631706,,
+python,deficient,0,coefficient_fit,1,0.002594360150396824,,
+python,deficient,0,coefficient_path,1,0.0019629551097750664,,
+python,deficient,0,public_fit,1,0.002378154080361128,,
+python,deficient,0,coefficient_fit,2,0.0020472430624067783,,
+python,deficient,0,coefficient_path,2,0.0021128058433532715,,
+python,deficient,0,public_fit,2,0.0023083826526999474,,
+python,deficient,0,public_path,2,0.00327175110578537,,
+python,deficient,0,coefficient_path,3,0.0019431179389357567,,
+python,deficient,0,public_fit,3,0.002175013069063425,,
+python,deficient,0,public_path,3,0.0027175210416316986,,
+python,deficient,0,coefficient_fit,3,0.001841807272285223,,

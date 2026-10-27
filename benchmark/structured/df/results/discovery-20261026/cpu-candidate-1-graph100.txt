@@ -1,0 +1,127 @@
+raw_stack_words=12877
+ Count  Overhead File                    Line Function
+ =====  ======== ====                    ==== ========
+     1         0 @Base/abstractarray.jl  827 similar
+     1         0 @Base/array.jl          407 similar
+     1         0 @Base/boot.jl           661 Array
+     1         0 @Base/boot.jl           648 Array
+     1         1 @Base/boot.jl           588 GenericMemory
+     1         0 @SparseArrays/src/linalg.jl  183 _At_or_Ac_mul_B!(tfun::typeof(tra…
+     1         0 @SparseArrays/src/linalg.jl  154 _matmul_size_AtB
+     1         0 @SparseArrays/src/linalg.jl  147 _matmul_size
+     1         0 @Base/operators.jl      320 !=
+     1         1 @LinearAlgebra/src/generic.jl  714 norm(itr::Vector{Float64})
+     1         0 @Base/broadcast.jl      701 _getindex
+     1         1 @Base/float.jl          494 *
+     1         0 @LinearAlgebra/src/generic.jl  715 norm(itr::Vector{Float64})
+     1         0 @Base/abstractarray.jl 1259 isempty
+     1         0 @Base/essentials.jl      11 length
+     1         1 @Base/essentials.jl      10 size
+     1         1 @Base/range.jl          928 iterate
+     1         0 @HighDimensionalModels/src/structured.jl  439 _split_fit(A::Matrix{Float64}, b:…
+     1         0 @Base/array.jl          318 copyto!
+     1         0 @Base/array.jl          311 _copyto2arg!
+     1         0 @Base/array.jl          291 copyto!
+     1         0 @Base/array.jl          300 _copyto_impl!
+     1         0 @Base/genericmemory.jl  139 unsafe_copyto!
+     1         1 @Base/cmem.jl            28 memmove
+     1         0 @SparseArrays/src/linalg.jl  186 _At_or_Ac_mul_B!(tfun::typeof(tra…
+     1         0 @LinearAlgebra/src/generic.jl  172 _rmul_or_fill!
+     1         0 @Base/array.jl          359 fill!
+     1         1 @Base/array.jl          364 _fill!
+     1         0 @LinearAlgebra/src/factorization.jl  159 ldiv!(Y::Vector{Float64}, A::Chol…
+     1         0 @Base/operators.jl      425 >
+     1         1 @Base/int.jl             83 <
+     1         0 @HighDimensionalModels/src/structured.jl  434 _split_fit(A::Matrix{Float64}, b:…
+     1         0 @HighDimensionalModels/src/structured.jl  789 _admm_path(X::Matrix{Float64}, y:…
+     1         0 @HighDimensionalModels/src/structured.jl  255 HighDimensionalModels._Structured…
+     1         0 @LinearAlgebra/src/svd.jl  257 svdvals(A::Matrix{Float64})
+     1         0 @LinearAlgebra/src/svd.jl  232 svdvals!
+     1         0 @LinearAlgebra/src/lapack.jl 1706 gesdd!(job::Char, A::Matrix{Float…
+     2         0 @LinearAlgebra/src/matmul.jl   81 mul!
+     2         0 @LinearAlgebra/src/matmul.jl  726 gemv!
+     2         2 @LinearAlgebra/src/blas.jl  680 gemv!(trans::Char, alpha::Float64…
+     2         0 @HighDimensionalModels/src/structured.jl  443 _split_fit(A::Matrix{Float64}, b:…
+     2         0 @Base/simdloop.jl        76 macro expansion
+     2         0 @Base/simdloop.jl        54 simd_index
+     2         2 @Base/int.jl             87 +
+     2         2 @Base/float.jl          493 -
+     2         0 @Base/broadcast.jl      315 instantiate
+     2         0 @Base/broadcast.jl      564 check_broadcast_axes
+     2         0 @Base/broadcast.jl      561 check_broadcast_axes
+     2         0 @Base/broadcast.jl      558 check_broadcast_shape
+     2         0 @Base/broadcast.jl      536 _bcsm
+     2         0 @Base/range.jl         1145 ==
+     3         0 @HighDimensionalModels/src/structured.jl  815 _admm_path(X::Matrix{Float64}, y:…
+     3         0 @HighDimensionalModels/src/structured.jl  161 _structured_finish(A::Matrix{Floa…
+     3         0 @HighDimensionalModels/src/structured.jl   14 _structured_product
+     3         0 @LinearAlgebra/src/matmul.jl   57 *
+     3         0 @HighDimensionalModels/src/structured.jl  440 _split_fit(A::Matrix{Float64}, b:…
+     3         3 @SparseArrays/src/linalg.jl  175 _spmatmul!(C::Vector{Float64}, A:…
+     3         3 @Base/promotion.jl      641 ==
+     3         0 @HighDimensionalModels/src/structured.jl  436 _split_fit(A::Matrix{Float64}, b:…
+     3         0 @Base/broadcast.jl      677 _broadcast_getindex
+     3         0 @Base/broadcast.jl      704 _broadcast_getindex_evalf
+     4         4 @Base/simdloop.jl        75 macro expansion
+     4         0 @SparseArrays/src/linalg.jl  197 _At_or_Ac_mul_B!(tfun::typeof(tra…
+     4         0 @Base/array.jl         1020 setindex!
+     4         4 @Base/array.jl         1025 _setindex!
+     4         0 @SparseArrays/src/linalg.jl  199 _At_or_Ac_mul_B!(tfun::typeof(tra…
+     4         0 @HighDimensionalModels/src/structured.jl  445 _split_fit(A::Matrix{Float64}, b:…
+     4         0 @SparseArrays/src/linalg.jl  196 _At_or_Ac_mul_B!(tfun::typeof(tra…
+     4         0 @SparseArrays/src/sparsematrix.jl  311 nzrange
+     4         0 @Base/range.jl            5 Colon
+     4         0 @Base/range.jl          417 UnitRange
+     4         4 @Base/range.jl          428 unitrange_last
+     5         0 @Base/broadcast.jl      670 _broadcast_getindex
+     6         6 @HighDimensionalModels/src/structured.jl  444 _split_fit(A::Matrix{Float64}, b:…
+     6         0 @Base/broadcast.jl      676 _broadcast_getindex
+     6         0 @Base/broadcast.jl      700 _getindex
+     7         0 @HighDimensionalModels/src/structured.jl  442 _split_fit(A::Matrix{Float64}, b:…
+     8         8 @HighDimensionalModels/src/structured.jl  447 _split_fit(A::Matrix{Float64}, b:…
+     8         0 @Base/broadcast.jl      617 getindex
+     8         0 @Base/broadcast.jl      621 _getindex
+     9         0 @SparseArrays/src/linalg.jl  174 _spmatmul!(C::Vector{Float64}, A:…
+     9         9 @Base/essentials.jl     975 getindex
+    10         9 @SparseArrays/src/linalg.jl  198 _At_or_Ac_mul_B!(tfun::typeof(tra…
+    10         0 @HighDimensionalModels/src/structured.jl  446 _split_fit(A::Matrix{Float64}, b:…
+    12         0 @HighDimensionalModels/src/structured.jl  438 _split_fit(A::Matrix{Float64}, b:…
+    12         0 @SparseArrays/src/linalg.jl   97 spdensemul!
+    12         0 @Base/simdloop.jl        77 macro expansion
+    12         0 @Base/broadcast.jl     1000 macro expansion
+    13         0 @Base/array.jl         1031 setindex!
+    13        13 @Base/array.jl         1037 _setindex!
+    14        12 @HighDimensionalModels/src/structured.jl  451 _split_fit(A::Matrix{Float64}, b:…
+    14         0 @HighDimensionalModels/src/structured.jl  448 _split_fit(A::Matrix{Float64}, b:…
+    14        14 @SparseArrays/src/linalg.jl    ? _At_or_Ac_mul_B!(tfun::typeof(tra…
+    14         0 @HighDimensionalModels/src/structured.jl  435 _split_fit(A::Matrix{Float64}, b:…
+    18         0 @Base/broadcast.jl      952 copyto!
+    18         0 @Base/broadcast.jl      999 copyto!
+    20         0 @Base/broadcast.jl      907 materialize!
+    20         0 @Base/broadcast.jl      910 materialize!
+    38         0 @SparseArrays/src/linalg.jl   99 spdensemul!
+    50         0 @SparseArrays/src/linalg.jl   91 mul!
+    52         0 @LinearAlgebra/src/matmul.jl  270 mul!
+    52         0 @LinearAlgebra/src/matmul.jl   73 mul!
+    52         0 @LinearAlgebra/src/matmul.jl   76 _mul!
+   275         0 @LinearAlgebra/src/factorization.jl  164 ldiv!(Y::Vector{Float64}, A::Chol…
+   275         0 @LinearAlgebra/src/cholesky.jl  738 ldiv!
+   275       275 @LinearAlgebra/src/lapack.jl 3343 potrs!(uplo::Char, A::Matrix{Floa…
+   276         0 @HighDimensionalModels/src/structured.jl  437 _split_fit(A::Matrix{Float64}, b:…
+   276         0 @HighDimensionalModels/src/structured.jl  373 _structured_solve!
+   375         0 @HighDimensionalModels/src/structured.jl  812 _admm_path(X::Matrix{Float64}, y:…
+   375         0 @HighDimensionalModels/src/structured.jl  421 _split_fit
+   379         0 @Base/client.jl         577 _start()
+   379         0 @Base/client.jl         344 exec_options(opts::Base.JLOptions)
+   379         0 @Base/Base.jl           309 include(mod::Module, _path::Strin…
+   379         0 @Base/loading.jl       3105 _include(mapexpr::Function, mod::…
+   379         0 @Base/loading.jl       3045 include_string(mapexpr::typeof(id…
+   379         0 @Base/boot.jl           489 eval(m::Module, e::Any)
+   379         0 …ight/issue99/bench.jl   80 top-level scope
+   379         0 @Profile/src/Profile.jl   60 macro expansion
+   379         0 …ight/issue99/bench.jl   84 macro expansion
+   379         0 …ight/issue99/bench.jl   40 (::var"#fitpath#fitpath##0"{Symbo…
+   379         0 @HighDimensionalModels/src/structured.jl  821 GeneralizedLassoPath
+   379         0 @HighDimensionalModels/src/structured.jl  821 #GeneralizedLassoPath#264
+   379         0 @HighDimensionalModels/src/structured.jl  774 _admm_path
+Total snapshots: 453. Utilization: 100% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.

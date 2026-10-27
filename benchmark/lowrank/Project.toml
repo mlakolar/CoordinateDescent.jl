@@ -1,5 +1,5 @@
 [deps]
-HighDimensionalModels = "c00ed354-b9be-54b8-8a23-c5ac771bc43a"
+HighDimensionalModels = "676596c9-8d02-4dfa-b091-57818f5febe0"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
@@ -15,7 +15,7 @@ ProximalBase = {path = "../../../ProximalBase.jl"}
 ProximalSolvers = {path = "../../../ProximalOPT.jl"}
 
 [compat]
-HighDimensionalModels = "0.8"
+HighDimensionalModels = "0.1"
 ProximalBase = "0.5"
-ProximalSolvers = "0.1.1"
+ProximalSolvers = "0.2"
 julia = "1.10"

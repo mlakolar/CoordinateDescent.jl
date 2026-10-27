@@ -1,0 +1,76 @@
+{
+  "run_id": "20261027-hdm-pilot-118-119",
+  "kind": "development",
+  "status": "completed",
+  "purpose": "Descriptive coverage pilot for #118 (post-Lasso partialling-out) and #119 (post-double-selection) on PR #129: 8 frozen Gaussian designs x 500 datasets, 5 arms on shared nuisance fits, 6 variance choices. Not a validation campaign; defaults unchanged.",
+  "cluster": {
+    "scheduler": "Slurm",
+    "note": "Run on a Slurm cluster; resources were passed at submission."
+  },
+  "recreation": {
+    "cwd": "benchmark/hdm/pilot (git worktree at the source commit, with ProximalBase.jl and ProximalSolvers.jl as sibling checkouts)",
+    "source": {
+      "HighDimensionalModels.jl": "46db8659c3a61017463e3cd309f1f0a389a457d9",
+      "ProximalBase.jl": "9c5a43b (v0.5.4)",
+      "ProximalSolvers.jl": "f7e3f28026a8e83e0fa18203b39839cf57a1c949 (v0.2.0)"
+    },
+    "environment": "Julia 1.13.3; pilot Project.toml path sources resolved before submission; JULIA_PKG_OFFLINE=true in jobs",
+    "commands": [
+      "julia --project=. make-tasks.jl tasks",
+      "sbatch --parsable --job-name=RUNTAG --comment=RUNTAG --export=ALL,RUNTAG=...,TASKS=... run.sbatch (account, CPUs, memory and time passed at submission)",
+      "julia --project=. analyze.jl OUTDIR RESULTSDIR"
+    ],
+    "seeds": "data Xoshiro(1_400_000_000 + 1_000_000 case + rep); solver Xoshiro(1_500_000_000 + 10_000_000 case + 10_000 rep + 10 slot + stream); disjoint from PR #86 blocks (max ~1.3002e9)"
+  },
+  "jobs": [
+    {
+      "stage": "canary (case 1 moderate, reps 1-2, 1 worker; also precompiles)",
+      "job_id": "62863",
+      "command": "sbatch --parsable --job-name=hdm118-canary-20261027 --comment=hdm118-canary-20261027 --export=ALL,RUNTAG=hdm118-canary-20261027,TASKS=$PWD/tasks/canary.txt,OUTDIR=$PWD/outputs/hdm118-canary-20261027 run.sbatch",
+      "submitted_utc": "2026-10-27T17:44:17Z",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "start_utc": "2026-10-27T17:43:55",
+      "elapsed": "00:02:28",
+      "outcome": "100/100 arm records ok, 0 NaN se; 0.4865 s/rep (moderate, incl. convenience timings), warm-up 4.93 s; most elapsed time was precompilation"
+    },
+    {
+      "stage": "main pilot (80 tasks = 8 cases x 10 chunks of 50 reps)",
+      "job_id": "62871",
+      "command": "sbatch --parsable --job-name=hdm118-pilot-20261027 --comment=hdm118-pilot-20261027 --export=ALL,RUNTAG=hdm118-pilot-20261027,TASKS=$PWD/tasks/tasks.txt,OUTDIR=$PWD/outputs/hdm118-pilot-20261027 run.sbatch",
+      "submitted_utc": "2026-10-27T17:48:10Z",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "start_utc": "2026-10-27T17:47:51",
+      "elapsed": "00:10:51",
+      "outcome": "80/80 tasks completed (80 worker steps COMPLETED); 180000/180000 arm records; zero exceptions"
+    },
+    {
+      "stage": "analysis (analyze.jl)",
+      "job_id": "62892",
+      "command": "sbatch --parsable --job-name=hdm118-analysis-20261027 --comment=hdm118-analysis-20261027 --wrap='... srun --exact -n1 -c2 julia --project=. analyze.jl outputs/hdm118-pilot-20261027 results/20261027'",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "elapsed": "00:00:20",
+      "outcome": "analysis records=180000 summary_rows=32120"
+    }
+  ],
+  "actual_resources": {
+    "running_union_minutes": 13.65,
+    "max_worker_rss_gb": 0.88
+  },
+  "outputs": {
+    "committed": [
+      "RESULTS.md",
+      "summary.csv",
+      "run-registry.json"
+    ],
+    "raw_records": "Not retained. The per-task record CSVs were deleted after analysis; summary.csv holds every reported quantity."
+  },
+  "validation": {
+    "checks": "sacct exit codes for all steps; record count 180000/180000 and zero exception rows (analysis); canary record sanity (100/100 ok, no NaN se); downloaded archive sha256 equals the cluster copy",
+    "not_performed": "No independent refit of individual records; the statistical code paths were verified by unit tests and R golden comparisons in U1-U5."
+  },
+  "created_utc": "2026-10-27T17:28:48Z",
+  "updated_utc": "2026-10-27T19:45:00Z"
+}

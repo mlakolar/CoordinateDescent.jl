@@ -124,7 +124,14 @@ the differences. For signal trend filtering this is the number of knots plus
 With the additional ℓ1 penalty, components pinned to zero contribute no
 degrees of freedom. Numerical classification near a transition depends on
 `df_tol`; a smaller tolerance needs a correspondingly accurate solve.
-Generic designs use a dense null-space calculation for degrees of freedom.
+For graph constraints and coordinate pins, regression uses a sparse,
+orthonormal component basis and calculates its rank after multiplication by
+the design. A component count alone is insufficient when the design is rank
+deficient. Paths check the design rank once and reuse a degree-of-freedom
+result only when the complete inactive-row pattern repeats at the next level.
+The cache retains one pattern and belongs to that path. General contrasts,
+numerically ambiguous edge weights and rank calculations retain the dense
+null-space calculation. These choices do not change `df_tol` or solver stopping.
 
 AIC and BIC are `n*log(RSS/n) + c*df`, with `c=2` and `c=log(n)`,
 respectively. They return `NaN` for nonconverged fits and for `df >= n`.
@@ -134,8 +141,8 @@ location grid in each fold and fits a sparse observation-selection design,
 so held-out responses do not enter training. Training observations must still
 identify the penalty's unpenalized polynomial component. CV throws if a fit
 does not converge.
-Signal CV uses the generic-design degrees-of-freedom calculation, including its
-dense null-space step. The large-signal benchmarks cover direct fits, not CV;
+Signal CV uses the generic-design degrees-of-freedom calculation; general
+contrasts can still require a dense null-space step. The large-signal benchmarks cover direct fits, not CV;
 they do not establish scalable tuning on million-point location grids.
 
 ## Comparison with local polynomial regression
