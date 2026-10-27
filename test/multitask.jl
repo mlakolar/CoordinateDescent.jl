@@ -6,15 +6,19 @@ using LinearAlgebra, Random, SparseArrays, Statistics, Test
 const TIGHT = CDOptions(; opt_tol = 1e-10, gaptol = 0)
 const EXACT = CDOptions(; opt_tol = 1e-14, gaptol = 0)
 
+# draws with mean zero and variance one: centered uniforms, so that the test
+# data come from rand alone, whose streams are the same across Julia versions
+centered_rand(rng, dims...) = sqrt(3) .* (2 .* rand(rng, dims...) .- 1)
+
 # q tasks with ns[t] observations of p predictors, the columns on different
 # scales and centers in each task, the rows `support` of the coefficients
 # nonzero, and the intercept t in task t
 function make_tasks(rng, ns, p; support = 1:4)
   q = length(ns)
   B = zeros(p, q)
-  B[support, :] .= randn(rng, length(support), q)
-  Xs = [randn(rng, n, p) .* (1 .+ 2 .* rand(rng, p))' .+ 0.5 .* randn(rng, p)' for n in ns]
-  ys = [t .+ Xs[t] * B[:, t] .+ randn(rng, ns[t]) for t in 1:q]
+  B[support, :] .= centered_rand(rng, length(support), q)
+  Xs = [centered_rand(rng, n, p) .* (1 .+ 2 .* rand(rng, p))' .+ 0.5 .* centered_rand(rng, p)' for n in ns]
+  ys = [t .+ Xs[t] * B[:, t] .+ centered_rand(rng, ns[t]) for t in 1:q]
   Xs, ys
 end
 
@@ -224,9 +228,9 @@ nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan
   @testset "a shared design: the multi-response lasso" begin
     rng = Xoshiro(82)
     n, p, q = 100, 15, 3
-    X = randn(rng, n, p) .* (1 .+ 2 .* rand(rng, p))'
-    Bt = zeros(p, q); Bt[[1, 4, 7], :] .= randn(rng, 3, q)
-    Y = 1.0 .+ X * Bt .+ randn(rng, n, q)
+    X = centered_rand(rng, n, p) .* (1 .+ 2 .* rand(rng, p))'
+    Bt = zeros(p, q); Bt[[1, 4, 7], :] .= centered_rand(rng, 3, q)
+    Y = 1.0 .+ X * Bt .+ centered_rand(rng, n, q)
     ys = [Y[:, t] for t in 1:q]
     # the shared-design model (the same matrix, or equal copies), and the
     # stacked design, forced by the internal entry point or by a sparse copy
@@ -242,10 +246,11 @@ nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan
     @test data(fill(sparse(X), q)).Z !== nothing && data(fill(X, q), [1.0, 2.0, 3.0]).Z !== nothing
     @test data(fill(X, q); shared = false).Z !== nothing
     for (intercept, standardize_x) in ((true, true), (false, false))
-      ms = multi_lasso(X, Y, 0.2, TIGHT; intercept, standardize_x)
+      λ = 0.3 * lambda_max(fill(X, q), ys, ones(q), ones(p), scales(fill(X, q), intercept, standardize_x); intercept)
+      ms = multi_lasso(X, Y, λ, TIGHT; intercept, standardize_x)
       @test 0 < length(ms.activerows) < p
       for (Xs, shared) in cases
-        sol = fitwith(Xs, shared, 0.2; intercept, standardize_x)
+        sol = fitwith(Xs, shared, λ; intercept, standardize_x)
         @test Matrix(sol.B) ≈ Matrix(ms.B) atol = 1e-6
         @test sol.intercept ≈ ms.intercept atol = 1e-6
         @test sol.activerows == ms.activerows
@@ -254,12 +259,13 @@ nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan
     end
     # a common task weight c: the multi-response lasso at λ/c; with equal
     # sizes :observations is :equal
-    ms = multi_lasso(X, Y, 0.1, TIGHT)
+    λ = 0.3 * lambda_max(fill(X, q), ys, ones(q), ones(p), scales(fill(X, q), true, true))
+    ms = multi_lasso(X, Y, λ, TIGHT)
     for (Xs, shared) in cases
-      sol = fitwith(Xs, shared, 0.2; task_weights = fill(2.0, q))
+      sol = fitwith(Xs, shared, 2λ; task_weights = fill(2.0, q))
       @test Matrix(sol.B) ≈ Matrix(ms.B) atol = 1e-6
       @test sol.intercept ≈ ms.intercept atol = 1e-6
-      so = fitwith(Xs, shared, 0.1; task_weights = :observations)
+      so = fitwith(Xs, shared, λ; task_weights = :observations)
       @test so.task_weights == ones(q)
       @test Matrix(so.B) ≈ Matrix(ms.B) atol = 1e-6
     end
@@ -326,17 +332,17 @@ nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan
     ns, p = (40, 80, 150), 6
     q = length(ns)
     Xs = map(collect(ns)) do n
-      Z = randn(rng, n, p)
+      Z = centered_rand(rng, n, p)
       Z .-= mean(Z; dims = 1)
-      sqrt(n) .* Matrix(qr(Z).Q) .+ randn(rng, p)'
+      sqrt(n) .* Matrix(qr(Z).Q) .+ centered_rand(rng, p)'
     end
     Bt = zeros(p, q); Bt[1:3, :] .= 1 .+ rand(rng, 3, q)
-    ys = [2.0 .+ Xs[t] * Bt[:, t] .+ randn(rng, ns[t]) for t in 1:q]
+    ys = [2.0 .+ Xs[t] * Bt[:, t] .+ centered_rand(rng, ns[t]) for t in 1:q]
     @test maximum(abs, scales(Xs, true, true) .- 1) < 1e-12
     B̂ = reduce(hcat, [(X .- mean(X; dims = 1)) \ (y .- mean(y)) for (X, y) in zip(Xs, ys)])
     ω = [1.0, 0.5, 2.0, 1.0, 0.0, 1.5]
     λ = 0.3
-    b = randn(rng, q)
+    b = centered_rand(rng, q)
     @test weighted_threshold(b, ones(q), 0.4) ≈ max(1 - 0.4 / norm(b), 0) .* b rtol = 1e-14
     for tw in (:equal, :observations, [0.5, 2.0, 1.0])
       c = weight_values(tw, ns)
@@ -418,8 +424,8 @@ nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan
 
     # sparse designs against dense ones, with and without an intercept, on a
     # strongly convex problem; the prediction of sparse new designs
-    Xsp = [sprandn(rng, n, p, 0.4) for n in ns]
-    ysp = [t .+ Xsp[t] * [1.0, -1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0] .+ 0.5 .* randn(rng, ns[t]) for t in 1:q]
+    Xsp = [sparse(centered_rand(rng, n, p) .* (rand(rng, n, p) .< 0.4)) for n in ns]
+    ysp = [t .+ Xsp[t] * [1.0, -1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0] .+ 0.5 .* centered_rand(rng, ns[t]) for t in 1:q]
     for intercept in (true, false), tw in (:equal, :observations)
       sd = multitask_lasso(Matrix.(Xsp), ysp, 0.05, TIGHT; intercept, task_weights = tw)
       ss = multitask_lasso(Xsp, ysp, 0.05, TIGHT; intercept, task_weights = tw)
@@ -430,8 +436,8 @@ nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan
 
     # integer data, a matrix that is not a Matrix, and tasks of different
     # element types
-    Xi = [rand(rng, -3:3, n, p) for n in ns]
-    yi = [X * [2, -1, 1, 0, 0, 0, 0, 0] .+ rand(rng, -2:2, size(X, 1)) for X in Xi]
+    Xi = [floor.(Int, 7 .* rand(rng, n, p)) .- 3 for n in ns]
+    yi = [X * [2, -1, 1, 0, 0, 0, 0, 0] .+ floor.(Int, 5 .* rand(rng, size(X, 1))) .- 2 for X in Xi]
     si = multitask_lasso(Xi, yi, 1, TIGHT)
     sf = multitask_lasso(float.(Xi), float.(yi), 1.0, TIGHT)
     @test si.B isa SparseMatrixCSC{Float64, Int} && si.intercept isa Vector{Float64}
@@ -581,27 +587,48 @@ nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan
       @test cv.λ1se == cv.λpath[findfirst(j -> cv.cvm[j] <= cv.cvm[jmin] + cv.cvse[jmin], 1:jmin)]
     end
     # fold paths that stop early (max_rows): a level is averaged over the folds
-    # that reached it; here two of the five stop one level before the last
-    cv = CVMultitaskLassoPath(Xs, ys, TIGHT; folds, nλ = 20, max_rows = 4, rng = Xoshiro(7))
-    L = length(cv.λpath)
-    cvm, cvse, cvm_task, Lk = cv_recompute(cv, Xs, ys, ones(q), :equal; max_rows = 4)
-    @test L < 20 && minimum(Lk) < L == maximum(Lk)
-    @test all(isfinite, cv.cvm) && all(isfinite, cv.cvm_task)
-    @test nan_approx(cv.cvm, cvm)
-    @test nan_approx(cv.cvse, cvse)
-    @test nan_approx(cv.cvm_task, cvm_task)
-    @test (cv.λmin, cv.λ1se) == cv_levels(cv.λpath, cv.cvm, cv.cvse)
-    # no fold path reaches the last levels of the full path: NaN there, the
-    # same lengths, and λmin and λ1se among the levels reached
-    rng = Xoshiro(1)
-    nb, pb = (20, 30, 40), 40
-    Bb = zeros(pb, 3); Bb[1:15, :] .= randn(rng, 15, 3)
-    Xb = [randn(rng, n, pb) for n in nb]
-    yb = [Xb[t] * Bb[:, t] .+ randn(rng, nb[t]) for t in 1:3]
-    for options in (CDOptions(), TIGHT)
-      cv = CVMultitaskLassoPath(Xb, yb, options; nfolds = 3, nλ = 40, max_rows = 6, rng = Xoshiro(1))
+    # that reached it. The data are the first of a range of seeds for which
+    # some fold paths stop before the last level and the others reach it.
+    partial = nothing
+    for seed in 1:100
+      Xa, ya = make_tasks(Xoshiro(seed), ns, p)
+      cv = CVMultitaskLassoPath(Xa, ya, TIGHT; folds, nλ = 20, max_rows = 4, rng = Xoshiro(7))
+      r = cv_recompute(cv, Xa, ya, ones(q), :equal; max_rows = 4)
+      L, Lk = length(cv.λpath), r[4]
+      L < 20 && minimum(Lk) < L == maximum(Lk) && (partial = (cv, r); break)
+    end
+    @test partial !== nothing
+    if partial !== nothing
+      cv, (cvm, cvse, cvm_task, Lk) = partial
       L = length(cv.λpath)
-      cvm, cvse, cvm_task, Lk = cv_recompute(cv, Xb, yb, ones(3), :equal, options; max_rows = 6)
+      @test L < 20 && minimum(Lk) < L == maximum(Lk)
+      @test all(isfinite, cv.cvm) && all(isfinite, cv.cvm_task)
+      @test nan_approx(cv.cvm, cvm)
+      @test nan_approx(cv.cvse, cvse)
+      @test nan_approx(cv.cvm_task, cvm_task)
+      @test (cv.λmin, cv.λ1se) == cv_levels(cv.λpath, cv.cvm, cv.cvse)
+    end
+    # no fold path reaches the last levels of the full path: NaN there, the
+    # same lengths, and λmin and λ1se among the levels reached. The data are
+    # the first of a range of seeds for which no fold path reaches the last
+    # level, with either option set.
+    nb, pb = (20, 30, 40), 40
+    fb = [repeat(1:3; outer = cld(n, 3))[1:n] for n in nb]
+    unreached = nothing
+    for seed in 1:100
+      rng = Xoshiro(seed)
+      Bb = zeros(pb, 3); Bb[1:15, :] .= centered_rand(rng, 15, 3)
+      Xb = [centered_rand(rng, n, pb) for n in nb]
+      yb = [Xb[t] * Bb[:, t] .+ centered_rand(rng, nb[t]) for t in 1:3]
+      runs = map((CDOptions(), TIGHT)) do options
+        cv = CVMultitaskLassoPath(Xb, yb, options; folds = fb, nλ = 40, max_rows = 6, rng = Xoshiro(1))
+        options, cv, cv_recompute(cv, Xb, yb, ones(3), :equal, options; max_rows = 6)
+      end
+      all(((_, cv, r),) -> maximum(r[4]) < length(cv.λpath), runs) && (unreached = runs; break)
+    end
+    @test unreached !== nothing
+    for (options, cv, (cvm, cvse, cvm_task, Lk)) in something(unreached, ())
+      L = length(cv.λpath)
       reached = maximum(Lk)
       @test reached < L
       @test length(cv.cvm) == length(cv.cvse) == length(cv.nrows) == L && size(cv.cvm_task) == (3, L)
@@ -707,7 +734,7 @@ nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan
     ns, p = (40, 80, 150), 12
     q, N = length(ns), sum(ns)
     Xs, ys = make_tasks(rng, ns, p)
-    Xn = [randn(rng, m, p) for m in (5, 7, 3)]
+    Xn = [centered_rand(rng, m, p) for m in (5, 7, 3)]
     λ = 0.2
     sol = multitask_lasso(Xs, ys, λ)
     @test sol isa MultitaskLassoSolution
