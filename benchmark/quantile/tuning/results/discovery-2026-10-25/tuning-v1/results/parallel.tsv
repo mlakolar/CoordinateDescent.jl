@@ -1,3 +1,0 @@
-Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
-2	:	1792953355.324	     3.273	0	0	1	0	srun --exclusive --exact -N1 -n1 -c1 --mem=8G --cpu-bind=cores bash worker.sh reference > logs/reference.log 2>&1
-1	:	1792953355.322	    54.649	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=8G --cpu-bind=cores bash worker.sh tests > logs/tests.log 2>&1

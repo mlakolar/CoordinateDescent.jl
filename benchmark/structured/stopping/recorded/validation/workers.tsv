@@ -1,4 +1,0 @@
-Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
-3	:	1792934489.215	    48.534	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness-validation/validate-worker.sh warmfix > validation/warmfix.log 2>&1
-1	:	1792934489.210	    86.523	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness-validation/validate-worker.sh release > validation/release.log 2>&1
-2	:	1792934489.213	    90.786	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness-validation/validate-worker.sh lts > validation/lts.log 2>&1

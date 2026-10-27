@@ -1,3 +1,0 @@
-Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
-1	:	1792949676.640	   114.529	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness/prepare-worker.sh release > validation/release.log 2>&1
-2	:	1792949676.642	   135.703	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness/prepare-worker.sh lts > validation/lts.log 2>&1

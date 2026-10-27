@@ -1,6 +1,0 @@
-Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
-1	:	1792935021.721	    84.069	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness-final/final-worker.sh release > validation-final/release.log 2>&1
-2	:	1792935021.723	    84.648	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness-final/final-worker.sh lts > validation-final/lts.log 2>&1
-3	:	1792935021.726	   146.260	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness-final/final-worker.sh 8301 > validation-final/8301.log 2>&1
-4	:	1792935105.794	   119.305	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness-final/final-worker.sh 8302 > validation-final/8302.log 2>&1
-5	:	1792935106.374	   120.248	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness-final/final-worker.sh 8303 > validation-final/8303.log 2>&1

@@ -1,4 +1,0 @@
-Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
-2	:	1792925138.527	   699.569	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=2800M bash harness/worker.sh 8202 Julia all baseline-matched > baseline-matched/worker-8202.log 2>&1
-1	:	1792925138.524	   754.538	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=2800M bash harness/worker.sh 8201 Julia all baseline-matched > baseline-matched/worker-8201.log 2>&1
-3	:	1792925138.531	   795.307	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=2800M bash harness/worker.sh 8203 Julia all baseline-matched > baseline-matched/worker-8203.log 2>&1

@@ -1,6 +1,0 @@
-Test Summary:                | Pass  Total  Time
-convolution check conjugates | 2232   2232  0.5s
-Test Summary:                               | Pass  Total  Time
-Newton convolution paths certify raw scores |  360    360  8.4s
-Test Summary:            | Pass  Total   Time
-Quantile primal–dual API |  582    582  11.2s
