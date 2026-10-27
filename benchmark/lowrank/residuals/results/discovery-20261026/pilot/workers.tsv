@@ -1,0 +1,3 @@
+Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
+1	:	1792964388.049	    43.558	0	0	1	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3500M bash worker.sh small-0 pilot
+2	:	1792964388.053	    50.755	0	0	1	0	srun --exclusive --exact -N1 -n1 -c1 --mem=3500M bash worker.sh medium-0 pilot

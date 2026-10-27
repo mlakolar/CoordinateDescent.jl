@@ -1,4 +1,23 @@
-# Unreleased
+# HighDimensionalModels 0.1.0 (unreleased)
+
+The rename from CoordinateDescent creates a new package identity and starts
+versioning at 0.1.0. Existing CoordinateDescent releases keep their UUID.
+Runtime dependencies resolve from General, with ProximalBase 0.5.4 and
+ProximalSolvers 0.2 as the minimum supported releases. Unit tests use only
+registered dependencies; examples and docs pin the unregistered KernelSmoothing
+integration dependency to an explicit commit.
+
+- Double selection supports `vcov` choices, final-stage diagnostics and
+  precomputed nuisance fits. Forced controls are validated before fitting;
+  invalid `forced` now raises `ArgumentError` instead of `BoundsError`.
+  The positional constructors of `TreatmentEffect` and `RLassoSolution` changed.
+
+- Partialling-out supports controlled nuisance `refit` modes and robust variance
+  choices through `vcov`; it now rejects nonempty `forced` and `intercept=false`.
+
+- `rlasso` accepts an `rng` keyword and retains the final penalized coefficients,
+  their penalty/loadings and intercept, convergence flags, selected-design rank,
+  and effective tuning in `RLassoSolution`.
 
 Low-rank nuclear fits and paths accept `solver = :panoc` after loading the
 optional ProximalAlgorithms dependency. Row-sparse fits and paths accept
@@ -14,7 +33,7 @@ residuals once, preserving numerical rank and degrees-of-freedom definitions.
 
 - Add `quantile_lambda` for fixed-quantile pivotal penalty simulation with explicit confidence, loading and RNG controls.
 - Add `CVQuantileLassoPath` for held-out check-loss tuning, minimum/one-standard-error selection, and raw dual access from the selected full-data fit. Inaccurate or missing fold fits exclude that penalty.
-- Enable certified smoothed stopping with the merged ProximalSolvers convolution backend; retain the documented older-release fallback. Active development and CI resolve workspace master sources, with migration version numbers unchanged.
+- Enable certified smoothed stopping with the merged ProximalSolvers convolution backend; retain the documented older-release fallback. Active development and CI resolve workspace master sources, while release CI resolves registered runtime dependencies.
 
 ## Multivariate regression
 
@@ -46,11 +65,10 @@ paths with near-exact solutions pass `gaptol = 0`.
 CoordinateDescent.jl is now HighDimensionalModels.jl. The Julia module is
 `HighDimensionalModels`; replace `using CoordinateDescent` and qualified
 `CoordinateDescent.` calls with the new name. The StatsModels extension is
-`HighDimensionalModelsStatsModelsExt`. The package UUID and version remain
-unchanged. Active development environments use local master checkouts of
+`HighDimensionalModelsStatsModelsExt`. The renamed package has a new UUID and starts at version 0.1.0. Active development environments use local master checkouts of
 ProximalBase, ProximalSolvers and KernelSmoothing.
 
-# Version 0.8.0
+# CoordinateDescent development history (previously labeled 0.8.0)
 
 ## Performance
 

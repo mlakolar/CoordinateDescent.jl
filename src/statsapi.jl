@@ -441,8 +441,8 @@ StatsAPI.deviance(r::PostLassoResult) = sum(abs2, r.residuals)
     confint(te::TreatmentEffect; level = 0.95)
 
 The estimate of the treatment effect as a model with one coefficient: a vector
-of length one, its standard error, a 1 × 1 covariance, and the normal
-confidence interval at `level` as a 1 × 2 matrix (`te.ci` holds the one at the
+of length one, its standard error, a 1 × 1 covariance using `te.vcov_type`, and
+the normal confidence interval at `level` as a 1 × 2 matrix (`te.ci` holds the one at the
 level of [`double_selection`](@ref)). `nobs` is the number of observations.
 """
 StatsAPI.coef(te::TreatmentEffect) = [te.estimate]
