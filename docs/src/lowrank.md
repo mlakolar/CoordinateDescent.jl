@@ -61,7 +61,7 @@ values. Tall designs use a quadratic value with a direct residual fallback near
 cancellation; wide designs share one residual between value and gradient.
 Float32 keeps its original loss/gradient arithmetic. The internal step remains
 `.95/L` and the certificate is checked every ten iterations, plus termination.
-The [replicated investigation](https://github.com/mlakolar/HighDimensionalModels.jl/blob/codex/issue103-nuclear-panoc/benchmark/lowrank/panoc_ablation/results/discovery-20261026/RESULTS.md)
+The [replicated study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/4c506aa8be5f2c485ca0f146255c0b1f4f01179e/benchmark/lowrank/panoc_ablation)
 compares complete fits and paths with independent accuracy checks. PANOC helps
 the tested middle-penalty fits and paths, but APG is faster for the weak
 many-response cold fit. APG remains the default; no automatic solver-selection

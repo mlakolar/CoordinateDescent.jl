@@ -25,6 +25,10 @@ optional ProximalAlgorithms dependency. Row-sparse fits and paths accept
 Fixed-rank fits reuse existing factorizations for diagnostics and compute
 residuals once, preserving numerical rank and degrees-of-freedom definitions.
 
+- Float64 nuclear PANOC fits and paths reuse loss/gradient products and the final
+  residual and singular values, preserving the objective and returned diagnostics.
+  APG remains the default.
+
 ## Quantile primal–dual API
 
 - Add exact HiGHS fit/path solvers and a convolution-smoothed proximal Newton route.
