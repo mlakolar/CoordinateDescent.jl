@@ -17,7 +17,7 @@ sys.dont_write_bytecode = True
 
 from compare import FIELDS, compare
 from summarize import mean_interval, summarize
-from validate import HEADERS, SERIES_SETTINGS, STATUSES, validate
+from validate import HEADERS, SERIES_SETTINGS, STATUSES, records, validate
 
 
 VERSION = "1.10.0"
@@ -38,15 +38,19 @@ DEPENDENCIES = {
 
 
 def write_rows(path, kind, rows):
+    # Like the runner: fields verbatim and unquoted; a tab or line break is an error.
     with path.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, FIXTURE_HEADERS[kind], delimiter="\t", lineterminator="\n")
+        writer = csv.DictWriter(stream, FIXTURE_HEADERS[kind], delimiter="\t", lineterminator="\n",
+                                quoting=csv.QUOTE_NONE, quotechar=None)
         writer.writeheader()
         writer.writerows(rows)
 
 
 def read_rows(path, delimiter="\t"):
+    # Runner TSVs are unquoted; the analysis CSVs use standard quoting.
+    quoting = csv.QUOTE_NONE if delimiter == "\t" else csv.QUOTE_MINIMAL
     with path.open(newline="", encoding="utf-8") as stream:
-        return list(csv.DictReader(stream, delimiter=delimiter))
+        return list(csv.DictReader(stream, delimiter=delimiter, quoting=quoting))
 
 
 def write_meta(path, values):
@@ -458,6 +462,33 @@ def target_missed_controls(root):
                      "ok case has missing or non-ok samples")
 
 
+def quoting_controls(root):
+    # Exception text is unquoted: leading, doubled and unbalanced quotes and backslashes
+    # are literal, and none of them may merge fields or rows.
+    first, second = "lasso/lasso/quoted", "lasso/lasso/unbalanced"
+    folder = root / "quoted-errors"
+    fixture(folder, cases=(first, second), status="error")
+    # Read as quoted, the first exception would run on over the tab into its stack.
+    text = {first: ('"MethodError: no method matching ""f""(::Int) \\ end',
+                    '[1] f(x) at "cases.jl":3 \\'),
+            second: ('"control" failed: "unbalanced', "'single' \\\"quote")}
+    def quote(rows):
+        for row in rows:
+            row.update(exception=text[row["id"]][0], stack=text[row["id"]][1])
+    edit_rows(folder, "errors", quote)
+    path = folder / f"julia-{VERSION}-rep01-errors.tsv"
+    assert all(f"{exception}\t{stack}\n" in path.read_text() for exception, stack in text.values())
+    checked = validate(folder, 3)
+    assert checked["valid"], checked["issues"]
+    assert checked["status_counts"]["error"] == 6
+    for rep in range(1, 4):
+        path = folder / f"julia-{VERSION}-rep{rep:02d}-errors.tsv"
+        for rows in (records(path, "errors"), read_rows(path)):
+            assert {row["id"]: (row["exception"], row["stack"]) for row in rows} == text
+    assert compare(folder, folder, root / "quoted-out", 3) == []
+    assert summarize(folder, root / "quoted-summary", 3)
+
+
 def integrity_controls(root):
     folder = root / "integrity"
     fixture(folder)
@@ -677,11 +708,12 @@ def main():
         sample_controls(root)
         failure_controls(root)
         target_missed_controls(root)
+        quoting_controls(root)
         integrity_controls(root)
         compatibility_controls(root)
         cli_controls(root)
     print("ANALYSIS_CONTROLS_PASSED repetitions=1,3,5,10; medians,t-intervals,paired-ratios,"
-          "allocations,statuses,target-missed-exclusion,all-failed,interrupted,corruption,"
+          "allocations,statuses,target-missed-exclusion,all-failed,quoted-text,interrupted,corruption,"
           "coverage,provenance,series-settings,dependencies,data-hashes,certificates,"
           "fresh-output,CLI")
 

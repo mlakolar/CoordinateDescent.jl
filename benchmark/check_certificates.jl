@@ -533,6 +533,7 @@ function quantile_primal(X, y, λ, w, τ; intercept)
   col = zeros(ncol)
   try
     HiGHS.Highs_setBoolOptionValue(h, "output_flag", 0)
+    HiGHS.Highs_setIntOptionValue(h, "threads", HIGHS_THREADS)
     HiGHS.Highs_setDoubleOptionValue(h, "primal_feasibility_tolerance", 1e-10)
     HiGHS.Highs_setDoubleOptionValue(h, "dual_feasibility_tolerance", 1e-10)
     HiGHS.Highs_passLp(h, ncol, n, nnz(A), HiGHS.kHighsMatrixFormatColwise, HiGHS.kHighsObjSenseMinimize, 0.0,
@@ -730,6 +731,17 @@ end
   @test knockoff_feasibility(Σ, 1.1 * top .* diag(Σ)).value ≈ 0.1top rtol = 1e-6
   @test knockoff_feasibility(Σ, [-0.1Σ[1, 1]; zeros(p - 1)]).value ≈ 0.1
   @test bad(knockoff_feasibility(Σ[:, 1:5], zeros(5)))
+  # feasibility accepts s = 0 and any smaller diagonal; the equicorrelated
+  # check accepts only s = (1 - safety) min(1, 2λmin(R)) diag(Σ)
+  equi = (1 - 1e-8) * top .* diag(Σ)
+  @test equicorrelated_check(Σ, equi).value ≤ 1e-14
+  @test equicorrelated_check(Σ, zeros(p)).value ≈ 1
+  @test equicorrelated_check(Σ, 0.9 .* equi).value ≈ 0.1 rtol = 1e-12
+  @test equicorrelated_check(Σ, top .* diag(Σ); safety = 0).value ≤ 1e-14
+  @test equicorrelated_check(Σ, top .* diag(Σ)).value ≈ 1e-8 rtol = 1e-6
+  @test equicorrelated_check(Σ, equi).measure === :consistency
+  @test bad(equicorrelated_check(Σ[:, 1:5], zeros(5)))
+  @test bad(equicorrelated_check(Σ, equi; safety = 1.0))
   # candidates 0.5, 1, 2, 3 have #{W ≤ -t} = 2, 1, 0, 0 and #{W ≥ t} = 4, 4, 3, 1
   W = [3.0, -1.0, 2.0, 2.0, -0.5, 1.0, 0.0]
   @test knockoff_threshold_reference(W, 0.5, 1) == 1.0     # (1 + 1)/4 ≤ 0.5
@@ -782,6 +794,8 @@ end
     @test bad(nuclear_gap(X, Y, zeros(2), B, 0.1; intercept = true))
     @test bad(rrr_excess(X, Y, zeros(2), B, 1; intercept = true))
     @test bad(knockoff_feasibility([1.0 v; v 1.0], [0.1, 0.1]))
+    @test bad(equicorrelated_check([1.0 v; v 1.0], [0.1, 0.1]))
+    @test bad(equicorrelated_check([1.0 0.5; 0.5 1.0], [v, 0.1]))
     @test bad(frequency_check(trues(2, 3), [v, 0.5]))
   end
 end
@@ -835,9 +849,29 @@ end
   @test data_hash((; a = 1)) != data_hash((; b = 1))
 end
 
+if Base.find_package("ProximalBase") !== nothing
+  # secondary: the convolution loss, written independently above, against
+  # ProximalBase's ConvolutionCheck, whose callable takes (η, y) with u = y - η
+  import ProximalBase
+  @testset "Secondary agreement with ProximalBase's convolution loss" begin
+    for τ in (0.2, 0.5, 0.8), h in (0.1, 1.0)
+      ℓ = ProximalBase.ConvolutionCheck(τ, h)
+      @test ProximalBase.curvature(ℓ) ≈ 3 / (4h)
+      for u in (-2h, -h, -0.7h, -0.2h, 0.0, 0.3h, 0.99h, h, 1.5h)
+        @test cert_conv_check(u, τ, h) ≈ ℓ(0.0, u) atol = 1e-14
+        @test cert_conv_score(u, τ, h) ≈ -ProximalBase.deriv(ℓ, 0.0, u) atol = 1e-14
+        @test cert_conv_check(u, τ, h) ≈ ℓ(1.5, u + 1.5) atol = 1e-13
+      end
+    end
+  end
+end
+
 if Base.find_package("HighDimensionalModels") !== nothing && get(ENV, "HDM_CERTIFICATES_PACKAGE", "1") != "0"
-  # secondary: tight package fits against the certificates (HDM_CERTIFICATES_PACKAGE=0 skips)
+  # secondary: tight package fits against the certificates, and the certificates
+  # against the diagnostics that the package and its solvers report
+  # (HDM_CERTIFICATES_PACKAGE=0 skips)
   import HighDimensionalModels as HDM
+  import ProximalSolvers as PS
   @testset "Secondary agreement with HighDimensionalModels at tight solutions" begin
     a = scenario("ls-weighted-200x50", 1)
     ω = column_loadings(a.X; intercept = true, weights = a.weights)
@@ -854,5 +888,42 @@ if Base.find_package("HighDimensionalModels") !== nothing && get(ENV, "HDM_CERTI
     D = HDM.difference_matrix(length(a.y), 2; x = a.x)
     s = HDM.trend_filter(a.y, 0.0561; order = 1, x = a.x, abstol = 1e-12, reltol = 1e-12, max_iter = 100_000)
     @test genlasso_gap(nothing, a.y, 0.0, s.x, D, fill(0.0561, size(D, 1)); intercept = false).value ≤ 1e-9
+    # the lasso and logistic gaps against ProximalSolvers' duality_gap on the
+    # model the package fits (the coordinate-descent model with an intercept)
+    a = scenario("ls-200x50", 1)
+    n, p = size(a.X)
+    ω = column_loadings(a.X; intercept = true)
+    s = HDM.lasso(a.X, a.y, 0.05; intercept = true, standardize_x = true, opt_tol = 1e-12, rng = Xoshiro(1))
+    own = PS.duality_gap(PS.cdmodel((1 / n) * ProximalBase.LeastSquaresLoss(a.y, a.X), s.x; intercept = true),
+                         ProximalBase.NormL1(0.05, ω), s.x)
+    mine = ls_l1_parts(a.X, a.y, s.intercept, Vector(s.x), 0.05, ω; intercept = true)
+    @test mine.P ≈ own.primal rtol = 1e-10
+    @test abs(own.gap) / abs(own.primal) ≤ 1e-8 && (mine.P - mine.D) / mine.P ≤ 1e-8
+    a = scenario("logistic-weighted-300x60", 1)
+    ω = column_loadings(a.X; intercept = true, weights = a.weights)
+    s = HDM.glm_lasso(a.X, a.y, 0.02, ProximalBase.Logistic(), HDM.CDOptions(opt_tol = 1e-12); weights = a.weights,
+                      offset = a.offset, newton_tol = 1e-14, rng = Xoshiro(1))
+    loss = inv(sum(a.weights)) * ProximalBase.GLMLoss(ProximalBase.Logistic(), a.y, a.X; weights = a.weights,
+                                                      offset = a.offset)
+    own = PS.duality_gap(PS.cdmodel(loss, s.x; intercept = true), ProximalBase.NormL1(0.02, ω), s.x)
+    mine = glm_parts(:logistic, a.X, a.y, s.intercept, Vector(s.x), 0.02, ω; intercept = true, weights = a.weights,
+                     offset = a.offset)
+    @test mine.P ≈ own.primal rtol = 1e-10
+    @test abs(own.gap) / abs(own.primal) ≤ 1e-8 && (mine.P - mine.D) / mine.P ≤ 1e-8
+    # exact quantile regression against the objective and the gaps that
+    # QuantileLassoSolution reports; the certificate LPs above have already run,
+    # so this also checks that they leave HiGHS's thread scheduler usable
+    a = scenario("quantile-200x30", 1)
+    w = column_loadings(a.X; intercept = true)
+    s = HDM.quantile_lasso(a.X, a.y, 0.02; tau = 0.3)
+    mine = quantile_parts(a.X, a.y, s.intercept, s.β, 0.02, w, 0.3; intercept = true)
+    @test s.converged
+    @test mine.P ≈ s.objective rtol = 1e-12
+    @test abs(s.duality_gap) / s.objective ≤ 1e-6 && s.certificate_gap / s.objective ≤ 1e-6
+    @test (mine.P - mine.D) / mine.P ≤ 1e-8
+    # the equicorrelated diagonal of the package
+    a = scenario("knockoff-300x50", 1)
+    @test equicorrelated_check(a.Sigma, HDM.equicorrelated_s(a.Sigma)).value ≤ 1e-12
+    @test knockoff_feasibility(a.Sigma, HDM.equicorrelated_s(a.Sigma)).value == 0
   end
 end

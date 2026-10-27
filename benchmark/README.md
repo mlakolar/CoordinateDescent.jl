@@ -28,7 +28,7 @@ overwritten.
 
 | Setting | Default | Use |
 |---|---|---|
-| `HDM_SUITE` | `quick` | `extended` adds larger, wide and correlated shapes, sparse, weighted and Float32 inputs, and the paths. |
+| `HDM_SUITE` | `quick` | `extended` runs the quick cases and adds larger, wide and correlated shapes, sparse, weighted and Float32 inputs, and more paths and variants. |
 | `HDM_GROUPS` | All groups but `controls` | Comma-separated groups, selected before any data are drawn. |
 | `HDM_CASES` | All cases | Comma-separated globs on case ids (`*`, `?`), within the suite and groups. |
 | `HDM_REPETITION` | `1` | Process and input draw, numbered 1–10. |
@@ -79,11 +79,15 @@ Most targets are thresholds on a relative duality gap, a stationarity residual
 or a coefficient error, at settings fixed per case in `cases.jl`; where the
 defaults stop short of the threshold (the path gap tolerance, the group lasso
 without orthonormalization, the smoothed quantile tolerance), the case tightens
-them and says why. Nonconvex and
-selection procedures (`sparse_reduced_rank`, `knockoff_filter`,
-`stability_selection`) have the target `record`: the certificate must be valid,
-and its value is recorded without a threshold. MCP and SCAD are certified as
-stationary points only. A path certifies every returned level and reports the
+them and says why. The nonconvex `sparse_reduced_rank` has the target `record`:
+the certificate must be valid, and its value is recorded without a threshold.
+MCP and SCAD are certified as stationary points only. The selections of
+`knockoff_filter` and `stability_selection` have no certificate, but their
+post-processing (the knockoff+ threshold of the returned statistics, the
+frequencies of the returned selections) is checked exactly, at a threshold of
+1e-12. `post_lasso` must refit the requested columns, and `double_selection` is
+certified on its effect regression, both nuisance lassos and the union of their
+supports. A path certifies every returned level and reports the
 worst. `check_certificates.jl` tests each certificate with analytic problems,
 designed nonoptimal points, weak duality and dual feasibility; agreement with the
 package's own diagnostics is secondary.
@@ -146,7 +150,9 @@ maximum bytes with their changes. Single-run ratios are exploratory, and an
 interval containing one is inconclusive. A case with a non-`ok` repetition is
 excluded from the ratios, with its reasons in the report. Invalid records,
 missing repetitions, unmatched cases, or differences in settings, catalog,
-data hashes, or dependency versions and tree hashes prevent a comparison.
+data hashes, or dependency versions and tree hashes prevent a comparison. A
+dependency tracked by path has an empty tree hash and is compared by version
+only, so the compared environments should use registered dependencies.
 
 ## Measurement and evidence
 
@@ -189,7 +195,9 @@ package path, commit and dirty status; SHA-1 hashes of the package's
 folder (`harness_hash`); and a `[dependencies]` table with the version and tree
 hash of every package of the manifest that is not a standard library, other than
 HighDimensionalModels (a package tracked by path has an empty tree hash). The
-SHA-256 `data_hash` of a case covers its inputs and penalty levels. The final
+SHA-256 `data_hash` of a case covers its inputs and penalty levels. It is
+specific to the Julia version: the scenario inputs are identical on every
+version, but penalty levels computed from them can differ by one ulp. The final
 metadata adds `cases`, `ok_cases`, `nonok_cases`, `elapsed_s`, `maxrss_bytes` and
 `finished = true`; start metadata without it marks an interrupted process, which
 is kept and restarted in a fresh series.

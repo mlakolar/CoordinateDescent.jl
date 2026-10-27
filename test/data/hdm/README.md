@@ -7,12 +7,24 @@ the estimators. Do not refresh the Julia baseline to accommodate those changes.
 ## Regeneration
 
 From the repository root, with the master test environment built by
-`julia scripts/test_master.jl --setup-only` and an R library `$RLIB` holding
-hdm 0.3.2 (`R CMD INSTALL -l $RLIB hdm_0.3.2.tar.gz`, from the CRAN archive
-with the SHA256 below, after hdm's CRAN dependencies) next to sandwich 3.1.1
-(`remotes::install_version("sandwich", "3.1.1")` with `R_LIBS=$RLIB`), run in
-order; each script writes into `test/data/hdm`, or into the directory given as
-its argument:
+`julia scripts/test_master.jl --setup-only` and R 4.5.1, install sandwich
+3.1.1 (CRAN's `3.1-1`), hdm's CRAN imports (MASS and methods ship with R)
+and the unmodified hdm 0.3.2 source archive, checked against the SHA256
+below, into an R library `$RLIB`. CRAN moves the archive to
+`src/contrib/Archive/hdm/` once hdm is updated.
+
+```sh
+mkdir -p "$RLIB"
+curl -fLO https://cloud.r-project.org/src/contrib/hdm_0.3.2.tar.gz
+echo "3354b22752f0aa0c0d9c8c12b38810202b6380f2587e539be11d9a358412fe6a  hdm_0.3.2.tar.gz" | shasum -a 256 -c
+R_LIBS=$RLIB Rscript -e 'repos <- "https://cloud.r-project.org"' \
+  -e 'install.packages(c("remotes", "glmnet", "ggplot2", "checkmate", "Formula"), repos = repos)' \
+  -e 'remotes::install_version("sandwich", "3.1-1", repos = repos, upgrade = "never")'
+R_LIBS=$RLIB R CMD INSTALL -l "$RLIB" hdm_0.3.2.tar.gz
+```
+
+Then run in order; each script writes into `test/data/hdm`, or into the
+directory given as its argument:
 
 ```sh
 julia --startup-file=no --project=.master-test-env/v1.13 test/data/hdm/golden_data.jl

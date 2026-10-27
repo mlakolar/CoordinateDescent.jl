@@ -1,12 +1,13 @@
 # The case table: a scenario of problems.jl, one public estimator call with fixed
 # settings, the certificate of certificates.jl for its documented objective, and
 # a target. Each case states its target and settings in its add_case! call;
-# thresholds are relative gaps or residuals, and `record` (nonconvex and
-# selection procedures only) records a valid certificate without a threshold.
+# thresholds are relative gaps, residuals, errors or exact consistency checks,
+# and `record`, for nonconvex procedures only, records a valid certificate
+# without a threshold.
 #
 # build(problem) prepares the inputs once, untimed: copies in the element type
 # and storage of the case, penalty levels, loadings for the certificate, options
-# and a solver generator. Each sample times call(prepared) on a fresh copy, and
+# and a solver generator. Each sample times call on a fresh copy of them, and
 # certify(problem, prepared, output) checks that output from the prepared inputs
 # and the returned coefficients and intercepts only (and, for the adaptive
 # procedures, the penalty parameters they return), never from the solver's own
@@ -215,18 +216,44 @@ function scaled_certificate(s, out)
   merge(cert, (; value = max(cert.value, σerror), note = cert.note * "; σ̂ relative error $σerror"))
 end
 
-# The effect regression of double selection, y on [1 d X_S], at the returned
-# estimate α̂: the intercept and the coefficients of the controls are the least
-# squares of y - α̂d on [1 X_S], which are optimal exactly when α̂ is, and the
-# certificate compares the completed point with an independent solve
-function effect_certificate(s, out)
+# The final nuisance lasso of an rlasso fit, ‖r - β₀ - Xβ‖²/(2n) + λ0∑Γⱼ|βⱼ| for the
+# response r on the scale of theory_lambda, at the level and loadings of that solve
+# as the fit returns them; certification is conditional on these data-driven
+# parameters.
+nuisance_gap(X, response, fit) = ls_l1_gap(X, response, fit.lasso_intercept, case64(fit.lasso), fit.lasso_λ0,
+                                           case64(fit.lasso_loadings); intercept = true)
+
+# A wrong set of columns fails the case: the value becomes at least one, a
+# relative error of 100%, and the status target_missed.
+function wrong_support(cert, note)
+  cert.status == :ok || return cert
+  merge(cert, (; value = max(cert.value, 1.0), note = cert.note * "; " * note))
+end
+
+# Double selection: the effect regression y on [1 d X_S] at the returned estimate
+# α̂, whose intercept and control coefficients are the least squares of y - α̂d on
+# [1 X_S] (optimal exactly when α̂ is), against an independent solve; both
+# nuisance lassos, d on X and y on X; and S, the sorted union of their supports.
+# The value is the largest of the effect's relative coefficient error and the two
+# nuisance gaps. They differ in kind but are all relative errors that vanish at the
+# solution, and the target applies to each; the measure is the effect's.
+function double_selection_certificate(s, out)
   X, y, d = case64(s.X), case64(s.y), case64(s.d)
   S, α = out.selected, case64(out.estimate)
   γ = [ones(length(y)) X[:, S]] \ (y .- α .* d)
   β = zeros(size(X, 2) + 1)
   β[1] = α
   β[S .+ 1] .= γ[2:end]
-  ols_coefficient_error([d X], y, [1; S .+ 1], γ[1], β; intercept = true)
+  effect = ols_coefficient_error([d X], y, [1; S .+ 1], γ[1], β; intercept = true)
+  nuisances = (y = nuisance_gap(X, y, out.nuisance_y), d = nuisance_gap(X, d, out.nuisance_d))
+  for (name, cert) in pairs(nuisances)
+    cert.status == :ok || return merge(cert, (; measure = effect.measure, note = "nuisance $name: " * cert.note))
+  end
+  effect.status == :ok || return effect
+  note = "effect $(effect.value), nuisance gaps y $(nuisances.y.value), d $(nuisances.d.value)"
+  cert = merge(effect, (; value = max(effect.value, nuisances.y.value, nuisances.d.value), note))
+  S == sort!(union(out.nuisance_y.selected, out.nuisance_d.selected)) ? cert :
+    wrong_support(cert, "selected is not the union of the nuisance supports")
 end
 
 ######################################################################
@@ -699,8 +726,11 @@ function selection_cases!(catalog)
     λ = 0.1 * maximum(abs.(X' * y)) / size(X, 1)
     (; X, y, Sigma, mu, λ, q = 0.1, rng = solver_rng(), levels = [λ])
   end
-  # The equicorrelated diagonal and the knockoffs drawn with it; the diagonal must
-  # be feasible on the correlation scale.
+  # The equicorrelated diagonal and the knockoffs drawn with it. The diagonal must
+  # be feasible on the correlation scale and equal (1 - 1e-8) min(1, 2λmin(R)) Σⱼⱼ,
+  # since feasibility alone accepts other diagonals, s = 0 among them. The value is
+  # the larger of the feasibility violation and the relative deviation from that
+  # diagonal, both zero at a correct s; the measure stays feasibility.
   add_case!(catalog, "selection", "equicorrelated_s", "gaussian"; scenario = "knockoff-300x50", suite = "extended",
     measure = MEASURE.feasibility, target = 1e-10,
     build = p -> knockoff_inputs(p),
@@ -708,19 +738,27 @@ function selection_cases!(catalog)
       d = equicorrelated_s(s.Sigma)
       (; s = d, Xk = gaussian_knockoffs(s.X, s.mu, s.Sigma; rng = s.rng, s = d))
     end,
-    certify = (p, s, out) -> knockoff_feasibility(s.Sigma, out.s))
-  # Selection procedures: the selections are recorded; their post-processing (the
-  # knockoff+ threshold of the returned W) is checked exactly.
+    certify = (p, s, out) -> begin
+      feasible, exact = knockoff_feasibility(s.Sigma, out.s), equicorrelated_check(s.Sigma, out.s)
+      feasible.status == :ok || return feasible
+      exact.status == :ok || return merge(exact, (; measure = feasible.measure))
+      merge(feasible, (; value = max(feasible.value, exact.value),
+                         note = "violation $(feasible.value), deviation from the diagonal $(exact.value)"))
+    end)
+  # Selection procedures: the selections themselves have no certificate, but their
+  # post-processing does, exactly. The knockoff+ threshold recomputed from the
+  # returned W is one of the values |Wⱼ|, so a correct threshold differs by zero.
   add_case!(catalog, "selection", "knockoff_filter", "gaussian"; scenario = "knockoff-300x50",
-    measure = MEASURE.consistency, target = "record",
+    measure = MEASURE.consistency, target = 1e-12,
     build = p -> knockoff_inputs(p),
     call = s -> knockoff_filter(s.X, s.y, s.λ; method = :gaussian, mu = s.mu, Sigma = s.Sigma, q = s.q,
                                 rng = s.rng),
     certify = (p, s, out) -> knockoff_threshold_check(case64(out.W), s.q, case64(out.threshold), 1))
   # Ten complementary pairs of lasso fits at a tenth of λmax, at most ten
-  # variables each; the frequencies must be the means of the returned selections.
+  # variables each; the frequencies must be the means of the returned selections,
+  # counts divided by the number of fits, which both sides round identically.
   add_case!(catalog, "selection", "stability_selection", "lasso"; scenario = "ls-200x50", suite = "extended",
-    measure = MEASURE.consistency, target = "record",
+    measure = MEASURE.consistency, target = 1e-12,
     build = p -> begin
       X, y = case64(p.X), case64(p.y)
       λ = 0.1 * ls_lambda_max(X, y, case_loadings(X))
@@ -733,17 +771,12 @@ end
 
 function inference_cases!(catalog)
   hdm_inputs(p) = (; X = case64(p.X), y = case64(p.y), d = case64(p.d), rng = solver_rng(), levels = Float64[])
-  # The final nuisance lasso, ‖y - β₀ - Xβ‖²/(2n) + λ0∑Γⱼ|βⱼ| on the scale of
-  # theory_lambda, at the level and loadings of that solve as the result returns
-  # them; certification is conditional on these data-driven parameters.
-  nuisance_gap(s, fit, response) = ls_l1_gap(s.X, response, fit.lasso_intercept, case64(fit.lasso),
-                                             fit.lasso_λ0, case64(fit.lasso_loadings); intercept = true)
   for (variant, post, suite) in (("post", true, "quick"), ("no-post", false, "extended"))
     add_case!(catalog, "inference", "rlasso", variant; scenario = "hdm-200x80", suite,
       measure = MEASURE.gap, target = 1e-6,
       build = p -> hdm_inputs(p),
       call = s -> rlasso(s.X, s.y; post, intercept = true, rng = s.rng),
-      certify = (p, s, out) -> nuisance_gap(s, out, s.y))
+      certify = (p, s, out) -> nuisance_gap(s.X, s.y, out))
   end
   # Least squares of y on [1 X_S] against an independent QR solve, for the support S
   # of the coefficients that generated the data (fixed by the draw, not by the
@@ -756,13 +789,17 @@ function inference_cases!(catalog)
       merge(s, (; support, levels = Float64.(support)))
     end,
     call = s -> post_lasso(s.X, s.y, s.support; intercept = true),
-    certify = (p, s, out) -> ols_coefficient_error(s.X, s.y, out.selected, out.intercept, case64(out.x);
-                                                   intercept = true))
+    certify = (p, s, out) -> begin
+      cert = ols_coefficient_error(s.X, s.y, s.support, out.intercept, case64(out.x); intercept = true)
+      out.selected == s.support ? cert : wrong_support(cert, "selected differs from the requested support")
+    end)
+  # The nuisance gaps, near 1e-8 at the default tolerances, set the target: 1e-6,
+  # that of the rlasso cases.
   add_case!(catalog, "inference", "double_selection", "hdm"; scenario = "hdm-200x80",
-    measure = MEASURE.coefficients, target = 1e-8,
+    measure = MEASURE.coefficients, target = 1e-6,
     build = p -> hdm_inputs(p),
     call = s -> double_selection(s.y, s.d, s.X; rng = s.rng),
-    certify = (p, s, out) -> effect_certificate(s, out))
+    certify = (p, s, out) -> double_selection_certificate(s, out))
 end
 
 function control_cases!(catalog)

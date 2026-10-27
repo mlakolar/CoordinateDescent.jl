@@ -66,8 +66,9 @@ def discover_versions(root):
 
 
 def records(path, kind):
+    # The runner writes fields verbatim, with tabs and line breaks replaced by spaces.
     with Path(path).open(newline="", encoding="utf-8") as stream:
-        reader = csv.DictReader(stream, delimiter="\t")
+        reader = csv.DictReader(stream, delimiter="\t", quoting=csv.QUOTE_NONE)
         if reader.fieldnames != HEADERS[kind]:
             raise ValueError(f"wrong {kind} header in {Path(path).name}")
         rows = list(reader)

@@ -25,9 +25,10 @@ R_LIBS=$RLIB Rscript test/golden/structured/golden.R test/golden/structured
 julia --startup-file=no --project=.master-test-env/v1.13 test/golden/structured/check_golden.jl test/golden/structured
 ```
 
-`setup.R` installs genlasso 1.6.1 from CRAN and glmgen from GitHub at the
-commit above (with `remotes`, in the R package subdirectory `R_pkg/glmgen`),
-and stops if either is missing or has another version. `golden.R OUT` writes
-the fixtures and `provenance.txt` into `OUT`; `check_golden.jl OUT` runs
+`setup.R` installs `remotes`, then genlasso 1.6.1 from CRAN
+(`remotes::install_version`) and glmgen from GitHub at the commit above
+(`remotes::install_github`, R package subdirectory `R_pkg/glmgen`), and stops
+if either is missing or has another version. `golden.R OUT` writes the
+fixtures and `provenance.txt` into `OUT`; `check_golden.jl OUT` runs
 `test/structured_golden.jl` against them. Another `OUT` leaves the fixtures
 unchanged.

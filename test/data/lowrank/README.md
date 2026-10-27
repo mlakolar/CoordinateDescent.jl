@@ -32,11 +32,13 @@ R_LIBS=$RLIB Rscript -e 'install.packages("remotes", repos = "https://cloud.r-pr
   -e 'remotes::install_version("rrpack", "0.1-14", repos = "https://cloud.r-project.org")'
 julia --startup-file=no --project=.master-test-env/v1.13 test/data/lowrank/oracle.jl generate test/data/lowrank
 R_LIBS=$RLIB Rscript test/data/lowrank/oracle.R test/data/lowrank
+rm test/data/lowrank/rrpack-version.txt
 julia --startup-file=no --project=.master-test-env/v1.13 test/data/lowrank/oracle.jl compare test/data/lowrank
 ```
 
 `oracle.jl generate DIR` writes the shared inputs `X*.csv` and `Y*.csv` into
 `DIR`; `oracle.R DIR` writes the R fits there, together with
-`rrpack-version.txt`, which is not part of the fixtures. `oracle.jl compare DIR`
-checks the package against those fits and prints the largest errors. Another
-`DIR` leaves the fixtures unchanged.
+`rrpack-version.txt` (the installed rrpack version), which is not part of the
+fixtures and is deleted above. `oracle.jl compare DIR` checks the package
+against those fits and prints the largest errors. Another `DIR` leaves the
+fixtures unchanged.

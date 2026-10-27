@@ -127,7 +127,10 @@ observations (rows) and ``p`` predictors (columns):
 
 At one ``\lambda`` the Gram matrix was slower in 93 of 94 cases, by up to 42
 times. The default, `gram = :auto`, therefore uses it for paths on a dense
-``X`` with ``n \ge p`` and ``p \le 2000``, and never at one ``\lambda``. The script
-[`gram_bench.jl`](https://github.com/mlakolar/HighDimensionalModels.jl/blob/abddaf56a790b86178de376b175a1185020c8381/benchmark/gram_bench.jl) of the benchmark snapshot measured
-these times; the `lasso` group of the [benchmark harness](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/benchmark/README.md) measures
-the current fits.
+``X`` with ``n \ge p`` and ``p \le 2000``, and never at one ``\lambda``. These
+measurements come from
+[`gram_bench.jl`](https://github.com/mlakolar/HighDimensionalModels.jl/blob/abddaf56a790b86178de376b175a1185020c8381/benchmark/gram_bench.jl)
+in the benchmark snapshot. The `lasso` group of the
+[benchmark harness](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/benchmark/README.md)
+times current fits, including fits on the Gram matrix, but does not repeat
+this comparison.

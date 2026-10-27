@@ -705,6 +705,10 @@ const QUANTILE_ZERO = 100 * HIGHS_FEASIBILITY
 # the tolerances of the completion LP; its solution is made exactly feasible
 # afterwards, so they affect only how tight the bound is
 const COMPLETION_TOLERANCE = 1e-10
+# HiGHS sizes one process-wide thread scheduler at its first run, and a later
+# instance that asks for another number of threads fails; the package's HiGHS
+# extension asks for one, so the completion LP does too, whichever runs first
+const HIGHS_THREADS = 1
 
 # The completion LP of quantile_exact_gap: over a_Z ∈ [τ - 1, τ], maximize
 # ∑_Z ỹᵢaᵢ subject to ∑_Z aᵢ = -∑_F fᵢ (intercept) and |X_Z'a_Z + X_F'f| ≤ nλw,
@@ -738,6 +742,7 @@ function quantile_completion(X, ỹ, Z, F, f, λ, w, τ, intercept::Bool)
   model = -1
   try
     HiGHS.Highs_setBoolOptionValue(h, "output_flag", 0)
+    HiGHS.Highs_setIntOptionValue(h, "threads", HIGHS_THREADS)
     HiGHS.Highs_setDoubleOptionValue(h, "primal_feasibility_tolerance", COMPLETION_TOLERANCE)
     HiGHS.Highs_setDoubleOptionValue(h, "dual_feasibility_tolerance", COMPLETION_TOLERANCE)
     status = HiGHS.Highs_passLp(h, k, nrow, length(index), HiGHS.kHighsMatrixFormatColwise,
@@ -1051,6 +1056,29 @@ function knockoff_feasibility(Sigma, s)
   violation = max(cert_maxabs(max.(-ρ, 0.0)), cert_maxabs(max.(ρ .- top, 0.0)),
                   max(-eigmin(Symmetric(2 .* Matrix(R) .- Diagonal(ρ))), 0.0))
   cert_ok(violation, m)
+end
+
+"""
+    equicorrelated_check(Sigma, s; safety = 1e-8)
+
+The largest relative deviation `maxⱼ |sⱼ/Σⱼⱼ - a| / max(a, floatmin)` of `s`
+from the equicorrelated diagonal `sⱼ = a Σⱼⱼ` of `equicorrelated_s`
+(src/knockoffs.jl), `a = (1 - safety) min(1, 2λmin(R))` with `R` the
+correlation matrix of `Σ` (and `a = 0` when that is negative): zero, to
+rounding, exactly for that diagonal. Feasibility alone
+(`knockoff_feasibility`) also accepts other diagonals, `s = 0` among them.
+"""
+function equicorrelated_check(Sigma, s; safety = 1e-8)
+  m = :consistency
+  p = size(Sigma, 1)
+  size(Sigma, 2) == p && length(s) == p || return uncertifiable("Sigma must be square, with one s per column", m)
+  cert_finite(Sigma, s, safety) && 0 <= safety < 1 ||
+    return uncertifiable("nonfinite input, or safety outside [0, 1)", m)
+  S, sv = f64(Sigma), f64(s)
+  issymmetric(S) && all(>(0), diag(S)) || return uncertifiable("Sigma must be symmetric with a positive diagonal", m)
+  scales = sqrt.(diag(S))
+  a = max((1 - safety) * min(1.0, 2eigmin(Symmetric(S ./ (scales * transpose(scales))))), 0.0)
+  cert_ok(cert_maxabs(sv ./ diag(S) .- a) / max(a, floatmin(Float64)), m)
 end
 
 """

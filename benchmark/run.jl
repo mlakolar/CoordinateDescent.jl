@@ -156,7 +156,9 @@ end
 
 # The input draw of a case, and the state of each sample: fresh copies of the
 # prepared inputs, whose random number generators restart with them, and the
-# default generator reseeded for the calls that draw from it.
+# default generator reseeded for the calls that draw from it. The call gets the
+# copy and the certificate the prepared inputs, which no call sees, so that a
+# call that changes its inputs cannot certify itself.
 struct CaseState{S}
   problem::NamedTuple
   prepared::S
@@ -187,7 +189,7 @@ function observe!(state, spec, case_seconds)
     gc = round(Int, timed.gctime * 1e9)
     cert, status, detail, stack = nothing, :ok, "", ""
     try
-      cert = spec.certify(state.problem, sample, timed.value)
+      cert = spec.certify(state.problem, state.prepared, timed.value)
       status = certificate_status(cert, meta)
       detail = status == :target_missed ?
         "value $(cert.value) exceeds the target $(meta.target); $(cert.note)" : cert.note
@@ -224,7 +226,7 @@ function profile_case!(io, state, spec, seconds)
   while time_ns() < deadline
     sample = reset_state(state)
     output = Profile.@profile spec.call(sample)
-    certificate_status(spec.certify(state.problem, sample, output), spec.meta) == :ok ||
+    certificate_status(spec.certify(state.problem, state.prepared, output), spec.meta) == :ok ||
       error("profile output fails certification")
   end
   println(io, "CASE\t", spec.meta.id)
