@@ -2,8 +2,8 @@
 
 This is a small **descriptive pilot**, not validation of coverage or a basis for
 changing defaults. It compares partialling and double selection at fixed
-nuisance fits, and native post-false tuning separately. The orchestrator runs
-the study on Titan. Local work is limited to short smoke checks.
+nuisance fits, and native post-false tuning separately. The study runs
+on a cluster under Slurm. Local work is limited to short smoke checks.
 
 ## Frozen designs
 
@@ -111,22 +111,22 @@ summaries deduplicate the repeated A/B/C and D1/D2 pair times. Only small CSV
 records are retained, not designs or fit objects (roughly 70 MB total, depending
 on numeric formatting and error frequency).
 
-## Setup and execution on Titan (orchestrator)
+## Setup and execution on a Slurm cluster
 
 Use a git worktree at the reviewed harness commit, with `ProximalBase.jl` and
 `ProximalSolvers.jl` as siblings of this repository. Julia 1.11+ is needed for
-`[sources]`; Titan uses Julia 1.13.3. Record the worktree commit, sibling commits,
+`[sources]`; the recorded run used Julia 1.13.3. Record the worktree commit, sibling commits,
 Julia version, run tag, submission command, job IDs and output locations in the
 existing run registry. Do not commit a Manifest or change package defaults.
 
 From `benchmark/hdm/pilot`, resolve the path sources using cached transitive
 dependencies. This command must not fetch packages; if dependencies are absent,
 the orchestrator must arrange the cache separately. Precompilation and fitting
-belong inside Slurm, not on the login node.
+belong inside Slurm jobs.
 
 ```sh
-cd /shared/home/mladen.kolar/WORKTREE/benchmark/hdm/pilot
-export JULIA="$HOME/.local/bin/julia"
+cd WORKTREE/benchmark/hdm/pilot
+export JULIA=julia   # Julia 1.11 or later
 export JULIA_PKG_SERVER="" JULIA_PKG_OFFLINE=true JULIA_PKG_PRECOMPILE_AUTO=0
 "$JULIA" --startup-file=no --project=. -e 'using Pkg; Pkg.offline(true); Pkg.instantiate(;allow_autoprecomp=false)'
 "$JULIA" --startup-file=no --project=. make-tasks.jl
@@ -140,20 +140,22 @@ environment and Slurm-visible metadata; it cannot expand in an SBATCH directive.
 ```sh
 export RUNTAG=hdm-pilot-canary-YYYYMMDD
 export TASKS="$PWD/canary.txt" OUTDIR="$PWD/outputs/$RUNTAG"
-sbatch --parsable --job-name="$RUNTAG" --comment="$RUNTAG" run.sbatch
+sbatch --parsable --job-name="$RUNTAG" --comment="$RUNTAG" \
+  --account=ACCOUNT --cpus-per-task=2 --mem=MEM --time=LIMIT run.sbatch
 ```
 
 Inspect the outcome, 100 arm rows, 40 timing rows, failure types and warm
-throughput before the main run. The script requests 8 Slurm CPUs (four physical
-cores), 16 GB and 1:45:00, account mladen/QoS normal, no partition or GRES. Four
-single-threaded workers each get two Slurm CPUs and explicit step memory.
+throughput before the main run. Pass the account, CPUs, memory and time limit at
+submission; the script runs one single-threaded worker per two allocated Slurm
+CPUs and gives each worker step an explicit share of the job memory (`--mem`).
 Canary and main execution together must remain inside the approved budget;
 the script does not authorize another allocation or an extension of that budget.
 
 ```sh
 export RUNTAG=hdm-pilot-main-YYYYMMDD
 export TASKS="$PWD/tasks.txt" OUTDIR="$PWD/outputs/$RUNTAG"
-sbatch --parsable --job-name="$RUNTAG" --comment="$RUNTAG" run.sbatch
+sbatch --parsable --job-name="$RUNTAG" --comment="$RUNTAG" \
+  --account=ACCOUNT --cpus-per-task=CPUS --mem=MEM --time=LIMIT run.sbatch
 # Run analysis in an authorized CPU allocation after workers finish:
 "$JULIA" --startup-file=no --project=. analyze.jl "$OUTDIR" "$PWD/results/$RUNTAG"
 ```
