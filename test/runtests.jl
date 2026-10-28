@@ -27,6 +27,7 @@ tests = [
   "multiresponse",
   "multitask",
   "lowrank",
+  "lowrank_sparse",
   "hdm",
   "hdm_golden",
   "hdm_effect",

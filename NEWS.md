@@ -7,6 +7,11 @@ ProximalSolvers 0.3 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- Add `sparse_nuclear_regression` for nuclear and entrywise/row sparsity
+  penalties on the same coefficient matrix, with duality-gap certificates and
+  `SparseNuclearSolution`. `PenaltyGrid` and `CVPenaltyGrid` tune both levels
+  with copied primal/dual warm starts and independent training-fold fits.
+
 - `CVLassoPath` and `CVGLMLassoPath` no longer throw when every fold path stops
   early (`max_hat_s`, `devmax`) before the last levels of the full path; those
   levels have `NaN` in `cvm` and `cvse`. `λmin` and `λ1se` of these and of
