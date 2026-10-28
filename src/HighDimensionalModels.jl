@@ -35,7 +35,7 @@ using ProximalSolvers
 using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel
 using StatsAPI: StatsAPI, aic, bic, coef, coefnames, confint, deviance, dof, fit, fitted, nobs, nulldeviance, predict,
   residuals, responsename, stderror, vcov
-using Random: AbstractRNG, Xoshiro, default_rng, randperm, randn
+using Random: AbstractRNG, Xoshiro, default_rng, randperm, randn, shuffle!
 using SparseArrays
 using SpecialFunctions: erfc, erfcinv
 using Statistics
@@ -83,6 +83,7 @@ export
   # the multi-response lasso
   multi_lasso,
   MultiLassoPath,
+  CVMultiLassoPath,
 
   # the multitask lasso with task-specific designs
   multitask_lasso, MultitaskLassoSolution, MultitaskLassoPath, CVMultitaskLassoPath,
@@ -124,6 +125,7 @@ include("sparsegroup.jl")
 include("multiresponse.jl")
 include("cv.jl")
 include("multitask.jl")
+include("multitask_rows.jl")
 include("quantile_tuning.jl")
 include("structured.jl")
 include("structured_cv.jl")
