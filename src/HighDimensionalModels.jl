@@ -67,6 +67,7 @@ export
 
   # primal–dual quantile regression
   quantile_lasso, QuantileLassoSolution, QuantileLassoPath, dual_scores,
+  quantile_refit, QuantileRefit, refit_quantile_path,
   quantile_lambda, CVQuantileLassoPath,
 
   # generalized linear models

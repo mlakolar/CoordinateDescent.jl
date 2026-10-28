@@ -163,6 +163,10 @@ end
     X, Y = uniform(rng, n, p), uniform(rng, n, 3)
     problem = HDM._grid_problem(sparse_nuclear_regression, X, Y)
     x, direction = rand(rng, p*3), uniform(rng, p*3)
+    L = ProximalBase.lipschitz(problem.loss)
+    @test L == problem.loss.setup.L
+    curvature = problem.loss(x + direction) + problem.loss(x - direction) - 2problem.loss(x)
+    @test 0 <= curvature <= L*sum(abs2, direction)
     G = similar(x)
     ProximalBase.gradient!(G, problem.loss, x)
     Xc, Yc = X .- mean(X; dims = 1), Y .- mean(Y; dims = 1)
@@ -380,7 +384,8 @@ end
     rd = sparse_nuclear_regression(hcat(X, X[:, 1]), Y, 0.03, 0.02; sparsity, tol = 1e-10)
     @test rd.converged && rd.gap <= 1e-10
     cs = sparse_nuclear_regression(ones(24, 4), Y, 0.03, 0.02; sparsity)
-    @test cs.converged && cs.iterations == 0 && cs.gap == 0
+    # Normalizing the rounded primal-dual difference leaves an O(eps(T)) gap.
+    @test cs.converged && cs.iterations == 0 && cs.gap <= 16eps(eltype(cs.B))
     @test iszero(cs.B) && cs.rank == cs.nnz == 0
     @test cs.intercept ≈ vec(mean(Y; dims = 1))
   end

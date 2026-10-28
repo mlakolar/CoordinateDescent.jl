@@ -180,9 +180,10 @@ coefficients are plausible, with prediction used to assess the tradeoff.
 It has no fixed rank bound. In contrast, `sparse_reduced_rank` imposes a rank
 constraint and solves a nonconvex problem. An additive model `B = L + S`
 allows separate low-rank and sparse components; it imposes different structure
-and is outside this estimator. Task-specific designs are also deferred:
-coefficients invisible to a task's loss still affect the joint nuclear norm,
-so dropping constant columns within tasks can change this problem.
+and is outside this estimator. Task-specific designs are not supported by
+this estimator. An entry invisible to a task's loss still enters the nuclear
+norm, so removing zero or constant columns within tasks, as the multitask
+data layer does, would change the problem.
 
 Combining convex penalties need not improve sample complexity over the
 better individual penalty. For noiseless matrix recovery from independent
