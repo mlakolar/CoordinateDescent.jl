@@ -474,8 +474,9 @@ Result returned by [`CVMultitaskLassoPath`](@ref)`(Xs, ys)`.
 - `cvm_task::Matrix`: the held-out mean squared error of each task (a row) at
   each level (a column), `NaN` where no fold reaches the level
 - `nrows::Vector{Int}`: the number of nonzero rows of `path` at each level
-- `λmin`, `λ1se`: the level with the smallest `cvm`, and the largest level
-  whose `cvm` is within one standard error of it
+- `λmin`, `λ1se`: among the levels that every fold reaches, the level with the
+  smallest `cvm`, and the largest level whose `cvm` is within one standard error
+  of it
 - `folds::Vector{Vector{Int}}`: the fold of each observation, a vector per task
 - `task_weights::Vector`: the task weights `cₜ` of the path on all the data
 """
@@ -528,8 +529,8 @@ fold reaches, `cvm = ∑ₜ cₜ MSEₜ / ∑ₜ cₜ`, the held-out counterpart
 `λmin` minimizes `cvm`, and `λ1se` is the largest level whose `cvm` is within
 `cvse` of the minimum (the one-standard-error rule). A fold path that stops
 early (`max_rows`) leaves the remaining levels out of the averages; the levels
-that no fold reaches have `NaN` in `cvm`, `cvse` and `cvm_task`, and are not
-candidates for `λmin` and `λ1se`.
+that no fold reaches have `NaN` in `cvm`, `cvse` and `cvm_task`. `λmin` and
+`λ1se` are chosen among the levels that every fold reaches.
 
 With `threads`, the folds run in parallel on the available threads; each fold
 draws its random coordinate orders from a generator seeded from `rng`, so that

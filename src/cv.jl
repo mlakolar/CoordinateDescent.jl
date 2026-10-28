@@ -13,11 +13,12 @@ Result returned by [`CVLassoPath`](@ref)`(X, y)`.
 - `path::LassoPath`: the path on all the data
 - `λpath::Vector`: its levels, the grid of every fold
 - `cvm::Vector`, `cvse::Vector`: the cross-validated mean squared prediction
-  error at each level, and its standard error (`NaN` at the levels that no fold
-  reaches)
+  error at each level, and its standard error (`cvm` is `NaN` at the levels that
+  no fold reaches, `cvse` where fewer than two do)
 - `nnz::Vector{Int}`: the number of nonzero coefficients of `path` at each level
-- `λmin`, `λ1se`: the level with the smallest `cvm`, and the largest level
-  whose `cvm` is within one standard error of it
+- `λmin`, `λ1se`: among the levels that every fold reaches, the level with the
+  smallest `cvm`, and the largest level whose `cvm` is within one standard error
+  of it
 - `folds::Vector{Int}`: the fold of each observation
 """
 struct CVLassoPath{T<:AbstractFloat}
@@ -56,8 +57,9 @@ so nothing leaks from the held-out one.
 its standard error, `sqrt(∑ₖ nₖ (eₖ - cvm)² / n / (K - 1))`, as in glmnet.
 `λmin` minimizes `cvm`, and `λ1se` is the largest level whose `cvm` is within
 `cvse` of the minimum (the one-standard-error rule). A fold path that stops
-early (`max_hat_s`) leaves the remaining levels out of the averages; levels
-that no fold reaches have `NaN` in `cvm` and `cvse` and are never chosen.
+early (`max_hat_s`) leaves the remaining levels out of the averages: `cvm` is
+`NaN` at the levels that no fold reaches and `cvse` where fewer than two do,
+and `λmin` and `λ1se` are chosen among the levels that every fold reaches.
 
 The folds are a balanced random assignment drawn from `rng`, or the vector
 `folds` of fold labels `1, …, K` given, for example grouped or blocked folds for
@@ -145,10 +147,11 @@ function _runfolds(fold!, K::Integer, threads::Bool)
 end
 
 # The weighted mean cvm of the fold errors errs (K × L, NaN at the levels a fold
-# path did not reach) and its standard error cvse at each level, as in glmnet,
-# both NaN at the levels that no fold reached; the level jmin that minimizes cvm
-# over the levels some fold reached, and the first (largest) level j1se whose
-# cvm is within cvse of the minimum.
+# path did not reach) over the folds that reached each level, and its standard
+# error cvse, as in glmnet: cvm is NaN at the levels that no fold reached, and
+# cvse where fewer than two did. The level jmin minimizes cvm among the levels
+# that every fold reached, and j1se is the first (largest) of those whose cvm is
+# within cvse of the minimum, so that both compare the same folds.
 function _cvsummary(errs::Matrix{T}, wk::Vector{T}) where {T}
   K, L = size(errs)
   cvm, cvse = fill(T(NaN), L), fill(T(NaN), L)
@@ -160,11 +163,12 @@ function _cvsummary(errs::Matrix{T}, wk::Vector{T}) where {T}
     cvm[j] = m
     length(ok) > 1 && (cvse[j] = sqrt(sum(w .* abs2.(errs[ok, j] .- m)) / sum(w) / (length(ok) - 1)))
   end
-  reached = findall(!isnan, cvm)
-  isempty(reached) && throw(ArgumentError("no fold path reached a level of the path."))
-  jmin = reached[argmin(view(cvm, reached))]
+  every = [!isnan(cvm[j]) && !any(isnan, view(errs, :, j)) for j in 1:L]
+  any(every) || throw(ArgumentError("no level of the path has an error from every fold; check the fold fits."))
+  candidates = findall(every)
+  jmin = candidates[argmin(view(cvm, candidates))]
   bound = cvm[jmin] + (isnan(cvse[jmin]) ? zero(T) : cvse[jmin])
-  cvm, cvse, jmin, findfirst(j -> cvm[j] <= bound, 1:jmin)
+  cvm, cvse, jmin, findfirst(j -> every[j] && cvm[j] <= bound, 1:jmin)
 end
 
 function CVLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, options::CDOptions = CDOptions(); kwargs...)
@@ -266,10 +270,12 @@ Result returned by [`CVGLMLassoPath`](@ref)`(X, y, loss)`.
 - `path::GLMLassoPath`: the path on all the data
 - `λpath::Vector`: its levels, the grid of every fold
 - `cvm::Vector`, `cvse::Vector`: the cross-validated measure at each level, and
-  its standard error (`NaN` at the levels that no fold reaches)
+  its standard error (`cvm` is `NaN` at the levels that no fold reaches, `cvse`
+  where fewer than two do)
 - `nnz::Vector{Int}`: the number of nonzero coefficients of `path` at each level
-- `λmin`, `λ1se`: the level with the smallest `cvm`, and the largest level
-  whose `cvm` is within one standard error of it
+- `λmin`, `λ1se`: among the levels that every fold reaches, the level with the
+  smallest `cvm`, and the largest level whose `cvm` is within one standard error
+  of it
 - `folds::Vector{Int}`: the fold of each observation
 - `measure::Symbol`: the measure of the held-out error
 """
@@ -308,8 +314,9 @@ with its offset in the linear predictor. `cvm` averages the folds, weighted by
 their sums of weights (their sizes without weights), and `cvse` is its standard
 error, `λmin` minimizes `cvm` and `λ1se` is the largest level within `cvse` of
 the minimum. A fold path that stops early (`max_hat_s`, `devmax`) leaves its
-remaining levels out of the averages; levels that no fold reaches have `NaN` in
-`cvm` and `cvse` and are never chosen. The folds and threads are as for
+remaining levels out of the averages: `cvm` is `NaN` at the levels that no fold
+reaches and `cvse` where fewer than two do, and `λmin` and `λ1se` are chosen
+among the levels that every fold reaches. The folds and threads are as for
 [`CVLassoPath`](@ref): the result does not depend on the number of threads.
 
 Returns a [`CVGLMLassoPath`](@ref); `coef(cv)` and `predict(cv, X)` use the
