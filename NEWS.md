@@ -19,6 +19,20 @@ integration dependency to an explicit commit.
   their penalty/loadings and intercept, convergence flags, selected-design rank,
   and effective tuning in `RLassoSolution`.
 
+Debiased Gaussian, logistic and Poisson lasso inference, with parallel nodewise
+regressions on a shared Gram matrix or Javanmard--Montanari QP projections.
+Adds multiplier max-T inference, a residual/wild bootstrap with lasso refitting,
+and single-coefficient decorrelated score tests. See the inference guide for
+normalizations, tuning, assumptions and validation. Initial penalties
+and nodewise projections now have bounded automatic CV defaults, with explicit
+penalties and the original theoretical rules available for expert use.
+
+The expert nodewise rule `:ldpe` adds a finite-grid bias/noise search, including
+restricted projections with `ldpe_unpenalized`. Diagnostics report the original
+bias target, reference noise, and grid boundaries. It remains experimental: fresh validation improved Gaussian coverage, but logistic
+undercoverage and frequent grid-endpoint choices remain.
+Cross-validation excludes tuning levels with no finite fold errors from selection.
+
 Low-rank nuclear fits and paths accept `solver = :panoc` after loading the
 optional ProximalAlgorithms dependency. Row-sparse fits and paths accept
 `block_solver = :fista`; both options propagate through cross-validation.

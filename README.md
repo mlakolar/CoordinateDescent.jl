@@ -33,6 +33,8 @@ Estimators:
 * Feasible (heteroscedastic) lasso
 * Inference after selection as in R's hdm: `rlasso`, `post_lasso` and
   `double_selection`
+* Debiased lasso and GLM inference with nodewise or QP projections,
+  joint multiplier or residual bootstrap tests, and decorrelated score tests
 * Lasso paths, with λ chosen by cross-validation or an information criterion,
   and refitting
 * Varying-coefficient models by local polynomial regression with an ℓ1 penalty

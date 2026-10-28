@@ -101,6 +101,10 @@ export
   post_lasso,
   double_selection,
 
+  # inference by debiasing and orthogonal scores
+  nodewise_lasso, debiasing_matrix, debiased_lasso, decorrelated_score,
+  multiplier_bootstrap, bootstrap_lasso,
+
   # selection with error control
   slope, slope_bh, SLOPEPath, SLOPESolution,
   equicorrelated_s, gaussian_knockoffs, fixed_knockoffs,
@@ -128,6 +132,7 @@ include("lowrank.jl")
 include("sparse_svd.jl")
 include("hdm.jl")
 include("statsapi.jl")
+include("inference.jl")
 include("formula.jl")
 include("varying.jl")
 
