@@ -7,6 +7,12 @@ ProximalSolvers 0.2 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- Add `knockoff_diagonal` and `strategy = :equicorrelated | :mvr | :maxent | :user`
+  for knockoff construction and `knockoff_filter`, with recorded construction
+  metadata. MVR and maximum entropy require the optional Knockoffs.jl extension
+  for diagonal optimization only; sampling stays native. Equicorrelation remains
+  the default.
+
 - Double selection supports `vcov` choices, final-stage diagnostics and
   precomputed nuisance fits. Forced controls are validated before fitting;
   invalid `forced` now raises `ArgumentError` instead of `BoundsError`.

@@ -105,9 +105,12 @@ Equicorrelation accepts `safety`; user diagonals accept no optimizer options.
 Optimized construction accepts `niter`, `tol`, `λmin`, `robust`, `verbose`, and
 `optimality_tol`. MVR and maximum entropy require the optional Knockoffs.jl
 extension. It supplies only the established diagonal optimizer; Gaussian and
-fixed-X sampling stay native. Its MIT license and pinned validation source are
-recorded in the benchmark protocol. Loading the extension does not change the
-equicorrelated default or existing seeded sampling arithmetic.
+fixed-X sampling stay native. Knockoffs.jl is MIT-licensed; the extension was
+validated with [Knockoffs.jl 3.1.4](https://github.com/biona001/Knockoffs.jl/tree/d23942e9af9103f93be9a20e47ae6f7cad685aa5).
+Only its diagonal optimizer is used. Its full sampler is not used because the
+pinned version's conditional sampler applies the noise with the wrong factor.
+Loading the extension does not change the equicorrelated default or existing
+seeded sampling arithmetic.
 
 Optimized diagonals minimize reconstructability or maximize entropy on the
 correlation scale, then return Float32/Float64 covariance/Gram units. The actual
@@ -132,15 +135,19 @@ An optimized diagonal does not repair a misspecified covariance, a statistic
 without swap antisymmetry, or a fixed-X procedure without sufficiency. The
 population-model assumptions and fixed-X restrictions above still apply.
 
-The [replicated Discovery study](https://github.com/mlakolar/HighDimensionalModels.jl/pull/117)
-uses 1,008 independent datasets per scenario and common innovations, lasso
-statistic and penalty across constructions. For the recorded AR(.4) design
-with alternating signals, power rises from 0.64% with equicorrelation to 39.90%
-with MVR, at estimated FDR 6.92%. Same-sign cases lose power, and optimized
-construction has a substantial runtime cost. Equicorrelation, safety `1e-8`,
-and knockoff+ target `q=0.1` therefore remain the compatibility defaults.
-These results concern the listed simulation laws; they do not supply a
-data-driven strategy or penalty selector, or a misspecified-model guarantee.
+The [replicated construction study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/0de5d94ebb4c463b3d17babdac268439fb9a52f6/benchmark/selection/knockoff_strategies)
+records historical evidence; its final report is in the snapshot's `results`
+directory. It was measured on an earlier dependency stack and was not rerun at
+this revision. The study uses 1,008 independent datasets per scenario and common
+innovations, lasso statistic and penalty across constructions. For the recorded
+AR(.4) design with alternating signals, power rises from 0.64% with
+equicorrelation to 39.90% with MVR, at estimated FDR 6.92%. Same-sign cases lose
+power, and optimized construction costs substantially more time: MVR full
+filters take 1.08–9.28 times the equicorrelation time on the tested cases.
+Equicorrelation, safety `1e-8`, and knockoff+ target `q=0.1` therefore remain the
+compatibility defaults. These results concern the listed simulation laws only;
+they do not supply a data-driven strategy or penalty selector, or a
+misspecified-model guarantee.
 
 
 The statistic is ``W_j=|\widehat\beta_j|-|\widehat\beta_{p+j}|`` from the
