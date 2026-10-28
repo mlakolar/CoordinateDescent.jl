@@ -384,7 +384,8 @@ end
     rd = sparse_nuclear_regression(hcat(X, X[:, 1]), Y, 0.03, 0.02; sparsity, tol = 1e-10)
     @test rd.converged && rd.gap <= 1e-10
     cs = sparse_nuclear_regression(ones(24, 4), Y, 0.03, 0.02; sparsity)
-    @test cs.converged && cs.iterations == 0 && cs.gap == 0
+    # Normalizing the rounded primal-dual difference leaves an O(eps(T)) gap.
+    @test cs.converged && cs.iterations == 0 && cs.gap <= 16eps(eltype(cs.B))
     @test iszero(cs.B) && cs.rank == cs.nnz == 0
     @test cs.intercept ≈ vec(mean(Y; dims = 1))
   end
