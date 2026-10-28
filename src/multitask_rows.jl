@@ -163,7 +163,8 @@ function _row_root(g::AbstractVector{T}, a::T, c::T) where {T}
   iszero(a) && return iszero(c) ? T(Inf) : norm(u) / c
   iszero(c) && return first(u) / a
   s, s2, avg, m2 = zero(T), zero(T), zero(T), zero(T)
-  for k in eachindex(u)
+  n = length(u)
+  for k in 1:n-1
     s += u[k]; s2 += u[k]^2
     delta = u[k] - avg
     avg += delta / k
@@ -171,9 +172,15 @@ function _row_root(g::AbstractVector{T}, a::T, c::T) where {T}
     disc = c^2 * s2 - a^2 * k * max(m2, zero(T))
     disc < 0 && continue
     λ = s2 / (a * s + sqrt(disc))
-    (k == length(u) || a * λ >= u[k + 1]) && return λ
+    a * λ >= u[k + 1] && return λ
   end
-  T(Inf)
+  s += u[n]; s2 += u[n]^2
+  delta = u[n] - avg
+  avg += delta / n
+  m2 += delta * (u[n] - avg)
+  disc = c^2 * s2 - a^2 * n * max(m2, zero(T))
+  # Rounding can leave the final discriminant slightly negative.
+  s2 / (a * s + sqrt(max(disc, zero(T))))
 end
 
 # The dual norm of a row's gradient; Inf for a nonzero unpenalized row.
