@@ -1,7 +1,0 @@
-{
-  "datasets": 5000,
-  "rows": 50000,
-  "max_normal_pvalue_error": 1.1102230246251565e-16,
-  "max_interval_error": 0.0,
-  "distinct_hash_pairs": 5000
-}

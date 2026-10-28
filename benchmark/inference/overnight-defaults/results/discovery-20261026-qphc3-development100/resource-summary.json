@@ -1,6 +1,0 @@
-{
-  "workers": 80,
-  "cpu_hours": 1.0109183500000003,
-  "max_worker_rss_gib": 1.2261505126953125,
-  "note": "Per-worker RSS,not simultaneous total;shared projection/tuning/compilation across methods,not independent engine speed. Search stops atfirstuncertified level;selectedprojectionscertified,failedsearchlevelsretained."
-}

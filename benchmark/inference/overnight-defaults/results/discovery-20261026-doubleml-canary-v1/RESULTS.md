@@ -1,7 +1,0 @@
-# DoubleML initial sparse-learner canary: computational failure
-
-EMPIRICAL. Official DoubleMLLPLR at revision6884b5f9816f180324d854a4d81b22e9d334f5e0, version0.11.5.dev62. Job13449081 completed24worker processes (12datasets,two native scores,two requested roles). All48target fits were rejected because nuisance CV paths generated convergence warnings under this configuration; zero inference rows survived. This is not coverage evidence and does not establish that the DoubleML framework itself fails.
-
-V1 used sklearn's broad default ten-C LogisticRegressionCV grid and60-level LassoCV to.001 with strict1e-8tolerances. Unselected weak-penalty tail failures can invalidate the composite sklearn CV fit. The separate v2 study uses an explicit bounded eight-level penalty grid and1e-6nuisance tolerances, retaining native nested cross-fitting/scores and warning rejection. This is a new development configuration, not a relabeling of these failed fits. DoubleML requires user-supplied nuisance learners; it has no universal learner default.
-
-Job elapsed1016seconds with64CPUs/128GiB allocated; consumed workerCPU4750.78seconds and maximum workerRSS.246GiB. Most allocated capacity became idle behind the slowest fits. These costs include failed attempts and are not a valid successful-estimator speed comparison. errors.json and checks.json preserve every failure. Full receipts and environment are local/onDiscovery. No confirmation data were used.

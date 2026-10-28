@@ -1,11 +1,22 @@
 # Inference golden fixtures
 
-Generated on Discovery in run `20261025-cd77-inference`, with R 4.5.3, hdi
+Generated under Slurm in run `20261025-cd77-inference`, with R 4.5.3, hdi
 0.1-10 from CRAN's Git mirror commit
 `3eb71fb52b3c0f5213b1283d5f0317b91f6a133a`, glmnet 5.1, and the authors'
 Javanmard--Montanari R implementation dated April 24, 2014. `R-session.txt`
-records the loaded versions. Recreate with `benchmark/inference/references.R`
-and its README recipe; no numerical values are hand-edited.
+records the loaded versions. No numerical values are hand-edited.
+
+To recreate them, download into `references/` of a working directory:
+`https://codeload.github.com/cran/hdi/tar.gz/3eb71fb52b3c0f5213b1283d5f0317b91f6a133a`
+as `hdi-3eb71fb.tar.gz`,
+`https://codeload.github.com/cran/linprog/tar.gz/f05bd8a1bb3c31d63f924ed2b9c6d582d9fbae52`
+as `linprog-f05bd8a.tar.gz`, and the authors' routine from
+<https://web.stanford.edu/~montanar/sslasso/sslasso_code.tar.gz> unpacked to
+`sslasso_code/lasso_inference.r`. Then run `Rscript references.R OUTPUT` there
+with R 4.5.3 and glmnet 5.1; it installs hdi and linprog into a run-local
+`Rlib`. `check_references.jl OUTPUT` in the
+[study archive](https://github.com/mlakolar/HighDimensionalModels.jl/releases/download/benchmark-evidence/pr86-debiased-inference-20261026.tar.gz)
+compares the output with this package.
 
 The Gaussian fixture fixes X, y, the initial slopes, sigma=1, initial lambda=.08
 and nodewise lambda=.1. Nodewise fits use exact-lambda glmnet with no scaling;

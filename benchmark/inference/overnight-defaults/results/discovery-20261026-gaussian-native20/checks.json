@@ -1,9 +1,0 @@
-{
-  "planned_fits": 420,
-  "complete_fits": 420,
-  "interval_available": 420,
-  "strict_valid": 352,
-  "convergence_warning_fits": 28,
-  "resources": 420,
-  "scope": "Native/default comparison; own10-target policy versus hdi/EconML/sslasso all slopes and SIHR/hdm ten requested targets. Not matched-penalty engine timing."
-}

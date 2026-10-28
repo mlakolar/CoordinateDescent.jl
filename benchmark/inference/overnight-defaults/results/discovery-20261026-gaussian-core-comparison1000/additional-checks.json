@@ -1,7 +1,0 @@
-{
-  "matched_dataset_hashes": 3000,
-  "own_source": "package-hc3-v2/env-hc3-v2;canonicalphysicaltargetseeds",
-  "native_source": "gaussian-native-full-v1 frozen56c8add",
-  "datasets": "same92300000inputs;notadditionalindependentdata",
-  "planned_methods": 6
-}

@@ -1,2 +1,0 @@
-n,p,rep,gram,threads,lambda,seconds,bytes,gctime,nonzeros,passes,converged
-200,10000,2,true,4,0.22761406940777196,2.844910753,16002279224,0.178560382,80766,163213,true

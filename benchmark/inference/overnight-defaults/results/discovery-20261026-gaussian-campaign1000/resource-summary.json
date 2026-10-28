@@ -1,8 +1,0 @@
-{
-  "workers": 80,
-  "cpu_seconds": 50836.002374999975,
-  "worker_process_seconds": 51173.541743134614,
-  "max_worker_rss_gib": 0.8817596435546875,
-  "median_worker_rss_gib": 0.8394184112548828,
-  "note": "Per-worker Linux child-process peak RSS, not simultaneous total. Worker processes include startup/import/compilation and 125 datasets each. Allocation: 64 CPUs,128 GiB; elapsed1426s. Fitting timer includes initial CV, projection, HC3 but excludes diagnostic checks and file I/O. First per worker includes fitting compilation after imports, not full fresh-process startup."
-}

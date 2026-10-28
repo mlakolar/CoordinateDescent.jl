@@ -1,8 +1,9 @@
-# Run under the Discovery R container. All output paths are run-local.
+# Run with R 4.5.3 from a directory that holds references/ (see README.md).
+# All output paths are run-local.
 args <- commandArgs(TRUE)
 out <- args[1]
 dir.create(out, recursive=TRUE, showWarnings=FALSE)
-libs <- c(file.path(getwd(),"Rlib"),"/home1/mkolar/juliaPkg/Rlib-cd-r4.5.3","/home1/mkolar/juliaPkg/Rlib-r4.5.3",.libPaths())
+libs <- c(file.path(getwd(),"Rlib"),.libPaths())
 dir.create(libs[1],showWarnings=FALSE)
 .libPaths(libs)
 if(!requireNamespace("linprog",quietly=TRUE))

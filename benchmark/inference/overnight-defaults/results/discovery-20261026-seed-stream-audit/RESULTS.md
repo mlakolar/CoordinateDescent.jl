@@ -1,5 +1,0 @@
-# Seed-stream provenance correction
-
-METADATA AUDIT. The earlier stage bases differ by100000 while expanded physical design rows span200000. The saved overlaps.json explicitly enumerates cross-stage equal seed intervals. Equal seeds across different designs need not give identical responses or matrices, but disjoint random streams were not ensured. Per-design estimates and failure records remain intact. Strong claims that the complete earlier confirmation collection was independent of all development streams are qualified.
-
-New validation base1000000000 is disjoint from these audited blocks. Its source was frozen and pushed3eefe3b before any new dataset was generated. The Gaussian statistical tuning rule was not changed. Earlier historical base95000000 confirmation canary and base92500000 campaign canary are also separated from this new block. Reusing deterministic fitting RNG970000+rep across stages does not duplicate response datasets. This is a seed-metadata audit, not a test of probabilistic independence or proof about PRNGs.

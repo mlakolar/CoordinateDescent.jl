@@ -1,9 +1,0 @@
-{
-  "unique_finite_target_records": 2000,
-  "normal_pvalue_max_error": 2.220446049250313e-16,
-  "score_sandwich_se_max_error": 4.163336342344337e-17,
-  "score_mean_max_residual": 1.7763568394002505e-17,
-  "warning_categories": {
-    "FutureWarning": 150000
-  }
-}

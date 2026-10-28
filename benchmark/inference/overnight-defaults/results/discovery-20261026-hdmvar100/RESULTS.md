@@ -1,7 +1,0 @@
-# Native hdm logistic variance audit,100datasets per case
-
-EMPIRICAL. Discovery13448401 completed1000datasets over10logistic cases,26700unique finite rows and zero target errors. The instrumented native coefficients and native SE reproduced the public function exactly (maximum differences0). The three reported variance modifications retain native selection and coefficient estimates. They are audit candidates, not native defaults.
-
-Replacing the native variance convention by full selected-model HC1 still gives88.0%±1.73pp active coverage in moderate and91.4%±1.25pp in random support. It gives96.0%±0.94pp benign,94.0%±1.15pp correlated, and95.0%±2.19pp for the Belloni distinguished coefficient. Thus correcting the native S22/index convention does not resolve the general logistic problem. All100roles/case-specific target roles, null rejection,power,length and dataset MCSE are in the compact summaries; the study is not independent confirmation.
-
-The job took105seconds on16CPUs/32GiB, reusing the first20datasets. Worker receipts totaled1507.67CPU-seconds; maximum workerRSS.321GiB. Shared computations and native-return instrumentation make these diagnostic costs, not competitor speed measurements. Recreate hdmvar-development.sbatch then slots_hdmvar100.sbatch; immutable hdmvar-v1 and fitting sourcef3c60f1 are preserved. Full coefficients/diagnostics and exact accounting are retained locally/onDiscovery outsideGit.

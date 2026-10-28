@@ -1,8 +1,0 @@
-{
-  "workers": 200,
-  "cpu_seconds": 2961.2794909999993,
-  "process_seconds_sum": 3189.6207329183817,
-  "max_worker_rss_gib": 0.23848342895507812,
-  "job": "13455362",
-  "note": "Fresh worker process per dataset/score, two target roles. Per-worker peakRSS,not simultaneous total. Development reuses first20original receipts; native tuning/cross-fitting time included."
-}

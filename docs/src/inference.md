@@ -22,17 +22,18 @@ ranged from 93.2% to 97.8%. Three roles had marginal Monte Carlo lower bounds
 below the exploratory 92.5% tolerance. Correlated designs had long intervals
 and low power. These are empirical calibration checks, not a uniform coverage
 theorem. The complete report retains uncertainty, power and all target roles.
-See `benchmark/inference/overnight-defaults/results/` and the frozen recipe
-`benchmark/inference/overnight-defaults/frozen-gaussian-hc3.json`.
+See `overnight-defaults/results/` and the frozen recipe
+`overnight-defaults/frozen-gaussian-hc3.json` in the
+[study archive](https://github.com/mlakolar/HighDimensionalModels.jl/releases/download/benchmark-evidence/pr86-debiased-inference-20261026.tar.gz).
 
 Logistic, Poisson and QP automatic policies remain experimental. An earlier
-prediction-CV policy was also inadequate for Gaussian data. A fresh Discovery
+prediction-CV policy was also inadequate for Gaussian data. A fresh
 holdout study with 100
 datasets per design found active-coefficient coverage of 77.6% and 73.0% in
 Gaussian designs, and 56.2% and 85.0% in logistic designs, for nominal 95%
 intervals. All fits converged. This includes a moderate-correlation sparse
 design, so the observed problem is broader than the severe stress case.
-See `benchmark/inference/automatic-tuning/results/discovery-20261025/RESULTS.md`
+See `automatic-tuning/results/cluster-20261025/RESULTS.md` in the study archive
 for settings, uncertainty, diagnostics and matched computational comparisons.
 
 A subsequent frozen restricted-LDPE candidate was validated on 200 new datasets
@@ -42,7 +43,7 @@ bias, with longer intervals and lower power. Logistic undercoverage persisted
 in the benign, moderate and random-support cases. Many selected penalties were
 finite-grid endpoints. The model-based restricted-LDPE candidate remains an explicit expert option;
 it is distinct from the newer Gaussian HC3 policy above. See
-`benchmark/inference/bias-tuning/results/discovery-20261025/RESULTS.md` and
+`bias-tuning/results/cluster-20261025/RESULTS.md` in the study archive and
 `CURRENT_COMPARISON.md` there for uncertainty, grid diagnostics, the refreshed
 paired competitor pilot, and conditional resource estimates.
 
@@ -234,7 +235,7 @@ requirements. Nodewise inference also needs suitably sparse precision rows;
 the QP approach relaxes that requirement under its own assumptions. A solver
 convergence flag establishes numerical convergence, not confidence coverage.
 Strong correlation, dense signals, separation and poor tuning can invalidate
-the normal approximation. The Discovery study records those failures without
+the normal approximation. The validation study records those failures without
 changing the inferential claims.
 
 ## Sources and validation
@@ -245,9 +246,11 @@ The methods follow [Zhang and Zhang (2014)](https://arxiv.org/abs/1110.2563),
 [Zhang and Cheng (2017)](https://arxiv.org/abs/1603.01295),
 [Dezeure, Bühlmann and Zhang (2017)](https://arxiv.org/abs/1606.03940), and
 [Ning and Liu (2017)](https://arxiv.org/abs/1412.8765).
-Reference generation, replicated Discovery measurements, and coverage settings
-are described in `benchmark/inference/README.md` in the source distribution.
-`RESULTS.md` and `GLM_RESULTS.md` in that directory retain the observed
+The reference fixtures are regenerated as described in
+`test/data/inference/README.md`. Replicated measurements and coverage settings
+are described in `README.md` of the
+[study archive](https://github.com/mlakolar/HighDimensionalModels.jl/releases/download/benchmark-evidence/pr86-debiased-inference-20261026.tar.gz);
+its `RESULTS.md` and `GLM_RESULTS.md` retain the observed
 undercoverage and conservative score results; the default tuning is not an
 empirically validated guarantee of nominal coverage across these designs.
 

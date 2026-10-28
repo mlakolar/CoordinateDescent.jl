@@ -1,9 +1,0 @@
-{
-  "planned_fits": 21000,
-  "complete_fits": 15000,
-  "interval_available": 15000,
-  "strict_valid": 11728,
-  "convergence_warning_fits": 1272,
-  "resources": 15000,
-  "scope": "Three-core native/default arm; hdi/EconML/sslasso all slopes and SIHR/hdm ten requested targets. Own1000 comparison is saved separately. Not matched-penalty engine timing."
-}
