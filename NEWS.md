@@ -7,6 +7,10 @@ ProximalSolvers 0.2 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- Add `slope_gaussian` and `calibration = :bh | :gaussian | :user` for `slope`
+  and `SLOPEPath`, with recorded calibration metadata. Explicit weights take
+  precedence; BH remains the default.
+
 - Add `knockoff_diagonal` and `strategy = :equicorrelated | :mvr | :maxent | :user`
   for knockoff construction and `knockoff_filter`, with recorded construction
   metadata. MVR and maximum entropy require the optional Knockoffs.jl extension
@@ -36,6 +40,10 @@ residuals once, preserving numerical rank and degrees-of-freedom definitions.
 - Float64 nuclear PANOC fits and paths reuse loss/gradient products and the final
   residual and singular values, preserving the objective and returned diagnostics.
   APG remains the default.
+
+- Sparse reduced-rank fits and paths reuse sufficient statistics across penalties
+  and compute rank/residual diagnostics from thin factors. CD results and all
+  defaults are unchanged; FISTA results agree within the stopping tolerance.
 
 ## Quantile primal–dual API
 

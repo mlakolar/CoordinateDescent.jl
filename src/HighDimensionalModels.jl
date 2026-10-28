@@ -102,7 +102,7 @@ export
   double_selection,
 
   # selection with error control
-  slope, slope_bh, SLOPEPath, SLOPESolution,
+  slope, slope_bh, slope_gaussian, SLOPEPath, SLOPESolution,
   equicorrelated_s, gaussian_knockoffs, fixed_knockoffs,
   knockoff_threshold, lasso_coefdiff, knockoff_filter, KnockoffResult,
   knockoff_diagonal, KnockoffDiagonal,
