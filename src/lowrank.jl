@@ -397,7 +397,7 @@ end
 
 function _lr_block!(A, XX, C, λ, w, newton::Bool; block_solver, max_iter, tol, L)
   T = eltype(A)
-  k1 = min(block_solver == :fista ? 100 : 10, max_iter)
+  k1 = min(block_solver == :fista ? 1000 : 100, max_iter)
   certified = block_solver == :fista ?
     _lr_group_fista!(A, XX, C, λ, w; max_iter = k1, tol, L) :
     _lr_group!(A, XX, C, λ, w; max_iter = k1, tol)
@@ -534,8 +534,9 @@ Explicit positive `weights` override adaptive weights. No column rescaling is
 performed. For rrpack's unscaled loss use `λ_rrpack = n * λ`.
 `block_solver = :fista` replaces row coordinate descent with restarted block
 FISTA, using the same weighted group proximal map and KKT stopping rule.
-When a block needs more than ten first-order KKT checks, that block and later
-blocks in the fit finish with guarded Newton steps on the nonzero rows.
+When a block needs more than 100 first-order KKT checks (100 CD sweeps or
+1000 FISTA iterations), that block and later blocks in the fit finish with
+guarded Newton steps on the nonzero rows.
 `inner_max_iter` bounds first-order iterations; Newton steps are additional.
 The defaults for `tol` and `inner_tol` are `max(1e-7, 100eps(T))` and
 `max(1e-9, 100eps(T))`, respectively (1e-7 and 1e-9 in Float64).
@@ -603,9 +604,10 @@ For sparse paths, `tol` and `inner_tol` default to `max(1e-7, 100eps(T))`
 and `max(1e-9, 100eps(T))` (1e-7 and 1e-9 in Float64); other methods use
 1e-7 and 1e-9. Explicit tolerances are unchanged. Each sparse block finishes
 with guarded Newton steps on its nonzero rows when the first-order solver
-needs more than ten KKT checks, and thereafter in that fit. `inner_max_iter`
-bounds first-order iterations; Newton steps are additional. Paths do not warn
-on non-convergence; [`sparse_reduced_rank`](@ref) does.
+needs more than 100 first-order KKT checks (100 CD sweeps or 1000 FISTA
+iterations), and thereafter in that fit. `inner_max_iter` bounds first-order
+iterations; Newton steps are additional. Paths do not warn on non-convergence;
+[`sparse_reduced_rank`](@ref) does.
 """
 struct LowRankPath{T<:AbstractFloat}
   solutions::Vector{LowRankSolution{T}}

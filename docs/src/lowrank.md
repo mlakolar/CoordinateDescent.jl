@@ -88,8 +88,9 @@ that a global optimum was found.
 block, retaining the same response update and KKT stopping conditions.
 `block_solver = :cd` remains the default. Either choice applies to paths
 and cross-validation.
-After ten unsuccessful first-order KKT checks, each block solve finishes with
-guarded Newton steps on the nonzero rows, including later blocks in that fit;
+After 100 unsuccessful first-order KKT checks (100 CD sweeps or 1000 FISTA
+iterations), each block solve finishes with guarded Newton steps on the
+nonzero rows, including later blocks in that fit;
 `inner_max_iter` bounds first-order iterations only. The defaults for `tol` and
 `inner_tol` are 1e-7 and 1e-9 in Float64, each with a `100eps(T)` floor;
 explicit tolerances are unchanged. `sparse_reduced_rank` warns when it does not

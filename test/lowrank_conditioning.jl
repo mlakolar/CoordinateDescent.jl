@@ -126,7 +126,7 @@ end
       block_solver = solver, max_iter = 1, tol = 1e-12, L)
     @test needed
     plain, polished = copy(start), copy(start)
-    k1 = solver == :cd ? 10 : 100
+    k1 = solver == :cd ? 100 : 1000
     if solver == :cd
       @test HighDimensionalModels._lr_group!(plain, XX, C, 0.0, w; max_iter = k1, tol = 1e-5)
     else
@@ -144,7 +144,7 @@ end
     XX = [1.0 0.5 0.5; 0.5 1.0 0.9; 0.5 0.9 1.0]
     C, w, L = fill(2.0, 3, 1), ones(3), opnorm(XX)
     start = reshape([0.0, 2.0, 2.0], 3, 1)
-    for budget in (1, 10, 11, 100, 101)
+    for budget in (1, 100, 101, 1000, 1001)
       A = copy(start)
       certified, _ = HighDimensionalModels._lr_block!(A, XX, C, 0.1, w, false;
         block_solver = solver, max_iter = budget, tol = 1e-12, L)
@@ -182,6 +182,30 @@ end
         @test !iszero(A[1, :])
       end
     end
+  end
+end
+
+@testset "Sparse blocks retain first-order iterates" begin
+  XX = [1.0 0.05; 0.05 0.01]
+  C, w, λ, tol = reshape([1.2, 0.17], 2, 1), ones(2), 0.1, 1e-12
+  L = opnorm(XX)
+  for solver in (:cd, :fista)
+    k0, k1 = solver == :cd ? (10, 100) : (100, 1000)
+    early, plain, A = zeros(2, 1), zeros(2, 1), zeros(2, 1)
+    if solver == :cd
+      @test !HighDimensionalModels._lr_group!(early, XX, C, λ, w; max_iter = k0, tol)
+      @test HighDimensionalModels._lr_group!(plain, XX, C, λ, w; max_iter = k1, tol)
+    else
+      @test !HighDimensionalModels._lr_group_fista!(early, XX, C, λ, w; max_iter = k0, tol, L)
+      @test HighDimensionalModels._lr_group_fista!(plain, XX, C, λ, w; max_iter = k1, tol, L)
+    end
+    # Keep the old cutoff far from the certificate's rounding scale.
+    @test HighDimensionalModels._lr_group_kkt(early, XX*early - C, λ, w) > 100tol*max(1, norm(C))
+    certified, needed = HighDimensionalModels._lr_block!(A, XX, C, λ, w, false;
+      block_solver = solver, max_iter = k1, tol, L)
+    @test certified
+    @test !needed
+    @test all(a === b for (a, b) in zip(A, plain))
   end
 end
 
