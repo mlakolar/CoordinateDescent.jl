@@ -18,5 +18,5 @@ HighDimensionalModels = {path = ".."}
 [compat]
 HiGHS = "1"
 ProximalBase = "0.5.4"
-ProximalSolvers = "0.2"
+ProximalSolvers = "0.3"
 julia = "1.10"
