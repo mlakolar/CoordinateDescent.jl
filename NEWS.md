@@ -60,6 +60,11 @@ residuals once, preserving numerical rank and degrees-of-freedom definitions.
   and compute rank/residual diagnostics from thin factors. CD results and all
   defaults are unchanged; FISTA results agree within the stopping tolerance.
 
+- Sparse reduced-rank fits finish difficult group-lasso blocks with guarded
+  Newton steps, improving convergence of ill-conditioned adaptive fits. Float32
+  sparse defaults use a `100eps(T)` tolerance floor, and single fits warn on
+  non-convergence with a conditioning diagnostic when applicable.
+
 ## Quantile primal–dual API
 
 - Add exact HiGHS fit/path solvers and a convolution-smoothed proximal Newton route.
