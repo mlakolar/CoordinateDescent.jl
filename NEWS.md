@@ -7,6 +7,13 @@ ProximalSolvers 0.2 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- `CVLassoPath` and `CVGLMLassoPath` no longer throw when every fold path stops
+  early (`max_hat_s`, `devmax`) before the last levels of the full path; those
+  levels have `NaN` in `cvm` and `cvse`. `λmin` and `λ1se` of these and of
+  `CVMultitaskLassoPath` are chosen among the levels that every fold reaches,
+  so a level that only some fold paths reached is no longer selected. `cvm` is
+  unchanged.
+
 - Add `slope_gaussian` and `calibration = :bh | :gaussian | :user` for `slope`
   and `SLOPEPath`, with recorded calibration metadata. Explicit weights take
   precedence; BH remains the default.

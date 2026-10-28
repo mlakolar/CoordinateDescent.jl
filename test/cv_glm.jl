@@ -6,6 +6,28 @@ using LinearAlgebra, Random, SparseArrays, Statistics, Test
 logistic(z) = 1 / (1 + exp(-z))
 log1pexp(z) = z > 0 ? z + log1p(exp(-z)) : log1p(exp(z))
 
+# cv against its fold errors errs (K × L, NaN at the levels a fold path did not
+# reach), for folds of equal size whose paths stop at different levels before
+# the last: cvm and cvse are NaN at the levels no fold reached, and elsewhere
+# the mean of the folds that reached the level and its standard error (NaN for
+# one fold); λmin and λ1se are among the first Lc levels, which every fold
+# reached.
+function check_unreached(cv, errs)
+  K, L = size(errs)
+  Lr = count(j -> any(!isnan, errs[:, j]), 1:L)
+  Lc = count(j -> all(!isnan, errs[:, j]), 1:L)
+  @test 1 <= Lc < Lr < L
+  @test all(j -> all(!isnan, errs[:, j]), 1:Lc) && all(j -> any(!isnan, errs[:, j]), 1:Lr)
+  @test all(isnan, cv.cvm[Lr+1:end]) && all(isnan, cv.cvse[Lr+1:end])
+  e = [filter(!isnan, errs[:, j]) for j in 1:Lr]
+  se = [length(ej) > 1 ? sqrt(sum(abs2, ej .- mean(ej)) / length(ej) / (length(ej) - 1)) : NaN for ej in e]
+  @test cv.cvm[1:Lr] ≈ mean.(e)
+  @test isequal(isnan.(cv.cvse[1:Lr]), isnan.(se)) && cv.cvse[1:Lr][.!isnan.(se)] ≈ se[.!isnan.(se)]
+  jmin = argmin(cv.cvm[1:Lc])
+  @test cv.λmin == cv.λpath[jmin]
+  @test cv.λ1se == cv.λpath[findfirst(j -> cv.cvm[j] <= cv.cvm[jmin] + cv.cvse[jmin], 1:jmin)]
+end
+
 @testset "cross-validation of GLM paths, and weights in CVLassoPath" begin
   rng = Xoshiro(61)
   n, p = 240, 15
@@ -122,6 +144,33 @@ log1pexp(z) = z > 0 ? z + log1p(exp(-z)) : log1p(exp(z))
     a = CVLassoPath(X, yl; folds = fl, nλ = 12, rng = Xoshiro(13))
     b = CVLassoPath(X, yl; folds = fl, nλ = 12, rng = Xoshiro(13), weights = ones(n))
     @test a.cvm == b.cvm
+  end
+
+  @testset "levels that no fold path reaches" begin
+    # Every logistic fold path stops early (max_hat_s or devmax) before the last
+    # levels of the full path (#144). Uniform data and explicit folds give the
+    # same draws on every Julia version.
+    rng = Xoshiro(1)
+    X = rand(rng, 40, 80) .- 0.5
+    yb = Float64.(X[:, 1:5] * ones(5) .+ 0.3 .* (rand(rng, 40) .- 0.5) .> 0)
+    folds, K = repeat(1:5, 8), 5
+    loss = ProximalBase.Logistic()
+    for kw in ((; max_hat_s = 15), (; devmax = 0.8), (; devmax = 0.9))
+      cv = CVGLMLassoPath(X, yb; folds, rng = Xoshiro(2), kw...)
+      # the fold deviances, 2(log(1 + exp(η)) - yη), from fold paths with the
+      # seeds that CVGLMLassoPath draws
+      seeds = rand(Xoshiro(2), UInt64, K + 1)
+      errs = fill(NaN, K, length(cv.λpath))
+      for k in 1:K
+        train, test = findall(!=(k), folds), findall(==(k), folds)
+        fp = GLMLassoPath(X[train, :], yb[train], cv.λpath, loss; rng = Xoshiro(seeds[k]), kw...)
+        H = predict(fp, X[test, :]; type = :link)
+        for j in axes(H, 2)
+          errs[k, j] = mean(2 * (log1pexp(H[i, j]) - yb[test[i]] * H[i, j]) for i in eachindex(test))
+        end
+      end
+      check_unreached(cv, errs)
+    end
   end
 end
 

@@ -3,6 +3,28 @@ module CVTest
 using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
+# cv against its fold errors errs (K × L, NaN at the levels a fold path did not
+# reach), for folds of equal size whose paths stop at different levels before
+# the last: cvm and cvse are NaN at the levels no fold reached, and elsewhere
+# the mean of the folds that reached the level and its standard error (NaN for
+# one fold); λmin and λ1se are among the first Lc levels, which every fold
+# reached.
+function check_unreached(cv, errs)
+  K, L = size(errs)
+  Lr = count(j -> any(!isnan, errs[:, j]), 1:L)
+  Lc = count(j -> all(!isnan, errs[:, j]), 1:L)
+  @test 1 <= Lc < Lr < L
+  @test all(j -> all(!isnan, errs[:, j]), 1:Lc) && all(j -> any(!isnan, errs[:, j]), 1:Lr)
+  @test all(isnan, cv.cvm[Lr+1:end]) && all(isnan, cv.cvse[Lr+1:end])
+  e = [filter(!isnan, errs[:, j]) for j in 1:Lr]
+  se = [length(ej) > 1 ? sqrt(sum(abs2, ej .- mean(ej)) / length(ej) / (length(ej) - 1)) : NaN for ej in e]
+  @test cv.cvm[1:Lr] ≈ mean.(e)
+  @test isequal(isnan.(cv.cvse[1:Lr]), isnan.(se)) && cv.cvse[1:Lr][.!isnan.(se)] ≈ se[.!isnan.(se)]
+  jmin = argmin(cv.cvm[1:Lc])
+  @test cv.λmin == cv.λpath[jmin]
+  @test cv.λ1se == cv.λpath[findfirst(j -> cv.cvm[j] <= cv.cvm[jmin] + cv.cvse[jmin], 1:jmin)]
+end
+
 @testset "CVLassoPath and information criteria" begin
   rng = Xoshiro(61)
   n, p = 150, 40
@@ -89,6 +111,39 @@ using LinearAlgebra, Random, SparseArrays, Statistics, Test
     a0 = aic(path0, X[1:30, :], y[1:30])
     @test all(isnan(a0[j]) == (nnz(path0.βpath[j]) >= 30) for j in eachindex(a0))
     @test_throws ArgumentError ebic(path, X, y; γ = 2)
+  end
+
+  @testset "summary of the fold errors" begin
+    # three folds of equal weight whose paths stop after levels 4, 3 and 2 of
+    # five: λmin minimizes cvm among the two levels every fold reached, though
+    # the levels fewer folds reached have smaller means
+    errs = [0.7 0.5 0.4 0.3 NaN; 0.8 1.0 0.2 NaN NaN; 0.9 0.6 NaN NaN NaN]
+    cvm, cvse, jmin, j1se = HighDimensionalModels._cvsummary(errs, ones(3))
+    @test cvm[1:4] ≈ [0.8, 0.7, 0.3, 0.3] && isnan(cvm[5])
+    @test cvse[1:3] ≈ [sqrt(0.02 / 6), sqrt(0.14 / 6), 0.1] && all(isnan, cvse[4:5])
+    @test (jmin, j1se) == (2, 1)
+    # a fold whose path reached no level
+    @test_throws ArgumentError HighDimensionalModels._cvsummary([1.0 2.0; NaN NaN], ones(2))
+  end
+
+  @testset "levels that no fold path reaches" begin
+    # Every fold path stops early (max_hat_s) before the last levels of the
+    # full path (#144). Uniform data and explicit folds give the same draws on
+    # every Julia version.
+    rng = Xoshiro(1)
+    X = rand(rng, 40, 80) .- 0.5
+    y = X[:, 1:5] * ones(5) .+ 0.3 .* (rand(rng, 40) .- 0.5)
+    folds, K = repeat(1:5, 8), 5
+    cv = CVLassoPath(X, y; folds, max_hat_s = 15, gram = false, rng = Xoshiro(2))
+    # the fold errors from fold paths with the seeds that CVLassoPath draws
+    seeds = rand(Xoshiro(2), UInt64, K + 1)
+    errs = fill(NaN, K, length(cv.λpath))
+    for k in 1:K
+      train, test = findall(!=(k), folds), findall(==(k), folds)
+      fp = LassoPath(X[train, :], y[train], cv.λpath; max_hat_s = 15, gram = false, rng = Xoshiro(seeds[k]))
+      errs[k, 1:length(fp.λpath)] = mean(abs2, y[test] .- predict(fp, X[test, :]); dims = 1)
+    end
+    check_unreached(cv, errs)
   end
 end
 

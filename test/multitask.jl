@@ -188,11 +188,11 @@ function cv_recompute(cv, Xs, ys, c, tw, options = TIGHT; kwargs...)
   cvm, cvse, cvm_task, Lk
 end
 
-# λmin and λ1se of the summaries cvm and cvse: the level that minimizes cvm
-# among those with a finite cvm, and the first level within cvse of it
-function cv_levels(λs, cvm, cvse)
-  ok = findall(!isnan, cvm)
-  jmin = ok[argmin(cvm[ok])]
+# λmin and λ1se of the summaries cvm and cvse when every fold reached the
+# first Lc levels: the level among those that minimizes cvm, and the first of
+# them within cvse of it
+function cv_levels(λs, cvm, cvse, Lc)
+  jmin = argmin(cvm[1:Lc])
   bound = cvm[jmin] + (isnan(cvse[jmin]) ? 0.0 : cvse[jmin])
   λs[jmin], λs[findfirst(j -> cvm[j] <= bound, 1:jmin)]
 end
@@ -606,12 +606,12 @@ nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan
       @test nan_approx(cv.cvm, cvm)
       @test nan_approx(cv.cvse, cvse)
       @test nan_approx(cv.cvm_task, cvm_task)
-      @test (cv.λmin, cv.λ1se) == cv_levels(cv.λpath, cv.cvm, cv.cvse)
+      @test (cv.λmin, cv.λ1se) == cv_levels(cv.λpath, cv.cvm, cv.cvse, minimum(Lk))
     end
     # no fold path reaches the last levels of the full path: NaN there, the
-    # same lengths, and λmin and λ1se among the levels reached. The data are
-    # the first of a range of seeds for which no fold path reaches the last
-    # level, with either option set.
+    # same lengths, and λmin and λ1se among the levels every fold reached. The
+    # data are the first of a range of seeds for which no fold path reaches the
+    # last level, with either option set.
     nb, pb = (20, 30, 40), 40
     fb = [repeat(1:3; outer = cld(n, 3))[1:n] for n in nb]
     unreached = nothing
@@ -635,8 +635,8 @@ nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan
       @test all(isnan, cv.cvm[reached+1:L]) && all(isnan, cv.cvse[reached+1:L])
       @test all(isnan, cv.cvm_task[:, reached+1:L])
       @test all(isfinite, cv.cvm[1:reached]) && all(isfinite, cv.cvm_task[:, 1:reached])
-      @test cv.λmin in cv.λpath[1:reached] && cv.λ1se in cv.λpath[1:reached]
-      @test (cv.λmin, cv.λ1se) == cv_levels(cv.λpath, cv.cvm, cv.cvse)
+      @test cv.λmin in cv.λpath[1:minimum(Lk)] && cv.λ1se in cv.λpath[1:minimum(Lk)]
+      @test (cv.λmin, cv.λ1se) == cv_levels(cv.λpath, cv.cvm, cv.cvse, minimum(Lk))
       if options === TIGHT
         @test nan_approx(cv.cvm, cvm)
         @test nan_approx(cv.cvse, cvse)
