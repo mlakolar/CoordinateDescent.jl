@@ -13,6 +13,7 @@ tests = [
   "cv",
   "structured",
   "structured_golden",
+  "structured_cv_masked",
   "cv_glm",
   "penalties",
   "bounds",

@@ -137,15 +137,28 @@ AIC and BIC are `n*log(RSS/n) + c*df`, with `c=2` and `c=log(n)`,
 respectively. They return `NaN` for nonconverged fits and for `df >= n`.
 Cross-validation uses the same grid in every fold and training-only centering.
 Supply `folds` for blocked or grouped data. Signal CV keeps the complete
-location grid in each fold and fits a sparse observation-selection design,
+location grid in each fold and fits a masked observation-selection design,
 so held-out responses do not enter training. Training observations must still
 identify the penalty's unpenalized polynomial component. CV throws if a fit
 does not converge.
-Signal CV uses the generic-design degrees-of-freedom calculation; general
-contrasts can still require a dense null-space step. The large-signal
-benchmarks of the [structured study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/abddaf56a790b86178de376b175a1185020c8381/benchmark/structured) cover
-direct fits, not CV; they do not establish scalable tuning on million-point
-location grids.
+Signal CV streams fold errors without computing fold degrees of freedom or
+retaining fold paths/prediction matrices. The complete returned full-data path
+uses direct-signal dispatch. Eligible masked systems use a diagonal observation
+Gram and banded penalty factors. `max_concurrent_folds=2` bounds simultaneous
+signal-fold state with threading; use one for serial fold memory. The generic
+matrix-CV interface is unchanged.
+
+The replicated CV study (archive
+[`pr113-masked-cv-20261026`](https://github.com/mlakolar/HighDimensionalModels.jl/releases/download/benchmark-evidence/pr113-masked-cv-20261026.tar.gz),
+report `results/cluster-20261026/RESULTS.md`) measures Float64 five/ten-fold paths through 100,000 locations for TV and linear
+regular/irregular/blocked signals, and through 10,000 for quadratic signals.
+Quadratic 100,000-point warmups did not complete within the study cap, and
+million-point CV remains unmeasured. All completed native fits stopped below
+the existing 20,000-iteration default, although the study used a 100,000 cap.
+Float32 quadratic signal paths can fail the default stopping test in both
+the existing and masked routes; Float64 is recommended for the measured
+higher-order/large-signal range. These are scoped computational observations,
+not a statistical prescription for the lambda grid, fold count or smoothing.
 
 ## Comparison with local polynomial regression
 
