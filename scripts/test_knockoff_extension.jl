@@ -25,5 +25,6 @@ mktempdir() do environment
     end
     println("Resolved Knockoffs version: ", only(info.version for info in values(dependencies) if info.name == "Knockoffs"))
     Pkg.status(; mode=Pkg.PKGMODE_MANIFEST)
-    run(`$(Base.julia_cmd()) --startup-file=no --check-bounds=yes --project=$environment $(joinpath(package_root, "test", "knockoff_extension.jl"))`)
+    coverage_args = get(ENV, "JULIA_TEST_COVERAGE", "false") == "true" ? ["--code-coverage=@$(package_root)"] : String[]
+    run(`$(Base.julia_cmd()) --startup-file=no --check-bounds=yes $coverage_args --project=$environment $(joinpath(package_root, "test", "knockoff_extension.jl"))`)
 end

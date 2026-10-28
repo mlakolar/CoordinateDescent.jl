@@ -119,3 +119,14 @@ jobs:
         env:
           JULIA_NUM_THREADS: '1'
           OPENBLAS_NUM_THREADS: '1'
+          JULIA_TEST_COVERAGE: 'true'
+      - uses: julia-actions/julia-processcoverage@v1
+        with:
+          directories: src,ext
+      - uses: codecov/codecov-action@v7
+        with:
+          # Codecov repository lookup requires its canonical lowercase slug.
+          slug: mlakolar/highdimensionalmodels.jl
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
