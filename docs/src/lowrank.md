@@ -152,7 +152,7 @@ rrpack 0.1-14 interchanges its BIC/BICP selection labels inside `rssvd.eea`.
 The oracle harness aligns the actual BIC column explicitly; the methods here
 use the criterion names according to the formulas above.
 
-The [Discovery harness](https://github.com/mlakolar/HighDimensionalModels.jl/tree/master/benchmark/lowrank) records replicated
+The [benchmark harness (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/abddaf56a790b86178de376b175a1185020c8381/benchmark/lowrank) records replicated
 timing, profiles and independent rrpack comparisons. rrpack uses unscaled
 squared losses: its penalty is `n * λ` for the objectives here. Its adaptive
 nuclear-norm estimator shrinks the fitted-value singular values, so it is
@@ -160,12 +160,19 @@ not an oracle for the coefficient nuclear penalty; the latter has an exact
 orthonormal-design test and a proximal-gradient optimality check.
 
 
-The sparse-fit setup optimization reuses sufficient statistics across penalty
-levels and uses conservative thin-factor result diagnostics. CD remains the
-default block solver. In the retained20-input Discovery optimization study,
-explicit `block_solver = :fista` was useful for ill-conditioned and rank-deficient
-inputs, especially at weaker penalties, while CD was faster on strong/middle
-wide inputs. The study does not establish a universal solver or statistical
-regularization default. See the benchmark's `sparse_setup/results/discovery-20261026/FINAL.md`
-for complete public fits, paths, common-initialization kernels, R comparisons,
-uncertainty, regressions and memory limits.
+The sparse-fit setup optimization reuses `X'X/n` and `X'Y/n` within each
+fit and across penalty levels in a path. The FISTA step scale comes from the
+existing design SVD. Coefficient rank, degrees of freedom and residuals are
+computed from thin factors with conservative dense fallbacks. Coefficients,
+objective, weights, support/DF semantics and stopping rules are unchanged;
+CD remains the default block solver. The
+[replicated optimization study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/09da5020ffe8aa1c3bd812629794c08fa4a93464/benchmark/lowrank/sparse_setup)
+used 20 shared independent inputs per design on an earlier dependency stack
+and was not rerun at this revision. Its final report is in the snapshot's
+`results` directory. At the middle penalty, paired public-fit candidate/baseline
+ratios were 0.854 (CD) and 0.860 (FISTA) for many responses, and 0.854 for wide
+FISTA. Wide CD was inconclusive at 0.962, with an interval reaching 1.003;
+small CD regressed at 1.016. Complete paths improved in every retained
+design/solver. FISTA was useful for ill-conditioned and rank-deficient inputs,
+while CD was faster on strong/middle wide inputs. The study establishes no
+universal solver or default.
