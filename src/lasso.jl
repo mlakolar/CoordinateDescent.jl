@@ -124,7 +124,8 @@ end
 # whether to solve on the Gram matrix: gram is true, false or :auto, which picks
 # it for a path on dense data with at least as many rows as columns and not too
 # many columns; at one λ, forming the Gram matrix costs more than the few passes
-# it makes cheaper (benchmark/gram_bench.jl)
+# it makes cheaper (measured by gram_bench.jl of the benchmark snapshot,
+# https://github.com/mlakolar/HighDimensionalModels.jl/blob/abddaf56a790b86178de376b175a1185020c8381/benchmark/gram_bench.jl)
 const _GRAM_PMAX = 2000
 
 function _usegram(gram, X::AbstractMatrix, path::Bool)

@@ -1,1 +1,0 @@
-datasets=7 cases=8 path_points=1820 max_coefficient_difference=0.0 max_objective_difference=0.0 exact_df=true exact_iterations=true all_converged=true

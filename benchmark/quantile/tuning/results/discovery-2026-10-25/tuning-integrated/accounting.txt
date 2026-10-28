@@ -1,2 +1,0 @@
-JobIDRaw|State|ExitCode|ElapsedRaw|AllocCPUS|ReqMem|Start|End|NodeList
-13442376|COMPLETED|0:0|65|1|8G|2026-10-25T11:53:44|2026-10-25T11:54:49|b01-03
