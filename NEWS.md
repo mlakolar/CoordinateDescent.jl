@@ -11,6 +11,14 @@ integration dependency to an explicit commit.
   and `SLOPEPath`, with recorded calibration metadata. Explicit weights take
   precedence; BH remains the default.
 
+- Add `knockoff_diagonal` and `strategy = :equicorrelated | :mvr | :maxent | :user`
+  for knockoff construction and `knockoff_filter`, with recorded construction
+  metadata. MVR and maximum entropy require the optional Knockoffs.jl extension
+  for diagonal optimization only; sampling stays native. Equicorrelation remains
+  the default. `fixed_knockoffs` and `knockoff_filter(...; method=:fixed)` now
+  raise `ArgumentError` for zero-norm columns or insufficient numerical column
+  rank checked on the column-normalized design.
+
 - Double selection supports `vcov` choices, final-stage diagnostics and
   precomputed nuisance fits. Forced controls are validated before fitting;
   invalid `forced` now raises `ArgumentError` instead of `BoundsError`.

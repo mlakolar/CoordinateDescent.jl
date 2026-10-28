@@ -105,6 +105,7 @@ export
   slope, slope_bh, slope_gaussian, SLOPEPath, SLOPESolution,
   equicorrelated_s, gaussian_knockoffs, fixed_knockoffs,
   knockoff_threshold, lasso_coefdiff, knockoff_filter, KnockoffResult,
+  knockoff_diagonal, KnockoffDiagonal,
   complementary_pairs, stability_bound, stability_selection, StabilitySelectionResult,
 
   # varying-coefficient models (kernels from KernelSmoothing.jl)
@@ -133,6 +134,7 @@ include("formula.jl")
 include("varying.jl")
 
 include("slope.jl")
+include("knockoff_construction.jl")
 include("knockoffs.jl")
 include("stability.jl")
 

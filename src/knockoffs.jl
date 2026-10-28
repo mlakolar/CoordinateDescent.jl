@@ -27,8 +27,12 @@ function equicorrelated_s(Sigma::AbstractMatrix{<:Real}; safety::Real=1e-8)
 end
 
 function _knockoff_parameters(S, s)
-  p = size(S, 1)
   d = s === nothing ? equicorrelated_s(S) : Vector{eltype(S)}(s)
+  _knockoff_parameters_from_diagonal(S, d)
+end
+
+function _knockoff_parameters_from_diagonal(S, d)
+  p = size(S, 1)
   length(d) == p || throw(DimensionMismatch("s must have one entry per predictor"))
   all(isfinite, d) && all(>=(0), d) || throw(ArgumentError("s must be finite and nonnegative"))
   # Check the joint covariance on the correlation scale. An absolute tolerance
@@ -53,7 +57,8 @@ function _knockoff_parameters(S, s)
 end
 
 """
-    gaussian_knockoffs(X, mu, Sigma; rng=Random.default_rng(), s=nothing, noise=nothing)
+    gaussian_knockoffs(X, mu, Sigma; rng=Random.default_rng(), s=nothing, noise=nothing,
+                      strategy=nothing, construction_options=(;))
 
 Gaussian model-X knockoffs `X - (X-mu')*(Sigma\\diag(s)) + Z*C`, with
 `C'C = 2diag(s) - diag(s)*(Sigma\\diag(s))`. By default s is
@@ -63,23 +68,34 @@ Plug-in estimates give only second-order matching, without that guarantee.
 `noise` optionally supplies an n-by-p matrix of independent standard normals
 for reproducible comparisons; otherwise Z is drawn from rng. It must be
 independent of X and y. Neither X nor the supplied parameters are modified.
+`strategy`/`construction_options` select the diagonal through
+[`knockoff_diagonal`](@ref); the returned object remains a matrix.
 """
 function gaussian_knockoffs(X::AbstractMatrix{<:Real}, mu::AbstractVector{<:Real},
-                            Sigma::AbstractMatrix{<:Real}; rng::AbstractRNG=default_rng(), s=nothing, noise=nothing)
+                            Sigma::AbstractMatrix{<:Real}; rng::AbstractRNG=default_rng(), s=nothing, noise=nothing,
+                            strategy=nothing, construction_options=(;))
+  first(_gaussian_knockoffs_details(X, mu, Sigma; rng, s, noise, strategy, construction_options))
+end
+
+function _gaussian_knockoffs_details(X::AbstractMatrix{<:Real}, mu::AbstractVector{<:Real},
+                            Sigma::AbstractMatrix{<:Real}; rng::AbstractRNG=default_rng(), s=nothing, noise=nothing,
+                            strategy=nothing, construction_options=(;))
+  _knockoff_strategy(strategy, s, construction_options)
   S = _knockoff_covariance(Sigma)
   n, p = size(X)
   n > 0 && p == size(S, 1) && length(mu) == p || throw(DimensionMismatch("X, mu and Sigma have incompatible dimensions"))
   all(isfinite, X) && all(isfinite, mu) || throw(ArgumentError("X and mu must be finite"))
-  _, A, C = _knockoff_parameters(S, s)
+  plan = _knockoff_choose_diagonal(S, strategy, s, construction_options)
+  _, A, C = _knockoff_parameters_from_diagonal(S, plan.s)
   T = float(promote_type(eltype(X), eltype(S), eltype(mu)))
   Z = noise === nothing ? randn(rng, T, n, p) : Matrix{T}(noise)
   size(Z) == (n, p) || throw(DimensionMismatch("noise must have the dimensions of X"))
   all(isfinite, Z) || throw(ArgumentError("noise must be finite"))
-  X - (X .- transpose(mu)) * A + Z * C
+  X - (X .- transpose(mu)) * A + Z * C, _knockoff_construction_info(plan)
 end
 
 """
-    fixed_knockoffs(X; s=nothing)
+    fixed_knockoffs(X; s=nothing, strategy=nothing, construction_options=(;))
 
 Fixed-X knockoffs for a full-column-rank design with n ≥ 2p. Uses the
 orthogonal complement from QR and the equicorrelated diagonal by default.
@@ -88,21 +104,37 @@ Columns need not have unit norm; s is computed on the correlation scale and
 mapped back to the Gram matrix. For fixed-X FDR control, use a linear model without an intercept, independent
 homoscedastic Gaussian errors, and a swap-antisymmetric statistic with the
 sufficiency property, such as a lasso fit at a prespecified penalty level.
+`strategy`/`construction_options` select the diagonal through
+[`knockoff_diagonal`](@ref); the returned object remains a matrix.
 """
-function fixed_knockoffs(X::AbstractMatrix{<:Real}; s=nothing)
+function fixed_knockoffs(X::AbstractMatrix{<:Real}; s=nothing, strategy=nothing, construction_options=(;))
+  first(_fixed_knockoffs_details(X; s, strategy, construction_options))
+end
+
+function _fixed_knockoffs_details(X::AbstractMatrix{<:Real}; s=nothing, strategy=nothing, construction_options=(;))
+  _knockoff_strategy(strategy, s, construction_options)
   n, p = size(X)
   p > 0 && n >= 2p || throw(ArgumentError("fixed-X knockoffs require n ≥ 2p > 0"))
   Z = Matrix{float(eltype(X))}(X)
   all(isfinite, Z) || throw(ArgumentError("X must be finite"))
-  S = _knockoff_covariance(transpose(Z) * Z)
-  _, A, C = _knockoff_parameters(S, s)
+  # Check rank on the correlation scale so column units do not affect it.
+  # Forming the Gram matrix can hide rank loss, especially in Float32.
+  column_norms = norm.(eachcol(Z))
+  any(iszero, column_norms) && throw(ArgumentError("X must not have zero-norm columns"))
+  pivots = abs.(diag(qr(Z ./ transpose(column_norms)).R))
+  rank_tol = max(n, p) * eps(eltype(Z)) * maximum(pivots)
+  count(>(rank_tol), pivots) == p || throw(ArgumentError("X must have full numerical column rank"))
+  # Keep the original design's QR for the orthogonal complement.
   F = qr(Z)
+  S = _knockoff_covariance(transpose(Z) * Z)
+  plan = _knockoff_choose_diagonal(S, strategy, s, construction_options)
+  _, A, C = _knockoff_parameters_from_diagonal(S, plan.s)
   E = zeros(eltype(Z), n, p)
   for j in 1:p
     E[p+j, j] = 1
   end
   U = F.Q * E
-  Z - Z * A + U * C
+  Z - Z * A + U * C, _knockoff_construction_info(plan)
 end
 
 """
@@ -161,7 +193,8 @@ end
     KnockoffResult
 
 Result of [`knockoff_filter`](@ref), with `selected` (column indices), `W`,
-`threshold`, `Xk`, target `q`, `lambda`, and construction `method`.
+`threshold`, `Xk`, target `q`, `lambda`, model `method`, and `construction`
+metadata with the actual diagonal strategy and optimizer diagnostics.
 """
 struct KnockoffResult{T, M<:AbstractMatrix}
   selected::Vector{Int}
@@ -171,11 +204,21 @@ struct KnockoffResult{T, M<:AbstractMatrix}
   q::T
   lambda::T
   method::Symbol
+  construction::NamedTuple
 end
+
+KnockoffResult(selected, W, threshold, Xk, q, lambda, method) =
+  KnockoffResult(selected, W, threshold, Xk, q, lambda, method,
+    (strategy=:unspecified, s=nothing, diagnostics=(backend=:unspecified,)))
+
+KnockoffResult{T,M}(selected, W, threshold, Xk, q, lambda, method) where {T,M<:AbstractMatrix} =
+  KnockoffResult{T,M}(selected, W, threshold, Xk, q, lambda, method,
+    (strategy=:unspecified, s=nothing, diagnostics=(backend=:unspecified,)))
 
 """
     knockoff_filter(X, y, lambda; method=:gaussian, mu=nothing, Sigma=nothing,
-                    Xk=nothing, q=0.1, rng=Random.default_rng(), options=CDOptions(), kwargs...)
+                    Xk=nothing, q=0.1, rng=Random.default_rng(), options=CDOptions(),
+                    strategy=nothing, s=nothing, noise=nothing, construction_options=(;), kwargs...)
 
 Construct knockoffs, fit [`lasso_coefdiff`](@ref), and select with the
 knockoff+ threshold. `method=:gaussian` requires population mu and Sigma;
@@ -187,25 +230,37 @@ requires swap antisymmetry; ties/nonunique lasso solutions need care.
 """
 function knockoff_filter(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, lambda::Real;
                          method::Symbol=:gaussian, mu=nothing, Sigma=nothing, Xk=nothing,
-                         q::Real=0.1, rng::AbstractRNG=default_rng(), options::CDOptions=CDOptions(), kwargs...)
+                         q::Real=0.1, rng::AbstractRNG=default_rng(), options::CDOptions=CDOptions(),
+                         strategy=nothing, s=nothing, noise=nothing, construction_options=(;), kwargs...)
   # Validate q before doing a potentially expensive fit.
   knockoff_threshold(Float64[]; q)
   method in (:gaussian, :fixed, :provided) || throw(ArgumentError("method must be :gaussian, :fixed or :provided"))
   Xk === nothing || method === :provided || throw(ArgumentError("use method=:provided when supplying Xk"))
-  K = if method === :gaussian
+  construction_options isa NamedTuple || throw(ArgumentError("construction_options must be a NamedTuple"))
+  method === :gaussian || noise === nothing || throw(ArgumentError("noise is only used with method=:gaussian"))
+  if method === :provided
+    strategy === nothing && s === nothing && isempty(construction_options) ||
+      throw(ArgumentError("provided Xk conflicts with strategy, s or construction_options"))
+  else
+    _knockoff_strategy(strategy, s, construction_options)
+  end
+  isfinite(lambda) && lambda > 0 || throw(ArgumentError("lambda must be finite and positive"))
+  # Validate solver options before optimization/sampling and keep construction
+  # options out of CDOptions. Existing supplied-noise/RNG semantics are native.
+  opts = _options(options, kwargs)
+  K, construction = if method === :gaussian
     mu !== nothing && Sigma !== nothing || throw(ArgumentError("Gaussian knockoffs require mu and Sigma"))
-    gaussian_knockoffs(X, mu, Sigma; rng)
+    _gaussian_knockoffs_details(X, mu, Sigma; rng, s, noise, strategy, construction_options)
   elseif method === :fixed
-    fixed_knockoffs(X)
+    _fixed_knockoffs_details(X; s, strategy, construction_options)
   else
     Xk === nothing && throw(ArgumentError("method=:provided requires Xk"))
-    Xk
+    (Xk, (strategy=:provided, s=nothing, diagnostics=(backend=:provided, feasibility=:caller_responsibility)))
   end
   # Only solver options are accepted here; model preprocessing can destroy
   # sufficiency of a fixed-design statistic after knockoffs are constructed.
-  opts = _options(options, kwargs)
   W = lasso_coefdiff(X, K, y, lambda; options=opts, rng)
   t = convert(eltype(W), knockoff_threshold(W; q))
   selected = isfinite(t) ? findall(>=(t), W) : Int[]
-  KnockoffResult(selected, W, t, K, eltype(W)(q), eltype(W)(lambda), method)
+  KnockoffResult(selected, W, t, K, eltype(W)(q), eltype(W)(lambda), method, construction)
 end

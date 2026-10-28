@@ -149,9 +149,80 @@ exchangeability. The filter deliberately requires explicit parameters.
 Gram identities ``\widetilde X^T\widetilde X=X^TX`` and
 ``X^T\widetilde X=X^TX-\operatorname{diag}(s)``. Columns may have arbitrary
 positive norms. Both constructions use an equicorrelated solution computed on
-the correlation scale; no SDP dependency is needed. A user-supplied feasible
-`s` is also accepted by the constructors. Semidefinite conditional covariances
+the correlation scale by default; no optimizer dependency is needed. A
+user-supplied feasible `s` is also accepted by the constructors and filter. Semidefinite conditional covariances
 use an eigenvalue square root, clipping only roundoff-sized negative values.
+
+### Diagonal construction choices
+
+```julia
+# Optional dependency: install Knockoffs separately, then load it explicitly.
+using Knockoffs
+plan = knockoff_diagonal(Sigma; strategy=:mvr)
+K = gaussian_knockoffs(X, mu, Sigma; s=plan.s, noise=Z)
+fit = knockoff_filter(X, y, 0.04; mu, Sigma, noise=Z, strategy=:maxent,
+    construction_options=(niter=1000, tol=1e-10, λmin=1e-10),
+    order=:cyclic, opt_tol=1e-9)
+fit.method, fit.construction.strategy, fit.construction.diagnostics
+```
+
+`method` identifies the model (`:gaussian`, `:fixed`, `:provided`); `strategy`
+identifies the diagonal (`:equicorrelated`, `:mvr`, `:maxent`, `:user`). Omitting
+strategy selects equicorrelation, or user construction when `s` is supplied.
+Explicit `:user` requires `s`; the other strategies reject a supplied `s`.
+Provided knockoffs reject strategy, diagonal, innovations and construction
+options. These conflicts are checked before fitting. Legacy Gaussian parameters
+unused by the fixed/provided routes remain accepted for compatibility.
+
+`construction_options` is a named tuple separate from lasso `CDOptions`.
+Equicorrelation accepts `safety`; user diagonals accept no optimizer options.
+Optimized construction accepts `niter`, `tol`, `λmin`, `robust`, `verbose`, and
+`optimality_tol`. MVR and maximum entropy require the optional Knockoffs.jl
+extension. It supplies only the established diagonal optimizer; Gaussian and
+fixed-X sampling stay native. Knockoffs.jl is MIT-licensed; the extension was
+validated with [Knockoffs.jl 3.1.4](https://github.com/biona001/Knockoffs.jl/tree/d23942e9af9103f93be9a20e47ae6f7cad685aa5).
+Only its diagonal optimizer is used. Its full sampler is not used because the
+pinned version's conditional sampler applies the noise with the wrong factor.
+Loading the extension does not change the equicorrelated default or existing
+seeded sampling arithmetic.
+
+Optimized diagonals minimize reconstructability or maximize entropy on the
+correlation scale, then return Float32/Float64 covariance/Gram units. The actual
+rounded diagonal must pass the original, unperturbed objective's stationarity
+check and both native scale-relative feasibility checks. Backend iterate-change
+tolerance alone is insufficient. Failure raises an error without switching
+strategy or projecting an infeasible diagonal. The backend returns neither an
+actual iteration count nor a convergence status; diagnostics mark those fields
+unavailable and report independent stationarity separately. The optimized
+defaults are `niter=1000`, `tol=1e-10`, `λmin=1e-10`, `robust=false`, with
+`optimality_tol=max(1e-6,100eps(input precision))`. The recorded matrix study
+supports these controls; the backend's looser package defaults can return
+feasible diagonals that miss original-objective stationarity.
+
+`KnockoffDiagonal` owns its diagonal and metadata. Passing `s=plan.s` explicitly
+records user construction; it validates that vector against the supplied
+covariance and does not reuse cached factors. `KnockoffResult.construction`
+records the actual strategy, owned diagonal and diagnostics. The existing
+seven-argument result constructors remain available with unspecified metadata.
+
+An optimized diagonal does not repair a misspecified covariance, a statistic
+without swap antisymmetry, or a fixed-X procedure without sufficiency. The
+population-model assumptions and fixed-X restrictions above still apply.
+
+The [replicated construction study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/0de5d94ebb4c463b3d17babdac268439fb9a52f6/benchmark/selection/knockoff_strategies)
+records historical evidence; its final report is in the snapshot's `results`
+directory. It was measured on an earlier dependency stack and was not rerun at
+this revision. The study uses 1,008 independent datasets per scenario and common
+innovations, lasso statistic and penalty across constructions. For the recorded
+AR(.4) design with alternating signals, power rises from 0.64% with
+equicorrelation to 39.90% with MVR, at estimated FDR 6.92%. Same-sign cases lose
+power, and optimized construction costs substantially more time: MVR full
+filters take 1.08–9.28 times the equicorrelation time on the tested cases.
+Equicorrelation, safety `1e-8`, and knockoff+ target `q=0.1` therefore remain the
+compatibility defaults. These results concern the listed simulation laws only;
+they do not supply a data-driven strategy or penalty selector, or a
+misspecified-model guarantee.
+
 
 The statistic is ``W_j=|\widehat\beta_j|-|\widehat\beta_{p+j}|`` from the
 joint lasso on ``[X\ \widetilde X]``. The filter fits without an intercept or
@@ -236,6 +307,6 @@ simulation designs; it does not prove a guarantee.
 
 ```@autodocs
 Modules = [HighDimensionalModels]
-Pages = ["src/slope.jl", "src/knockoffs.jl", "src/stability.jl"]
+Pages = ["src/slope.jl", "src/knockoff_construction.jl", "src/knockoffs.jl", "src/stability.jl"]
 Private = false
 ```

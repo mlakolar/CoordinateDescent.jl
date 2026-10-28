@@ -100,3 +100,33 @@ jobs:
       - uses: julia-actions/cache@v3
       - run: julia scripts/instantiate_release.jl examples
       - run: julia --project=examples examples/run_all.jl
+  knockoff-extension:
+    name: Registered Knockoffs extension - Julia ${{ matrix.version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['lts', '1']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: ${{ matrix.version }}
+      - uses: julia-actions/cache@v3
+      - name: Test the optional diagonal optimizer and native sampling with registered releases
+        run: julia --color=yes scripts/test_knockoff_extension.jl
+        env:
+          JULIA_NUM_THREADS: '1'
+          OPENBLAS_NUM_THREADS: '1'
+          JULIA_TEST_COVERAGE: 'true'
+      - uses: julia-actions/julia-processcoverage@v1
+        with:
+          directories: src,ext
+      - uses: codecov/codecov-action@v7
+        with:
+          # Codecov repository lookup requires its canonical lowercase slug.
+          slug: mlakolar/highdimensionalmodels.jl
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
