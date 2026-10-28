@@ -11,7 +11,9 @@ integration dependency to an explicit commit.
   for knockoff construction and `knockoff_filter`, with recorded construction
   metadata. MVR and maximum entropy require the optional Knockoffs.jl extension
   for diagonal optimization only; sampling stays native. Equicorrelation remains
-  the default.
+  the default. `fixed_knockoffs` and `knockoff_filter(...; method=:fixed)` now
+  raise `ArgumentError` for zero-norm columns or insufficient numerical column
+  rank checked on the column-normalized design.
 
 - Double selection supports `vcov` choices, final-stage diagnostics and
   precomputed nuisance fits. Forced controls are validated before fitting;
