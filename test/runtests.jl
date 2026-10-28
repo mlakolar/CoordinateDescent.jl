@@ -21,6 +21,7 @@ tests = [
   "glm",
   "quantile",
   "quantile_tuning",
+  "quantile_path_stop",
   "glm_penalties",
   "group",
   "sparsegroup",

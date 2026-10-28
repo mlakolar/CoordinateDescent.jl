@@ -45,7 +45,7 @@ struct QuantileLassoSolution
 end
 
 """
-    QuantileLassoPath(X, y, λpath; tau=0.5, method=:exact, kwargs...)
+    QuantileLassoPath(X, y, λpath; tau=0.5, method=:exact, max_hat_s=Inf, kwargs...)
     QuantileLassoPath(X, y; nλ=100, λminratio=0.01, kwargs...)
 
 Fit `mean(rho_tau(y - intercept - X*β - offset)) + λ*sum(w .* abs.(β))`
@@ -56,6 +56,14 @@ returned levels and `requested_λpath` the requested grid. `complete` is false
 when a limit stops the path. There is no coefficient or dual interpolation:
 `coef(path, λ)` requires a saved level.
 
+`max_hat_s=Inf` limits the number of nonzero slopes. It must be a nonnegative
+real number other than NaN. After saving the first fit with
+`count(!iszero, β) > max_hat_s`, later levels are skipped. The intercept does
+not count; nonzero slopes with zero penalty factors do. The exceeding fit is
+retained, as in `LassoPath` and `GLMLassoPath`; QR.jl dropped it. If levels are
+skipped, `complete=false` and `status=:max_hat_s`. Exceeding the limit only at
+the last requested level leaves `complete=true` and the usual status.
+
 `method=:exact` uses HiGHS dual simplex with an analytic quantile starting
 basis and reuses that basis/model along the path. Load `HiGHS` to activate the
 optional extension. `initial_basis=:default` disables the analytic start;
@@ -64,6 +72,10 @@ path between levels and passes the remaining time to HiGHS. Preparation and
 diagnostics can overrun that limit, and automatic-grid preparation precedes
 the path timer. A stopped path retains available
 primal–dual results and the termination status; it never fills missing levels.
+The support limit is checked only after an `OPTIMAL` level with a saved pair.
+Non-`OPTIMAL` termination or a missing pair takes precedence. The path time budget
+is checked before each level; a support stop after an optimal level takes
+precedence over a budget exhausted during that level.
 
 `method=:smooth` uses the existing proximal Newton path with the Epanechnikov
 convolution loss at explicit `bandwidth` (default 0.2). Its raw dual scores are
@@ -226,7 +238,7 @@ end
 function QuantileLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λpath::AbstractVector{<:Real};
                           tau::Real=0.5, method::Symbol=:exact, bandwidth::Real=0.2,
                           penalty_factors=nothing, standardize_x::Bool=true, intercept::Bool=true,
-                          offset=nothing, tol::Real=2e-5, time_limit::Real=Inf,
+                          offset=nothing, tol::Real=2e-5, time_limit::Real=Inf, max_hat_s=Inf,
                           initial_basis::Symbol=:quantile, simplex::Symbol=:dual,
                           options::CDOptions=CDOptions(opt_tol=1e-8, max_iter=10000),
                           newton_tol::Real=1e-10, newton_max_iter::Integer=100,
@@ -235,6 +247,8 @@ function QuantileLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real},
   isfinite(tau) && 0 < tau < 1 || throw(ArgumentError("tau must lie strictly between zero and one"))
   isfinite(tol) && tol > 0 || throw(ArgumentError("tol must be positive and finite"))
   time_limit > 0 || throw(ArgumentError("time_limit must be positive"))
+  max_hat_s isa Real && !isnan(max_hat_s) && max_hat_s >= 0 ||
+    throw(ArgumentError("max_hat_s must be a nonnegative real number other than NaN"))
   method in (:exact, :smooth) || throw(ArgumentError("method must be :exact or :smooth"))
   initial_basis in (:quantile, :default) || throw(ArgumentError("invalid initial_basis"))
   simplex in (:dual, :primal) || throw(ArgumentError("simplex must be :dual or :primal"))
@@ -246,7 +260,7 @@ function QuantileLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real},
   Xf, yf, w = _qdata(X, y, penalty_factors, standardize_x, intercept, offset)
   sols, status = if method == :exact
     _quantile_exact_path(Xf, yf, ls, w, Float64(tau), intercept;
-                         tol=Float64(tol), time_limit=Float64(time_limit), initial_basis, simplex, start)
+                         tol=Float64(tol), time_limit=Float64(time_limit), max_hat_s, initial_basis, simplex, start)
   else
     # Use the requested observation-score accuracy for Newton's certified
     # stopping too. The backend's feasible certificate and its raw-score guard
@@ -259,7 +273,7 @@ function QuantileLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real},
     smooth_options = supported ? CDOptions(options; gaptol=gt) : options
     path = GLMLassoPath(Xf, yf, ls, loss, smooth_options;
                        intercept, standardize_x=false, penalty=NormL1(1.0, w), devmax=1,
-                       newton_tol, newton_max_iter, screening, rng)
+                       max_hat_s, newton_tol, newton_max_iter, screening, rng)
     ss = QuantileLassoSolution[]
     loss = path.loss
     for k in eachindex(path.λpath)
@@ -270,7 +284,7 @@ function QuantileLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real},
                            Float64(bandwidth), path.converged[k] ? :optimal : :not_converged,
                            path.iterations[k], path.converged[k], Float64(tol)))
     end
-    ss, all(s -> s.converged, ss) ? :optimal : :not_converged
+    ss, length(ss) < length(ls) ? :max_hat_s : all(s -> s.converged, ss) ? :optimal : :not_converged
   end
   QuantileLassoPath(ls[1:length(sols)], sols, ls, length(sols)==length(ls), status,
                     length(y), size(X,2), intercept, method)

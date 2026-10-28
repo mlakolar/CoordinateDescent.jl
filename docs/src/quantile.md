@@ -43,6 +43,18 @@ observation weights and formula syntax are deferred. A finite `time_limit`
 returns a partial path if needed. Check `complete`, `status` and each fit's
 `converged` before using it. Saved dual vectors are independent snapshots.
 
+Both backends accept `max_hat_s=Inf`, a nonnegative real support limit.
+After saving the first fit with `count(!iszero, β) > max_hat_s`, the path
+skips later levels. The intercept does not count; nonzero unpenalized slopes
+do. The exceeding fit is retained, as in `LassoPath` and `GLMLassoPath`,
+whereas QR.jl dropped it. If any levels are skipped, `complete=false` and
+`status=:max_hat_s`; `λpath` contains the solved levels and `requested_λpath`
+keeps the full grid. Exceeding only at the last level leaves the path complete
+with its usual status. A single-level `quantile_lasso` fit is never cut short.
+For exact fits, native non-`OPTIMAL` termination or a missing primal–dual pair
+takes precedence. The support check follows each optimal saved fit, before
+the next level's time-budget check. Per-fit `converged` still reports accuracy.
+
 A smoothed path uses the production proximal Newton implementation:
 
 ```julia
@@ -113,6 +125,11 @@ standardization use each training fold. Automatic grids use the full-data
 path as their shared grid; supply your own grid to avoid that dependence.
 Both exact and smoothed paths are evaluated by the **unsmoothed check loss**.
 An explicit `bandwidth` applies to every smoothed fold.
+
+`max_hat_s` applies to the full-data path and every training-fold path.
+The full-data stop truncates the shared grid. Folds that stop sooner leave
+`NaN` errors at later levels, which are ineligible for selection and have
+`cvm=Inf` and `cvse=NaN`, including levels that no fold reaches.
 
 The result exposes `cvm`, `cvse`, `λmin`, `λ1se`, `folds`, `fold_errors`, and
 the full-data `path`. Fold errors and their standard errors use fold-size

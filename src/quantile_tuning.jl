@@ -63,6 +63,10 @@ end
 Select a quantile-lasso penalty by held-out **check loss**, for either exact
 or convolution-smoothed fits. `kwargs` go to [`QuantileLassoPath`](@ref),
 including `method`, `bandwidth`, loadings, standardization and solver controls.
+`max_hat_s` is forwarded to the full-data path and every fold path. A support
+stop on the full data truncates the shared grid. A fold that stops earlier
+has `NaN` errors at its unreached levels; these are ineligible, with `cvm=Inf`
+and `cvse=NaN`, even when no fold reaches them.
 An explicit decreasing `λpath` is shared by all folds; otherwise the full-data
 path supplies the common grid. Scaling and centering are computed using each
 training fold. The automatic common grid itself uses the full data.
