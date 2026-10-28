@@ -163,6 +163,10 @@ end
     X, Y = uniform(rng, n, p), uniform(rng, n, 3)
     problem = HDM._grid_problem(sparse_nuclear_regression, X, Y)
     x, direction = rand(rng, p*3), uniform(rng, p*3)
+    L = ProximalBase.lipschitz(problem.loss)
+    @test L == problem.loss.setup.L
+    curvature = problem.loss(x + direction) + problem.loss(x - direction) - 2problem.loss(x)
+    @test 0 <= curvature <= L*sum(abs2, direction)
     G = similar(x)
     ProximalBase.gradient!(G, problem.loss, x)
     Xc, Yc = X .- mean(X; dims = 1), Y .- mean(Y; dims = 1)
