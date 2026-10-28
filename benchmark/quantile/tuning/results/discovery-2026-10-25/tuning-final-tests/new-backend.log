@@ -1,4 +1,0 @@
-Test Summary:                      | Pass  Total  Time
-fixed-quantile pivotal calibration |   54     54  4.6s
-Test Summary:                        | Pass  Total   Time
-quantile check-loss cross-validation |  106    106  15.2s

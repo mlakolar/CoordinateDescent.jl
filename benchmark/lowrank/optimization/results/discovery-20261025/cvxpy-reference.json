@@ -1,8 +1,0 @@
-{
-  "status": "optimal",
-  "objective": 2.2543443794652624,
-  "max_coefficient_error": 1.5157097799090025e-11,
-  "gap": 6.299233068704387e-12,
-  "residual": 4.932179706265113e-11,
-  "solver": "CVXPY/SCS"
-}

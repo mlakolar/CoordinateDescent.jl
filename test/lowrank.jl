@@ -148,4 +148,24 @@ using LinearAlgebra, Random, Statistics, SparseArrays
 end
 
 include("lowrank_golden.jl")
+
+@testset "fixed-rank residuals through thin factors" begin
+  rng = Xoshiro(101026)
+  for T in (Float32,Float64), (n,p,q) in ((60,10,80),(25,40,12),(60,10,8)), intercept in (false,true)
+    X,Y = T.(randn(rng,n,p)),T.(randn(rng,n,q))
+    for r in (0,1,3,min(n-intercept,p,q))
+      fit = reduced_rank(X,Y,r;intercept)
+      Xc = intercept ? X .- mean(X;dims=1) : X
+      Yc = intercept ? Y .- mean(Y;dims=1) : Y
+      E = Yc-Xc*fit.B
+      # Both product orders describe the returned coefficients, up to the
+      # rounding scale of the original matrix product, including wide fits.
+      @test norm(residuals(fit)-E) <= 20eps(T)*max(norm(Yc),norm(Xc)*norm(fit.B))
+      @test fit.objective ≈ sum(abs2,E)/(2n) rtol=100eps(T) atol=100eps(T)
+      @test predict(fit,X)+residuals(fit) ≈ Y rtol=100eps(T) atol=100eps(T)
+      @test fit.rank == rank(fit.B)
+      @test fit.activerows == [j for j in 1:p if any(!iszero,fit.B[j,:])]
+    end
+  end
+end
 include("lowrank_solvers.jl")

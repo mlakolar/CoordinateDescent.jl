@@ -107,6 +107,7 @@ function _lr_rrsolution(d, f, bound)
   p, q = size(d.X, 2), size(d.Y, 2)
   if bound == 0
     B, r = zeros(T, p, q), 0
+    E = copy(d.Y)
   else
     L, R = _lr_rrfactors(f, bound)
     B = L * R
@@ -120,11 +121,14 @@ function _lr_rrsolution(d, f, bound)
     # Retain the original dense-matrix diagnostic for these ambiguous cases.
     ambiguous = any(<=(8cutoff), σ) || 8bound*eps(T)*norm(L)*norm(R) > cutoff
     r = ambiguous ? LinearAlgebra.rank(B) : count(>(cutoff), σ)
+    # Reuse the thin factors for residual construction when that product
+    # order has fewer operations. Preserve the dense coefficient matrix and
+    # all rank/support diagnostics, including their ambiguous-rank fallback.
+    E = bound * (p + q) < p * q ? d.Y - (d.X * L) * R : d.Y - d.X * B
   end
   rows = _activerows(B)
   k = isempty(rows) ? 0 : length(rows) == p ? f.diagnostic_xrank : LinearAlgebra.rank(d.X[:, rows])
   df = r * (k + q - r) + q * d.intercept
-  E = d.Y - d.X * B
   _lr_solution(d, B, 0, 0, true, sum(abs2, E)/(2size(d.X, 1)), :rank;
     df, df_exact = _lr_exact_df(f, bound, q, d.intercept), rows, coefficient_rank = r, residual = E)
 end

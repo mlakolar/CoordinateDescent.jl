@@ -6,7 +6,9 @@ Lasso estimators computed by coordinate descent: [`lasso`](@ref),
 [`LassoPath`](@ref), the penalized generalized linear models [`glm_lasso`](@ref) and
 [`GLMLassoPath`](@ref), the group lasso [`group_lasso`](@ref) and
 [`GroupLassoPath`](@ref), the multi-response lasso [`multi_lasso`](@ref) and
-[`MultiLassoPath`](@ref), the inference after selection of R's hdm
+[`MultiLassoPath`](@ref), the multitask lasso with task-specific designs
+[`multitask_lasso`](@ref), [`MultitaskLassoPath`](@ref) and
+[`CVMultitaskLassoPath`](@ref), the inference after selection of R's hdm
 ([`rlasso`](@ref), [`post_lasso`](@ref), [`double_selection`](@ref)), and the
 varying-coefficient models [`varying_coefficient`](@ref) and
 [`varying_coefficient_lasso`](@ref), with the kernels of KernelSmoothing.jl. They run the coordinate descent, the penalty paths and
@@ -81,6 +83,9 @@ export
   multi_lasso,
   MultiLassoPath,
 
+  # the multitask lasso with task-specific designs
+  multitask_lasso, MultitaskLassoSolution, MultitaskLassoPath, CVMultitaskLassoPath,
+
   # penalties on ordered coefficients and graphs
   fused_lasso, generalized_lasso, trend_filter,
   difference_matrix, graph_difference,
@@ -120,6 +125,7 @@ include("group.jl")
 include("sparsegroup.jl")
 include("multiresponse.jl")
 include("cv.jl")
+include("multitask.jl")
 include("quantile_tuning.jl")
 include("structured.jl")
 include("lowrank.jl")
