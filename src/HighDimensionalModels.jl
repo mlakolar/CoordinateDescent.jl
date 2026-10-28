@@ -102,7 +102,7 @@ export
   double_selection,
 
   # selection with error control
-  slope, slope_bh, SLOPEPath, SLOPESolution,
+  slope, slope_bh, slope_gaussian, SLOPEPath, SLOPESolution,
   equicorrelated_s, gaussian_knockoffs, fixed_knockoffs,
   knockoff_threshold, lasso_coefdiff, knockoff_filter, KnockoffResult,
   complementary_pairs, stability_bound, stability_selection, StabilitySelectionResult,
@@ -124,6 +124,7 @@ include("cv.jl")
 include("multitask.jl")
 include("quantile_tuning.jl")
 include("structured.jl")
+include("structured_cv.jl")
 include("lowrank.jl")
 include("sparse_svd.jl")
 include("hdm.jl")

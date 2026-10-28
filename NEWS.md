@@ -14,6 +14,10 @@ integration dependency to an explicit commit.
   so a level that only some fold paths reached is no longer selected. `cvm` is
   unchanged.
 
+- Add `slope_gaussian` and `calibration = :bh | :gaussian | :user` for `slope`
+  and `SLOPEPath`, with recorded calibration metadata. Explicit weights take
+  precedence; BH remains the default.
+
 - Double selection supports `vcov` choices, final-stage diagnostics and
   precomputed nuisance fits. Forced controls are validated before fitting;
   invalid `forced` now raises `ArgumentError` instead of `BoundsError`.
@@ -35,6 +39,10 @@ residuals once, preserving numerical rank and degrees-of-freedom definitions.
 - Float64 nuclear PANOC fits and paths reuse loss/gradient products and the final
   residual and singular values, preserving the objective and returned diagnostics.
   APG remains the default.
+
+- Sparse reduced-rank fits and paths reuse sufficient statistics across penalties
+  and compute rank/residual diagnostics from thin factors. CD results and all
+  defaults are unchanged; FISTA results agree within the stopping tolerance.
 
 ## Quantile primal–dual API
 

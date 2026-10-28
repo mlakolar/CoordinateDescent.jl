@@ -487,7 +487,7 @@ _structured_solve!(x, F::SparseArrays.CHOLMOD.Factor, b) = copyto!(x, F \ b)
 
 function _split_factor(gram, K, ρ; bandwidth = nothing)
   H = gram + ρ * (transpose(K) * K)
-  if bandwidth !== nothing && 1 <= bandwidth <= 3 && gram isa Diagonal
+  if bandwidth !== nothing && 0 <= bandwidth <= 3 && gram isa Diagonal
     return _structured_band_factor(sparse(H), bandwidth)
   end
   F = cholesky(Symmetric(H); check = false)
@@ -652,7 +652,8 @@ function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::
                      reltol::Real = _structured_tolerances(X, y, :fused).reltol,
                      df_tol::Real = 1e-4,
                      _start = nothing, _data = nothing, _gram = nothing, _xy = nothing,
-                     _df_workspace = nothing, _df_constraints = nothing)
+                     _df_workspace = nothing, _df_constraints = nothing,
+                     _prediction_only::Bool = false)
   _structured_lambda(λ1); _structured_lambda(λ2)
   _structured_options(max_iter, abstol, reltol, df_tol)
   A, b, xm, ym = _data === nothing ? _structured_data(X, y, intercept) : _data
@@ -745,6 +746,7 @@ function fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, λ1::
       end
     end
   end
+  _prediction_only && return (β, it, ok, dr)
   if A isa _SignalDesign
     df = 0
     left = 1
@@ -1091,8 +1093,14 @@ function CVGeneralizedLassoPath(X::AbstractMatrix{<:Real}, y::AbstractVector{<:R
   _structured_cv((A, b, ls) -> GeneralizedLassoPath(A, b, D, ls; kwargs...), X, y, levels;
                   nfolds, folds, rng, threads)
 end
-CVGeneralizedLassoPath(y::AbstractVector{<:Real}, D::AbstractMatrix{<:Real}, levels; kwargs...) =
-  CVGeneralizedLassoPath(spdiagm(0 => ones(float(eltype(y)), length(y))), y, D, levels; kwargs...)
+function CVGeneralizedLassoPath(y::AbstractVector{<:Real}, D::AbstractMatrix{<:Real}, levels;
+                               nfolds::Integer=10, folds=nothing, rng::AbstractRNG=default_rng(),
+                               threads::Bool=true, max_concurrent_folds::Integer=2, kwargs...)
+  T=float(eltype(y));p=length(y);M=_structured_penalty(D,p,T)
+  makepath=(ls)->GeneralizedLassoPath(y,M,ls;kwargs...)
+  foldpath=(train,ls,emit)->_signal_admm_errors(_MaskedSignalDesign{T}(p,train),T.(y[train]),M,M,ls,emit;kwargs...)
+  _signal_cv(makepath,foldpath,y,levels;nfolds,folds,rng,threads,max_concurrent_folds)
+end
 
 """
     cv_fused_lasso(X, y, levels; l1_ratio = 0.5, nfolds = 10, folds = nothing,
@@ -1101,9 +1109,12 @@ CVGeneralizedLassoPath(y::AbstractVector{<:Real}, D::AbstractMatrix{<:Real}, lev
     cv_trend_filter(y, levels; kwargs...)
 
 Cross-validation using [`fused_lasso_path`](@ref) or [`trend_filter_path`](@ref).
-For signal trend filtering, a sparse row-selection design keeps the full
-location grid in every training fold and holds out responses. This avoids
-using held-out responses or changing the difference penalty between folds.
+For signals, masked training observations keep the complete location grid.
+Fold work streams prediction errors without computing degrees of freedom or
+retaining a training path. The full-data returned path uses direct signal
+dispatch. `max_concurrent_folds = 2` bounds simultaneous signal-fold work when
+`threads = true`; use one for serial fold memory. No held-out response enters
+a training fit or changes its difference penalty.
 `order` is the polynomial degree, and `x` must be strictly increasing.
 Returns a [`CVGeneralizedLassoPath`](@ref).
 """
@@ -1113,14 +1124,23 @@ function cv_fused_lasso(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, le
   _structured_cv((A, b, ls) -> fused_lasso_path(A, b, ls; kwargs...), X, y, levels;
                   nfolds, folds, rng, threads)
 end
-cv_fused_lasso(y::AbstractVector{<:Real}, levels; kwargs...) =
-  cv_fused_lasso(spdiagm(0 => ones(float(eltype(y)), length(y))), y, levels; kwargs...)
+function cv_fused_lasso(y::AbstractVector{<:Real}, levels;
+                        nfolds::Integer=10, folds=nothing, rng::AbstractRNG=default_rng(),
+                        threads::Bool=true, max_concurrent_folds::Integer=2, l1_ratio::Real=.5, kwargs...)
+  isfinite(l1_ratio) && 0<=l1_ratio<=1 || throw(ArgumentError("l1_ratio must be in [0, 1]."))
+  T=float(eltype(y));p=length(y)
+  makepath=(ls)->fused_lasso_path(y,ls;l1_ratio,kwargs...)
+  foldpath=(train,ls,emit)->_signal_fused_errors(_MaskedSignalDesign{T}(p,train),T.(y[train]),ls,emit;l1_ratio,kwargs...)
+  _signal_cv(makepath,foldpath,y,levels;nfolds,folds,rng,threads,max_concurrent_folds)
+end
 """
     cv_trend_filter(X, y, levels; order = 1, x = nothing, kwargs...)
     cv_trend_filter(y, levels; kwargs...)
 
 Cross-validate a trend-filtering path. Signal folds retain the full location
-grid and withhold responses through a sparse row-selection design. See
+grid and use diagonal observation Grams and eligible banded systems. Positive
+penalties require enough training locations to identify the degree-`order`
+polynomial component; unidentified folds fail without adding a ridge. See
 [`cv_fused_lasso`](@ref) for the fold, grid and tuning conventions.
 """
 function cv_trend_filter(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, levels;
@@ -1129,8 +1149,28 @@ function cv_trend_filter(X::AbstractMatrix{<:Real}, y::AbstractVector{<:Real}, l
   _structured_cv((A, b, ls) -> trend_filter_path(A, b, ls; kwargs...), X, y, levels;
                   nfolds, folds, rng, threads)
 end
-cv_trend_filter(y::AbstractVector{<:Real}, levels; kwargs...) =
-  cv_trend_filter(spdiagm(0 => ones(float(eltype(y)), length(y))), y, levels; kwargs...)
+function cv_trend_filter(y::AbstractVector{<:Real}, levels;
+                         nfolds::Integer=10, folds=nothing, rng::AbstractRNG=default_rng(),
+                         threads::Bool=true, max_concurrent_folds::Integer=2,
+                         order::Integer=1, x=nothing, rho=nothing, kwargs...)
+  T=float(eltype(y));p=length(y)
+  0<=order<p-1 || throw(ArgumentError("order must be between 0 and p - 2."))
+  D=difference_matrix(p,order+1;x)
+  K=order==0 ? nothing : difference_matrix(p,order;x)
+  if order>0 && x!==nothing
+    K=Diagonal(T[order/(x[j+order]-x[j]) for j in 1:p-order])*K
+  end
+  spacing=x===nothing ? one(T) : T((x[end]-x[1])/(p-1))
+  makepath=(ls)->trend_filter_path(y,ls;order,x,rho,kwargs...)
+  function foldpath(train,ls,emit)
+    # Distinct ordered training locations identify the polynomial null space.
+    any(>(0),ls) && length(train)<order+1 && throw(ArgumentError("training observations do not identify the degree-$order polynomial component."))
+    A=_MaskedSignalDesign{T}(p,train);b=T.(y[train])
+    order==0 ? _signal_fused_errors(A,b,ls,emit;l1_ratio=0,kwargs...) :
+      _signal_admm_errors(A,b,D,K,ls,emit;family=:trend,trend_order=order,spacing,rho,kwargs...)
+  end
+  _signal_cv(makepath,foldpath,y,levels;nfolds,folds,rng,threads,max_concurrent_folds)
+end
 
 StatsAPI.coef(cv::CVGeneralizedLassoPath; λ = :λ1se) = coef(cv.path, _cvlevel(cv, λ))
 StatsAPI.predict(cv::CVGeneralizedLassoPath, X::AbstractMatrix; λ = :λ1se) =
