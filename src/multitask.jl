@@ -335,8 +335,8 @@ coordinate descent is drawn from `rng`. When the tasks share one dense design
 are converted to a common floating point type, and options are passed as
 [`CDOptions`](@ref).
 
-The new penalties use row coordinate descent on the tasks' own designs,
-without stacking or copying a shared design. Sparse columns are centered on
+The row ℓ1/ℓ∞ and sparse-group penalties use row coordinate descent on the
+tasks' own designs, without stacking or copying a shared design. Sparse columns are centered on
 the fly. Full passes alternate with active-row passes. With `relative_tol`,
 the change rule divides the largest change of the standardized coefficients
 by `max(1, max|U|)`; otherwise it uses absolute changes. Single fits require
@@ -382,8 +382,8 @@ end
 Solutions `β0path[k]` and `Bpath[k]` of the multitask lasso of
 [`multitask_lasso`](@ref) (with the same keywords) along a decreasing sequence
 `λpath`, each one warm started from the previous solution. The default uses
-ProximalSolvers' `solve_path`; the new penalties use row coordinate descent
-on the tasks' own designs.
+ProximalSolvers' `solve_path`; the row ℓ1/ℓ∞ and sparse-group penalties use row
+coordinate descent on the tasks' own designs.
 
 Without `λpath`, the path has `nλ` values spaced evenly on the log scale from
 `λmax`, the smallest value whose solution is zero, down to `λminratio ⋅ λmax`;

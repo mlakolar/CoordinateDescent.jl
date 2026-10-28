@@ -121,8 +121,8 @@ end
 Solutions `β0path[k]` and `Bpath[k]` of the multi-response lasso of
 [`multi_lasso`](@ref) along a decreasing sequence `λpath`, each one warm started
 from the previous solution, by ProximalSolvers' `solve_path` for the default
-penalty and by row coordinate descent for the new penalties. `row_norm` and
-`alpha` record the penalty on the path; the old positional constructor fills
+penalty and by row coordinate descent for the row ℓ1/ℓ∞ and sparse-group
+penalties. `row_norm` and `alpha` record the penalty on the path; the old positional constructor fills
 `:l2` and zero.
 
 Without `λpath`, the path has `nλ` values spaced evenly on the log scale from

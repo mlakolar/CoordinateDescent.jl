@@ -344,7 +344,8 @@ read_matrix(dir, file) = readdlm(joinpath(dir, file), ',', Float64)
     for standardize_x in (false, true)
       scalar = CVLassoPath(X, ys[1], EXACT; folds, nλ = 6, intercept = true, standardize_x, rng = Xoshiro(7), gram = false)
       for (row_norm, alpha) in ((:l2, 0.0), (:linf, 0.0), (:l2, 0.5))
-        cv = CVMultiLassoPath(X, Y[:, 1:1], TIGHT; folds, nλ = 6, standardize_x, row_norm, alpha, rng = Xoshiro(7))
+        options = row_norm === :l2 && iszero(alpha) ? CDOptions(TIGHT; gaptol = 0) : TIGHT
+        cv = CVMultiLassoPath(X, Y[:, 1:1], options; folds, nλ = 6, standardize_x, row_norm, alpha, rng = Xoshiro(7))
         @test cv.cvm ≈ scalar.cvm atol = 1e-8
         @test cv.cvse ≈ scalar.cvse atol = 1e-8
         @test cv.λmin ≈ scalar.λmin atol = 1e-8

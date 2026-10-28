@@ -291,7 +291,8 @@ that norm is the root above. Every excluded row is checked against its zero-row
 optimality condition after solving; violators are added and the level is
 solved again. `kkt_checks` records these rounds.
 
-The two new penalties use row coordinate descent on the tasks' own designs.
+The row ℓ1/ℓ∞ and sparse-group penalties use row coordinate descent on the
+tasks' own designs.
 No stacked design is built, and a shared design is stored once. The solver
 keeps per-task residuals and centered column squared norms. A row uses the
 majorizing curvature
@@ -318,8 +319,8 @@ row, or when the primal objective is zero. Reaching `max_iter` passes gives
 
 [`sparse_group_lasso`](@ref) has one response and user-defined groups of
 predictors. Here a group is one predictor across tasks, with a common entrywise
-penalty. Neither is a dirty model: a decomposition ``B=A+S`` with different
-penalties on ``A`` and ``S`` is a separate model (#90).
+penalty. A dirty model decomposes ``B = A + S`` with different penalties on the
+two components; it is not one of these penalties.
 
 ### Cross-validation with a shared design
 
