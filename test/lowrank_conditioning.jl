@@ -273,12 +273,13 @@ end
     @test all(isfinite, cv.cvm)
   end
   logs, s = Test.collect_test_logs() do
-    sparse_reduced_rank(X, Y, 2, 0.01f0; tol = 1e-12)
+    sparse_reduced_rank(X, Y, 2, 0.01f0; tol = 1e-12, inner_tol = 1e-11, max_iter = 1)
   end
   @test !s.converged
   @test length(logs) == 1
   @test occursin((:warn, r"did not converge"), only(logs))
   @test only(logs).kwargs[:tol] == 1e-12
+  @test only(logs).kwargs[:inner_tol] == 1e-11
   for T in (Float64, Float32)
     p = LowRankPath(T.(X), T.(Y); method = :nuclear, λpath = T[0.02, 0.01])
     explicit = LowRankPath(T.(X), T.(Y); method = :nuclear, λpath = T[0.02, 0.01], tol = 1e-7)
