@@ -32,12 +32,12 @@ separates across coordinates, including your own.
 
 ## Installation
 
-Use the master checkout and prepare its dependency master checkouts:
+Before the first registration, use a checkout with registered dependencies:
 
 ```sh
 git clone --branch master https://github.com/mlakolar/HighDimensionalModels.jl.git
 cd HighDimensionalModels.jl
-julia scripts/instantiate.jl
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
 julia --project=.
 ```
 
@@ -110,7 +110,8 @@ ProximalSolvers; to write your own algorithm, ProximalBase.
 
 ## Development tests
 
-From the repository root, run `julia scripts/test_master.jl`. It prepares an
-isolated environment containing dependency master checkouts and the test extras,
-then runs the full suite on Julia 1.10 and newer. The repository's
+From the repository root, run `julia scripts/test_registered.jl` for the full
+suite with registered dependencies on Julia 1.10 and newer. In a separate
+checkout, `julia scripts/test_master.jl` checks integration with dependency
+master checkouts. The repository's
 `CONTRIBUTING.md` describes the naming convention and bootstrap scripts.

@@ -1,6 +1,8 @@
 module VaryingTest
+include("kernels.jl")
+using .TestKernels
 
-using HighDimensionalModels, KernelSmoothing
+using HighDimensionalModels
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
 # the weighted least squares fit of y on the columns Xᵢⱼ (zᵢ - z₀)ʳ, with

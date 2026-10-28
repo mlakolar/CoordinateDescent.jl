@@ -156,6 +156,8 @@ StatsAPI.fit(::Type{LassoPath}, X::AbstractMatrix, y::AbstractVector, args...; k
     fit(GroupLassoPath, X, y, args...; kwargs...)
     fit(SparseGroupLassoPath, X, y, args...; kwargs...)
     fit(MultiLassoPath, X, Y, args...; kwargs...)
+    fit(MultitaskLassoPath, Xs, ys, args...; kwargs...)
+    fit(CVMultitaskLassoPath, Xs, ys, args...; kwargs...)
 
 The same as calling the constructor, for example
 [`GLMLassoPath`](@ref)`(X, y, args...; kwargs...)`.
@@ -172,6 +174,10 @@ StatsAPI.fit(::Type{SparseGroupLassoPath}, X::AbstractMatrix, y::AbstractVector,
   SparseGroupLassoPath(X, y, args...; kwargs...)
 StatsAPI.fit(::Type{MultiLassoPath}, X::AbstractMatrix, Y::AbstractMatrix, args...; kwargs...) =
   MultiLassoPath(X, Y, args...; kwargs...)
+StatsAPI.fit(::Type{MultitaskLassoPath}, Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector{<:AbstractVector},
+             args...; kwargs...) = MultitaskLassoPath(Xs, ys, args...; kwargs...)
+StatsAPI.fit(::Type{CVMultitaskLassoPath}, Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector{<:AbstractVector},
+             args...; kwargs...) = CVMultitaskLassoPath(Xs, ys, args...; kwargs...)
 
 ######################################################################
 #
@@ -368,6 +374,80 @@ StatsAPI.nobs(path::MultiLassoPath) = path.nobs
 
 ######################################################################
 #
+#   The multitask lasso
+#
+######################################################################
+
+# the fitted values β₀ₜ .+ X_t * b_t at the designs Xs of the tasks, the columns
+# of B
+function _taskpredict(Xs::AbstractVector{<:AbstractMatrix}, B::SparseMatrixCSC, β0::AbstractVector)
+  length(Xs) == size(B, 2) ||
+    throw(DimensionMismatch("there are $(length(Xs)) designs, but the model has $(size(B, 2)) tasks."))
+  foreach(X -> _checkcolumns(X, size(B, 1)), Xs)
+  [Vector(Xs[t] * B[:, t]) .+ β0[t] for t in eachindex(Xs)]
+end
+
+"""
+    coef(sol::MultitaskLassoSolution)
+    predict(sol::MultitaskLassoSolution, Xs)
+
+The `p × q` coefficients `B` as a sparse matrix, a column per task, with the
+intercepts of the tasks in a first row when the solver fitted them, and the
+fitted values `β₀ₜ .+ X_t * b_t` at the rows of the designs `Xs[t]` of the
+tasks, a vector per task. `nobs` (the observations of all the tasks) and `dof`
+(the nonzero coefficients, plus one intercept per task) apply too.
+"""
+StatsAPI.coef(sol::MultitaskLassoSolution) = sol.hasintercept ? _prependrow(sol.intercept, sol.B) : sol.B
+StatsAPI.predict(sol::MultitaskLassoSolution, Xs::AbstractVector{<:AbstractMatrix}) =
+  _taskpredict(Xs, sol.B, sol.intercept)
+StatsAPI.nobs(sol::MultitaskLassoSolution) = sol.nobs
+StatsAPI.dof(sol::MultitaskLassoSolution) = nnz(sol.B) + sol.hasintercept * size(sol.B, 2)
+
+"""
+    coef(path::MultitaskLassoPath)
+    coef(path::MultitaskLassoPath, λ)
+    predict(path::MultitaskLassoPath, Xs)
+
+The coefficient matrices along the path, one per level (with the intercepts in
+the first row when the path has them), or the matrix at `λ`, interpolated
+linearly in `λ` between neighboring levels; and the fitted values at the rows
+of the designs `Xs[t]` of the tasks, an `nₜ × L` matrix per task with a column
+per level.
+"""
+StatsAPI.coef(path::MultitaskLassoPath) = [_multitaskcoef(path, k) for k in eachindex(path.λpath)]
+StatsAPI.coef(path::MultitaskLassoPath{T}, λ::Real) where {T} =
+  _coefat(T, path.λpath, k -> _multitaskcoef(path, k), λ)
+_multitaskcoef(path::MultitaskLassoPath, k::Int) =
+  path.intercept ? _prependrow(path.β0path[k], path.Bpath[k]) : path.Bpath[k]
+
+function StatsAPI.predict(path::MultitaskLassoPath{T}, Xs::AbstractVector{<:AbstractMatrix}) where {T}
+  q = length(path.task_nobs)
+  length(Xs) == q || throw(DimensionMismatch("there are $(length(Xs)) designs, but the path has $q tasks."))
+  [_predictpath(T, [B[:, t] for B in path.Bpath], T[β0[t] for β0 in path.β0path], Xs[t]) for t in 1:q]
+end
+
+StatsAPI.nobs(path::MultitaskLassoPath) = path.nobs
+
+"""
+    coef(cv::CVMultitaskLassoPath; λ = :λ1se)
+    predict(cv::CVMultitaskLassoPath, Xs; λ = :λ1se)
+
+The coefficients (with the intercepts in the first row when the path has them),
+and the fitted values at the rows of the designs `Xs[t]` of the tasks, a vector
+per task, of the path on all the data at `cv.λ1se`, at `cv.λmin` with
+`λ = :λmin`, or at a level `λ` within the path.
+"""
+StatsAPI.coef(cv::CVMultitaskLassoPath; λ::Union{Symbol, Real} = :λ1se) = coef(cv.path, _cvlevel(cv, λ))
+
+function StatsAPI.predict(cv::CVMultitaskLassoPath{T}, Xs::AbstractVector{<:AbstractMatrix};
+                          λ::Union{Symbol, Real} = :λ1se) where {T}
+  C = coef(cv; λ)
+  cv.path.intercept || return _taskpredict(Xs, C, zeros(T, size(C, 2)))
+  _taskpredict(Xs, C[2:end, :], Vector(C[1, :]))
+end
+
+######################################################################
+#
 #   Inference after selection
 #
 ######################################################################
@@ -441,8 +521,8 @@ StatsAPI.deviance(r::PostLassoResult) = sum(abs2, r.residuals)
     confint(te::TreatmentEffect; level = 0.95)
 
 The estimate of the treatment effect as a model with one coefficient: a vector
-of length one, its standard error, a 1 × 1 covariance, and the normal
-confidence interval at `level` as a 1 × 2 matrix (`te.ci` holds the one at the
+of length one, its standard error, a 1 × 1 covariance using `te.vcov_type`, and
+the normal confidence interval at `level` as a 1 × 2 matrix (`te.ci` holds the one at the
 level of [`double_selection`](@ref)). `nobs` is the number of observations.
 """
 StatsAPI.coef(te::TreatmentEffect) = [te.estimate]

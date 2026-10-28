@@ -56,6 +56,17 @@ loaded, `solver = :panoc` uses its limited-memory quasi-Newton acceleration
 and line search. Both backends use ProximalBase's nuclear proximal operator
 and certify the same normalized gradient mapping at the returned coefficients.
 
+Float64 PANOC fits reuse the loss/gradient products and final residual/singular
+values. Tall designs use a quadratic value with a direct residual fallback near
+cancellation; wide designs share one residual between value and gradient.
+Float32 keeps its original loss/gradient arithmetic. The internal step remains
+`.95/L` and the certificate is checked every ten iterations, plus termination.
+The [replicated study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/4c506aa8be5f2c485ca0f146255c0b1f4f01179e/benchmark/lowrank/panoc_ablation)
+compares complete fits and paths with independent accuracy checks. PANOC helps
+the tested middle-penalty fits and paths, but APG is faster for the weak
+many-response cold fit. APG remains the default; no automatic solver-selection
+rule or general memory improvement is implied by those measurements.
+
 ## Row-sparse reduced-rank regression
 
 ```math
@@ -138,11 +149,14 @@ allow grouped or blocked validation. A nonconverged fold fit raises an error.
 For a rank path, request ranks that are estimable in every training fold.
 
 rrpack 0.1-14 interchanges its BIC/BICP selection labels inside `rssvd.eea`.
-The oracle harness aligns the actual BIC column explicitly; the methods here
-use the criterion names according to the formulas above.
+The R oracle, `test/data/lowrank/oracle.R`, aligns the actual BIC column
+explicitly; the methods here use the criterion names according to the formulas
+above.
 
-The [Discovery harness](https://github.com/mlakolar/HighDimensionalModels.jl/tree/master/benchmark/lowrank) records replicated
-timing, profiles and independent rrpack comparisons. rrpack uses unscaled
+The [low-rank study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/abddaf56a790b86178de376b175a1185020c8381/benchmark/lowrank) records replicated
+timing and profiles; the `lowrank` group of the [benchmark harness](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/benchmark/README.md)
+measures the current fits. The test suite checks the fits against rrpack fits
+saved by the R oracle. rrpack uses unscaled
 squared losses: its penalty is `n * λ` for the objectives here. Its adaptive
 nuclear-norm estimator shrinks the fitted-value singular values, so it is
 not an oracle for the coefficient nuclear penalty; the latter has an exact

@@ -1,1 +1,0 @@
-fixed rho=0.1; selected on seed901 only; confirmation seeds902,903,904
