@@ -1,5 +1,0 @@
-case,seed,rep,method,levels,fit_s,diagnostics_s,total_s,max_kkt,max_abs_rawgap,max_certificate_gap,qualified_2e6,qualified_2e7,all_native,status,host
-wide,1303,1,certified-tight,32,4.327260229,0.0,4.327260229,3.5496758865605216e-8,1.2388412184982656e-7,8.269756821555063e-7,true,true,false,returned,b09-17.hpc.usc.edu
-wide,1303,1,conquer-1e-8,32,34.4227497577667,0.017325364,34.440075121766704,1.2386939104991335e-7,2.627710005143058e-7,8.56825575579201e-6,true,false,not_reported,returned,b09-17.hpc.usc.edu
-wide,1303,2,certified-tight,32,4.260217603,0.0,4.260217603,3.5496758865605216e-8,1.2388412184982656e-7,8.269756821555063e-7,true,true,false,returned,b09-17.hpc.usc.edu
-wide,1303,2,conquer-1e-8,32,33.6237683296204,0.013706684,33.637475013620396,1.2386939104991335e-7,2.627710005143058e-7,8.56825575579201e-6,true,false,not_reported,returned,b09-17.hpc.usc.edu

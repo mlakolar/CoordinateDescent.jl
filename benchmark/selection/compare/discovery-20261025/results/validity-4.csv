@@ -1,3 +1,0 @@
-rep,engine,relative_covariance_error,min_eigenvalue_conditional,implied_covariance_error
-4,CD,0.03185505291244507,4.456410798126375e-9,1.0993510408086582e-15
-4,Knockoffs.jl,0.25311619047774797,4.456410798126375e-9,0.2508018617799106

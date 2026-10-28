@@ -1,3 +1,0 @@
-case,seed,rep,method,n,p,tau,status,levels,total_s,setup_s,optimize_s,extract_s,bytes,gc_s,iterations,host,first_lp_pivots
-ultrawide,1001,1,lp-dual-nullbasis-warm,1000,10000,0.5,TIME_LIMIT,6,30.288933157,4.598134517669678,25.656911849975586,0.03010869026184082,3253609992,0.782642401,590,a01-09.hpc.usc.edu,0
-ultrawide,1001,1,lp-dual-dual-warm,1000,10000,0.5,TIME_LIMIT,6,30.222184968,3.4761369228363037,26.7131564617157,0.03232121467590332,3253764040,0.690636978,591,a01-09.hpc.usc.edu,NaN

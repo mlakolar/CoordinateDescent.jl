@@ -1,8 +1,0 @@
-ACCURACY wide 1 api-default 1.76349363
-ACCURACY wide 1 api-tight 4.483877421
-ACCURACY wide 2 api-tight 4.478236999
-ACCURACY wide 2 api-default 1.779157178
-┌ Warning: coordinate descent did not converge in maxpasses = 10000 passes (largest change of a coordinate in the last pass 2.13 > tolerance 3.92e-5); the solution may be inaccurate.
-└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-api/source/ProximalSolvers.jl/src/cd/solver.jl:580
-┌ Warning: coordinate descent did not converge in maxpasses = 20000 passes (largest change of a coordinate in the last pass 2.21 > tolerance 3.92e-8); the solution may be inaccurate.
-└ @ ProximalSolvers ~/juliaPkg/runs/20261025-cd78-api/source/ProximalSolvers.jl/src/cd/solver.jl:580

@@ -1,5 +1,0 @@
-parallel: This job failed:
-srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness/prepare-worker.sh lts > validation/lts.log 2>&1
-parallel: Starting no more jobs. Waiting for 1 jobs to finish.
-parallel: This job failed:
-srun --exclusive --exact -N1 -n1 -c1 --mem=3800M bash harness/prepare-worker.sh release > validation/release.log 2>&1
