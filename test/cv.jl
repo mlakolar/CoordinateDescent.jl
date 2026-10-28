@@ -3,6 +3,26 @@ module CVTest
 using HighDimensionalModels, ProximalBase
 using LinearAlgebra, Random, SparseArrays, Statistics, Test
 
+# cv against its fold errors errs (K × L, NaN at the levels a fold path did not
+# reach), for folds of equal size: the last levels, which no fold reached, have
+# NaN in cvm and cvse, the others the mean of the folds that reached them and
+# its standard error (NaN for one fold), and λmin and λ1se are levels reached.
+function check_unreached(cv, errs)
+  K, L = size(errs)
+  reached = [any(!isnan, errs[:, j]) for j in 1:L]
+  Lr = count(reached)
+  @test 1 <= Lr < L && all(reached[1:Lr])
+  @test all(isnan, cv.cvm[Lr+1:end]) && all(isnan, cv.cvse[Lr+1:end])
+  e = [filter(!isnan, errs[:, j]) for j in 1:Lr]
+  se = [length(ej) > 1 ? sqrt(sum(abs2, ej .- mean(ej)) / length(ej) / (length(ej) - 1)) : NaN for ej in e]
+  @test cv.cvm[1:Lr] ≈ mean.(e)
+  @test isequal(isnan.(cv.cvse[1:Lr]), isnan.(se)) && cv.cvse[1:Lr][.!isnan.(se)] ≈ se[.!isnan.(se)]
+  jmin = argmin(cv.cvm[1:Lr])
+  bound = cv.cvm[jmin] + (isnan(cv.cvse[jmin]) ? 0.0 : cv.cvse[jmin])
+  @test cv.λmin == cv.λpath[jmin]
+  @test cv.λ1se == cv.λpath[findfirst(j -> cv.cvm[j] <= bound, 1:jmin)]
+end
+
 @testset "CVLassoPath and information criteria" begin
   rng = Xoshiro(61)
   n, p = 150, 40
@@ -89,6 +109,26 @@ using LinearAlgebra, Random, SparseArrays, Statistics, Test
     a0 = aic(path0, X[1:30, :], y[1:30])
     @test all(isnan(a0[j]) == (nnz(path0.βpath[j]) >= 30) for j in eachindex(a0))
     @test_throws ArgumentError ebic(path, X, y; γ = 2)
+  end
+
+  @testset "levels that no fold path reaches" begin
+    # Every fold path stops early (max_hat_s) before the last levels of the
+    # full path (#144). Uniform data and explicit folds give the same draws on
+    # every Julia version.
+    rng = Xoshiro(1)
+    X = rand(rng, 40, 80) .- 0.5
+    y = X[:, 1:5] * ones(5) .+ 0.3 .* (rand(rng, 40) .- 0.5)
+    folds, K = repeat(1:5, 8), 5
+    cv = CVLassoPath(X, y; folds, max_hat_s = 15, gram = false, rng = Xoshiro(2))
+    # the fold errors from fold paths with the seeds that CVLassoPath draws
+    seeds = rand(Xoshiro(2), UInt64, K + 1)
+    errs = fill(NaN, K, length(cv.λpath))
+    for k in 1:K
+      train, test = findall(!=(k), folds), findall(==(k), folds)
+      fp = LassoPath(X[train, :], y[train], cv.λpath; max_hat_s = 15, gram = false, rng = Xoshiro(seeds[k]))
+      errs[k, 1:length(fp.λpath)] = mean(abs2, y[test] .- predict(fp, X[test, :]); dims = 1)
+    end
+    check_unreached(cv, errs)
   end
 end
 

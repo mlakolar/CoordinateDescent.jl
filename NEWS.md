@@ -7,6 +7,10 @@ ProximalSolvers 0.2 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- `CVLassoPath` and `CVGLMLassoPath` no longer throw when every fold path stops
+  early (`max_hat_s`, `devmax`) before the last levels of the full path. Those
+  levels have `NaN` in `cvm` and `cvse` and are never chosen as `λmin` or `λ1se`.
+
 - Double selection supports `vcov` choices, final-stage diagnostics and
   precomputed nuisance fits. Forced controls are validated before fitting;
   invalid `forced` now raises `ArgumentError` instead of `BoundsError`.

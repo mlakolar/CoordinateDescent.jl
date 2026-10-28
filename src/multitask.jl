@@ -575,19 +575,14 @@ function CVMultitaskLassoPath(Xs::AbstractVector{<:AbstractMatrix}, ys::Abstract
   end
   _runfolds(fold!, K, threads)
 
-  # the fold paths stop in order, so the levels that some fold reached are 1:Lr
-  Lr = something(findlast(j -> any(k -> !isnan(sse[1, k, j]), 1:K), 1:L), 0)
-  Lr >= 1 || throw(ArgumentError("no fold path reached the first level of the path."))
   c = path.task_weights
   wk = T[sum(c[t] * mt[t, k] / n[t] for t in 1:q) for k in 1:K]
-  errs = T[isnan(sse[1, k, j]) ? T(NaN) : sum(c[t] / n[t] * sse[t, k, j] for t in 1:q) / wk[k] for k in 1:K, j in 1:Lr]
-  cvr, cvser, jmin, j1se = _cvsummary(errs, wk)
-  cvm, cvse = fill(T(NaN), L), fill(T(NaN), L)
-  cvm[1:Lr], cvse[1:Lr] = cvr, cvser
+  errs = T[isnan(sse[1, k, j]) ? T(NaN) : sum(c[t] / n[t] * sse[t, k, j] for t in 1:q) / wk[k] for k in 1:K, j in 1:L]
+  cvm, cvse, jmin, j1se = _cvsummary(errs, wk)
   cvm_task = fill(T(NaN), q, L)
-  for t in 1:q, j in 1:Lr
+  for t in 1:q, j in 1:L
     ok = [k for k in 1:K if !isnan(sse[t, k, j])]
-    cvm_task[t, j] = sum(sse[t, ok, j]) / sum(mt[t, ok])
+    isempty(ok) || (cvm_task[t, j] = sum(sse[t, ok, j]) / sum(mt[t, ok]))
   end
   CVMultitaskLassoPath{T}(path, λs, cvm, cvse, cvm_task, length.(path.activerows), λs[jmin], λs[j1se], fl, c)
 end
