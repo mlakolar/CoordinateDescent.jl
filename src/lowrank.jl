@@ -111,16 +111,7 @@ function _lr_rrsolution(d, f, bound)
   else
     L, R = _lr_rrfactors(f, bound)
     B = L * R
-    # The singular values of B equal those of this bound-by-bound core.
-    # Apply rank(B)'s original dimension-dependent cutoff, including when
-    # the fitted coefficient rank is smaller than the requested bound.
-    core = Matrix(qr(L).R) * Matrix(qr(R').R)'
-    σ = svdvals!(core)
-    cutoff = min(p, q) * eps(T) * first(σ)
-    # Near the numerical cutoff, roundoff in L*R itself can affect rank.
-    # Retain the original dense-matrix diagnostic for these ambiguous cases.
-    ambiguous = any(<=(8cutoff), σ) || 8bound*eps(T)*norm(L)*norm(R) > cutoff
-    r = ambiguous ? LinearAlgebra.rank(B) : count(>(cutoff), σ)
+    r = _lr_factor_rank(B, L, R)
     # Reuse the thin factors for residual construction when that product
     # order has fewer operations. Preserve the dense coefficient matrix and
     # all rank/support diagnostics, including their ambiguous-rank fallback.
@@ -337,8 +328,6 @@ function _lr_group_fista!(A, XX, C, λ, w; max_iter, tol, L)
   return false
 end
 
-# The design SVD already supplies the gradient's spectral scale. Keep the
-# sufficient statistics local to one fit/path, reusing them across penalties.
 function _lr_factor_rank(B, L, R)
   iszero(L) && return 0
   p, q = size(B)
@@ -346,15 +335,23 @@ function _lr_factor_rank(B, L, R)
   core = Matrix(qr(L).R) * Matrix(qr(R').R)'
   σ = svdvals!(core)
   cutoff = min(p, q) * eps(T) * first(σ)
-  ambiguous = any(<=(8cutoff), σ) || 8r*eps(T)*norm(L)*norm(R) > cutoff
+  error_bound = 8r*eps(T)*norm(L)*norm(R)
+  # Near the numerical cutoff, roundoff in L*R itself can affect rank.
+  # Retain the dense diagnostic for ambiguity or nonnormal error scales.
+  ambiguous = !isfinite(cutoff) || cutoff < floatmin(T) ||
+    !isfinite(error_bound) || error_bound < floatmin(T) ||
+    any(<=(8cutoff), σ) || error_bound > cutoff
   ambiguous ? LinearAlgebra.rank(B) : count(>(cutoff), σ)
 end
 
-function _lr_sparse_setup(d, f, block_solver)
+# The design SVD already supplies the gradient's spectral scale. Keep the
+# sufficient statistics local to one fit/path, reusing them across penalties.
+function _lr_sparse_setup(d, f)
   T, n = eltype(d.X), size(d.X, 1)
   XX, XY = d.X' * d.X / n, d.X' * d.Y / n
-  L = block_solver == :fista && !isempty(f.s) ?
-      (one(T) + sqrt(eps(T))) * abs2(first(f.s)) / n : zero(T)
+  L = isempty(f.s) ? zero(T) :
+      (one(T) + sqrt(eps(T))) * abs2(first(f.s) / sqrt(T(n)))
+  isfinite(L) || (L = eigmax(Symmetric(XX)))
   (; XX, XY, L, design_rank = f.diagnostic_xrank)
 end
 
@@ -444,7 +441,7 @@ function sparse_reduced_rank(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real
   _lr_rank(r, min(f.xrank, size(Y, 2)))
   initial = _lr_rrcoef(d, f, r)
   w = _lr_weights(d, initial, weights, adaptive, gamma)
-  setup = r == 0 ? nothing : _lr_sparse_setup(d, f, block_solver)
+  setup = r == 0 ? nothing : _lr_sparse_setup(d, f)
   _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol, block_solver, setup)
 end
 
@@ -540,7 +537,7 @@ function LowRankPath(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real};
     throw(ArgumentError("row weights apply only to method = :sparse"))
   end
   g = method == :nuclear ? _lr_gradient(d) : nothing
-  sparse_setup = method == :sparse && rank > 0 ? _lr_sparse_setup(d, f, block_solver) : nothing
+  sparse_setup = method == :sparse && rank > 0 ? _lr_sparse_setup(d, f) : nothing
   if λpath === nothing
     nλ >= 1 || throw(ArgumentError("nλ must be positive"))
     isfinite(λminratio) && 0 < λminratio <= 1 || throw(ArgumentError("λminratio must be in (0, 1]"))
