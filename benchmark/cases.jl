@@ -665,6 +665,39 @@ function structured_cases!(catalog)
                  fill(s.λpath[k], length(s.y) - 2))
     end)
 
+  # Issue #98: slow large signals, and small and irregular cases that must not regress.
+  for (variant, datakey, order, λR) in (
+      ("signal-linear-100k", "trend-sine-100000", 1, 1.0),
+      ("signal-quadratic-100k", "trend-sine-100000", 2, 0.1),
+      ("signal-linear-irregular-10k", "trend-sine-10000-irregular", 1, 1.0),
+      ("signal-linear-1k", "trend-sine-1000", 1, 10.0))
+    add_case!(catalog, "structured", "trend_filter", variant; scenario = datakey,
+      suite = "extended", measure = MEASURE.gap, target = 1e-5,
+      build = p -> begin
+        y = case64(p.y)
+        x = haskey(p, :x) ? case64(p.x) : nothing
+        λ = λR / length(y)
+        (; y, x, λ, levels = [λ])
+      end,
+      call = s -> s.x === nothing ? trend_filter(s.y, s.λ; order) :
+                                    trend_filter(s.y, s.λ; order, x = s.x),
+      certify = (p, s, out) -> signal_gap(s, out,
+        difference_operator(length(s.y), order + 1; x = s.x),
+        fill(s.λ, length(s.y) - order - 1)))
+  end
+  add_case!(catalog, "structured", "trend_filter_path", "signal-quadratic-10k";
+    scenario = "trend-sine-10000", suite = "extended", measure = MEASURE.gap, target = 1e-5,
+    build = p -> begin
+      y = case64(p.y)
+      λpath = level_grid(10.0, 0.01, 10) ./ length(y)
+      (; y, λpath, levels = λpath)
+    end,
+    call = s -> trend_filter_path(s.y, s.λpath; order = 2),
+    certify = (p, s, out) -> path_certificate(out.solutions, length(s.λpath)) do k
+      signal_gap(s, out.solutions[k], difference_operator(length(s.y), 3),
+                 fill(s.λpath[k], length(s.y) - 3))
+    end)
+
   # Regression with n > p, an intercept and levels relative to max|x̃ⱼ'ỹ|/n
   function regression_inputs(p; levels = 0)
     X, y = case64(p.X), case64(p.y)

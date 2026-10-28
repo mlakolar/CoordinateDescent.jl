@@ -52,6 +52,7 @@ function _signal_admm_errors(A,b,D,K,levels,emit;family=:generalized,trend_order
   rho===nothing || (isfinite(rho) && rho>0) || throw(ArgumentError("rho must be positive and finite."))
   T=eltype(b);n,p=size(A);gram=_structured_gram(A);xy=_structured_tproduct(A,b)
   bandwidth=_masked_bandwidth(K);curvature=n/p
+  products=eltype(K)==T ? _trend_products(K,trend_order) : K
   state,factor,last_rho=nothing,nothing,nothing
   for (j,λ) in enumerate(levels)
     if λ==0 || size(D,1)==0
@@ -65,7 +66,7 @@ function _signal_admm_errors(A,b,D,K,levels,emit;family=:generalized,trend_order
       factor=_split_factor(gram,K,ρ;bandwidth);last_rho=ρ
     end
     g=trend_order===nothing ? NormL1(T(n*λ)) : TotalVariation1D(T(n*λ))
-    β,it,ok,pr,dr,state=_split_fit(A,b,K,g,ρ;max_iter,abstol,reltol,start=state,gram,xy,factor)
+    β,it,ok,pr,dr,state=_split_fit(A,b,K,g,ρ;max_iter,abstol,reltol,start=state,gram,xy,factor,products)
     emit(β,j,ok)
   end
   nothing
