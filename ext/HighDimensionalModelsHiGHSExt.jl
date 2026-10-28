@@ -7,7 +7,7 @@ const MOI = HiGHS.MOI
 function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},
                                   ls::Vector{Float64}, w::Vector{Float64}, τ::Float64, intercept::Bool;
                                   tol, time_limit, initial_basis, simplex, start,
-                                  optimizer_factory=HiGHS.Optimizer)
+                                  max_hat_s=Inf, optimizer_factory=HiGHS.Optimizer)
   n, p = size(X)
   # The private factory permits deterministic native termination tests.
   opt = optimizer_factory()
@@ -51,7 +51,7 @@ function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},
     ret == HiGHS.kHighsStatusOk || error("HiGHS rejected the quantile starting basis")
   end
   solutions = CD.QuantileLassoSolution[]; status = :optimal
-  for λ in ls
+  for (k,λ) in enumerate(ls)
     remaining = time_limit-(time_ns()-start)/1e9
     remaining <= 0 && (status=:TIME_LIMIT;break)
     for j in 1:p
@@ -71,6 +71,7 @@ function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},
       break
     end
     term == MOI.OPTIMAL || break
+    k < length(ls) && count(!iszero,solutions[end].β) > max_hat_s && (status=:max_hat_s;break)
   end
   solutions, status
 end

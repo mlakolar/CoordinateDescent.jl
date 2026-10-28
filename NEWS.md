@@ -19,6 +19,10 @@ integration dependency to an explicit commit.
   so a level that only some fold paths reached is no longer selected. `cvm` is
   unchanged.
 
+- Add `max_hat_s` to exact and smoothed quantile paths and their cross-validation.
+  Paths retain the first fit exceeding the nonzero-slope limit and skip later
+  levels with `status=:max_hat_s`; unreached fold levels are ineligible.
+
 - Add `slope_gaussian` and `calibration = :bh | :gaussian | :user` for `slope`
   and `SLOPEPath`, with recorded calibration metadata. Explicit weights take
   precedence; BH remains the default.
