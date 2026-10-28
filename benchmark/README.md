@@ -171,8 +171,9 @@ machine noise; they do not correct for correlated noise or multiple
 comparisons. Profiles are diagnostic, not latency estimates. The default suite is
 not a substitute for the package tests or for broad coverage of parameter
 regimes. Do not select the fastest run or discard adverse runs; put the concise
-finding and its limitations in the pull request, and preserve the manifests and
-any uncommitted sources behind a claim.
+finding and its limitations in the pull request, and archive the records,
+manifests and any uncommitted sources behind a claim as described in
+[Studies and campaigns](#studies-and-campaigns).
 
 ## Records
 
@@ -217,6 +218,35 @@ Pass `--expected-runs N` to `validate.py`, `summarize.py` and `compare.py` for a
 series of `N` repetitions; `validate.py` and `summarize.py` also take
 `--versions VERSION ...`. `summarize.py` writes `SUMMARY.md` and `summary.csv`.
 Generated results, environments and profiles are ignored by Git.
+
+## Studies and campaigns
+
+Studies beyond the harness, such as validation campaigns, comparisons with
+other packages and profiling studies, keep their records out of Git.
+
+- **The repository** keeps what detects regressions or informs users: tests
+  with small reference values; cases of this harness; for statistical
+  properties such as coverage or error rates, a few fixed-seed checks with
+  tolerance bands; and, for comparisons with other packages, summary tables in
+  the documentation, each built from a small committed file and stating the
+  package versions, the date and the hardware class. Timings are not kept as
+  regression baselines: compare the base and the head on one machine with
+  `compare.py`.
+- **The archive** of a study is one compressed file attached to the GitHub
+  release `benchmark-evidence` of this repository, with its SHA-256 in the pull
+  request. It holds the per-replication or per-sample results that the
+  conclusions are computed from, the harness records behind a cited comparison,
+  the scripts and environment files used, and the profiles or logs that a claim
+  rests on. Release assets are public, so remove host names, paths and
+  scheduler settings first.
+- **Nothing else is kept:** exploratory, canary and superseded runs,
+  intermediate files, and profiles that no claim rests on.
+
+A pull request commits at most about 1 MB of study material: scripts,
+aggregated tables and its report, removed before merge unless they belong in
+the repository. A pull request that has already committed larger records
+removes them and is squash-merged, so that they stay out of the history of
+master; its commits remain reachable from the pull request.
 
 ## Historical studies
 
