@@ -14,6 +14,10 @@ integration dependency to an explicit commit.
   so a level that only some fold paths reached is no longer selected. `cvm` is
   unchanged.
 
+- Add `quantile_refit`, `QuantileRefit` and `refit_quantile_path` for unpenalized
+  refits on selected supports, preserving raw dual scores and restricted-fit
+  diagnostics. Exact refits reuse one model across requested quantiles.
+
 - Add `max_hat_s` to exact and smoothed quantile paths and their cross-validation.
   Paths retain the first fit exceeding the nonzero-slope limit and skip later
   levels with `status=:max_hat_s`; unreached fold levels are ineligible.
