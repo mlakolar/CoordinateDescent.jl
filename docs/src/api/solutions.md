@@ -8,4 +8,5 @@ Private = false
 
 ```@docs
 SparseNuclearSolution
+LowRankPlusSparseSolution
 ```
