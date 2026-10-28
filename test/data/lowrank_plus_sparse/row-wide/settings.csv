@@ -1,0 +1,6 @@
+sparsity,row
+intercept,true
+design,full
+lambda_rank_reference,2.326037363860363
+lambda_sparse_reference,1.6795748460669873
+levels,1
