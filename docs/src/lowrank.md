@@ -159,13 +159,13 @@ nuclear-norm estimator shrinks the fitted-value singular values, so it is
 not an oracle for the coefficient nuclear penalty; the latter has an exact
 orthonormal-design test and a proximal-gradient optimality check.
 
-
 The sparse-fit setup optimization reuses `X'X/n` and `X'Y/n` within each
 fit and across penalty levels in a path. The FISTA step scale comes from the
 existing design SVD. Coefficient rank, degrees of freedom and residuals are
-computed from thin factors with conservative dense fallbacks. Coefficients,
-objective, weights, support/DF semantics and stopping rules are unchanged;
-CD remains the default block solver. The
+computed from thin factors with conservative dense fallbacks. The objective,
+weights, support/DF semantics and stopping rules are unchanged. CD results are
+unchanged and FISTA results agree within the stopping tolerance. CD remains
+the default block solver. The
 [replicated optimization study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/09da5020ffe8aa1c3bd812629794c08fa4a93464/benchmark/lowrank/sparse_setup)
 used 20 shared independent inputs per design on an earlier dependency stack
 and was not rerun at this revision. Its final report is in the snapshot's

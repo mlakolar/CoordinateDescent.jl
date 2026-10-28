@@ -30,8 +30,8 @@ residuals once, preserving numerical rank and degrees-of-freedom definitions.
   APG remains the default.
 
 - Sparse reduced-rank fits and paths reuse sufficient statistics across penalties
-  and compute rank/residual diagnostics from thin factors. Results and defaults
-  are unchanged.
+  and compute rank/residual diagnostics from thin factors. CD results and all
+  defaults are unchanged; FISTA results agree within the stopping tolerance.
 
 ## Quantile primal–dual API
 
