@@ -87,6 +87,91 @@ recommendation. Inference and full parametric breakpoint enumeration remain
 separate work. Quantile paths do not linearly
 interpolate coefficients or duals between saved levels.
 
+## Refitting a selected support
+
+Use `quantile_refit` to remove the penalty while keeping a selected set of
+columns. The result is a `QuantileRefit` with coefficients on the full design
+and a restricted λ=0 fit in `r.fit`:
+
+```julia
+r = quantile_refit(X, y, [1, 3]; tau=0.5)
+r = quantile_refit(X, y, sol)    # exact nonzeros of sol.β
+coef(r)                        # full coefficients, intercept first if fitted
+predict(r, Xnew; offset=offset_new)
+u = dual_scores(r)             # raw scores from the restricted fit
+xi = -u / nobs(r)               # QR.jl's row-dual convention
+r.fit.converged                 # numerical KKT and raw-gap checks
+```
+
+An explicit support is copied, sorted and checked for distinct integer indices
+in `1:size(X,2)`; it may be empty. Convert Bool masks with `findall`.
+The solution form uses exact nonzeros without a threshold and inherits its
+method, bandwidth and intercept setting. Every other column is fixed at zero.
+A zero-loading column whose fitted coefficient is zero is excluded too;
+list it explicitly to keep it. Penalty factors, standardization and
+`max_hat_s` have no role and are not accepted as refit keywords. Sparse designs
+remain sparse. Empty supports work with and without an intercept.
+
+`r.β` has one entry per original column and is zero off `r.support`.
+`r.fit.β` has one entry per selected column. `residuals(r)` and `nobs(r)`
+refer to this restricted fit. `dof(r)` counts `length(r.support)` plus one
+when fitting an intercept, even if a selected coefficient refits to zero.
+All diagnostics and stationarity checks use the restricted design. At an
+accurate optimum, `X[:,r.support]'*u/nobs(r)` is zero; correlations with
+excluded columns need not vanish. At λ=0 the separate feasible certificate
+is zero, so its gap may be loose. Numerical convergence uses the raw pair.
+
+Several quantiles can share an exact model:
+
+```julia
+rs = quantile_refit(X, y, [1, 3]; tau=[0.7, 0.3, 0.7], offset=offset)
+refits = refit_quantile_path(path, X, y; offset=offset)
+r = refits[findall(!iszero, path[2].β)]
+```
+
+A scalar `tau` returns one result; a nonempty vector returns a vector in the
+supplied order, including repeats. Exact refits reuse one solver model and its
+current basis across quantiles, changing only the observation-score bounds.
+Smoothed refits use the same Epanechnikov loss, tolerances and solver controls
+as smoothed paths, with one independent fit per quantile and no warm starts.
+Their scores are convolution derivatives, not exact check-loss scores.
+
+`refit_quantile_path` returns a `Dict{Vector{Int},QuantileRefit}` and refits
+each distinct support of the saved fits once, including nonconsecutive repeats.
+The method and intercept setting come from the path. Each support inherits the
+quantile and bandwidth of its first saved fit; a scalar `tau` overrides the
+quantile. An empty path returns an empty dictionary. A truncated path uses
+only its saved fits. Models are not reused across supports.
+
+The solution form checks dimensions and requires the recomputed residuals
+`y - offset - sol.intercept - X*sol.β` to match `sol.residuals` within
+`sqrt(eps(Float64))*(1 + maximum(abs, y - offset))` in maximum norm.
+Each distinct support's source fit receives the same check for path refits.
+This catches incompatible responses, offsets or scaling. It does not prove
+that the supplied design is the original one: changes with `ΔX*sol.β == 0`
+pass. Supply the original data and offset.
+
+Every requested refit is attempted, even after a non-optimal native
+termination that returns a primal–dual pair. Such a result keeps the native
+`r.fit.status` and `native_converged=false`; `converged` independently reports
+numerical accuracy. A missing pair raises an error. An exact `time_limit`
+is one deadline for the whole call, across all quantiles or supports.
+The remaining time is passed to each solve. If the deadline has passed before
+a requested solve, the call raises an error. Preparation and diagnostics can
+overrun the deadline. Finite limits are rejected for smoothed refits.
+
+Let `d = length(r.support) + r.fit.hasintercept`. When the restricted design
+(with an intercept column if fitted) has full column rank, an exact vertex
+solution has at least `d` zero residuals. If exactly `d` residuals are zero
+and the design of those rows is nonsingular, stationarity uniquely determines
+their scores. Scores and coefficients can be nonunique in degenerate cases:
+more zero residuals than `d`, tied responses, rank-deficient or
+overparameterized supports (`d ≥ n`), or dual-degenerate optima.
+The refit keeps the optimizer's values. Compare objectives and KKT conditions
+in such cases; entrywise comparisons need a checked nondegenerate fixture.
+These routines provide computation, not post-selection inference; inference
+is tracked in [issue #104](https://github.com/mlakolar/HighDimensionalModels.jl/issues/104).
+
 ## Penalty calibration and cross-validation
 
 For a fixed quantile, simulate the pivotal score penalty, then use the same
