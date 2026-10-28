@@ -32,3 +32,10 @@ the [benchmark snapshot](https://github.com/mlakolar/HighDimensionalModels.jl/tr
 describes the current benchmark harness.
 HighDimensionalModels starts at 0.1.0 under a new UUID; CoordinateDescent retains
 its original UUID and registered versions.
+
+Studies and validation campaigns keep their records out of Git. The repository
+keeps what detects regressions or informs users: tests, harness cases, and
+summary tables of comparisons with other packages in the documentation. Each
+study's records go into one archive attached to the `benchmark-evidence`
+release, and a pull request commits at most about 1 MB of study material; see
+[Studies and campaigns](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/benchmark/README.md#studies-and-campaigns).
