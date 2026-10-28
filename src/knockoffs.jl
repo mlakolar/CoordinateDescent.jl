@@ -117,12 +117,15 @@ function _fixed_knockoffs_details(X::AbstractMatrix{<:Real}; s=nothing, strategy
   p > 0 && n >= 2p || throw(ArgumentError("fixed-X knockoffs require n ≥ 2p > 0"))
   Z = Matrix{float(eltype(X))}(X)
   all(isfinite, Z) || throw(ArgumentError("X must be finite"))
-  F = qr(Z)
-  # Use the design's QR scale: forming the Gram matrix can hide rank loss,
-  # especially in Float32. Reuse this factorization for the complement below.
-  pivots = abs.(diag(F.R))
+  # Check rank on the correlation scale so column units do not affect it.
+  # Forming the Gram matrix can hide rank loss, especially in Float32.
+  column_norms = norm.(eachcol(Z))
+  any(iszero, column_norms) && throw(ArgumentError("X must not have zero-norm columns"))
+  pivots = abs.(diag(qr(Z ./ transpose(column_norms)).R))
   rank_tol = max(n, p) * eps(eltype(Z)) * maximum(pivots)
   count(>(rank_tol), pivots) == p || throw(ArgumentError("X must have full numerical column rank"))
+  # Keep the original design's QR for the orthogonal complement.
+  F = qr(Z)
   S = _knockoff_covariance(transpose(Z) * Z)
   plan = _knockoff_choose_diagonal(S, strategy, s, construction_options)
   _, A, C = _knockoff_parameters_from_diagonal(S, plan.s)

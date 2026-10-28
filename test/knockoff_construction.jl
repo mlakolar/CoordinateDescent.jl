@@ -119,6 +119,19 @@ end
   end
 end
 
+@testset "fixed-X rank is invariant to column units" begin
+  R=[.5^abs(i-j) for i in 1:8,j in 1:8]
+  base=randn(Xoshiro(106),60,8)*cholesky(R).U .* exp10.(range(-3,3;length=8))'
+  for T in (Float32,Float64)
+    X=T.(base);G=X'X
+    s=knockoff_diagonal(G).s
+    K=fixed_knockoffs(X)
+    scales=sqrt.(diag(G));normalizer=scales*scales'
+    @test (K'K)./normalizer≈G./normalizer rtol=200eps(T) atol=200eps(T)
+    @test (X'K)./normalizer≈(G-Diagonal(s))./normalizer rtol=200eps(T) atol=200eps(T)
+  end
+end
+
 @testset "Gaussian joint covariance with nonzero mean" begin
   rng=Xoshiro(10603);n=20000
   Sigma=[1.0 .4 .1;.4 1.5 .3;.1 .3 .8];mu=[1.5,-2.,.75]
