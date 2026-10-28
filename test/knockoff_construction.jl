@@ -1,5 +1,5 @@
 module KnockoffConstructionTests
-using HighDimensionalModels, LinearAlgebra, Random, Test
+using HighDimensionalModels, LinearAlgebra, Random, Statistics, Test
 const H = HighDimensionalModels
 
 @testset "construction selector and compatibility" begin
@@ -42,8 +42,13 @@ const H = HighDimensionalModels
   @test_throws ArgumentError knockoff_diagonal(S;s=fill(3.,4))
   @test_throws ArgumentError knockoff_diagonal(S;s=fill(NaN,4))
   @test_throws ArgumentError knockoff_diagonal(S;construction_options=Dict())
-  for strategy in (:mvr,:maxent),opts in ((niter=0,),(tol=0.,),(λmin=-1.,),(robust=1,),(optimality_tol=0.,),(unknown=1,))
+  for strategy in (:mvr,:maxent),opts in ((niter=0,),(tol=0.,),(λmin=-1.,),(robust=1,),
+      (optimality_tol=0.,),(optimality_tol=1.,),(optimality_tol=2.,),
+      (optimality_tol=Inf,),(optimality_tol=NaN,),(unknown=1,))
     @test_throws ArgumentError knockoff_diagonal(S;strategy,construction_options=opts)
+  end
+  for strategy in (:mvr,:maxent),optimality_tol in (0.,1.,2.,Inf,NaN)
+    @test_throws r"optimality_tol must be finite and in \(0, 1\)" knockoff_diagonal(S;strategy,construction_options=(;optimality_tol))
   end
   if Base.get_extension(H,:HighDimensionalModelsKnockoffsExt)===nothing
     @test_throws ArgumentError knockoff_diagonal(S;strategy=:mvr)
@@ -64,6 +69,7 @@ end
 @testset "filter forwarding and conflict rejection" begin
   rng=Xoshiro(106);X=randn(rng,40,4);y=randn(rng,40);Z=randn(rng,40,4);mu=zeros(4)
   S=[.3^abs(i-j) for i in 1:4,j in 1:4];s=.4diag(S)
+  before=map(copy,(X,y,mu,S,s,Z))
   K=gaussian_knockoffs(X,mu,S;s,noise=Z)
   f=knockoff_filter(X,y,.2;Sigma=S,mu,s,noise=Z,order=:cyclic,opt_tol=1e-9)
   @test f.Xk==K && f.method==:gaussian && f.construction.strategy==:user
@@ -89,5 +95,92 @@ end
   rng=Xoshiro(17);control=copy(rng)
   @test_throws ArgumentError knockoff_filter(X,y,.2;Sigma=S,mu,rng,not_a_cd_option=true)
   @test rand(rng)==rand(control)
+  @test all(isequal.(before,(X,y,mu,S,s,Z)))
+end
+
+@testset "fixed-X numerical rank before construction" begin
+  for T in (Float32,Float64)
+    duplicated=ones(T,6,2)
+    zero_column=hcat(ones(T,6),zeros(T,6))
+    near_duplicate=copy(duplicated);near_duplicate[4,2]+=eps(T)
+    # The Float32 perturbation is the rounded value of 1 + 1f-7.
+    for X in (duplicated,zero_column,near_duplicate)
+      y=ones(T,6)
+      @test_throws ArgumentError fixed_knockoffs(X)
+      @test_throws ArgumentError knockoff_filter(X,y,T(.2);method=:fixed)
+    end
+    X=T[1 0;0 1;1 1;1 -1;2 1;-1 2]
+    d,A,C=H._knockoff_parameters(X'X,nothing)
+    E=zeros(T,6,2);E[3,1]=1;E[4,2]=1
+    expected=X-X*A+(qr(X).Q*E)*C
+    @test fixed_knockoffs(X)==expected
+    result=knockoff_filter(X,ones(T,6),T(.2);method=:fixed,order=:cyclic)
+    @test result.Xk==expected
+  end
+end
+
+@testset "Gaussian joint covariance with nonzero mean" begin
+  rng=Xoshiro(10603);n=20000
+  Sigma=[1.0 .4 .1;.4 1.5 .3;.1 .3 .8];mu=[1.5,-2.,.75]
+  X=randn(rng,n,3)*cholesky(Symmetric(Sigma)).U .+ mu'
+  Z=randn(rng,n,3)
+  for strategy in (:equicorrelated,:user)
+    supplied=strategy===:user ? (;s=.35diag(Sigma)) : (;)
+    plan=knockoff_diagonal(Sigma;strategy,supplied...)
+    K=gaussian_knockoffs(X,mu,Sigma;strategy,noise=Z,supplied...)
+    D=Diagonal(plan.s);target=[Sigma Sigma-D;Sigma-D Sigma]
+    @test all(isapprox.(vec(mean(hcat(X,K);dims=1)),vcat(mu,mu);atol=.04,rtol=0))
+    @test all(isapprox.(cov(hcat(X,K)),target;atol=.06,rtol=0))
+  end
+end
+
+@testset "filter sampling and solver share the RNG" begin
+  data_rng=Xoshiro(10604);X=randn(data_rng,80,4);y=X[:,1]+randn(data_rng,80)
+  mu=[.2,-.1,.3,-.4];Sigma=[.3^abs(i-j) for i in 1:4,j in 1:4];s=.4diag(Sigma)
+  before=map(copy,(X,y,mu,Sigma,s))
+  for strategy in (:equicorrelated,:user)
+    supplied=strategy===:user ? (;s) : (;)
+    sampled_rng=Xoshiro(17);noise_rng=Xoshiro(17)
+    # Construction draws first; pass the advanced generator to the random-order solver.
+    noise=randn(noise_rng,Float64,size(X)...)
+    sampled=knockoff_filter(X,y,.2;mu,Sigma,strategy,rng=sampled_rng,order=:random,supplied...)
+    supplied_noise=knockoff_filter(X,y,.2;mu,Sigma,strategy,noise,rng=noise_rng,order=:random,supplied...)
+    @test sampled.Xk==supplied_noise.Xk
+    @test sampled.W==supplied_noise.W
+    @test sampled.selected==supplied_noise.selected
+    @test sampled.threshold==supplied_noise.threshold
+    @test sampled.construction==supplied_noise.construction
+    @test rand(sampled_rng)==rand(noise_rng)
+  end
+  @test all(isequal.(before,(X,y,mu,Sigma,s)))
+end
+
+@testset "near-singular covariance remains validated" begin
+  Sigma=[1.0 1-1e-8;1-1e-8 1.0]
+  # Keep a definite interior margin for this ill-conditioned covariance.
+  construction_options=(safety=.1,)
+  plan=knockoff_diagonal(Sigma;construction_options)
+  @test plan.diagnostics.feasibility==:validated
+  @test all(>(0),plan.s)
+  D=Diagonal(plan.s)
+  @test eigmin(Symmetric([Sigma Sigma-D;Sigma-D Sigma]))>=-100eps(Float64)
+  _,A,C=H._knockoff_parameters(Sigma,plan.s)
+  @test C'C≈2D-D*A atol=100eps(Float64) rtol=1e-6
+  X=randn(Xoshiro(10605),20,2);Z=randn(Xoshiro(10606),20,2)
+  K=gaussian_knockoffs(X,zeros(2),Sigma;noise=Z,construction_options)
+  @test K≈X-X*A+Z*C
+  @test all(isfinite,K)
+end
+
+# Diagnostic only: retain visibility of the existing rounded-Cholesky limitation
+# without making acceptance of a singular covariance a regression requirement.
+let Sigma=fill(6f0,2,2)
+  outcome=try
+    gaussian_knockoffs(ones(Float32,6,2),zeros(Float32,2),Sigma;noise=zeros(Float32,6,2))
+    :accepted
+  catch err
+    nameof(typeof(err))
+  end
+  @info "Singular Float32 Gaussian covariance probe" rank=rank(Sigma) rounded_cholesky=isposdef(Symmetric(Sigma)) outcome
 end
 end

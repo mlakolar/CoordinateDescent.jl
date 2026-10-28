@@ -1,5 +1,5 @@
 module KnockoffExtensionTests
-using HighDimensionalModels, LinearAlgebra, Random, Test
+using HighDimensionalModels, LinearAlgebra, Random, Statistics, Test
 import Knockoffs
 const H=HighDimensionalModels
 @test Base.get_extension(H,:HighDimensionalModelsKnockoffsExt)!==nothing
@@ -54,7 +54,60 @@ end
     @test result.Xk==gaussian_knockoffs(X,mu,S;strategy,noise=Z)
     # A deliberately inadequate iteration cap must not silently fall back.
     hard=[.7^abs(i-j) for i in 1:12,j in 1:12]
-    @test_throws Exception knockoff_diagonal(hard;strategy,construction_options=(niter=1,optimality_tol=1e-12))
+    control=knockoff_diagonal(hard;strategy)
+    @test control.diagnostics.stationarity_passed
+    @test_throws Regex("^$strategy diagonal failed original-objective stationarity:") knockoff_diagonal(hard;strategy,construction_options=(niter=1,optimality_tol=1e-12))
+  end
+end
+
+@testset "optimized fixed-X identities across precision and units" begin
+  rng=Xoshiro(10607);base=randn(rng,40,4)
+  for T in (Float32,Float64),units in (1e-20,1.,1e20),strategy in (:mvr,:maxent)
+    X=T.(base.*(sqrt(units).*[.01,.7,2,100])')
+    before=copy(X);S=X'X
+    K=fixed_knockoffs(X;strategy)
+    plan=knockoff_diagonal(S;strategy)
+    # Compare in correlation units so small columns are checked as well.
+    scales=sqrt.(Float64.(diag(S)));normalizer=scales*scales'
+    @test eltype(K)==T
+    @test Float64.(K'K)./normalizer≈Float64.(S)./normalizer rtol=500eps(T) atol=500eps(T)
+    @test Float64.(X'K)./normalizer≈Float64.(S-Diagonal(plan.s))./normalizer rtol=500eps(T) atol=500eps(T)
+    @test X==before
+  end
+end
+
+@testset "optimized Gaussian joint covariance with nonzero mean" begin
+  rng=Xoshiro(10603);n=20000
+  Sigma=[1.0 .4 .1;.4 1.5 .3;.1 .3 .8];mu=[1.5,-2.,.75]
+  X=randn(rng,n,3)*cholesky(Symmetric(Sigma)).U .+ mu'
+  Z=randn(rng,n,3)
+  for strategy in (:mvr,:maxent)
+    plan=knockoff_diagonal(Sigma;strategy)
+    K=gaussian_knockoffs(X,mu,Sigma;strategy,noise=Z)
+    D=Diagonal(plan.s);target=[Sigma Sigma-D;Sigma-D Sigma]
+    @test all(isapprox.(vec(mean(hcat(X,K);dims=1)),vcat(mu,mu);atol=.04,rtol=0))
+    @test all(isapprox.(cov(hcat(X,K)),target;atol=.06,rtol=0))
+  end
+end
+
+@testset "optimized filter RNG forwarding and input ownership" begin
+  data_rng=Xoshiro(10604);X=randn(data_rng,80,4);y=X[:,1]+randn(data_rng,80)
+  mu=[.2,-.1,.3,-.4];Sigma=[.3^abs(i-j) for i in 1:4,j in 1:4]
+  for strategy in (:mvr,:maxent)
+    s=knockoff_diagonal(Sigma;strategy).s
+    before=map(copy,(X,y,mu,Sigma,s))
+    sampled_rng=Xoshiro(17);noise_rng=Xoshiro(17)
+    # Advance past construction's draw before the random-order lasso uses RNG.
+    noise=randn(noise_rng,Float64,size(X)...)
+    sampled=knockoff_filter(X,y,.2;mu,Sigma,strategy,rng=sampled_rng,order=:random)
+    supplied=knockoff_filter(X,y,.2;mu,Sigma,strategy,noise,rng=noise_rng,order=:random)
+    @test sampled.Xk==supplied.Xk && sampled.W==supplied.W
+    @test sampled.selected==supplied.selected && sampled.threshold==supplied.threshold
+    @test sampled.construction==supplied.construction
+    @test rand(sampled_rng)==rand(noise_rng)
+    user=knockoff_filter(X,y,.2;mu,Sigma,s,noise,order=:cyclic)
+    @test user.Xk==supplied.Xk && user.construction.strategy==:user
+    @test all(isequal.(before,(X,y,mu,Sigma,s)))
   end
 end
 end

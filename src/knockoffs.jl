@@ -57,7 +57,8 @@ function _knockoff_parameters_from_diagonal(S, d)
 end
 
 """
-    gaussian_knockoffs(X, mu, Sigma; rng=Random.default_rng(), s=nothing, noise=nothing)
+    gaussian_knockoffs(X, mu, Sigma; rng=Random.default_rng(), s=nothing, noise=nothing,
+                      strategy=nothing, construction_options=(;))
 
 Gaussian model-X knockoffs `X - (X-mu')*(Sigma\\diag(s)) + Z*C`, with
 `C'C = 2diag(s) - diag(s)*(Sigma\\diag(s))`. By default s is
@@ -94,7 +95,7 @@ function _gaussian_knockoffs_details(X::AbstractMatrix{<:Real}, mu::AbstractVect
 end
 
 """
-    fixed_knockoffs(X; s=nothing)
+    fixed_knockoffs(X; s=nothing, strategy=nothing, construction_options=(;))
 
 Fixed-X knockoffs for a full-column-rank design with n ≥ 2p. Uses the
 orthogonal complement from QR and the equicorrelated diagonal by default.
@@ -116,10 +117,15 @@ function _fixed_knockoffs_details(X::AbstractMatrix{<:Real}; s=nothing, strategy
   p > 0 && n >= 2p || throw(ArgumentError("fixed-X knockoffs require n ≥ 2p > 0"))
   Z = Matrix{float(eltype(X))}(X)
   all(isfinite, Z) || throw(ArgumentError("X must be finite"))
+  F = qr(Z)
+  # Use the design's QR scale: forming the Gram matrix can hide rank loss,
+  # especially in Float32. Reuse this factorization for the complement below.
+  pivots = abs.(diag(F.R))
+  rank_tol = max(n, p) * eps(eltype(Z)) * maximum(pivots)
+  count(>(rank_tol), pivots) == p || throw(ArgumentError("X must have full numerical column rank"))
   S = _knockoff_covariance(transpose(Z) * Z)
   plan = _knockoff_choose_diagonal(S, strategy, s, construction_options)
   _, A, C = _knockoff_parameters_from_diagonal(S, plan.s)
-  F = qr(Z)
   E = zeros(eltype(Z), n, p)
   for j in 1:p
     E[p+j, j] = 1
@@ -208,7 +214,8 @@ KnockoffResult{T,M}(selected, W, threshold, Xk, q, lambda, method) where {T,M<:A
 
 """
     knockoff_filter(X, y, lambda; method=:gaussian, mu=nothing, Sigma=nothing,
-                    Xk=nothing, q=0.1, rng=Random.default_rng(), options=CDOptions(), kwargs...)
+                    Xk=nothing, q=0.1, rng=Random.default_rng(), options=CDOptions(),
+                    strategy=nothing, s=nothing, noise=nothing, construction_options=(;), kwargs...)
 
 Construct knockoffs, fit [`lasso_coefdiff`](@ref), and select with the
 knockoff+ threshold. `method=:gaussian` requires population mu and Sigma;
