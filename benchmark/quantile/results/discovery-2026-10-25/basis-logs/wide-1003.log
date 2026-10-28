@@ -1,4 +1,0 @@
-DONE wide 1003 1 lp-dual-nullbasis-warm complete 1.773530154s first_pivots=0
-DONE wide 1003 1 lp-dual-dual-warm complete 2.605433s first_pivots=NaN
-DONE wide 1003 2 lp-dual-dual-warm complete 2.529174097s first_pivots=NaN
-DONE wide 1003 2 lp-dual-nullbasis-warm complete 1.565826588s first_pivots=0

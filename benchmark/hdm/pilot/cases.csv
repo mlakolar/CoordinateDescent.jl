@@ -1,9 +1,0 @@
-case,n,p,rho,s,signal,support,error,design,alpha,cy
-moderate,200,500,0.3,5,0.5,fixed,normal,standard,,
-correlated,100,500,0.9,15,0.5,fixed,normal,standard,,
-benign,500,100,0.3,5,0.5,fixed,normal,standard,,
-hetero-target,300,500,0.3,5,0.5,fixed,hetero_target,standard,,
-heavy,300,500,0.3,5,0.5,random,t3,standard,,
-weak-signal,200,500,0.3,5,0.2,random,normal,standard,,
-belloni-a0,200,250,0.5,,,,normal,belloni,0,0.75
-belloni-a05,200,250,0.5,,,,normal,belloni,0.5,0.75

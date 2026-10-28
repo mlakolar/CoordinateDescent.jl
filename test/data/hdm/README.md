@@ -7,17 +7,34 @@ the estimators. Do not refresh the Julia baseline to accommodate those changes.
 ## Regeneration
 
 From the repository root, with the master test environment built by
-`julia scripts/test_master.jl --setup-only` and an R library `$RLIB` holding
-hdm 0.3.2 (`R CMD INSTALL -l $RLIB hdm_0.3.2.tar.gz`, from the CRAN archive
-with the SHA256 below) next to sandwich 3.1.1, run in order:
+`julia scripts/test_master.jl --setup-only` and R 4.5.1, install sandwich
+3.1.1 (CRAN's `3.1-1`), hdm's CRAN imports (MASS and methods ship with R)
+and the unmodified hdm 0.3.2 source archive, checked against the SHA256
+below, into an R library `$RLIB`. CRAN moves the archive to
+`src/contrib/Archive/hdm/` once hdm is updated.
 
 ```sh
-julia --startup-file=no --project=.master-test-env/v1.13 benchmark/hdm/golden_data.jl
-R_LIBS=$RLIB Rscript benchmark/hdm/golden.R
-julia --startup-file=no --project=.master-test-env/v1.13 benchmark/hdm/baseline.jl
+mkdir -p "$RLIB"
+curl -fLO https://cloud.r-project.org/src/contrib/hdm_0.3.2.tar.gz
+echo "3354b22752f0aa0c0d9c8c12b38810202b6380f2587e539be11d9a358412fe6a  hdm_0.3.2.tar.gz" | shasum -a 256 -c
+R_LIBS=$RLIB Rscript -e 'repos <- "https://cloud.r-project.org"' \
+  -e 'install.packages(c("remotes", "glmnet", "ggplot2", "checkmate", "Formula"), repos = repos)' \
+  -e 'remotes::install_version("sandwich", "3.1-1", repos = repos, upgrade = "never")'
+R_LIBS=$RLIB R CMD INSTALL -l "$RLIB" hdm_0.3.2.tar.gz
 ```
 
-Each takes a few seconds with one BLAS thread. The focused tests:
+Then run in order; each script writes into `test/data/hdm`, or into the
+directory given as its argument:
+
+```sh
+julia --startup-file=no --project=.master-test-env/v1.13 test/data/hdm/golden_data.jl
+R_LIBS=$RLIB Rscript test/data/hdm/golden.R
+julia --startup-file=no --project=.master-test-env/v1.13 test/data/hdm/baseline.jl
+```
+
+Each takes a few seconds with one BLAS thread. `baseline.jl` reproduces the
+frozen `baseline-julia.csv` only with the package at commit
+`d6174f5c148ed7e08a4732c915aa691ecb83cb8a`. The focused tests:
 
 ```sh
 julia --startup-file=no --project=.master-test-env/v1.13 -e 'using Test; include("test/hdm.jl"); include("test/hdm_golden.jl")'
@@ -36,7 +53,7 @@ Each directory has headerless `X.csv` (observations by controls), `y.csv`, and
 its other inputs are byte-identical to `hetero`. These controls are absent from
 both nuisance supports, for both post choices, in both packages.
 
-Equations, draw order, and Xoshiro seeds are in `benchmark/hdm/golden_data.jl`:
+Equations, draw order, and Xoshiro seeds are in `golden_data.jl`:
 hetero/forced 11801, highdim 11802, nearthreshold 11803, empty 12138. Empty has
 centered noise responses and selects nothing, even with post=false. Centering
 avoids hdm's empty-fit quirk: its coefficient vector has zero intercept while

@@ -6,7 +6,7 @@ function readmat(d,f)
   rows = [parse.(Float64, split(line)) for line in readlines(joinpath(d,f)) if !isempty(strip(line))]
   permutedims(hcat(rows...))
 end
-@testset "Discovery R golden paths" begin
+@testset "R golden paths" begin
   for seed in 8101:8103
     d = joinpath(root,string(seed))
     X, y, levels = readmat(d,"X.tsv"), vec(readmat(d,"y.tsv")), vec(readmat(d,"levels.tsv"))

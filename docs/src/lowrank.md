@@ -149,11 +149,14 @@ allow grouped or blocked validation. A nonconverged fold fit raises an error.
 For a rank path, request ranks that are estimable in every training fold.
 
 rrpack 0.1-14 interchanges its BIC/BICP selection labels inside `rssvd.eea`.
-The oracle harness aligns the actual BIC column explicitly; the methods here
-use the criterion names according to the formulas above.
+The R oracle, `test/data/lowrank/oracle.R`, aligns the actual BIC column
+explicitly; the methods here use the criterion names according to the formulas
+above.
 
-The [Discovery harness](https://github.com/mlakolar/HighDimensionalModels.jl/tree/master/benchmark/lowrank) records replicated
-timing, profiles and independent rrpack comparisons. rrpack uses unscaled
+The [low-rank study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/abddaf56a790b86178de376b175a1185020c8381/benchmark/lowrank) records replicated
+timing and profiles; the `lowrank` group of the [benchmark harness](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/benchmark/README.md)
+measures the current fits. The test suite checks the fits against rrpack fits
+saved by the R oracle. rrpack uses unscaled
 squared losses: its penalty is `n * λ` for the objectives here. Its adaptive
 nuclear-norm estimator shrinks the fitted-value singular values, so it is
 not an oracle for the coefficient nuclear penalty; the latter has an exact

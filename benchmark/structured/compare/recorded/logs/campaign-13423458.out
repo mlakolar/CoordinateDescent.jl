@@ -1,8 +1,0 @@
-parallel: This job failed:
-srun --exclusive --exact -N1 -n1 -c1 --mem=3800M /usr/bin/time -v bash harness/worker.sh 8201 Julia canary baseline-canary > baseline-canary/worker-8201-Julia.log 2>&1
-parallel: Starting no more jobs. Waiting for 2 jobs to finish.
-parallel: This job failed:
-srun --exclusive --exact -N1 -n1 -c1 --mem=3800M /usr/bin/time -v bash harness/worker.sh 8202 R canary baseline-canary > baseline-canary/worker-8202-R.log 2>&1
-parallel: Starting no more jobs. Waiting for 1 jobs to finish.
-parallel: This job failed:
-srun --exclusive --exact -N1 -n1 -c1 --mem=3800M /usr/bin/time -v bash harness/worker.sh 8201 R canary baseline-canary > baseline-canary/worker-8201-R.log 2>&1

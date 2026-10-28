@@ -1,9 +1,0 @@
-{
-  "running_union_seconds": 5067.0,
-  "cpu_hours": 2.651388888888889,
-  "peak_allocated_cpus": 2,
-  "peak_allocated_memory_gib": 16,
-  "standing_budget_minutes": 120,
-  "standing_budget_cpus": 8,
-  "standing_budget_memory_gib": 16
-}

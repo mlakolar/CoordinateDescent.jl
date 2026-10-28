@@ -1,3 +1,0 @@
-# Saved Discovery evidence keeps its original bytes, including R/CSV whitespace.
-results/** -text -whitespace linguist-generated=true
-results/**/REPORT.md text whitespace linguist-generated=false
