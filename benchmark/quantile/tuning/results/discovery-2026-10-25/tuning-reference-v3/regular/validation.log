@@ -1,9 +1,0 @@
-REFERENCE tau=0.23 standardized=false
-REFERENCE tau=0.23 standardized=true
-REFERENCE tau=0.51 standardized=false
-REFERENCE tau=0.51 standardized=true
-REFERENCE tau=0.79 standardized=false
-REFERENCE tau=0.79 standardized=true
-Test Summary:                                       | Pass  Total  Time
-independent R calibration and quantile CV reference |   24     24  7.5s
-TUNING VALIDATION COMPLETE: 24 R reference assertions; 18 repeated measurements

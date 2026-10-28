@@ -26,6 +26,9 @@ master; existing checkouts are never reset or silently updated. This workflow
 intentionally uses path overrides and is kept as a separate CI job.
 
 Active manifests are generated locally. Historical benchmark lockfiles and
-recorded source identities remain frozen as evidence of their original runs.
+recorded source identities, the evidence of their original runs, are frozen in
+the [benchmark snapshot](https://github.com/mlakolar/HighDimensionalModels.jl/tree/abddaf56a790b86178de376b175a1185020c8381/benchmark).
+[`benchmark/README.md`](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/benchmark/README.md)
+describes the current benchmark harness.
 HighDimensionalModels starts at 0.1.0 under a new UUID; CoordinateDescent retains
 its original UUID and registered versions.

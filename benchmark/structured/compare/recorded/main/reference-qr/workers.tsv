@@ -1,4 +1,0 @@
-Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
-3	:	1792927868.360	    21.338	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=1250M bash harness-qr/worker.sh 8203 R qr reference-qr > reference-qr/worker-8203.log 2>&1
-2	:	1792927868.355	    26.571	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=1250M bash harness-qr/worker.sh 8202 R qr reference-qr > reference-qr/worker-8202.log 2>&1
-1	:	1792927868.348	    26.786	0	0	0	0	srun --exclusive --exact -N1 -n1 -c1 --mem=1250M bash harness-qr/worker.sh 8201 R qr reference-qr > reference-qr/worker-8201.log 2>&1

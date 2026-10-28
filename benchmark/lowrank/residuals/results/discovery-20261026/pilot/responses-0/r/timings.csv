@@ -1,7 +1,0 @@
-variant,case,rep,mode,round,seconds,bytes,gctime
-r,responses,0,public_path,1,0.10767388343811035,,
-r,responses,0,public_fit,1,0.087556600570678711,,
-r,responses,0,public_fit,2,0.071653366088867188,,
-r,responses,0,public_path,2,0.099871158599853516,,
-r,responses,0,public_path,3,0.10166358947753906,,
-r,responses,0,public_fit,3,0.070190906524658203,,

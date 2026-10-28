@@ -1,5 +1,0 @@
-"case","seed","rep","method","total_s"
-"small",702,1,"conquer",0.0326402187347412
-"small",702,1,"quantreg-fn",0.238589763641357
-"small",702,2,"quantreg-fn",0.24179220199585
-"small",702,2,"conquer",0.0337519645690918

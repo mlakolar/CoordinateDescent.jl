@@ -130,12 +130,13 @@ alternative optima or alter their raw duals.
 With older ProximalSolvers versions, objective-based smoothed stopping may fail
 the requested accuracy on some folds. CV excludes the affected levels. The
 convolution gap/raw-score stopping backend is needed for the stricter behavior
-demonstrated in the solver follow-up benchmarks.
+demonstrated in the [solver follow-up benchmarks (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/abddaf56a790b86178de376b175a1185020c8381/benchmark/quantile/convergence).
 
 Quantile inference is tracked separately in
 [issue #104](https://github.com/mlakolar/HighDimensionalModels.jl/issues/104).
 
-The larger Discovery benchmark campaign is tracked in
+The `quantile` group of the [benchmark harness](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/benchmark/README.md) measures the
+current fits; the larger benchmark campaign is tracked in
 [issue #105](https://github.com/mlakolar/HighDimensionalModels.jl/issues/105).
 Workspace development resolves ProximalSolvers master, including the merged
 convolution-certification changes from PR #96. CI verifies this capability

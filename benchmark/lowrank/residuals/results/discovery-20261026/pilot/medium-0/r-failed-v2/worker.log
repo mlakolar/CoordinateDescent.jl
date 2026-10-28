@@ -1,3 +1,0 @@
-Error in fn() : identical(dim(coefs), as.integer(c(p, q, 3))) is not TRUE
-Calls: fn -> stopifnot
-Execution halted

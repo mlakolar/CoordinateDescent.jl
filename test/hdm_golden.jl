@@ -70,9 +70,9 @@ end
       @test startswith(meta["R"], "R version 4.5.1")
       @test meta["hdm"] == "0.3.2" && meta["sandwich"] == "3.1.1"
       @test meta["hdm_archive_sha256"] == "3354b22752f0aa0c0d9c8c12b38810202b6380f2587e539be11d9a358412fe6a"
-      @test meta["data_script"] == "benchmark/hdm/golden_data.jl"
-      @test meta["reference_script"] == "benchmark/hdm/golden.R"
-      @test meta["baseline_script"] == "benchmark/hdm/baseline.jl"
+      @test meta["data_script"] == "test/data/hdm/golden_data.jl"
+      @test meta["reference_script"] == "test/data/hdm/golden.R"
+      @test meta["baseline_script"] == "test/data/hdm/baseline.jl"
 
       # Load both layouts' references; their final stages are checked below
       # on hdm's own residuals or selection, independently of Julia selection.

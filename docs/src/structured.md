@@ -142,8 +142,10 @@ so held-out responses do not enter training. Training observations must still
 identify the penalty's unpenalized polynomial component. CV throws if a fit
 does not converge.
 Signal CV uses the generic-design degrees-of-freedom calculation; general
-contrasts can still require a dense null-space step. The large-signal benchmarks cover direct fits, not CV;
-they do not establish scalable tuning on million-point location grids.
+contrasts can still require a dense null-space step. The large-signal
+benchmarks of the [structured study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/abddaf56a790b86178de376b175a1185020c8381/benchmark/structured) cover
+direct fits, not CV; they do not establish scalable tuning on million-point
+location grids.
 
 ## Comparison with local polynomial regression
 
@@ -160,5 +162,7 @@ signal; it does not establish a general accuracy advantage for either method.
 
 R's `genlasso` and `glmgen::trendfilter` use an unnormalized squared loss.
 Use `lambda_R = n*lambda_Julia` on identical inputs and difference matrices.
-The independent golden-data generator and replicated Discovery launcher are
-in [`benchmark/structured`](https://github.com/mlakolar/HighDimensionalModels.jl/tree/master/benchmark/structured).
+The independent golden-data generator is `test/golden/structured/golden.R`.
+The replicated timings are in the [structured study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/abddaf56a790b86178de376b175a1185020c8381/benchmark/structured);
+the `structured` group of the [benchmark harness](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/benchmark/README.md) measures the
+current fits.

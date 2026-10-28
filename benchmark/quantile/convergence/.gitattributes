@@ -1,2 +1,0 @@
-# Preserve saved numerical evidence and keep generated data collapsed in review.
-results/** -text -whitespace linguist-generated=true
