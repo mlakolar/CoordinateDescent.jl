@@ -338,8 +338,12 @@ are converted to a common floating point type, and options are passed as
 The row ℓ1/ℓ∞ and sparse-group penalties use row coordinate descent on the
 tasks' own designs, without stacking or copying a shared design. Sparse columns are centered on
 the fly. Full passes alternate with active-row passes. With `relative_tol`,
-the change rule divides the largest change of the standardized coefficients
-by `max(1, max|U|)`; otherwise it uses absolute changes. Single fits require
+the change rule measures each change Δ of U[j, t] as `|Δ| * sqrt(aₜⱼ)`, where
+`aₜⱼ = cₜ ‖x̃ₜⱼ‖² / (nₜ sₜⱼ²)`, against `opt_tol * r`, with response scale
+`r = sqrt(∑ₜ cₜ ‖ỹₜ‖² / nₜ)`. The columns and responses are centered with an
+intercept. The scale has a positive numerical floor; at r = 0 the zero
+coefficients are exact. Without `relative_tol`, it uses absolute changes of U.
+Single fits require
 a duality gap only with a positive `gaptol`; continuation uses the path target.
 There is no gap at λ = 0, with completely unpenalized rows, or at zero objective.
 

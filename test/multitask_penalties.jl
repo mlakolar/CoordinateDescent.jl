@@ -81,6 +81,21 @@ end
 read_values(file) = Dict(row[1] => row[2] for row in eachrow(readdlm(file, ',', String)))
 read_matrix(dir, file) = readdlm(joinpath(dir, file), ',', Float64)
 
+# A fit and its fitted values, with the same coordinate orders at every scale.
+function scaled_fit(Xs, ys, λ, options::CDOptions = CDOptions(); shared, intercept, row_norm, alpha)
+  if shared
+    sol = multi_lasso(Xs[1], hcat(ys...), λ, options;
+                      intercept, standardize_x = false, row_norm, alpha, rng = Xoshiro(3))
+    return sol, collect(eachcol(predict(sol, Xs[1])))
+  end
+  sol = multitask_lasso(Xs, ys, λ, options; intercept, standardize_x = false, row_norm, alpha,
+                        rng = Xoshiro(3))
+  sol, predict(sol, Xs)
+end
+
+# The weighted RMS norm across tasks, in the units of the responses.
+response_norm(ys, c) = sqrt(sum(c[t] * sum(abs2, ys[t]) / length(ys[t]) for t in eachindex(ys)))
+
 @testset "Multitask row penalties" begin
   @testset "Clarabel reference and screening" begin
     root = joinpath(@__DIR__, "data", "multitask")
@@ -130,6 +145,53 @@ read_matrix(dir, file) = readdlm(joinpath(dir, file), ',', Float64)
       d = HDM._MultitaskData(Xs, ys; intercept, standardize_x, task_weights, stacked = false)
       @test d.Z === nothing && d.ỹ === nothing
       shared && @test all(X -> X === d.X[1], d.X)
+    end
+  end
+
+  @testset "Change rule in fitted-value units" begin
+    rng = Xoshiro(1)
+    Z = rand(rng, 50, 6) .- 0.5
+    Z[:, 2] = Z[:, 1] .+ 0.05 .* (rand(rng, 50) .- 0.5)
+    truth = [1.0 2 -1; 1 0.5 1; 0 0 0; 0.5 0 0; 0 0 0; 0 0 0]
+    Y = Z * truth .+ 0.1 .* (rand(rng, 50, 3) .- 0.5)
+    Zs = [Z, Z .+ 0.1 .* (rand(rng, 50, 6) .- 0.5), Z[1:45, :]]
+    task_y = [Zs[t] * truth[:, t] .+ 0.1 .* (rand(rng, size(Zs[t], 1)) .- 0.5) for t in 1:3]
+    tight = CDOptions(; opt_tol = 1e-14, gaptol = 1e-12)
+    for shared in (true, false), intercept in (false, true), scale in (1.0, 1e8)
+      Xs = shared ? fill(scale .* Z, 3) : [scale .* X for X in Zs]
+      ys = shared ? collect(eachcol(Y)) : task_y
+      c = ones(3)
+      r = response_norm([y .- (intercept ? mean(y) : 0) for y in ys], c)
+      for (row_norm, alpha) in ((:linf, 0.0), (:l2, 0.5))
+        @testset "shared=$shared intercept=$intercept scale=$scale row_norm=$row_norm" begin
+          kw = (; shared, intercept, row_norm, alpha)
+          sol, fitted = scaled_fit(Xs, ys, 0.01; kw...)
+          ref, reference = scaled_fit(Xs, ys, 0.01, tight; kw...)
+          @test sol.converged && ref.converged
+          @test sol.iterations > 1
+          # Prediction error is at most 1e-5 of the centered response RMS scale.
+          @test response_norm(fitted .- reference, c) <= 1e-5 * r
+          # Scaling Y and λ together scales the minimizer of this objective.
+          large, large_fit = scaled_fit(Xs, [1e6 .* y for y in ys], 1e6 * 0.01; kw...)
+          @test large.converged
+          @test response_norm([large_fit[t] ./ 1e6 .- fitted[t] for t in 1:3], c) <= 1e-5 * r
+        end
+      end
+    end
+    for (row_norm, alpha) in ((:linf, 0.0), (:l2, 0.5))
+      # A zero centered response has an exact zero-coefficient solution.
+      for intercept in (false, true)
+        zero = multi_lasso(Z, fill(intercept ? 2.0 : 0.0, 50, 3), 0.01;
+                            intercept, standardize_x = false, row_norm, alpha)
+        @test zero.converged && zero.iterations == 1 && all(iszero, zero.B)
+        exhausted = multi_lasso(Z, zeros(50, 3), 0.01, CDOptions(; max_iter = 0);
+                                 intercept, standardize_x = false, row_norm, alpha)
+        @test !exhausted.converged && exhausted.iterations == 0
+      end
+      # Absolute tolerances still measure changes of U itself.
+      absolute = multi_lasso(1e8 .* Z, Y, 0.01, CDOptions(; relative_tol = false);
+                              standardize_x = false, row_norm, alpha, rng = Xoshiro(3))
+      @test absolute.converged && absolute.iterations == 1
     end
   end
 
