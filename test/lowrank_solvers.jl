@@ -187,4 +187,247 @@ end
   end
 end
 
+@testset "Sparse-path setup preserves the weighted orthogonal solution" begin
+  rng = Xoshiro(102261026)
+  for T in (Float32,Float64), solver in (:cd,:fista)
+    X = T.(Matrix(qr(randn(rng,30,6)).Q)[:,1:6] * sqrt(30))
+    Y = T.(randn(rng,30,4)); C = X'Y/30
+    w = T[1,2,.5,.7,3,1.1]
+    tol = T === Float32 ? 1e-5 : 1e-10
+    path = LowRankPath(X,Y;method=:sparse,rank=4,block_solver=solver,
+      λpath=T[100,.2,.05],weights=w,intercept=false,tol,inner_tol=tol)
+    @test path.solutions[1].rank == 0
+    for (λ,s) in zip(path.λpath,path.solutions)
+      target=copy(C)
+      for j in axes(target,1)
+        row=view(target,j,:);nr=norm(row)
+        row .*= max(zero(T),1-λ*w[j]/nr)
+      end
+      @test s.converged
+      @test s.B ≈ target atol=100tol rtol=100tol
+      @test s.objective ≈ sum(abs2,Y-X*target)/60 + λ*sum(w[j]*norm(view(target,j,:)) for j in axes(target,1)) atol=100tol rtol=100tol
+      @test predict(s,X)+residuals(s) ≈ Y atol=100tol rtol=100tol
+    end
+  end
+end
+
+@testset "Factor-based sparse rank keeps dense numerical-rank semantics" begin
+  rng=Xoshiro(102261027)
+  for T in (Float32,Float64), (p,q) in ((8,6),(80,100),(120,40))
+    Q=Matrix(qr(randn(rng,T,p,3)).Q)[:,1:3]
+    V=Matrix(qr(randn(rng,T,q,3)).Q)[:,1:3]
+    for multiplier in T[.5,2,32], scale in T[1e-8,1e8]
+      A=Q*Diagonal(T[1,.3,min(p,q)*eps(T)*multiplier].*scale)
+      B=A*V'
+      @test HighDimensionalModels._lr_factor_rank(B,A,V')==rank(B)
+    end
+    A=zeros(T,p,3);B=A*V'
+    @test HighDimensionalModels._lr_factor_rank(B,A,V')==rank(B)==0
+  end
+end
+
+@testset "Sparse thin residuals retain the orthogonal rank-two fit" begin
+  rng=Xoshiro(102261028)
+  for T in (Float32,Float64), solver in (:cd,:fista)
+    X=T.(Matrix(qr(randn(rng,30,10)).Q)[:,1:10]*sqrt(30))
+    L=zeros(T,10,2);L[1:4,:].=randn(rng,T,4,2)
+    Y=X*(L*randn(rng,T,2,80));C=X'Y/30;target=copy(C)
+    for row in eachrow(target)
+      nr=norm(row);row .*= nr==0 ? zero(T) : max(zero(T),1-T(.1)/nr)
+    end
+    tol=T===Float32 ? 1e-4 : 1e-10
+    s=sparse_reduced_rank(X,Y,2,T(.1);intercept=false,block_solver=solver,tol,inner_tol=tol)
+    @test s.converged
+    @test s.B ≈ target atol=100tol rtol=100tol
+    @test norm(residuals(s)-(Y-X*s.B)) <= 100eps(T)*max(norm(Y),norm(X)*norm(s.B))
+    @test s.rank==rank(s.B)
+    @test dof(s)==s.rank*(rank(X[:,s.activerows])+80-s.rank)
+  end
+end
+
+@testset "Sparse setup handles large scales and subnormal factor ranks" begin
+  H = HighDimensionalModels
+  rng = Xoshiro(102261029)
+  for T in (Float32, Float64)
+    a = T === Float32 ? T(5e18) : T(5e153)
+    X, Y = fill(a, 4, 4), ones(T, 4, 1)
+    d = H._lr_data(X, Y, false)
+    f = H._lr_svd(d)
+    setup = H._lr_sparse_setup(d, f)
+    @test isinf(abs2(first(f.s)))
+    @test isfinite(setup.L)
+    @test setup.L >= eigmax(Symmetric(setup.XX))
+    tol = T === Float32 ? 1e-5 : 1e-10
+    s = sparse_reduced_rank(X, Y, 1, a/5; intercept = false,
+      block_solver = :fista, tol, inner_tol = tol)
+    @test s.converged
+    @test all(isfinite, s.B)
+
+    scale = T === Float32 ? T(1e-40) : T(1e-320)
+    L = scale .* randn(rng, T, 40, 1)
+    V = Matrix(qr(randn(rng, T, 50, 1)).Q)[:, 1:1]
+    B = L * V'
+    @test rank(B) > 1
+    @test H._lr_factor_rank(B, L, V') == rank(B)
+
+    # A large design and small response also reach the subnormal guard
+    # through the fixed-rank solution's actual SVD factors.
+    design_scale = T === Float32 ? T(1e36) : T(1e300)
+    response_scale = T === Float32 ? T(1e-4) : T(1e-20)
+    X = design_scale .* Matrix{T}(I, 44, 40)
+    Y = response_scale .* vcat(randn(rng, T, 40, 1) * V', zeros(T, 4, 50))
+    d = H._lr_data(X, Y, false)
+    f = H._lr_svd(d)
+    s = H._lr_rrsolution(d, f, 1)
+    @test s.rank == rank(s.B)
+    @test rank(s.B) > 1
+  end
+end
+
+@testset "Reused sparse setup agrees with independent block setup" begin
+  H = HighDimensionalModels
+  rng = Xoshiro(102261030)
+  for T in (Float32, Float64), solver in (:cd, :fista)
+    X = T.(Matrix(qr(randn(rng, 24, 5)).Q)[:, 1:5] * sqrt(24))
+    Y = X * randn(rng, T, 5, 3) + T(0.1) .* randn(rng, T, 24, 3)
+    w = T[1, 2, 0.5, 0.7, 3]
+    originals = (copy(X), copy(Y), copy(w))
+    d = H._lr_data(X, Y, true)
+    f = H._lr_svd(d)
+    setup = H._lr_sparse_setup(d, f)
+    @test isfinite(setup.L) && setup.L > 0
+    tol = T === Float32 ? 1e-6 : 1e-11
+    opts = (; max_iter = 200, tol, inner_max_iter = 300, inner_tol = tol,
+      block_solver = solver)
+    for r in (1, 3)
+      initial = H._lr_rrcoef(d, f, r)
+      cached = H._lr_sparse(d, r, T(0.1), w, initial; opts..., setup)
+      fresh = H._lr_sparse(d, r, T(0.1), w, initial; opts..., setup = nothing)
+      @test cached.converged == fresh.converged == true
+      @test cached.B ≈ fresh.B atol = 300eps(T)*max(one(T), norm(fresh.B)) rtol = 300eps(T)
+      @test cached.rank == fresh.rank == rank(cached.B)
+      @test cached.activerows == fresh.activerows
+      @test dof(cached) == dof(fresh)
+      @test cached.objective ≈ fresh.objective rtol = 300eps(T) atol = 300eps(T)
+      @test residuals(cached) ≈ residuals(fresh) atol = 300eps(T)*max(one(T), norm(Y)) rtol = 300eps(T)
+    end
+    @test (X, Y, w) == originals
+  end
+end
+
+@testset "Automatic sparse grids, zero paths and unchanged inputs" begin
+  rng = Xoshiro(102261031)
+  for T in (Float32, Float64), solver in (:cd, :fista)
+    X = randn(rng, T, 24, 4) .+ T[1 2 3 4]
+    Y = X * randn(rng, T, 4, 3) .+ T[2 4 6]
+    w = T[0.5, 2, 1, 3]
+    originals = (copy(X), copy(Y), copy(w))
+    Xc, Yc = X .- mean(X; dims = 1), Y .- mean(Y; dims = 1)
+    C = Xc' * Yc / size(X, 1)
+    λmax = maximum(norm(view(C, j, :))/w[j] for j in axes(C, 1)) * (1 + sqrt(eps(T)))
+    tol = T === Float32 ? 1e-5 : 1e-9
+    for r in (0, 1, 3)
+      path = LowRankPath(X, Y; method = :sparse, rank = r, nλ = 3,
+        λminratio = 0.2, weights = w, block_solver = solver, tol, inner_tol = tol)
+      @test first(path.λpath) ≈ λmax rtol = 5eps(T)
+      @test path.λpath ≈ λmax .* T[1, sqrt(0.2), 0.2] rtol = 5eps(T)
+      @test all(s -> s.converged, path.solutions)
+      @test first(path.solutions).rank == 0
+      if r == 0
+        @test all(s -> iszero(s.B) && s.rank == 0 && dof(s) == 3, path.solutions)
+      end
+    end
+    Z = zeros(T, size(Y))
+    zero_path = LowRankPath(X, Z; method = :sparse, rank = 2, nλ = 3,
+      weights = w, block_solver = solver, tol, inner_tol = tol)
+    @test iszero(zero_path.λpath)
+    @test all(s -> s.converged && iszero(s.B) && iszero(residuals(s)), zero_path.solutions)
+    @test iszero(Z)
+    sparse_reduced_rank(X, Y, 2, λmax/2; weights = w,
+      block_solver = solver, tol, inner_tol = tol)
+    @test (X, Y, w) == originals
+  end
+end
+
+@testset "Sparse diagnostic rank and both residual product orders" begin
+  rng = Xoshiro(102261032)
+  for T in (Float32, Float64)
+    U = randn(rng, T, 24, 4)
+    U .-= mean(U; dims = 1)
+    U = Matrix(qr(U).Q)[:, 1:4]
+    V = Matrix(qr(randn(rng, T, 5, 4)).Q)[:, 1:4]
+    X = U * Diagonal(T[1, 0.6, 0.3, 9eps(T)]) * V'
+    Y = X * ones(T, 5, 1)
+    d = HighDimensionalModels._lr_data(X, Y, true)
+    f = HighDimensionalModels._lr_svd(d)
+    @test f.diagnostic_xrank == rank(d.X) == 4
+    @test f.xrank == 3
+    for solver in (:cd, :fista)
+      tol = T === Float32 ? 1e-5 : 1e-10
+      s = sparse_reduced_rank(X, Y, 1, zero(T); block_solver = solver,
+        tol, inner_tol = tol)
+      @test s.converged
+      @test length(s.activerows) == 5
+      @test dof(s) == s.rank*(rank(d.X) + 1 - s.rank) + 1
+    end
+
+    # Rank one takes the thin product; full response rank takes the dense
+    # product. The small noise makes the residual check sensitive to rounding.
+    for (p, q, r) in ((6, 20, 1), (4, 3, 3)), solver in (:cd, :fista)
+      X = T.(Matrix(qr(randn(rng, 24, p)).Q)[:, 1:p] * sqrt(24))
+      X .+= one(T)
+      B = randn(rng, T, p, r) * randn(rng, T, r, q)
+      Y = X * B .+ T(2) .+ 10eps(T) .* randn(rng, T, 24, q)
+      tol = T === Float32 ? 1e-6 : 1e-11
+      s = sparse_reduced_rank(X, Y, r, zero(T); block_solver = solver,
+        tol, inner_tol = tol)
+      @test s.converged
+      direct = Y - X*s.B .- s.intercept'
+      @test norm(residuals(s) - direct) <= 100eps(T)*max(norm(Y), norm(X)*norm(s.B))
+      @test norm(direct) <= 100eps(T)*max(norm(Y), norm(X)*norm(s.B))
+    end
+  end
+end
+
+@testset "Sparse FISTA CV agrees with deterministic training-fold refits" begin
+  rng = Xoshiro(102261033)
+  for T in (Float32, Float64)
+    X = randn(rng, T, 24, 4) .+ T[1 2 3 4]
+    Y = X * randn(rng, T, 4, 2) .+ T[2 4]
+    w = T[0.5, 2, 1, 3]
+    originals = (copy(X), copy(Y), copy(w))
+    folds = repeat(1:3, 8)
+    tol = T === Float32 ? 1e-5 : 1e-9
+    opts = (; method = :sparse, rank = 2, block_solver = :fista,
+      λpath = T[0.3, 0.1], weights = w, tol, inner_tol = tol)
+    cv = CVLowRankPath(X, Y; opts..., folds)
+    @test cv.folds == folds
+    errors = zeros(T, 3, 2)
+    for k in 1:3
+      tr, te = findall(!=(k), folds), findall(==(k), folds)
+      path = LowRankPath(X[tr, :], Y[tr, :]; opts...)
+      @test all(s -> s.converged, path.solutions)
+      for (j, s) in enumerate(path.solutions)
+        errors[k, j] = sum(abs2, Y[te, :] - predict(s, X[te, :])) / (length(te)*size(Y, 2))
+      end
+    end
+    # CV exposes the fold-size-weighted mean and its standard error.
+    expected = vec(mean(errors; dims = 1))
+    @test cv.cvm ≈ expected rtol = 20eps(T) atol = 20eps(T)
+    @test cv.cvse ≈ vec(std(errors; dims = 1)) / sqrt(T(3)) rtol = 20eps(T) atol = 20eps(T)
+    @test (X, Y, w) == originals
+
+    # Identical halves have equal fold errors, so the reported CV mean is
+    # also the error of either fold, independently refitted on its training half.
+    A, Z = repeat(X[1:12, :], 2, 1), repeat(Y[1:12, :], 2, 1)
+    saved = (copy(A), copy(Z), copy(w))
+    paired = CVLowRankPath(A, Z; opts..., folds = repeat(1:2; inner = 12))
+    training = LowRankPath(A[13:24, :], Z[13:24, :]; opts...)
+    fold_error = [sum(abs2, Z[1:12, :] - predict(s, A[1:12, :])) / 24 for s in training.solutions]
+    @test paired.cvm ≈ fold_error rtol = 20eps(T) atol = 20eps(T)
+    @test all(s -> s.converged, training.solutions)
+    @test (A, Z, w) == saved
+  end
+end
+
 include("lowrank_panoc_costs.jl")
