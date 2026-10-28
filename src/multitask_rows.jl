@@ -16,7 +16,9 @@ struct _RowLoss{T, D<:_MultitaskData{T}}
   data::D
   residuals::Vector{Vector{T}}
   norms::Matrix{T}
+  coordinate_curvature::Matrix{T}
   curvature::Vector{T}
+  response_scale::T
 end
 
 # One coefficient component U and its row penalty.
@@ -33,16 +35,19 @@ end
 
 function _RowLoss(d::_MultitaskData{T}) where {T}
   p, q = size(d.S)
-  norms, curvature = zeros(T, p, q), zeros(T, p)
+  norms, a, curvature = zeros(T, p, q), zeros(T, p, q), zeros(T, p)
   for t in 1:q
     u = findfirst(s -> d.X[s] === d.X[t], 1:t-1)
     for j in 1:p
       norms[j, t] = u === nothing ? _row_norm2(d.X[t], j, d.xbar[j, t]) : norms[j, u]
       iszero(d.S[j, t]) && continue
-      curvature[j] = max(curvature[j], d.c[t] * norms[j, t] / (d.nobs[t] * d.S[j, t]^2))
+      a[j, t] = d.c[t] * norms[j, t] / (d.nobs[t] * d.S[j, t]^2)
+      curvature[j] = max(curvature[j], a[j, t])
     end
   end
-  _RowLoss(d, [d.y[t] .- d.ybar[t] for t in 1:q], norms, curvature)
+  residuals = [d.y[t] .- d.ybar[t] for t in 1:q]
+  response_scale = norm(T[sqrt(d.c[t] / d.nobs[t]) * norm(residuals[t]) for t in 1:q])
+  _RowLoss(d, residuals, norms, a, curvature, response_scale)
 end
 
 # The squared norm of a centered column, without storing that column.
@@ -158,7 +163,8 @@ function _row_root(g::AbstractVector{T}, a::T, c::T) where {T}
   iszero(a) && return iszero(c) ? T(Inf) : norm(u) / c
   iszero(c) && return first(u) / a
   s, s2, avg, m2 = zero(T), zero(T), zero(T), zero(T)
-  for k in eachindex(u)
+  n = length(u)
+  for k in 1:n-1
     s += u[k]; s2 += u[k]^2
     delta = u[k] - avg
     avg += delta / k
@@ -166,9 +172,15 @@ function _row_root(g::AbstractVector{T}, a::T, c::T) where {T}
     disc = c^2 * s2 - a^2 * k * max(m2, zero(T))
     disc < 0 && continue
     λ = s2 / (a * s + sqrt(disc))
-    (k == length(u) || a * λ >= u[k + 1]) && return λ
+    a * λ >= u[k + 1] && return λ
   end
-  T(Inf)
+  s += u[n]; s2 += u[n]^2
+  delta = u[n] - avg
+  avg += delta / n
+  m2 += delta * (u[n] - avg)
+  disc = c^2 * s2 - a^2 * n * max(m2, zero(T))
+  # Rounding can leave the final discriminant slightly negative.
+  s2 / (a * s + sqrt(max(disc, zero(T))))
 end
 
 # The dual norm of a row's gradient; Inf for a nonzero unpenalized row.
@@ -220,6 +232,12 @@ function _row_solve!(loss::_RowLoss{T}, comp::_RowComponent{T}, λ, options;
                       candidates = collect(axes(comp.U, 1)), rng = default_rng(),
                       gaptol = _row_gaptol(T, options, false), max_iter = options.max_iter) where {T}
   d, U = loss.data, comp.U
+  if options.relative_tol && iszero(loss.response_scale) && max_iter > 0
+    fill!(U, zero(T))
+    foreach(r -> fill!(r, zero(T)), loss.residuals)
+    return (; passes = 1, converged = true)
+  end
+  tol = options.opt_tol * (options.relative_tol ? max(loss.response_scale, floatmin(T)) : one(T))
   q = size(U, 2)
   g, v, scratch = zeros(T, q), zeros(T, q), zeros(T, q)
   full = true
@@ -238,14 +256,13 @@ function _row_solve!(loss::_RowLoss{T}, comp::_RowComponent{T}, λ, options;
       for t in 1:q
         iszero(d.S[j, t]) && continue
         delta = v[t] - U[j, t]
-        change = max(change, abs(delta))
+        h = options.relative_tol ? abs(delta) * sqrt(loss.coordinate_curvature[j, t]) : abs(delta)
+        change = max(change, h)
         iszero(delta) && continue
         U[j, t] = v[t]
         _row_residual!(loss.residuals[t], d.X[t], j, d.xbar[j, t], delta / d.S[j, t])
       end
     end
-    # Relative changes are measured against max(1, max|U|).
-    tol = options.opt_tol * (options.relative_tol ? max(one(T), maximum(abs, U; init = zero(T))) : one(T))
     if change <= tol
       if full
         gap = gaptol > 0 ? _row_gap(loss, comp, λ, candidates) : nothing

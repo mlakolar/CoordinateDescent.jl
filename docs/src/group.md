@@ -291,7 +291,8 @@ that norm is the root above. Every excluded row is checked against its zero-row
 optimality condition after solving; violators are added and the level is
 solved again. `kkt_checks` records these rounds.
 
-The two new penalties use row coordinate descent on the tasks' own designs.
+The row ℓ1/ℓ∞ and sparse-group penalties use row coordinate descent on the
+tasks' own designs.
 No stacked design is built, and a shared design is stored once. The solver
 keeps per-task residuals and centered column squared norms. A row uses the
 majorizing curvature
@@ -305,8 +306,14 @@ without densifying them.
 
 Full passes alternate with passes on active rows, in cyclic order or random
 order from `rng`. A full pass confirms convergence. With `relative_tol`,
-`opt_tol` bounds the largest change of ``U`` divided by
-``\max(1,\max_{jt}|U_{jt}|)``; otherwise it bounds the absolute change.
+each change ``\Delta U_{jt}`` is measured in fitted-value units as
+``|\Delta U_{jt}|\sqrt{a_{tj}}``, where
+``a_{tj}=c_t\|\tilde x_{tj}\|^2/(n_t s_{tj}^2)``. The largest such change is
+compared with ``\texttt{opt\_tol}\,r``, with response scale
+``r=\sqrt{\sum_t c_t\|\tilde y_t\|^2/n_t}``. Columns and responses are centered
+with an intercept. The scale has a positive numerical floor; when ``r=0``,
+zero coefficients solve the problem exactly. Without `relative_tol`,
+`opt_tol` bounds the absolute change of ``U``.
 A positive `gaptol` also requires a relative duality gap below that target.
 Paths default to `max(ProximalSolvers.PATH_GAPTOL, 64eps(T))`; single fits
 require the gap only with an explicit positive `gaptol`, except continuation
@@ -318,8 +325,8 @@ row, or when the primal objective is zero. Reaching `max_iter` passes gives
 
 [`sparse_group_lasso`](@ref) has one response and user-defined groups of
 predictors. Here a group is one predictor across tasks, with a common entrywise
-penalty. Neither is a dirty model: a decomposition ``B=A+S`` with different
-penalties on ``A`` and ``S`` is a separate model (#90).
+penalty. A dirty model decomposes ``B = A + S`` with different penalties on the
+two components; it is not one of these penalties.
 
 ### Cross-validation with a shared design
 
