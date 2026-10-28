@@ -22,7 +22,8 @@
 # structure it does not preserve, such as a low-rank B, should build its blocks
 # with standardize_x = false. With shared, tasks that share one dense design
 # and have equal weights are left to the multi-response model of multi_lasso,
-# and Z and ỹ are not built (nothing).
+# and Z and ỹ are not built (nothing). With stacked = false they are not
+# built for any design; row coordinate descent reads X directly.
 struct _MultitaskData{T<:AbstractFloat, VX<:AbstractVector{<:AbstractMatrix{T}}}
   X::VX                                      # the designs, as coordinate descent reads them
   y::Vector{Vector{T}}                       # the responses
@@ -41,7 +42,7 @@ struct _MultitaskData{T<:AbstractFloat, VX<:AbstractVector{<:AbstractMatrix{T}}}
 end
 
 function _MultitaskData(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector{<:AbstractVector}; intercept::Bool,
-                        standardize_x::Bool, task_weights, shared::Bool = false)
+                        standardize_x::Bool, task_weights, shared::Bool = false, stacked::Bool = true)
   n, p = _task_sizes(Xs, ys, intercept)
   q = length(n)
   all(X -> eltype(X) <: Real, Xs) && all(y -> eltype(y) <: Real, ys) ||
@@ -79,7 +80,7 @@ function _MultitaskData(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector
     isempty(G) || (push!(groups, G); push!(rows, j))
   end
   N = sum(n)
-  Z, ỹ = shared && _isshared(X, c) ? (nothing, nothing) : _stacked_design(X, y, n, c, xbar, ybar, S, fitted)
+  Z, ỹ = !stacked || shared && _isshared(X, c) ? (nothing, nothing) : _stacked_design(X, y, n, c, xbar, ybar, S, fitted)
   _MultitaskData{T, typeof(X)}(X, y, n, N, c, intercept, xbar, ybar, S, fitted, groups, rows, Z, ỹ)
 end
 
@@ -242,8 +243,7 @@ Result returned by [`multitask_lasso`](@ref).
   `intercept = true`
 - `λ`: the penalty level
 - `activerows::Vector{Int}`: the selected predictors, the rows of `B` with a
-  nonzero coefficient; a selected row is still zero in the tasks where its
-  column is zero or, with an intercept, constant
+  nonzero coefficient; entries of a selected row can still be zero
 - `iterations::Int`, `converged::Bool`: the passes of coordinate descent over
   the rows and whether it met its stopping rule
 - `hasintercept::Bool`: whether the solver fitted intercepts
@@ -251,6 +251,7 @@ Result returned by [`multitask_lasso`](@ref).
   tasks, `N = ∑ₜ nₜ`, and those of each task, `nₜ`
 - `task_weights::Vector`, `penalty_factors::Vector`: the task weights `cₜ` and
   the penalty factors `ωⱼ` of the fit
+- `row_norm::Symbol`, `alpha`: the row norm and share of the entrywise penalty
 
 [`coef`](@ref) (a `(p + 1) × q` matrix, the intercepts in the first row),
 [`predict`](@ref) (a vector of fitted values per task), [`nobs`](@ref) and
@@ -268,20 +269,35 @@ struct MultitaskLassoSolution{T}
   task_nobs::Vector{Int}
   task_weights::Vector{T}
   penalty_factors::Vector{T}
+  row_norm::Symbol
+  alpha::T
 end
+
+MultitaskLassoSolution{T}(B, intercept, λ, activerows, iterations, converged, hasintercept, nobs, task_nobs,
+                         task_weights, penalty_factors) where {T} =
+  MultitaskLassoSolution{T}(B, intercept, λ, activerows, iterations, converged, hasintercept, nobs, task_nobs,
+                           task_weights, penalty_factors, :l2, zero(T))
+MultitaskLassoSolution(B::SparseMatrixCSC{T, Int}, args::Vararg{Any, 10}) where {T} =
+  MultitaskLassoSolution{T}(B, args...)
 
 """
     multitask_lasso(Xs, ys, λ, options = CDOptions(); intercept = true, standardize_x = true,
-                    task_weights = :equal, penalty_factors = nothing, rng = Random.default_rng())
+                    task_weights = :equal, penalty_factors = nothing, row_norm = :l2, alpha = 0,
+                    rng = Random.default_rng())
 
 The multitask lasso of the responses `ys[t]` on the designs `Xs[t]`, `t = 1, …, q`,
 with the same `p` columns in every task (the same predictors, in the same order)
 and `nₜ` rows, which may differ between the tasks,
 
-    minimize  ∑ₜ cₜ ‖y_t - β₀ₜ - X_t b_t‖² / (2nₜ) + λ ∑ⱼ ωⱼ ‖(s₁ⱼ b₁ⱼ, …, s_qⱼ b_qⱼ)‖₂
+    minimize  ∑ₜ cₜ ‖y_t - β₀ₜ - X_t b_t‖² / (2nₜ) + λ ∑ⱼ hⱼ((s₁ⱼ b₁ⱼ, …, s_qⱼ b_qⱼ))
 
 over the intercepts `β₀ₜ` and the coefficients `B = [b_1 … b_q]`. The penalty
-on the rows of `B` selects the same predictors for all the tasks.
+on the rows of `B` selects predictors across tasks; a selected row can have
+zero entries. With `row_norm = :l2`,
+`hⱼ(u) = alpha * ‖u‖₁ + (1 - alpha) * ωⱼ * ‖u‖₂`, the row ℓ1/ℓ2 penalty by
+default (`alpha = 0`) and the multitask sparse group for `alpha > 0`.
+With `row_norm = :linf`, `hⱼ(u) = ωⱼ * ‖u‖∞`, and `alpha` must be zero.
+`alpha` must lie in `[0, 1]`.
 
 - The task weights `cₜ` are given by `task_weights`: `:equal`, the default,
   `cₜ = 1`, so that the mean squared error of each task counts once;
@@ -296,17 +312,18 @@ on the rows of `B` selects the same predictors for all the tasks.
   intercept constant there, has a zero coefficient in that task. The
   coefficients are on the scale of the data.
 - The penalty factors `ωⱼ` are given by `penalty_factors`, finite, nonnegative
-  and not all zero, one by default; a zero factor leaves predictor `j`
-  unpenalized.
+  and not all zero, one by default. They weight the row term only: a zero
+  factor leaves the entrywise term when `alpha > 0`.
 - The intercepts are not penalized, and they are zero unless `intercept` is true.
 
 With unit penalty factors, one design `X` for all the tasks and equal task
 weights `c`, this is [`multi_lasso`](@ref)`(X, [y_1 … y_q], λ / c)`, and with one
 task it is [`lasso`](@ref)`(X_1, y_1, λ / c₁)`, both with the same `intercept`
-and `standardize_x`.
+and `standardize_x` and unit factors; these reductions hold for both new
+penalties too.
 
-The tasks are stacked into one least-squares problem over `vec(B)`, whose design
-has the centered and scaled designs of the tasks on its diagonal and is
+For the default penalty, the tasks are stacked into one least-squares problem
+over `vec(B)`, whose design has the centered and scaled designs of the tasks on its diagonal and is
 stored as a sparse matrix; a sparse design stays sparse without an intercept,
 and with an intercept its centered columns are dense. It is solved by block
 coordinate descent on the rows of `B` (ProximalSolvers' group coordinate
@@ -318,27 +335,37 @@ coordinate descent is drawn from `rng`. When the tasks share one dense design
 are converted to a common floating point type, and options are passed as
 [`CDOptions`](@ref).
 
+The new penalties use row coordinate descent on the tasks' own designs,
+without stacking or copying a shared design. Sparse columns are centered on
+the fly. Full passes alternate with active-row passes. With `relative_tol`,
+the change rule divides the largest change of the standardized coefficients
+by `max(1, max|U|)`; otherwise it uses absolute changes. Single fits require
+a duality gap only with a positive `gaptol`; continuation uses the path target.
+There is no gap at λ = 0, with completely unpenalized rows, or at zero objective.
+
 Returns a [`MultitaskLassoSolution`](@ref). See also [`MultitaskLassoPath`](@ref)
 and [`CVMultitaskLassoPath`](@ref).
 """
 function multitask_lasso(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector{<:AbstractVector}, λ::Real,
                          options::CDOptions = CDOptions(); intercept::Bool = true, standardize_x::Bool = true,
                          task_weights = :equal, penalty_factors = nothing, rng::AbstractRNG = default_rng(),
-                         kwargs...)
+                         row_norm::Symbol = :l2, alpha::Real = 0, kwargs...)
   _no_keywords(kwargs)
-  _multitask_fit(Xs, ys, λ, options; intercept, standardize_x, task_weights, penalty_factors, rng)
+  _multitask_fit(Xs, ys, λ, options; intercept, standardize_x, task_weights, penalty_factors, rng, row_norm, alpha)
 end
 
-# multitask_lasso, which with shared = false fits a shared design on the stacked
-# design too
+# With the default penalty and shared = false, fit shared designs by stacking.
 function _multitask_fit(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector{<:AbstractVector}, λ::Real,
                         options::CDOptions = CDOptions(); intercept::Bool = true, standardize_x::Bool = true,
                         task_weights = :equal, penalty_factors = nothing, rng::AbstractRNG = default_rng(),
-                        shared::Bool = true)
+                        shared::Bool = true, row_norm::Symbol = :l2, alpha::Real = 0)
+  _check_row_penalty(row_norm, alpha)
   λ >= 0 || throw(ArgumentError("λ must be nonnegative, but it is $λ."))
-  d = _MultitaskData(Xs, ys; intercept, standardize_x, task_weights, shared)
+  d = _MultitaskData(Xs, ys; intercept, standardize_x, task_weights, shared,
+                     stacked = row_norm === :l2 && iszero(alpha))
   T = eltype(d.S)
   ω = _penalty_factors(T, penalty_factors, size(d.S, 1))
+  row_norm === :l2 && iszero(alpha) || return _row_fit(d, ω, T(λ), options; row_norm, alpha, rng)
   m, x, groups, w = _multitask_problem(d, ω)
   r = _solve!(x, m, GroupNormL2(T(λ), groups, w), options; rng)
   B = _task_coefficients(d, x)
@@ -350,12 +377,13 @@ end
     MultitaskLassoPath(Xs, ys, options = CDOptions(); nλ = 100, λminratio, kwargs...)
     MultitaskLassoPath(Xs, ys, λpath, options = CDOptions(); intercept = true, standardize_x = true,
                        task_weights = :equal, penalty_factors = nothing, rng = Random.default_rng(),
-                       screening = true, max_rows = Inf)
+                       screening = true, max_rows = Inf, row_norm = :l2, alpha = 0)
 
 Solutions `β0path[k]` and `Bpath[k]` of the multitask lasso of
 [`multitask_lasso`](@ref) (with the same keywords) along a decreasing sequence
-`λpath`, each one warm started from the previous solution, by ProximalSolvers'
-`solve_path`.
+`λpath`, each one warm started from the previous solution. The default uses
+ProximalSolvers' `solve_path`; the new penalties use row coordinate descent
+on the tasks' own designs.
 
 Without `λpath`, the path has `nλ` values spaced evenly on the log scale from
 `λmax`, the smallest value whose solution is zero, down to `λminratio ⋅ λmax`;
@@ -363,8 +391,11 @@ Without `λpath`, the path has `nλ` values spaced evenly on the log scale from
 coefficients, `∑ₜ nₜ < pq`, and to `1e-4` otherwise, the rule of
 [`LassoPath`](@ref) for one task and of [`MultiLassoPath`](@ref) for a shared
 design. The first value is `λmax` times `1 + √eps`. This grid needs positive
-penalty factors, since `λmax` leaves the unpenalized predictors out; with zero
-factors, give `λpath`.
+penalty factors for row ℓ1/ℓ2 and ℓ1/ℓ∞. Sparse group with `alpha > 0`
+also allows zero factors, since the entries remain penalized. The grid needs
+finite λmax; otherwise give `λpath`. For ℓ∞, λmax is the largest row gradient
+ℓ1 norm divided by its factor; for sparse group it is the largest root of
+`‖soft(gⱼ(0), alpha * λ)‖₂ = (1 - alpha) * ωⱼ * λ`.
 
 With `screening`, each λ is solved first over the rows kept by the sequential
 strong rule, and the optimality conditions of the others are checked
@@ -382,7 +413,8 @@ then contains only the values that were solved for.
   rule, and the checks of the screening
 - `intercept::Bool`: whether the path has intercepts
 - `nobs::Int`, `task_nobs::Vector{Int}`, `task_weights::Vector`,
-  `penalty_factors::Vector`: as in [`MultitaskLassoSolution`](@ref)
+  `penalty_factors::Vector`, `row_norm::Symbol`, `alpha`: as in
+  [`MultitaskLassoSolution`](@ref)
 
 `coef` gives a vector with a coefficient matrix per level, with the intercepts
 in the first row when the path has them (`coef(path, λ)` one matrix,
@@ -404,45 +436,60 @@ struct MultitaskLassoPath{T<:AbstractFloat}
   task_nobs::Vector{Int}
   task_weights::Vector{T}
   penalty_factors::Vector{T}
+  row_norm::Symbol
+  alpha::T
 end
+
+MultitaskLassoPath{T}(λpath, Bpath, β0path, activerows, iterations, converged, kkt_checks, intercept, nobs,
+                     task_nobs, task_weights, penalty_factors) where {T} =
+  MultitaskLassoPath{T}(λpath, Bpath, β0path, activerows, iterations, converged, kkt_checks, intercept, nobs,
+                       task_nobs, task_weights, penalty_factors, :l2, zero(T))
+MultitaskLassoPath(λpath::Vector{T}, args::Vararg{Any, 11}) where {T<:AbstractFloat} =
+  MultitaskLassoPath{T}(λpath, args...)
 
 function MultitaskLassoPath(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector{<:AbstractVector},
                             λpath::AbstractVector{<:Real}, options::CDOptions = CDOptions(); intercept::Bool = true,
                             standardize_x::Bool = true, task_weights = :equal, penalty_factors = nothing,
-                            rng::AbstractRNG = default_rng(), screening::Bool = true, max_rows = Inf, kwargs...)
+                            rng::AbstractRNG = default_rng(), screening::Bool = true, max_rows = Inf,
+                            row_norm::Symbol = :l2, alpha::Real = 0, kwargs...)
   _no_keywords(kwargs)
   _multitask_path(Xs, ys, λpath, options; intercept, standardize_x, task_weights, penalty_factors, rng, screening,
-                  max_rows)
+                  max_rows, row_norm, alpha)
 end
 
 function MultitaskLassoPath(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector{<:AbstractVector},
                             options::CDOptions = CDOptions(); nλ::Integer = 100,
                             λminratio::Union{Nothing, Real} = nothing, intercept::Bool = true,
                             standardize_x::Bool = true, task_weights = :equal, penalty_factors = nothing,
-                            rng::AbstractRNG = default_rng(), screening::Bool = true, max_rows = Inf, kwargs...)
+                            rng::AbstractRNG = default_rng(), screening::Bool = true, max_rows = Inf,
+                            row_norm::Symbol = :l2, alpha::Real = 0, kwargs...)
   _no_keywords(kwargs)
   _multitask_path(Xs, ys, nothing, options; nλ, λminratio, intercept, standardize_x, task_weights, penalty_factors,
-                  rng, screening, max_rows)
+                  rng, screening, max_rows, row_norm, alpha)
 end
 
-# MultitaskLassoPath at the levels λpath, or on the automatic grid for nothing;
-# with shared = false, a shared design is fitted on the stacked design too
+# A path at λpath, or an automatic grid for nothing. With the default penalty
+# and shared = false, shared designs are stacked too.
 function _multitask_path(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector{<:AbstractVector},
                          λpath::Union{Nothing, AbstractVector{<:Real}}, options::CDOptions = CDOptions();
                          nλ::Integer = 100, λminratio::Union{Nothing, Real} = nothing, intercept::Bool = true,
                          standardize_x::Bool = true, task_weights = :equal, penalty_factors = nothing,
                          rng::AbstractRNG = default_rng(), screening::Bool = true, max_rows = Inf,
-                         shared::Bool = true)
+                         shared::Bool = true, row_norm::Symbol = :l2, alpha::Real = 0)
+  _check_row_penalty(row_norm, alpha)
   if λpath === nothing
     nλ >= 1 || throw(ArgumentError("nλ must be positive"))
     λminratio === nothing || 0 < λminratio <= 1 || throw(ArgumentError("λminratio must be in (0, 1]"))
   else
     all(λ -> λ >= 0, λpath) || throw(ArgumentError("The penalty levels in λpath must be nonnegative."))
   end
-  d = _MultitaskData(Xs, ys; intercept, standardize_x, task_weights, shared)
+  d = _MultitaskData(Xs, ys; intercept, standardize_x, task_weights, shared,
+                     stacked = row_norm === :l2 && iszero(alpha))
   T = eltype(d.S)
   p, q = size(d.S)
   ω = _penalty_factors(T, penalty_factors, p)
+  row_norm === :l2 && iszero(alpha) ||
+    return _row_path(d, ω, λpath, options; nλ, λminratio, row_norm, alpha, rng, screening, max_rows)
   m, x, groups, w = _multitask_problem(d, ω)
   g = GroupNormL2(one(T), groups, w)
   λs = if λpath === nothing
@@ -474,9 +521,9 @@ Result returned by [`CVMultitaskLassoPath`](@ref)`(Xs, ys)`.
 - `cvm_task::Matrix`: the held-out mean squared error of each task (a row) at
   each level (a column), `NaN` where no fold reaches the level
 - `nrows::Vector{Int}`: the number of nonzero rows of `path` at each level
-- `λmin`, `λ1se`: among the levels that every fold reaches, the level with the
-  smallest `cvm`, and the largest level whose `cvm` is within one standard error
-  of it
+- `λmin`, `λ1se`: among the levels reached and converged in every fold, the
+  level with the smallest `cvm`, and the largest level whose `cvm` is within
+  one standard error of it
 - `folds::Vector{Vector{Int}}`: the fold of each observation, a vector per task
 - `task_weights::Vector`: the task weights `cₜ` of the path on all the data
 """
@@ -499,11 +546,12 @@ end
 
 K-fold cross-validation of the path of [`MultitaskLassoPath`](@ref) (with the
 same options and keywords, such as `intercept`, `standardize_x`, `task_weights`,
-`penalty_factors` and `max_rows`), as [`CVLassoPath`](@ref) does for one task:
+`penalty_factors`, `row_norm`, `alpha` and `max_rows`), as [`CVLassoPath`](@ref)
+does for one task:
 the path on all the data gives the levels, each fold's path is computed on the
 other folds at those levels, and the error on the held-out fold estimates the
-prediction error at each level. The levels are the automatic grid, so the
-penalty factors must be positive.
+prediction error at each level. The automatic grid needs finite λmax; sparse
+group with `alpha > 0` permits zero factors.
 
 The folds are drawn within each task: the observations of every task are
 assigned to the `K = nfolds` folds in a balanced random way, drawn from `rng`
@@ -511,7 +559,7 @@ assigned to the `K = nfolds` folds in a balanced random way, drawn from `rng`
 vector of labels `1, …, K` per task, with every label used in every task. Each
 fold's path refits the whole procedure on the observations of the other folds,
 with the same `task_weights` argument: the centering, the scales, the weights of
-`:observations` and the stacked design are computed on them, so that nothing
+`:observations` and the design caches are computed on them, so that nothing
 leaks from the held-out fold. Every task must keep two training observations in
 each fold with an intercept, and one without.
 
@@ -528,9 +576,10 @@ of the tasks, whose folds are weighted by the `mₜₖ`; at the levels that ever
 fold reaches, `cvm = ∑ₜ cₜ MSEₜ / ∑ₜ cₜ`, the held-out counterpart of the loss.
 `λmin` minimizes `cvm`, and `λ1se` is the largest level whose `cvm` is within
 `cvse` of the minimum (the one-standard-error rule). A fold path that stops
-early (`max_rows`) leaves the remaining levels out of the averages; the levels
+early (`max_rows`) leaves the remaining levels out of the averages;
+nonconverged fold levels are treated the same way and are never selected. Levels
 that no fold reaches have `NaN` in `cvm`, `cvse` and `cvm_task`. `λmin` and
-`λ1se` are chosen among the levels that every fold reaches.
+`λ1se` are chosen among the levels that every fold reaches and converges at.
 
 With `threads`, the folds run in parallel on the available threads; each fold
 draws its random coordinate orders from a generator seeded from `rng`, so that
@@ -544,7 +593,9 @@ function CVMultitaskLassoPath(Xs::AbstractVector{<:AbstractMatrix}, ys::Abstract
                               options::CDOptions = CDOptions(); nfolds::Integer = 10,
                               folds::Union{Nothing, AbstractVector{<:AbstractVector{<:Integer}}} = nothing,
                               rng::AbstractRNG = default_rng(), threads::Bool = true, nλ::Integer = 100,
-                              λminratio::Union{Nothing, Real} = nothing, intercept::Bool = true, kwargs...)
+                              λminratio::Union{Nothing, Real} = nothing, intercept::Bool = true,
+                              row_norm::Symbol = :l2, alpha::Real = 0, kwargs...)
+  _check_row_penalty(row_norm, alpha)
   n, _ = _task_sizes(Xs, ys, intercept)
   q = length(n)
   fl = folds === nothing ? [_folds(rng, nt, nfolds) for nt in n] : _task_folds(folds, n)
@@ -555,12 +606,9 @@ function CVMultitaskLassoPath(Xs::AbstractVector{<:AbstractMatrix}, ys::Abstract
       throw(ArgumentError("fold $k leaves $(n[t] - mt[t, k]) training observations in task $t, but a fit$(intercept ? " with an intercept" : "") needs at least $(1 + intercept)."))
   end
 
-  pf = get(kwargs, :penalty_factors, nothing)
-  pf === nothing || !any(iszero, pf) ||
-    throw(ArgumentError("cross-validation needs positive penalty factors, since its penalty levels are an automatic grid."))
-
   seeds = rand(rng, UInt64, K + 1)
-  path = MultitaskLassoPath(Xs, ys, options; nλ, λminratio, intercept, rng = Xoshiro(seeds[end]), kwargs...)
+  path = MultitaskLassoPath(Xs, ys, options; nλ, λminratio, intercept, row_norm, alpha,
+                            rng = Xoshiro(seeds[end]), kwargs...)
   λs = path.λpath
   T, L = eltype(λs), length(λs)
   sse = fill(T(NaN), q, K, L)
@@ -568,9 +616,10 @@ function CVMultitaskLassoPath(Xs::AbstractVector{<:AbstractMatrix}, ys::Abstract
     train = [findall(!=(k), fl[t]) for t in 1:q]
     test = [findall(==(k), fl[t]) for t in 1:q]
     fp = MultitaskLassoPath([Xs[t][train[t], :] for t in 1:q], [ys[t][train[t]] for t in 1:q], λs, options;
-                            intercept, rng = Xoshiro(seeds[k]), kwargs...)
+                            intercept, row_norm, alpha, rng = Xoshiro(seeds[k]), kwargs...)
     Ŷ = predict(fp, [Xs[t][test[t], :] for t in 1:q])
     for t in 1:q, j in axes(Ŷ[t], 2)
+      fp.converged[j] || continue
       sse[t, k, j] = sum(i -> abs2(ys[t][test[t][i]] - Ŷ[t][i, j]), eachindex(test[t]))
     end
   end
