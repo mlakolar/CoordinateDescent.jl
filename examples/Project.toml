@@ -16,5 +16,5 @@ KernelSmoothing = {rev = "a99bcc9497d7997106d66ce837705fd70c055687", url = "http
 [compat]
 HighDimensionalModels = "0.1"
 ProximalBase = "0.5"
-ProximalSolvers = "0.2"
+ProximalSolvers = "0.3"
 julia = "1.10"

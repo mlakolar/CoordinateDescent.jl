@@ -450,13 +450,18 @@ nan_approx(a, b; rtol = 1e-6) = isnan.(a) == isnan.(b) && isapprox(filter(!isnan
     s32 = multitask_lasso([Xi[1], Float32.(Xi[2]), Xi[3]], yi, 1)
     @test s32.B isa SparseMatrixCSC{Float32, Int} && s32.intercept isa Vector{Float32}
     @test Matrix(s32.B) ≈ Matrix(sf.B) atol = 1e-4
-    # Float32 paths: with the default gap rule, ProximalSolvers 0.2.0 has no
-    # method of its gap check for the stacked model in Float32 (a MethodError);
-    # with gaptol = 0 they run. The Float32 grid differs from the Float64 one
-    # by the factor 1 + √eps(T) of λmax, so the Float64 path is fitted on it.
+    # Float32 paths: with the default gap rule they run since ProximalSolvers
+    # 0.3, which keeps the tightened tolerance in Float32; some levels can stop
+    # short of the gap target in Float32 and warn (ProximalSolvers.jl#128), so
+    # the warnings are silenced. With gaptol = 0 they ran before. The Float32
+    # grid differs from the Float64 one by the factor 1 + √eps(T) of λmax, so
+    # the Float64 path is fitted on it.
     X32, y32 = [Float32.(X) for X in Xi], [Float32.(y) for y in yi]
-    @test_broken (MultitaskLassoPath(X32, y32; nλ = 10); true)
-    @test_broken (CVMultitaskLassoPath(X32, y32; nfolds = 3, nλ = 10); true)
+    quiet(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
+    pd32 = quiet(() -> MultitaskLassoPath(X32, y32; nλ = 10))
+    @test pd32.λpath isa Vector{Float32} && length(pd32.λpath) == 10 && pd32.Bpath isa Vector{SparseMatrixCSC{Float32, Int}}
+    cv32 = quiet(() -> CVMultitaskLassoPath(X32, y32; nfolds = 3, nλ = 10, rng = Xoshiro(1)))
+    @test cv32.λmin isa Float32 && cv32.λmin in cv32.λpath
     p32 = MultitaskLassoPath(X32, y32, CDOptions(; gaptol = 0); nλ = 10)
     @test p32.λpath isa Vector{Float32} && p32.Bpath isa Vector{SparseMatrixCSC{Float32, Int}} && all(p32.converged)
     λs64 = MultitaskLassoPath(Xi, yi; nλ = 10).λpath
