@@ -233,9 +233,9 @@ end
     check_split(HM._SignalDesign{Float64}(5), scale .* [.1, -.2, .3, -.4, .5], K,
       NormL1(.2), .7, HM._trend_products(K, 1); bandwidth = 1)
   end
-  # Cross a sum block boundary and retain an incomplete final block.
-  for T in (Float32, Float64), order in 1:2, irregular in (false, true)
-    n = 263
+  # Cover boundary groups, complete sum blocks and incomplete final blocks.
+  for T in (Float32, Float64), order in 1:2, irregular in (false, true),
+      n in (8, 16, 256, 257, 263, 264, 512, 513)
     x = irregular ? cumsum(T.(.8 .+ rand(rng, n))) : nothing
     K = T.(difference_matrix(n, order; x))
     A, b = HM._SignalDesign{T}(n), randn(rng, T, n)

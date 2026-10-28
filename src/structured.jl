@@ -498,7 +498,7 @@ function _structured_band_solve!(x, L, d, b, ::Val{2})
     y2 = muladd(-L[1, 1], y1, b[2])
     x[1], x[2] = y1, y2
     for j in 3:n
-      v = muladd(-L[2, j-2], y1, muladd(-L[1, j-1], y2, b[j]))
+      v = muladd(-L[1, j-1], y2, muladd(-L[2, j-2], y1, b[j]))
       x[j] = v
       y1, y2 = y2, v
     end
@@ -506,7 +506,7 @@ function _structured_band_solve!(x, L, d, b, ::Val{2})
     x2 = muladd(-L[1, n-1], x1, y1 / d[n-1])
     x[n], x[n-1] = x1, x2
     for j in n-2:-1:1
-      v = muladd(-L[2, j], x1, muladd(-L[1, j], x2, x[j] / d[j]))
+      v = muladd(-L[1, j], x2, muladd(-L[2, j], x1, x[j] / d[j]))
       x[j] = v
       x1, x2 = x2, v
     end
@@ -520,19 +520,19 @@ function _structured_band_solve!(x, L, d, b, ::Val{3})
   @inbounds begin
     y1 = b[1]
     y2 = muladd(-L[1, 1], y1, b[2])
-    y3 = muladd(-L[2, 1], y1, muladd(-L[1, 2], y2, b[3]))
+    y3 = muladd(-L[1, 2], y2, muladd(-L[2, 1], y1, b[3]))
     x[1], x[2], x[3] = y1, y2, y3
     for j in 4:n
-      v = muladd(-L[3, j-3], y1, muladd(-L[2, j-2], y2, muladd(-L[1, j-1], y3, b[j])))
+      v = muladd(-L[1, j-1], y3, muladd(-L[2, j-2], y2, muladd(-L[3, j-3], y1, b[j])))
       x[j] = v
       y1, y2, y3 = y2, y3, v
     end
     x1 = y3 / d[n]
     x2 = muladd(-L[1, n-1], x1, y2 / d[n-1])
-    x3 = muladd(-L[2, n-2], x1, muladd(-L[1, n-2], x2, y1 / d[n-2]))
+    x3 = muladd(-L[1, n-2], x2, muladd(-L[2, n-2], x1, y1 / d[n-2]))
     x[n], x[n-1], x[n-2] = x1, x2, x3
     for j in n-3:-1:1
-      v = muladd(-L[3, j], x1, muladd(-L[2, j], x2, muladd(-L[1, j], x3, x[j] / d[j])))
+      v = muladd(-L[1, j], x3, muladd(-L[2, j], x2, muladd(-L[3, j], x1, x[j] / d[j])))
       x[j] = v
       x1, x2, x3 = x2, x3, v
     end
@@ -592,6 +592,28 @@ end
 @inline _trend_entry(x, i) = @inbounds x[i]
 @inline _trend_entry(x::Tuple, i) = @inbounds x[1][i] - x[2][i]
 
+@inline function _trend_tinterior(K::_TrendProducts{T, W}, x, j) where {T, W}
+  value = zero(T)
+  @inbounds for offset in 1:W
+    i = j - W + offset
+    value += _trend_coefficient(K.coefficients[W-offset+1], i) * _trend_entry(x, i)
+  end
+  value
+end
+
+@inline function _trend_tinterior(K::_TrendProducts{T, 2}, x, j) where {T}
+  a, b = K.coefficients
+  (zero(T) + _trend_coefficient(b, j-1) * _trend_entry(x, j-1)) +
+    _trend_coefficient(a, j) * _trend_entry(x, j)
+end
+
+@inline function _trend_tinterior(K::_TrendProducts{T, 3}, x, j) where {T}
+  a, b, c = K.coefficients
+  ((zero(T) + _trend_coefficient(c, j-2) * _trend_entry(x, j-2)) +
+    _trend_coefficient(b, j-1) * _trend_entry(x, j-1)) +
+    _trend_coefficient(a, j) * _trend_entry(x, j)
+end
+
 @inline function _trend_tvalue(K::_TrendProducts{T, W}, x, j) where {T, W}
   value = zero(T)
   @inbounds for i in max(1, j-W+1):min(j, K.m)
@@ -604,8 +626,7 @@ end
   a, b = K.coefficients
   j == 1 && return zero(T) + _trend_coefficient(a, 1) * _trend_entry(x, 1)
   j == K.n && return zero(T) + _trend_coefficient(b, K.m) * _trend_entry(x, K.m)
-  (zero(T) + _trend_coefficient(b, j-1) * _trend_entry(x, j-1)) +
-    _trend_coefficient(a, j) * _trend_entry(x, j)
+  _trend_tinterior(K, x, j)
 end
 
 @inline function _trend_tvalue(K::_TrendProducts{T, 3}, x, j) where {T}
@@ -619,9 +640,7 @@ end
     return (zero(T) + _trend_coefficient(c, j-2) * _trend_entry(x, j-2)) +
       _trend_coefficient(b, j-1) * _trend_entry(x, j-1)
   end
-  ((zero(T) + _trend_coefficient(c, j-2) * _trend_entry(x, j-2)) +
-    _trend_coefficient(b, j-1) * _trend_entry(x, j-1)) +
-    _trend_coefficient(a, j) * _trend_entry(x, j)
+  _trend_tinterior(K, x, j)
 end
 
 function _split_rhs!(rhs, products, xy, ρ, z, u, v)
@@ -630,8 +649,14 @@ function _split_rhs!(rhs, products, xy, ρ, z, u, v)
   @. rhs = xy + ρ * rhs
 end
 
-function _split_rhs!(rhs, products::_TrendProducts, xy, ρ, z, u, v)
-  @inbounds @simd for j in eachindex(rhs)
+function _split_rhs!(rhs, products::_TrendProducts{T, W}, xy, ρ, z, u, v) where {T, W}
+  @inbounds for j in 1:W-1
+    rhs[j] = xy[j] + ρ * _trend_tvalue(products, (z, u), j)
+  end
+  @inbounds @simd for j in W:products.m
+    rhs[j] = xy[j] + ρ * _trend_tinterior(products, (z, u), j)
+  end
+  @inbounds for j in max(W, products.m+1):products.n
     rhs[j] = xy[j] + ρ * _trend_tvalue(products, (z, u), j)
   end
   rhs
@@ -734,16 +759,32 @@ function _split_dual_sums!(dual, ktu, v, products, z, zold, u)
   _structured_sumsq(dual), _structured_sumsq(ktu)
 end
 
-function _split_dual_sums!(dual, ktu, v, products::_TrendProducts, z, zold, u)
+@inline function _split_dual_group(ds, us, products, z, zold, u, j, stencil::F) where {F}
+  delta = ntuple(k -> stencil(products, (z, zold), j+k-1), Val(8))
+  ku = ntuple(k -> stencil(products, u, j+k-1), Val(8))
+  _structured_sumadd(ds, delta), _structured_sumadd(us, ku)
+end
+
+function _split_dual_sums!(dual, ktu, v, products::_TrendProducts{T, W}, z, zold, u) where {T, W}
   ds, us, dc, uc = 0.0, 0.0, 0.0, 0.0
   n = length(dual)
+  # Peel containing groups so each column retains its materialized sum lane.
+  interior_first = 1 + 8cld(W-1, 8)
+  interior_last = 8fld(products.m, 8) - 7
   @inbounds for first in 1:256:n-7
     dual_square = ktu_square = ntuple(_ -> 0.0, Val(8))
-    for j in first:8:min(first+255, n-7)
-      delta = ntuple(k -> _trend_tvalue(products, (z, zold), j+k-1), Val(8))
-      ku = ntuple(k -> _trend_tvalue(products, u, j+k-1), Val(8))
-      dual_square = _structured_sumadd(dual_square, delta)
-      ktu_square = _structured_sumadd(ktu_square, ku)
+    last = min(first+255, n-7)
+    for j in first:8:min(last, interior_first-8)
+      dual_square, ktu_square = _split_dual_group(dual_square, ktu_square,
+        products, z, zold, u, j, _trend_tvalue)
+    end
+    for j in max(first, interior_first):8:min(last, interior_last)
+      dual_square, ktu_square = _split_dual_group(dual_square, ktu_square,
+        products, z, zold, u, j, _trend_tinterior)
+    end
+    for j in max(first, interior_first, interior_last+8):8:last
+      dual_square, ktu_square = _split_dual_group(dual_square, ktu_square,
+        products, z, zold, u, j, _trend_tvalue)
     end
     ds, dc = _structured_sumfinish(ds, dc, _structured_sum(dual_square))
     us, uc = _structured_sumfinish(us, uc, _structured_sum(ktu_square))
