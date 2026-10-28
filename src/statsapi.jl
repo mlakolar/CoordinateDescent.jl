@@ -156,6 +156,7 @@ StatsAPI.fit(::Type{LassoPath}, X::AbstractMatrix, y::AbstractVector, args...; k
     fit(GroupLassoPath, X, y, args...; kwargs...)
     fit(SparseGroupLassoPath, X, y, args...; kwargs...)
     fit(MultiLassoPath, X, Y, args...; kwargs...)
+    fit(CVMultiLassoPath, X, Y, args...; kwargs...)
     fit(MultitaskLassoPath, Xs, ys, args...; kwargs...)
     fit(CVMultitaskLassoPath, Xs, ys, args...; kwargs...)
 
@@ -174,6 +175,8 @@ StatsAPI.fit(::Type{SparseGroupLassoPath}, X::AbstractMatrix, y::AbstractVector,
   SparseGroupLassoPath(X, y, args...; kwargs...)
 StatsAPI.fit(::Type{MultiLassoPath}, X::AbstractMatrix, Y::AbstractMatrix, args...; kwargs...) =
   MultiLassoPath(X, Y, args...; kwargs...)
+StatsAPI.fit(::Type{CVMultiLassoPath}, X::AbstractMatrix, Y::AbstractMatrix, args...; kwargs...) =
+  CVMultiLassoPath(X, Y, args...; kwargs...)
 StatsAPI.fit(::Type{MultitaskLassoPath}, Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector{<:AbstractVector},
              args...; kwargs...) = MultitaskLassoPath(Xs, ys, args...; kwargs...)
 StatsAPI.fit(::Type{CVMultitaskLassoPath}, Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector{<:AbstractVector},
@@ -371,6 +374,22 @@ function StatsAPI.predict(path::MultiLassoPath, X::AbstractMatrix{<:Real})
 end
 
 StatsAPI.nobs(path::MultiLassoPath) = path.nobs
+
+"""
+    coef(cv::CVMultiLassoPath; λ = :λ1se)
+    predict(cv::CVMultiLassoPath, X; λ = :λ1se)
+
+The coefficients (with intercepts in the first row when fitted), and the
+matrix of predictions at the rows of X, at `cv.λ1se`, at `cv.λmin` with
+`λ = :λmin`, or at a level within the path.
+"""
+StatsAPI.coef(cv::CVMultiLassoPath; λ::Union{Symbol, Real} = :λ1se) = coef(cv.path, _cvlevel(cv, λ))
+
+function StatsAPI.predict(cv::CVMultiLassoPath, X::AbstractMatrix{<:Real}; λ::Union{Symbol, Real} = :λ1se)
+  b = coef(cv; λ)
+  _checkcolumns(X, size(first(cv.path.Bpath), 1))
+  cv.path.intercept ? Matrix(X * b[2:end, :]) .+ b[1, :]' : Matrix(X * b)
+end
 
 ######################################################################
 #

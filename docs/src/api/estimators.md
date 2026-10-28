@@ -1,5 +1,8 @@
 # Estimators
 
+[`CVMultiLassoPath`](@ref) tunes the multi-response row penalties with folds
+shared by all responses.
+
 ```@docs
 HighDimensionalModels
 ```
