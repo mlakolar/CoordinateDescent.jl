@@ -4,10 +4,7 @@ using HighDimensionalModels, HiGHS, SparseArrays
 const CD = HighDimensionalModels
 const MOI = HiGHS.MOI
 
-function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},
-                                  ls::Vector{Float64}, w::Vector{Float64}, τ::Float64, intercept::Bool;
-                                  tol, time_limit, initial_basis, simplex, start,
-                                  max_hat_s=Inf, optimizer_factory=HiGHS.Optimizer)
+function _quantile_model(X, y, λ, w, τ, intercept, initial_basis, simplex, optimizer_factory)
   n, p = size(X)
   # The private factory permits deterministic native termination tests.
   opt = optimizer_factory()
@@ -18,7 +15,7 @@ function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},
     MOI.set(opt, MOI.RawOptimizerAttribute(name), val)
   end
   u = MOI.add_variables(opt, n)
-  MOI.add_constraints(opt, u, fill(MOI.Interval(τ-1, τ), n))
+  bounds = MOI.add_constraints(opt, u, fill(MOI.Interval(τ-1, τ), n))
   eq = if intercept
     MOI.add_constraint(opt, MOI.ScalarAffineFunction(MOI.ScalarAffineTerm.(ones(n), u), 0.0), MOI.EqualTo(0.0))
   else
@@ -31,7 +28,7 @@ function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},
     else
       [MOI.ScalarAffineTerm(X[i,j],u[i]) for i in 1:n if X[i,j] != 0]
     end
-    push!(constraints, MOI.add_constraint(opt, MOI.ScalarAffineFunction(terms,0.0), MOI.Interval(-n*ls[1]*w[j], n*ls[1]*w[j])))
+    push!(constraints, MOI.add_constraint(opt, MOI.ScalarAffineFunction(terms,0.0), MOI.Interval(-n*λ*w[j], n*λ*w[j])))
   end
   MOI.set(opt, MOI.ObjectiveSense(), MOI.MAX_SENSE)
   MOI.set(opt, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
@@ -50,6 +47,15 @@ function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},
     ret = HiGHS.Highs_setBasis(opt,columns,rows)
     ret == HiGHS.kHighsStatusOk || error("HiGHS rejected the quantile starting basis")
   end
+  opt, u, bounds, eq, constraints
+end
+
+function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},
+                                  ls::Vector{Float64}, w::Vector{Float64}, τ::Float64, intercept::Bool;
+                                  tol, time_limit, initial_basis, simplex, start,
+                                  max_hat_s=Inf, optimizer_factory=HiGHS.Optimizer)
+  n, p = size(X)
+  opt, u, _, eq, constraints = _quantile_model(X,y,ls[1],w,τ,intercept,initial_basis,simplex,optimizer_factory)
   solutions = CD.QuantileLassoSolution[]; status = :optimal
   for (k,λ) in enumerate(ls)
     remaining = time_limit-(time_ns()-start)/1e9
@@ -63,7 +69,7 @@ function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},
     if MOI.get(opt,MOI.ResultCount()) > 0 &&
        MOI.get(opt,MOI.PrimalStatus()) != MOI.NO_SOLUTION && MOI.get(opt,MOI.DualStatus()) != MOI.NO_SOLUTION
       scores = MOI.get(opt,MOI.VariablePrimal(),u)
-      β = -n .* MOI.get(opt,MOI.ConstraintDual(),constraints)
+      β = Float64[-n*MOI.get(opt,MOI.ConstraintDual(),c) for c in constraints]
       a = intercept ? -n*MOI.get(opt,MOI.ConstraintDual(),eq) : 0.0
       push!(solutions, CD._qsolution(X,y,β,a,scores,λ,w,τ,intercept,:exact,0.0,
                                      status,MOI.get(opt,MOI.SimplexIterations()),term==MOI.OPTIMAL,tol))
@@ -74,5 +80,34 @@ function CD._quantile_exact_path(X::AbstractMatrix{Float64}, y::Vector{Float64},
     k < length(ls) && count(!iszero,solutions[end].β) > max_hat_s && (status=:max_hat_s;break)
   end
   solutions, status
+end
+
+function CD._quantile_exact_refit(X::AbstractMatrix{Float64}, y::Vector{Float64},
+                                   taus::Vector{Float64}, intercept::Bool;
+                                   tol, time_limit, initial_basis, simplex, start,
+                                   optimizer_factory=HiGHS.Optimizer)
+  n, p = size(X); w = ones(p)
+  opt, u, bounds, eq, constraints = _quantile_model(X,y,0.0,w,taus[1],intercept,initial_basis,simplex,optimizer_factory)
+  solutions = CD.QuantileLassoSolution[]
+  for τ in taus
+    # Bound updates retain the current simplex basis, including after a limit.
+    for c in bounds
+      MOI.set(opt,MOI.ConstraintSet(),c,MOI.Interval(τ-1,τ))
+    end
+    remaining = time_limit-(time_ns()-start)/1e9
+    remaining > 0 || error("quantile refit returned no primal–dual pair (TIME_LIMIT)")
+    isfinite(remaining) && MOI.set(opt,MOI.TimeLimitSec(),remaining)
+    MOI.optimize!(opt)
+    term = MOI.get(opt,MOI.TerminationStatus()); status = Symbol(string(term))
+    MOI.get(opt,MOI.ResultCount()) > 0 &&
+      MOI.get(opt,MOI.PrimalStatus()) != MOI.NO_SOLUTION && MOI.get(opt,MOI.DualStatus()) != MOI.NO_SOLUTION ||
+      error("quantile refit returned no primal–dual pair ($status)")
+    scores = Float64[MOI.get(opt,MOI.VariablePrimal(),v) for v in u]
+    β = Float64[-n*MOI.get(opt,MOI.ConstraintDual(),c) for c in constraints]
+    a = intercept ? -n*MOI.get(opt,MOI.ConstraintDual(),eq) : 0.0
+    push!(solutions, CD._qsolution(X,y,β,a,scores,0.0,w,τ,intercept,:exact,0.0,
+                                   status,MOI.get(opt,MOI.SimplexIterations()),term==MOI.OPTIMAL,tol))
+  end
+  solutions
 end
 end

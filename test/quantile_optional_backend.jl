@@ -11,4 +11,11 @@ using HighDimensionalModels, Random, Test
   end
   @test err isa ArgumentError
   @test occursin("using HiGHS",sprint(showerror,err))
+  err=try
+    quantile_refit(X,y,Int[])
+  catch e
+    e
+  end
+  @test err isa ArgumentError
+  @test occursin("requires the optional HiGHS backend",sprint(showerror,err))
 end
