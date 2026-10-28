@@ -1,0 +1,5 @@
+lambda_shared,0.06
+lambda_specific,0.06
+objective,0.4258013365199489
+iterations,9
+tolerance,1e-10
