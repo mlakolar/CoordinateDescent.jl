@@ -7,6 +7,10 @@ ProximalSolvers 0.2 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- Add `slope_gaussian` and `calibration = :bh | :gaussian | :user` for `slope`
+  and `SLOPEPath`, with recorded calibration metadata. Explicit weights take
+  precedence; BH remains the default.
+
 - Double selection supports `vcov` choices, final-stage diagnostics and
   precomputed nuisance fits. Forced controls are validated before fitting;
   invalid `forced` now raises `ArgumentError` instead of `BoundsError`.

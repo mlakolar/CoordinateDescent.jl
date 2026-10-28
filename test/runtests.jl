@@ -6,6 +6,7 @@ tests = [
   "coordinate_descent",
   "selection",
   "slope_sparse",
+  "slope_calibration",
   "selection_golden",
   "naming",
   "lasso",
