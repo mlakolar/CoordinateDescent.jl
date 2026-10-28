@@ -1,4 +1,0 @@
-variant,case,rep,round,seconds,bytes,iterations,converged,primal_residual,dual_residual
-candidate,irregular,2,1,0.135951961,15357976,360,true,1.2742926707684022e-5,1.2034141140791607e-7
-candidate,irregular,2,2,0.133926989,15357976,360,true,1.2742926707684022e-5,1.2034141140791607e-7
-candidate,irregular,2,3,0.144058482,15357976,360,true,1.2742926707684022e-5,1.2034141140791607e-7

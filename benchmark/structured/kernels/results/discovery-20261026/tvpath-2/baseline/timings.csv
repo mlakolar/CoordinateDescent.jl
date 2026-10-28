@@ -1,4 +1,0 @@
-variant,case,rep,round,seconds,bytes,iterations,converged,primal_residual,dual_residual
-baseline,tvpath,2,1,0.02684143,31286752,50,true,0.0,0.0
-baseline,tvpath,2,2,0.025280499,31286752,50,true,0.0,0.0
-baseline,tvpath,2,3,0.02028035,31286752,50,true,0.0,0.0

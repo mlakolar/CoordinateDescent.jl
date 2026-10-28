@@ -1,4 +1,0 @@
-variant,case,rep,round,seconds,bytes,iterations,converged,primal_residual,dual_residual
-candidate,quadraticpath,1,1,55.117855563,369931776,152509,true,1.483558038081714e-6,8.870529860299767e-8
-candidate,quadraticpath,1,2,55.13659927,369932864,152509,true,1.483558038081714e-6,8.870529860299767e-8
-candidate,quadraticpath,1,3,55.422940078,369931904,152509,true,1.483558038081714e-6,8.870529860299767e-8

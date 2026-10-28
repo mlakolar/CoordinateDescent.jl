@@ -1,4 +1,0 @@
-variant,case,rep,round,seconds,bytes,iterations,converged,primal_residual,dual_residual
-candidate,linearpath,3,1,5.322467065,260610448,14720,true,7.296987404686138e-5,6.8918945331199e-7
-candidate,linearpath,3,2,5.354986686,260610480,14720,true,7.296987404686138e-5,6.8918945331199e-7
-candidate,linearpath,3,3,5.374738013,260610512,14720,true,7.296987404686138e-5,6.8918945331199e-7
