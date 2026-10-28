@@ -1,0 +1,80 @@
+calls=12 raw_stack_words=6484
+ Count  Overhead File                    Line Function
+ =====  ======== ====                    ==== ========
+     1         0 @Base/array.jl         1020 setindex!
+     1         1 @Base/array.jl         1025 _setindex!
+     1         0 @LinearAlgebra/src/adjtrans.jl  348 getindex
+     1         0 @Base/array.jl          963 getindex
+     1         1 @Base/essentials.jl     975 getindex
+     1         0 @LinearAlgebra/src/matmul.jl  547 _syrk_herk_gemm_wrapper!(C::Matri…
+     2         0 @Base/multidimensional.jl  998 _unsafe_getindex(::IndexCartesian…
+     2         0 @Base/multidimensional.jl 1007 _unsafe_getindex!
+     2         0 @Base/cartesian.jl       65 macro expansion
+     2         0 @Base/multidimensional.jl 1009 macro expansion
+     2         0 @HighDimensionalModels/src/lowrank.jl  111 _lr_rrsolution(d::@NamedTuple{X::…
+     2         0 @HighDimensionalModels/src/lowrank.jl   89 _lr_rrfactors(f::@NamedTuple{U::M…
+     2         0 @LinearAlgebra/src/eigen.jl  556 eigencopy_oftype
+     2         0 @LinearAlgebra/src/LinearAlgebra.jl  515 copy_similar
+     3         0 @Base/arraymath.jl        8 -(A::Matrix{Float64}, B::Matrix{F…
+     3         0 @Base/broadcast.jl      888 broadcast_preserving_zero_d
+     3         0 @Base/broadcast.jl      899 materialize
+     3         0 @Base/broadcast.jl      924 copy
+     3         0 @Base/broadcast.jl      952 copyto!
+     3         0 @Base/broadcast.jl      999 copyto!
+     3         0 @Base/simdloop.jl        77 macro expansion
+     3         0 @Base/broadcast.jl     1000 macro expansion
+     3         0 @Base/multidimensional.jl  774 setindex!
+     3         0 @Base/array.jl         1031 setindex!
+     3         3 @Base/array.jl         1037 _setindex!
+     3         0 @Base/abstractarray.jl 1186 copyto_axcheck!
+     4         0 @LinearAlgebra/src/matmul.jl  559 _syrk_herk_gemm_wrapper!
+     4         0 @Base/multidimensional.jl  996 _unsafe_getindex(::IndexCartesian…
+     4         0 @Base/abstractarray.jl  825 similar
+     4         0 @Base/abstractarray.jl  836 similar
+     4         0 @LinearAlgebra/src/adjtrans.jl  391 similar
+     5         0 @HighDimensionalModels/src/lowrank.jl  127 _lr_rrsolution(d::@NamedTuple{X::…
+     5         0 @Base/array.jl          318 copyto!
+     5         0 @Base/array.jl          311 _copyto2arg!
+     5         0 @Base/array.jl          291 copyto!
+     5         0 @Base/array.jl          300 _copyto_impl!
+     5         0 @Base/genericmemory.jl  139 unsafe_copyto!
+     5         5 @Base/cmem.jl            28 memmove
+     5         0 @LinearAlgebra/src/matmul.jl  141 *
+     5         0 @LinearAlgebra/src/matmul.jl  270 mul!
+     5         0 @LinearAlgebra/src/matmul.jl  302 mul!
+     5         0 @LinearAlgebra/src/matmul.jl  333 _mul!
+     5         0 @LinearAlgebra/src/matmul.jl  533 generic_matmatmul_wrapper!(C::Mat…
+     5         0 @LinearAlgebra/src/matmul.jl  925 gemm_wrapper!
+     5         5 @LinearAlgebra/src/blas.jl 1654 gemm!(transA::Char, transB::Char,…
+     6         0 @HighDimensionalModels/src/lowrank.jl   53 _lr_svd(d::@NamedTuple{X::Matrix{…
+     6         0 @Base/abstractarray.jl 1363 getindex
+     6         0 @Base/multidimensional.jl  984 _getindex
+     7         0 @HighDimensionalModels/src/lowrank.jl  487 LowRankPath(X::Matrix{Float64}, Y…
+    11         0 @HighDimensionalModels/src/lowrank.jl  473 LowRankPath(X::Matrix{Float64}, Y…
+    11         0 @HighDimensionalModels/src/lowrank.jl   39 _lr_data(X::Matrix{Float64}, Y::M…
+    11         0 @Base/array.jl          652 Array
+    27         0 @LinearAlgebra/src/lapack.jl 1678 gesdd!(job::Char, A::Matrix{Float…
+    31         0 @Base/array.jl          407 similar
+    39         0 @Base/boot.jl           662 Array
+    39         0 @Base/boot.jl           652 Array
+    39         0 @Base/boot.jl           605 new_as_memoryref
+    39        39 @Base/boot.jl           588 GenericMemory
+    47         0 @HighDimensionalModels/src/lowrank.jl   54 _lr_svd(d::@NamedTuple{X::Matrix{…
+    81         0 @HighDimensionalModels/src/lowrank.jl   48 _lr_svd(d::@NamedTuple{X::Matrix{…
+    98        98 @LinearAlgebra/src/lapack.jl 1706 gesdd!(job::Char, A::Matrix{Float…
+   125         0 @LinearAlgebra/src/svd.jl  100 svd!
+   125         0 @LinearAlgebra/src/svd.jl  105 svd!(A::Matrix{Float64}; full::Bo…
+   125         0 @LinearAlgebra/src/svd.jl  127 _svd!
+   127         0 @LinearAlgebra/src/svd.jl  193 svd
+   127         0 @LinearAlgebra/src/svd.jl  194 #svd#122
+   134         0 @HighDimensionalModels/src/lowrank.jl  478 LowRankPath(X::Matrix{Float64}, Y…
+   134         0 @HighDimensionalModels/src/lowrank.jl   47 _lr_svd
+   152         0 @Base/client.jl         577 _start()
+   152         0 @Base/client.jl         344 exec_options(opts::Base.JLOptions)
+   152         0 @Base/Base.jl           309 include(mod::Module, _path::Strin…
+   152         0 @Base/loading.jl       3105 _include(mapexpr::Function, mod::…
+   152         0 @Base/loading.jl       3045 include_string(mapexpr::typeof(id…
+   152         0 @Base/boot.jl           489 eval(m::Module, e::Any)
+   152         0 …dy-v1/julia_worker.jl   22 public_path(X::Matrix{Float64}, Y…
+   152         0 @HighDimensionalModels/src/lowrank.jl  459 LowRankPath
+Total snapshots: 216. Utilization: 100% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.

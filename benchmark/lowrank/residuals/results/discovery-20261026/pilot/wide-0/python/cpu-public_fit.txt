@@ -1,0 +1,89 @@
+calls=20
+         6900 function calls (6880 primitive calls) in 0.246 seconds
+
+   Ordered by: cumulative time
+   List reduced from 84 to 80 due to restriction <80>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       20    0.000    0.000    0.246    0.012 python_worker.py:32(public_fit)
+       20    0.007    0.000    0.235    0.012 common.py:14(factors)
+  120/100    0.001    0.000    0.230    0.002 _util.py:1149(wrapper)
+       60    0.225    0.004    0.227    0.004 _decomp_svd.py:16(svd)
+       20    0.005    0.000    0.010    0.001 python_worker.py:17(solution)
+      380    0.002    0.000    0.002    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+       40    0.000    0.000    0.002    0.000 _decomp_qr.py:27(qr)
+       80    0.000    0.000    0.002    0.000 {method 'mean' of 'numpy.ndarray' objects}
+       80    0.000    0.000    0.002    0.000 _methods.py:115(_mean)
+      140    0.001    0.000    0.001    0.000 _function_base_impl.py:603(asarray_chkfinite)
+       60    0.000    0.000    0.001    0.000 _util.py:423(_asarray_validated)
+       20    0.000    0.000    0.001    0.000 _decomp_svd.py:182(svdvals)
+       80    0.001    0.000    0.001    0.000 _decomp_qr.py:13(safecall)
+       40    0.000    0.000    0.001    0.000 _twodim_base_impl.py:510(triu)
+       20    0.000    0.000    0.001    0.000 python_worker.py:9(exact)
+       60    0.000    0.000    0.001    0.000 fromnumeric.py:2436(any)
+      140    0.000    0.000    0.001    0.000 {method 'all' of 'numpy.ndarray' objects}
+      120    0.000    0.000    0.001    0.000 _aliases.py:70(asarray)
+       40    0.000    0.000    0.001    0.000 _misc.py:17(norm)
+       60    0.000    0.000    0.000    0.000 fromnumeric.py:86(_wrapreduction_any_all)
+      140    0.000    0.000    0.000    0.000 _methods.py:64(_all)
+       40    0.000    0.000    0.000    0.000 _twodim_base_impl.py:389(tri)
+       60    0.000    0.000    0.000    0.000 lapack.py:1028(_compute_lwork)
+       40    0.000    0.000    0.000    0.000 fromnumeric.py:2304(sum)
+       80    0.000    0.000    0.000    0.000 _methods.py:73(_count_reduce_items)
+       40    0.000    0.000    0.000    0.000 fromnumeric.py:66(_wrapreduction)
+      140    0.000    0.000    0.000    0.000 blas.py:395(getter)
+      120    0.000    0.000    0.000    0.000 {built-in method numpy.array}
+       60    0.000    0.000    0.000    0.000 {method 'sum' of 'numpy.ndarray' objects}
+       40    0.000    0.000    0.000    0.000 _linalg.py:2599(norm)
+       60    0.000    0.000    0.000    0.000 _methods.py:47(_sum)
+       40    0.000    0.000    0.000    0.000 {method 'outer' of 'numpy.ufunc' objects}
+      400    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+       80    0.000    0.000    0.000    0.000 {method 'astype' of 'numpy.generic' objects}
+       20    0.000    0.000    0.000    0.000 numeric.py:679(flatnonzero)
+       60    0.000    0.000    0.000    0.000 _sparse.py:10(issparse)
+       80    0.000    0.000    0.000    0.000 _twodim_base_impl.py:47(_min_int)
+      120    0.000    0.000    0.000    0.000 _helpers.py:683(_check_device)
+       40    0.000    0.000    0.000    0.000 getlimits.py:412(__init__)
+       60    0.000    0.000    0.000    0.000 lapack.py:1062(_check_work_float)
+      120    0.000    0.000    0.000    0.000 enum.py:193(__get__)
+      340    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+       80    0.000    0.000    0.000    0.000 {built-in method numpy.arange}
+       20    0.000    0.000    0.000    0.000 fromnumeric.py:1993(nonzero)
+       40    0.000    0.000    0.000    0.000 {method 'dot' of 'numpy.ndarray' objects}
+       20    0.000    0.000    0.000    0.000 {method 'tolist' of 'numpy.ndarray' objects}
+       60    0.000    0.000    0.000    0.000 <frozen abc>:117(__instancecheck__)
+       20    0.000    0.000    0.000    0.000 fromnumeric.py:48(_wrapfunc)
+      120    0.000    0.000    0.000    0.000 getlimits.py:436(max)
+      140    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
+      180    0.000    0.000    0.000    0.000 {built-in method numpy.asarray}
+       60    0.000    0.000    0.000    0.000 fromnumeric.py:88(<dictcomp>)
+       20    0.000    0.000    0.000    0.000 fromnumeric.py:1879(ravel)
+      240    0.000    0.000    0.000    0.000 {built-in method builtins.issubclass}
+       60    0.000    0.000    0.000    0.000 {built-in method _abc._abc_instancecheck}
+       60    0.000    0.000    0.000    0.000 core.py:6669(isMaskedArray)
+      220    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+      100    0.000    0.000    0.000    0.000 {built-in method builtins.max}
+      120    0.000    0.000    0.000    0.000 _array_api_override.py:69(array_namespace)
+       20    0.000    0.000    0.000    0.000 {method 'nonzero' of 'numpy.ndarray' objects}
+      240    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       60    0.000    0.000    0.000    0.000 {method 'ravel' of 'numpy.ndarray' objects}
+       40    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+      120    0.000    0.000    0.000    0.000 {built-in method builtins.any}
+       80    0.000    0.000    0.000    0.000 getlimits.py:423(min)
+       40    0.000    0.000    0.000    0.000 fromnumeric.py:67(<dictcomp>)
+       40    0.000    0.000    0.000    0.000 {built-in method builtins.min}
+       80    0.000    0.000    0.000    0.000 {built-in method numpy.lib.array_utils.normalize_axis_index}
+      120    0.000    0.000    0.000    0.000 enum.py:1257(value)
+      140    0.000    0.000    0.000    0.000 {built-in method numpy.asanyarray}
+      100    0.000    0.000    0.000    0.000 _misc.py:181(_datacopied)
+       40    0.000    0.000    0.000    0.000 _linalg.py:168(isComplexType)
+       40    0.000    0.000    0.000    0.000 {method 'astype' of 'numpy.ndarray' objects}
+      100    0.000    0.000    0.000    0.000 {method 'items' of 'dict' objects}
+       60    0.000    0.000    0.000    0.000 fromnumeric.py:2431(_any_dispatcher)
+       40    0.000    0.000    0.000    0.000 fromnumeric.py:2299(_sum_dispatcher)
+       40    0.000    0.000    0.000    0.000 multiarray.py:403(where)
+       40    0.000    0.000    0.000    0.000 _twodim_base_impl.py:450(_trilu_dispatcher)
+       40    0.000    0.000    0.000    0.000 _linalg.py:2595(_norm_dispatcher)
+       19    0.000    0.000    0.000    0.000 {built-in method time.perf_counter}
+
+

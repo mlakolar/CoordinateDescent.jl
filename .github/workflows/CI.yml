@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    name: Registered - Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
@@ -53,11 +53,8 @@ jobs:
       - uses: julia-actions/cache@v3
       - name: Check naming conventions
         run: ${{ runner.os == 'Windows' && 'python' || 'python3' }} scripts/check_naming.py
-      - name: Resolve dependencies from master checkouts
-        run: julia --color=yes scripts/instantiate.jl
-      - uses: julia-actions/julia-buildpkg@v1
       - name: Test the canonical API with deprecations as errors
-        run: julia --color=yes scripts/test_master.jl
+        run: julia --color=yes scripts/test_registered.jl
         env:
           JULIA_NUM_THREADS: "2"
           JULIA_TEST_DEPWARN: "error"
@@ -70,9 +67,25 @@ jobs:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+  master-integration:
+    name: Master dependency integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v3
+      - run: julia scripts/instantiate.jl
+      - run: julia scripts/test_master.jl
+        env:
+          JULIA_NUM_THREADS: "2"
+          JULIA_TEST_DEPWARN: "error"
   examples:
-    # the examples environment loads this checkout through [sources], which
-    # needs Julia 1.11 or later
     name: Examples
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -85,5 +98,5 @@ jobs:
         with:
           version: '1'
       - uses: julia-actions/cache@v3
-      - run: julia scripts/instantiate.jl examples
+      - run: julia scripts/instantiate_release.jl examples
       - run: julia --project=examples examples/run_all.jl

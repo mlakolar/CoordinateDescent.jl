@@ -244,3 +244,5 @@ end
     @test dof(s)==s.rank*(rank(X[:,s.activerows])+80-s.rank)
   end
 end
+
+include("lowrank_panoc_costs.jl")

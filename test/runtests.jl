@@ -24,6 +24,8 @@ tests = [
   "multiresponse",
   "lowrank",
   "hdm",
+  "hdm_golden",
+  "hdm_effect",
   "varying",
   "statsapi",
   "formula",
@@ -41,8 +43,6 @@ tests = [
   end
 
   @testset "Aqua" begin
-    # KernelSmoothing is a test dependency; on Julia 1.10, which ignores
-    # [sources], CI adds it by URL, which also lists it in [deps]
-    Aqua.test_all(HighDimensionalModels; stale_deps = (ignore = [:KernelSmoothing],))
+    Aqua.test_all(HighDimensionalModels)
   end
 end

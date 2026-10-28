@@ -1,0 +1,13 @@
+variant,case,rep,mode,round,seconds,bytes,gctime
+candidate,medium,0,coefficient_path,1,0.001735384,1256328,0.0
+candidate,medium,0,public_fit,1,0.001865588,1695336,0.0
+candidate,medium,0,public_path,1,0.002070853,3051816,0.0
+candidate,medium,0,coefficient_fit,1,0.001583269,1126256,0.0
+candidate,medium,0,coefficient_fit,2,0.001544826,1126256,0.0
+candidate,medium,0,coefficient_path,2,0.001358838,1256328,0.0
+candidate,medium,0,public_fit,2,0.001735775,1695336,0.0
+candidate,medium,0,public_path,2,0.001830392,3051816,0.0
+candidate,medium,0,public_path,3,0.001878582,3051816,0.0
+candidate,medium,0,coefficient_fit,3,0.001412729,1126256,0.0
+candidate,medium,0,coefficient_path,3,0.001400736,1256328,0.0
+candidate,medium,0,public_fit,3,0.001655174,1695336,0.0
