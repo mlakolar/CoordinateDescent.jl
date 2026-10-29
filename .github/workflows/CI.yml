@@ -113,7 +113,11 @@ jobs:
       - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
+      # Compiled files restored from a runner with other CPU features crash
+      # LLVM on Julia 1.10 here (#167); keep the package and registry caches.
       - uses: julia-actions/cache@v3
+        with:
+          cache-compiled: 'false'
       - name: Test the optional diagonal optimizer and native sampling with registered releases
         run: julia --color=yes scripts/test_knockoff_extension.jl
         env:
