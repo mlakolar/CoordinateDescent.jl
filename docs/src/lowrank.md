@@ -5,7 +5,8 @@ predictors across responses. For an `n × p` design `X` and `n × q` response
 matrix `Y`, these estimators return a `p × q` coefficient matrix `B`.
 The intercepts are fitted by default, without penalty, and columns keep their
 original scales. Inputs may be integer, Float32 or Float64; sparse inputs are
-converted to dense matrices. The methods return `LowRankSolution`s with
+converted to dense matrices. The single-penalty and rank-constrained methods
+return `LowRankSolution`s with
 `coef`, `predict`, `residuals`, `nobs`, `deviance`, and `dof`.
 
 ```julia
@@ -66,6 +67,134 @@ compares complete fits and paths with independent accuracy checks. PANOC helps
 the tested middle-penalty fits and paths, but APG is faster for the weak
 many-response cold fit. APG remains the default; no automatic solver-selection
 rule or general memory improvement is implied by those measurements.
+
+## Simultaneously sparse and low rank
+
+[`sparse_nuclear_regression`](@ref) applies both penalties to the same
+coefficient matrix:
+
+```math
+\min_{B,\beta_0}\ \frac{\|Y-1\beta_0^T-XB\|_F^2}{2n}
++\lambda_{\mathrm{rank}}\|B\|_*+\lambda_{\mathrm{sparse}}P(B).
+```
+
+With `sparsity = :entry`, the default,
+`P(B) = ∑ⱼ wⱼ ∑ₜ |B[j,t]|`, the sum of absolute entries with row weights.
+With `sparsity = :row`, `P(B) = ∑ⱼ wⱼ ‖B[j,:]‖₂`, selecting predictors
+across responses. `weights` must contain one positive finite value per
+predictor and defaults to ones. Both levels may be zero. The intercepts
+remain unpenalized and columns keep their original scales.
+
+The solver is ProximalSolvers' Condat–Vũ splitting, with smooth least squares,
+the weighted sparsity proximal operator, and a dual nuclear-norm step.
+Its vector iterates are reshaped for ProximalBase's `NuclearNorm`.
+This splitting solves the sum of the penalties; applying their two proximal
+operators in succession would generally solve a different problem.
+
+```julia
+s = sparse_nuclear_regression(X, Y, 0.1, 0.05; sparsity = :row)
+s.gap, s.rank, s.rank_tol, s.activerows, s.nnz
+predict(s, Xnew)
+```
+
+The returned [`SparseNuclearSolution`](@ref) records the coefficients,
+intercepts, residuals, objective, exact entry/row support, and convergence
+diagnostics. All describe the returned `B`. Its numerical rank counts
+singular values above
+`rank_tol = max(√eps(T) σ₁(B), ‖B - B_h‖₂)`, where `B_h` is the last nuclear
+proximal point. The solver uses residual balancing without averaging to keep
+that point paired with the returned iterate. Balancing is disabled when the
+nuclear level is zero. `rank_tol` exposes the scale of
+the diagnostic; small positive singular values need not represent recovered
+components. `coef`, `predict`, `residuals`, `nobs` and `deviance` apply.
+No `dof`, `aic`, `bic` or `lowrank_ic` is supplied for this estimator.
+
+### Certificate and zero region
+
+For centered data, put `R = Yc - Xc*B` and `Θ = R/n`. A dual feasible point
+satisfies `Xc'Θ = U + V`, with `‖U‖₂ ≤ λ_rank` and either
+`|V[j,t]| ≤ λ_sparse*w[j]` or `‖V[j,:]‖₂ ≤ λ_sparse*w[j]`.
+The solver's nuclear dual supplies `U`. Set `V = Xc'R/n - U` and choose the
+largest `t ∈ [0,1]` that puts `tV` in its sparsity ball. The nuclear dual is
+also checked for roundoff at its boundary. The dual objective is
+
+```math
+D(t\Theta)=\frac{t\langle R,Y_c\rangle}{n}
+-\frac{t^2\|R\|_F^2}{2n}.
+```
+
+`gap = (objective - D)/max(objective, floatmin(T))` bounds relative objective
+error up to floating point accuracy. Nonfinite certificates or material
+violations of weak duality give `Inf`; negative roundoff is clipped to zero.
+Condat–Vũ stops on this gap, and `converged` requires `gap ≤ tol`.
+`r_norm`, `s_norm`, `eps_pri` and `eps_dual` also record the solver's KKT
+residuals and tolerances. A gap tolerance does not bound coefficient error
+on an ill-conditioned or unidentified design.
+
+When `λ_sparse = 0`, the certificate scales `U = Xc'R/n` into the spectral
+ball. When `λ_rank = 0`, it uses `U = 0`. With both levels zero, the solver
+uses its own KKT stopping rule and reports `gap = NaN`. A design that is
+zero after centering returns the intercept-only fit directly.
+
+Writing `C = Xc'Yc/n`, zero coefficients are optimal exactly when
+`C = U + V` for elements of the two dual balls. The marginal thresholds are
+`‖C‖₂` and the weighted maximum absolute entry or row norm of `C`.
+Either marginal threshold alone suffices. The zero region also includes
+pairs with both levels below those thresholds.
+
+### Tuning two penalties
+
+```julia
+grid = PenaltyGrid(sparse_nuclear_regression, X, Y;
+  nλ = (5, 5), λminratio = (0.01, 0.01), sparsity = :row)
+grid.names                     # (:rank, :sparse)
+grid.solutions[2, 3]            # λ1[2] is rank; λ2[3] is sparsity
+cv = CVPenaltyGrid(sparse_nuclear_regression, X, Y;
+  λ1 = grid.λ1, λ2 = grid.λ2, sparsity = :row, nfolds = 5)
+cv.λmin, cv.cvm, cv.cvse
+coef(cv)                       # the minimum-error full-data fit
+predict(cv, Xnew)
+```
+
+[`PenaltyGrid`](@ref) stores a concrete matrix of solutions. Automatic axes
+start at each marginal threshold times `1 + √eps` and decrease on a log
+scale. Explicit axes must be nonempty, decreasing, finite and nonnegative;
+zeros and repeated levels are allowed. Fits proceed down columns, starting
+each column from the head of the previous one. Primal/dual vectors and both
+step sizes are copied at each branch; solutions do not share mutable state.
+
+[`CVPenaltyGrid`](@ref) uses the full-data numerical axes in every fold and
+recomputes preprocessing from training rows alone. Each fold has its own
+seeded generator and workspaces, including mutable SVD caches. `threads`
+controls fold parallelism. Explicit `folds` supply row labels, as for
+`CVLowRankPath`. `cvm` is mean squared error per response, weighted by fold
+sizes; `cvse` is the weighted standard error described in its docstring.
+A pair with a nonconverged full-data or training fit gets `NaN` and is
+excluded. An empty eligible set raises an error. Ties go to the first pair
+in column-major order, preferring larger levels. There is no two-dimensional
+one-standard-error rule. `fit(PenaltyGrid, sparse_nuclear_regression, X, Y; ...)`
+and the corresponding `fit(CVPenaltyGrid, ...)` are also available.
+
+This combination is useful when a shared response subspace and sparse
+coefficients are plausible, with prediction used to assess the tradeoff.
+It has no fixed rank bound. In contrast, `sparse_reduced_rank` imposes a rank
+constraint and solves a nonconvex problem. An additive model `B = L + S`
+allows separate low-rank and sparse components; it imposes different structure
+and is outside this estimator. Task-specific designs are not supported by
+this estimator. An entry invisible to a task's loss still enters the nuclear
+norm, so removing zero or constant columns within tasks, as the multitask
+data layer does, would change the problem.
+
+Combining convex penalties need not improve sample complexity over the
+better individual penalty. For noiseless matrix recovery from independent
+Gaussian linear measurements of the vectorized matrix,
+[Oymak, Jalali, Fazel, Eldar and Hassibi (2015)](https://arxiv.org/abs/1212.3753)
+give lower bounds for combinations of structure-inducing norms, including
+sparse and low-rank models. Those measurement assumptions differ from the
+shared-design regression operator here. The result cautions against a
+universal recovery claim; this implementation makes none. See
+[`examples/14_sparse_nuclear.jl`](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/examples/14_sparse_nuclear.jl)
+for a small prediction comparison with nuclear regression and row lasso.
 
 ## Row-sparse reduced-rank regression
 

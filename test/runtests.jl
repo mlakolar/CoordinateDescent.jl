@@ -30,6 +30,7 @@ tests = [
   "multitask",
   "multitask_penalties",
   "lowrank",
+  "lowrank_sparse",
   "hdm",
   "hdm_golden",
   "hdm_effect",
