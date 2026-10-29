@@ -915,10 +915,18 @@ end
     @test Vector(path1.βpath[k]) ≈ Vector(path0.βpath[k]) atol=1e-6
   end
 
-  # not on the groups of an AtomIterate
+  # on the groups of an AtomIterate when asked for, from ProximalSolvers 0.3.1,
+  # with the solution of the plain passes; earlier releases refuse it
   groups = [((k-1)*10+1):(k*10) for k in 1:100]
   gg = GroupNormL2(λ, groups)
-  @test_throws ArgumentError coordinate_descent!(AtomIterate(p, groups), f, gg, mom)
+  if pkgversion(ProximalSolvers) >= v"0.3.1"
+    xg0, xg1 = AtomIterate(p, groups), AtomIterate(p, groups)
+    coordinate_descent!(xg0, f, gg, plain)
+    coordinate_descent!(xg1, f, gg, mom)
+    @test Vector(xg1) ≈ Vector(xg0) atol=1e-6
+  else
+    @test_throws ArgumentError coordinate_descent!(AtomIterate(p, groups), f, gg, mom)
+  end
 
   # by default it is used with a random order, a SparseIterate and a built-in
   # loss, and not otherwise: the same runs as momentum = true or false
