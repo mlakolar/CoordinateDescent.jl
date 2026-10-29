@@ -169,3 +169,4 @@ include("lowrank_golden.jl")
   end
 end
 include("lowrank_solvers.jl")
+include("lowrank_conditioning.jl")

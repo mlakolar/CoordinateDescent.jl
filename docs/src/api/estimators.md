@@ -20,4 +20,7 @@ Private = true
 dirty_multitask
 DirtyMultitaskPath
 CVDirtyMultitaskPath
+sparse_nuclear_regression
+PenaltyGrid
+CVPenaltyGrid
 ```
