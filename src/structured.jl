@@ -104,6 +104,7 @@ _trend_products(K, order) = K
 _split_product!(y, K, x) = mul!(y, K, x)
 _split_tproduct!(y, K, x) = mul!(y, transpose(K), x)
 
+# Coverage reports the end of every @simd loop as unexecuted; those ends are excluded.
 function _split_product!(y, K::_TrendProducts{T, W}, x) where {T, W}
   length(y) == K.m && length(x) == K.n || throw(DimensionMismatch("trend product dimensions"))
   @inbounds @simd for i in 1:K.m
@@ -112,7 +113,7 @@ function _split_product!(y, K::_TrendProducts{T, W}, x) where {T, W}
       value += _trend_coefficient(K.coefficients[offset], i) * x[i+offset-1]
     end
     y[i] = value
-  end
+  end # COV_EXCL_LINE
   y
 end
 
@@ -124,7 +125,7 @@ function _split_tproduct!(y, K::_TrendProducts{T, W}, x) where {T, W}
       value += _trend_coefficient(K.coefficients[j-i+1], i) * x[i]
     end
     y[j] = value
-  end
+  end # COV_EXCL_LINE
   y
 end
 
@@ -137,7 +138,7 @@ function _split_tproduct!(y, K::_TrendProducts{T, 2}, x) where {T}
     y[1] = zero(T) + _trend_coefficient(a, 1) * x[1]
     @simd for j in 2:K.m
       y[j] = (zero(T) + _trend_coefficient(b, j-1) * x[j-1]) + _trend_coefficient(a, j) * x[j]
-    end
+    end # COV_EXCL_LINE
     y[K.n] = zero(T) + _trend_coefficient(b, K.m) * x[K.m]
   end
   y
@@ -155,7 +156,7 @@ function _split_tproduct!(y, K::_TrendProducts{T, 3}, x) where {T}
       @simd for j in 3:K.m
         y[j] = ((zero(T) + _trend_coefficient(c, j-2) * x[j-2]) +
           _trend_coefficient(b, j-1) * x[j-1]) + _trend_coefficient(a, j) * x[j]
-      end
+      end # COV_EXCL_LINE
       y[K.m+1] = (zero(T) + _trend_coefficient(c, K.m-1) * x[K.m-1]) +
         _trend_coefficient(b, K.m) * x[K.m]
     end
@@ -422,55 +423,120 @@ end
 # The standard D beta = z split, or the specialized trend-filtering split
 # K beta = z with TV(z). Factors are reused by a path at a fixed rho.
 # Signal trend systems have at most three subdiagonals for the usual orders.
-# Store their Cholesky factor by subdiagonal so repeated solves need no sparse
-# solver workspace or conversion of a CHOLMOD-owned solution vector.
+# Store unit-lower LDL' multipliers by subdiagonal and keep the pivots separate.
 struct _StructuredBandFactor{T, W}
   lower::Matrix{T}
+  pivots::Vector{T}
 end
 
 function _structured_band_factor(H, width)
   T, n = eltype(H), size(H, 1)
-  L = zeros(T, width + 1, n)
+  L, pivots = zeros(T, width, n), zeros(T, n)
   for j in 1:n, idx in nzrange(H, j)
     i = rowvals(H)[idx]
-    j <= i <= min(n, j + width) && (L[i-j+1, j] = nonzeros(H)[idx])
+    if i == j
+      pivots[j] = nonzeros(H)[idx]
+    elseif j < i <= min(n, j + width)
+      L[i-j, j] = nonzeros(H)[idx]
+    end
   end
   for j in 1:n
-    d = L[1, j]
+    d = pivots[j]
     for k in max(1, j-width):j-1
-      d -= abs2(L[j-k+1, k])
+      d -= abs2(L[j-k, k]) * pivots[k]
     end
     isfinite(d) && d > 0 || throw(ArgumentError("trend-filtering normal equations must be positive definite."))
-    L[1, j] = sqrt(d)
+    pivots[j] = d
     for i in j+1:min(n, j+width)
-      v = L[i-j+1, j]
+      v = L[i-j, j]
       for k in max(1, i-width):j-1
-        v -= L[i-k+1, k] * L[j-k+1, k]
+        v -= L[i-k, k] * pivots[k] * L[j-k, k]
       end
-      L[i-j+1, j] = v / L[1, j]
+      l = v / d
+      isfinite(l) || throw(ArgumentError("trend-filtering normal equations must be positive definite."))
+      L[i-j, j] = l
     end
   end
-  _StructuredBandFactor{T, width}(L)
+  _StructuredBandFactor{T, width}(L, pivots)
 end
 
-function _structured_solve!(x, F::_StructuredBandFactor{T, W}, b) where {T, W}
-  L = F.lower
+_structured_solve!(x, F::_StructuredBandFactor{T, W}, b) where {T, W} =
+  _structured_band_solve!(x, F.lower, F.pivots, b, Val(W))
+
+function _structured_band_solve!(x, L, d, b, ::Val{0})
+  @inbounds @simd for j in eachindex(x)
+    x[j] = b[j] / d[j]
+  end # COV_EXCL_LINE
+  x
+end
+
+# Carry each recurrence in registers. Division precedes the backward updates;
+# storing inverse pivots would overflow for positive subnormal diagonals.
+function _structured_band_solve!(x, L, d, b, ::Val{1})
   n = length(x)
-  # The supported widths are 1:3. Constant-width substitution avoids short
-  # dynamic inner loops in each of the millions of ADMM triangular solves.
-  @inbounds for j in 1:n
-    v = b[j]
-    W >= 1 && j > 1 && (v -= L[2, j-1] * x[j-1])
-    W >= 2 && j > 2 && (v -= L[3, j-2] * x[j-2])
-    W >= 3 && j > 3 && (v -= L[4, j-3] * x[j-3])
-    x[j] = v / L[1, j]
+  @inbounds begin
+    previous = b[1]
+    x[1] = previous
+    for j in 2:n
+      previous = muladd(-L[1, j-1], previous, b[j])
+      x[j] = previous
+    end
+    previous /= d[n]
+    x[n] = previous
+    for j in n-1:-1:1
+      previous = muladd(-L[1, j], previous, x[j] / d[j])
+      x[j] = previous
+    end
   end
-  @inbounds for j in n:-1:1
-    v = x[j]
-    W >= 1 && j < n && (v -= L[2, j] * x[j+1])
-    W >= 2 && j < n-1 && (v -= L[3, j] * x[j+2])
-    W >= 3 && j < n-2 && (v -= L[4, j] * x[j+3])
-    x[j] = v / L[1, j]
+  x
+end
+
+function _structured_band_solve!(x, L, d, b, ::Val{2})
+  n = length(x)
+  n == 1 && return _structured_band_solve!(x, L, d, b, Val(1))
+  @inbounds begin
+    y1 = b[1]
+    y2 = muladd(-L[1, 1], y1, b[2])
+    x[1], x[2] = y1, y2
+    for j in 3:n
+      v = muladd(-L[1, j-1], y2, muladd(-L[2, j-2], y1, b[j]))
+      x[j] = v
+      y1, y2 = y2, v
+    end
+    x1 = y2 / d[n]
+    x2 = muladd(-L[1, n-1], x1, y1 / d[n-1])
+    x[n], x[n-1] = x1, x2
+    for j in n-2:-1:1
+      v = muladd(-L[1, j], x2, muladd(-L[2, j], x1, x[j] / d[j]))
+      x[j] = v
+      x1, x2 = x2, v
+    end
+  end
+  x
+end
+
+function _structured_band_solve!(x, L, d, b, ::Val{3})
+  n = length(x)
+  n <= 2 && return _structured_band_solve!(x, L, d, b, Val(2))
+  @inbounds begin
+    y1 = b[1]
+    y2 = muladd(-L[1, 1], y1, b[2])
+    y3 = muladd(-L[1, 2], y2, muladd(-L[2, 1], y1, b[3]))
+    x[1], x[2], x[3] = y1, y2, y3
+    for j in 4:n
+      v = muladd(-L[1, j-1], y3, muladd(-L[2, j-2], y2, muladd(-L[3, j-3], y1, b[j])))
+      x[j] = v
+      y1, y2, y3 = y2, y3, v
+    end
+    x1 = y3 / d[n]
+    x2 = muladd(-L[1, n-1], x1, y2 / d[n-1])
+    x3 = muladd(-L[1, n-2], x2, muladd(-L[2, n-2], x1, y1 / d[n-2]))
+    x[n], x[n-1], x[n-2] = x1, x2, x3
+    for j in n-3:-1:1
+      v = muladd(-L[1, j], x3, muladd(-L[2, j], x2, muladd(-L[3, j], x1, x[j] / d[j])))
+      x[j] = v
+      x1, x2, x3 = x2, x3, v
+    end
   end
   x
 end
@@ -524,6 +590,213 @@ function _structured_signal_gap!(stationarity, w, K, beta, b, kb, u, rho, alpha)
   stationarity_square / 2 + slack, residual_square / 2 + penalty
 end
 
+@inline _trend_entry(x, i) = @inbounds x[i]
+@inline _trend_entry(x::Tuple, i) = @inbounds x[1][i] - x[2][i]
+
+@inline function _trend_tinterior(K::_TrendProducts{T, W}, x, j) where {T, W}
+  value = zero(T)
+  @inbounds for offset in 1:W
+    i = j - W + offset
+    value += _trend_coefficient(K.coefficients[W-offset+1], i) * _trend_entry(x, i)
+  end
+  value
+end
+
+@inline function _trend_tinterior(K::_TrendProducts{T, 2}, x, j) where {T}
+  a, b = K.coefficients
+  (zero(T) + _trend_coefficient(b, j-1) * _trend_entry(x, j-1)) +
+    _trend_coefficient(a, j) * _trend_entry(x, j)
+end
+
+@inline function _trend_tinterior(K::_TrendProducts{T, 3}, x, j) where {T}
+  a, b, c = K.coefficients
+  ((zero(T) + _trend_coefficient(c, j-2) * _trend_entry(x, j-2)) +
+    _trend_coefficient(b, j-1) * _trend_entry(x, j-1)) +
+    _trend_coefficient(a, j) * _trend_entry(x, j)
+end
+
+@inline function _trend_tvalue(K::_TrendProducts{T, W}, x, j) where {T, W}
+  value = zero(T)
+  @inbounds for i in max(1, j-W+1):min(j, K.m)
+    value += _trend_coefficient(K.coefficients[j-i+1], i) * _trend_entry(x, i)
+  end
+  value
+end
+
+@inline function _trend_tvalue(K::_TrendProducts{T, 2}, x, j) where {T}
+  a, b = K.coefficients
+  j == 1 && return zero(T) + _trend_coefficient(a, 1) * _trend_entry(x, 1)
+  j == K.n && return zero(T) + _trend_coefficient(b, K.m) * _trend_entry(x, K.m)
+  _trend_tinterior(K, x, j)
+end
+
+@inline function _trend_tvalue(K::_TrendProducts{T, 3}, x, j) where {T}
+  a, b, c = K.coefficients
+  j == 1 && return zero(T) + _trend_coefficient(a, 1) * _trend_entry(x, 1)
+  j == K.n && return zero(T) + _trend_coefficient(c, K.m) * _trend_entry(x, K.m)
+  if j == 2
+    value = zero(T) + _trend_coefficient(b, 1) * _trend_entry(x, 1)
+    return K.m == 1 ? value : value + _trend_coefficient(a, 2) * _trend_entry(x, 2)
+  elseif j == K.m + 1
+    return (zero(T) + _trend_coefficient(c, j-2) * _trend_entry(x, j-2)) +
+      _trend_coefficient(b, j-1) * _trend_entry(x, j-1)
+  end
+  _trend_tinterior(K, x, j)
+end
+
+function _split_rhs!(rhs, products, xy, ρ, z, u, v)
+  @. v = z - u
+  _split_tproduct!(rhs, products, v)
+  @. rhs = xy + ρ * rhs
+end
+
+function _split_rhs!(rhs, products::_TrendProducts{T, W}, xy, ρ, z, u, v) where {T, W}
+  @inbounds for j in 1:W-1
+    rhs[j] = xy[j] + ρ * _trend_tvalue(products, (z, u), j)
+  end
+  @inbounds @simd for j in W:products.m
+    rhs[j] = xy[j] + ρ * _trend_tinterior(products, (z, u), j)
+  end # COV_EXCL_LINE
+  @inbounds for j in max(W, products.m+1):products.n
+    rhs[j] = xy[j] + ρ * _trend_tvalue(products, (z, u), j)
+  end
+  rhs
+end
+
+function _split_primal!(kb, v, products, β, u)
+  _split_product!(kb, products, β)
+  @. v = kb + u
+end
+
+function _split_primal!(kb, v, products::_TrendProducts{T, W}, β, u) where {T, W}
+  @inbounds @simd for i in eachindex(kb)
+    value = zero(T)
+    for offset in 1:W
+      value += _trend_coefficient(products.coefficients[offset], i) * β[i+offset-1]
+    end
+    kb[i] = value
+    v[i] = value + u[i]
+  end # COV_EXCL_LINE
+  kb
+end
+
+@inline _structured_square(x::Union{Float32, Float64}) = abs2(Float64(x))
+@inline _structured_square(x) = 0.0
+# Use the same fixed reductions in fused and materialized passes. Independent
+# partials expose vector additions; compensated block totals limit roundoff.
+@inline _structured_sumadd(s, x) = ntuple(k -> s[k] + _structured_square(x[k]), Val(8))
+@inline _structured_sum(s) = ((s[1] + s[2]) + (s[3] + s[4])) + ((s[5] + s[6]) + (s[7] + s[8]))
+@inline function _structured_sumfinish(s, correction, value)
+  y = value - correction
+  total = s + y
+  total, (total - s) - y
+end
+_structured_sumsq(x) = 0.0
+function _structured_sumsq(x::AbstractVector{<:Union{Float32, Float64}})
+  s, correction = 0.0, 0.0
+  n = length(x)
+  @inbounds for first in 1:256:n-7
+    partial = ntuple(_ -> 0.0, Val(8))
+    for i in first:8:min(first+255, n-7)
+      partial = _structured_sumadd(partial, ntuple(k -> x[i+k-1], Val(8)))
+    end
+    s, correction = _structured_sumfinish(s, correction, _structured_sum(partial))
+  end
+  @inbounds for i in n - n % 8 + 1:n
+    s, correction = _structured_sumfinish(s, correction, _structured_square(x[i]))
+  end
+  s
+end
+
+# Scaled norm handles underflow, overflow and nonfinite values as before.
+# Materialize only on that path; ordinary Float32/64 sums use no scratch pass.
+@inline function _structured_norm(s, x::AbstractVector{T}, materialize!::F = identity, args...) where {T, F}
+  if T <: Union{Float32, Float64} && isfinite(s) && !(T === Float64 && s < 0x1p-900)
+    return T(sqrt(s))
+  end
+  norm(materialize!(x, args...))
+end
+
+function _split_residuals!(u, kb, z)
+  pr, kbs, zs, pc, kc, zc = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  n = length(u)
+  @inbounds for first in 1:256:n-7
+    primal = kb_square = z_square = ntuple(_ -> 0.0, Val(8))
+    for i in first:8:min(first+255, n-7)
+      residual = ntuple(Val(8)) do k
+        j = i + k - 1
+        u[j] = (u[j] + kb[j]) - z[j]
+        kb[j] - z[j]
+      end
+      primal = _structured_sumadd(primal, residual)
+      kb_square = _structured_sumadd(kb_square, ntuple(k -> kb[i+k-1], Val(8)))
+      z_square = _structured_sumadd(z_square, ntuple(k -> z[i+k-1], Val(8)))
+    end
+    pr, pc = _structured_sumfinish(pr, pc, _structured_sum(primal))
+    kbs, kc = _structured_sumfinish(kbs, kc, _structured_sum(kb_square))
+    zs, zc = _structured_sumfinish(zs, zc, _structured_sum(z_square))
+  end
+  @inbounds for i in n - n % 8 + 1:n
+    u[i] = (u[i] + kb[i]) - z[i]
+    pr, pc = _structured_sumfinish(pr, pc, _structured_square(kb[i] - z[i]))
+    kbs, kc = _structured_sumfinish(kbs, kc, _structured_square(kb[i]))
+    zs, zc = _structured_sumfinish(zs, zc, _structured_square(z[i]))
+  end
+  pr, kbs, zs
+end
+
+function _split_difference!(v, x, y)
+  @. v = x - y
+end
+
+function _split_dual!(dual, products, z, zold, v)
+  @. v = z - zold
+  _split_tproduct!(dual, products, v)
+end
+
+function _split_dual_sums!(dual, ktu, v, products, z, zold, u)
+  _split_dual!(dual, products, z, zold, v)
+  _split_tproduct!(ktu, products, u)
+  _structured_sumsq(dual), _structured_sumsq(ktu)
+end
+
+@inline function _split_dual_group(ds, us, products, z, zold, u, j, stencil::F) where {F}
+  delta = ntuple(k -> stencil(products, (z, zold), j+k-1), Val(8))
+  ku = ntuple(k -> stencil(products, u, j+k-1), Val(8))
+  _structured_sumadd(ds, delta), _structured_sumadd(us, ku)
+end
+
+function _split_dual_sums!(dual, ktu, v, products::_TrendProducts{T, W}, z, zold, u) where {T, W}
+  ds, us, dc, uc = 0.0, 0.0, 0.0, 0.0
+  n = length(dual)
+  # Peel containing groups so each column retains its materialized sum lane.
+  interior_first = 1 + 8cld(W-1, 8)
+  interior_last = 8fld(products.m, 8) - 7
+  @inbounds for first in 1:256:n-7
+    dual_square = ktu_square = ntuple(_ -> 0.0, Val(8))
+    last = min(first+255, n-7)
+    for j in first:8:min(last, interior_first-8)
+      dual_square, ktu_square = _split_dual_group(dual_square, ktu_square,
+        products, z, zold, u, j, _trend_tvalue)
+    end
+    for j in max(first, interior_first):8:min(last, interior_last)
+      dual_square, ktu_square = _split_dual_group(dual_square, ktu_square,
+        products, z, zold, u, j, _trend_tinterior)
+    end
+    for j in max(first, interior_first, interior_last+8):8:last
+      dual_square, ktu_square = _split_dual_group(dual_square, ktu_square,
+        products, z, zold, u, j, _trend_tvalue)
+    end
+    ds, dc = _structured_sumfinish(ds, dc, _structured_sum(dual_square))
+    us, uc = _structured_sumfinish(us, uc, _structured_sum(ktu_square))
+  end
+  @inbounds for j in n - n % 8 + 1:n
+    ds, dc = _structured_sumfinish(ds, dc, _structured_square(_trend_tvalue(products, (z, zold), j)))
+    us, uc = _structured_sumfinish(us, uc, _structured_square(_trend_tvalue(products, u, j)))
+  end
+  ds, us
+end
+
 function _split_fit(A, b, K, g, ρ; max_iter, abstol, reltol, start = nothing,
                     gram = _structured_gram(A), xy = _structured_tproduct(A, b), factor = nothing,
                     bandwidth = nothing, relative_gap = nothing, products = K)
@@ -537,31 +810,26 @@ function _split_fit(A, b, K, g, ρ; max_iter, abstol, reltol, start = nothing,
   energy = relative_gap === nothing ? zero(T) : sum(abs2, b)
   ok, it, pr, dr = false, 0, T(Inf), T(Inf)
   for iter in 1:max_iter
-    @. v = z - u
-    _split_tproduct!(rhs, products, v)
-    @. rhs = xy + ρ * rhs
+    _split_rhs!(rhs, products, xy, ρ, z, u, v)
     _structured_solve!(β, F, rhs)
-    _split_product!(kb, products, β)
-    copyto!(zold, z)
-    @. v = kb + u
+    _split_primal!(kb, v, products, β, u)
+    z, zold = zold, z
     prox!(z, g, v, inv(ρ))
-    @. u = u + kb - z
-    @. v = kb - z
-    pr = norm(v)
-    @. v = z - zold
-    _split_tproduct!(dual, products, v)
-    dr = ρ * norm(dual)
-    _split_tproduct!(ktu, products, u)
+    primal_square, kb_square, z_square = _split_residuals!(u, kb, z)
+    dual_square, ktu_square = _split_dual_sums!(dual, ktu, v, products, z, zold, u)
+    pr = _structured_norm(primal_square, v, _split_difference!, kb, z)
+    dr = ρ * _structured_norm(dual_square, dual, _split_dual!, products, z, zold, v)
+    kb_norm, z_norm = _structured_norm(kb_square, kb), _structured_norm(z_square, z)
     it = iter
     if relative_gap === nothing
-      if pr <= sqrt(m) * abstol + reltol * max(norm(kb), norm(z)) &&
-         dr <= sqrt(p) * abstol + reltol * ρ * norm(ktu)
+      if pr <= sqrt(m) * abstol + reltol * max(kb_norm, z_norm) &&
+         dr <= sqrt(p) * abstol + reltol * ρ * _structured_norm(ktu_square, ktu, _split_tproduct!, products, u)
         ok = true
         break
       end
     else
-      ep = sqrt(m) * abstol + reltol * max(norm(kb), norm(z))
-      ed = sqrt(p) * abstol + reltol * ρ * norm(ktu)
+      ep = sqrt(m) * abstol + reltol * max(kb_norm, z_norm)
+      ed = sqrt(p) * abstol + reltol * ρ * _structured_norm(ktu_square, ktu, _split_tproduct!, products, u)
       if pr <= 5ep && dr <= 5ed && (iter == 1 || iter % 10 == 0 || iter == max_iter)
         gap, objective = _structured_signal_gap!(dual, v, products, β, b, kb, u, ρ, g.λ)
         # Relative objective accuracy is not meaningful near a zero optimum.

@@ -181,6 +181,8 @@ function _lr_options(λ, max_iter, tol)
   isfinite(tol) && tol > 0 || throw(ArgumentError("tol must be finite and positive"))
 end
 
+_lr_tolerance(tol, default, T) = tol === nothing ? max(default, 100eps(T)) : tol
+
 # A shared gradient setup for every level of a nuclear-norm path. Use the
 # data form for a wide design, avoiding a p × p allocation there.
 function _lr_gradient(d)
@@ -328,6 +330,95 @@ function _lr_group_fista!(A, XX, C, λ, w; max_iter, tol, L)
   return false
 end
 
+function _lr_group_newton_direction(XX, F, c, U)
+  T = eltype(F)
+  Kc = cholesky(Symmetric(XX + Diagonal(c)); check = false)
+  issuccess(Kc) || return nothing
+  inv(cond(UpperTriangular(Kc.U), 1))^2 >= 100eps(T) || return nothing
+  sc = sqrt.(c)
+  Ki = inv(Kc)
+  N = I - (sc .* (Ki .* (U * U')) .* sc')
+  Nc = cholesky(Symmetric(N); check = false)
+  issuccess(Nc) || return nothing
+  b = vec(sum(U .* (Kc \ F); dims = 2))
+  t = -(Nc \ (sc .* b))
+  Δ = -(Kc \ (F .- (sc .* t) .* U))
+  all(isfinite, Δ) && dot(F, Δ) < 0 || return nothing
+  # Cancellation in the capacitance solve can spoil an otherwise valid step.
+  HΔ = XX * Δ + c .* (Δ - U .* sum(U .* Δ; dims = 2))
+  norm(HΔ + F) <= norm(F)/10 || return nothing
+  Δ
+end
+
+function _lr_group_newton!(A, XX, C, λ, w; max_iter = 20)
+  T = eltype(A)
+  steps = 0
+  for _ in 1:max_iter
+    S = [j for j in axes(A, 1) if !iszero(view(A, j, :))]
+    isempty(S) && break
+    a, H = A[S, :], XX[S, S]
+    G = XX[S, :] * A - C[S, :]
+    nr = [norm(view(a, j, :)) for j in axes(a, 1)]
+    U = a ./ nr
+    c = T[λ*w[j]/nr[i] for (i, j) in enumerate(S)]
+    F = G + c .* a
+    e0 = maximum(norm(view(F, j, :)) for j in axes(F, 1))
+    e0 <= 4eps(T) * (norm(H)*norm(a) + norm(C[S, :]) + λ*norm(w[S])) && break
+    Δ = _lr_group_newton_direction(H, F, c, U)
+    Δ === nothing && break
+    HΔ = H * Δ
+    slope = dot(F, Δ)
+    s, accepted = one(T), false
+    for _ in 0:30
+      candidate = a + s * Δ
+      nn = [norm(view(candidate, j, :)) for j in axes(candidate, 1)]
+      if all(>(zero(T)), nn)
+        # Rationalized norm differences avoid subtracting nearly equal losses.
+        dq = s*dot(G, Δ) + s^2/2*dot(Δ, HΔ)
+        for (i, j) in enumerate(S)
+          dq += λ*w[j] * (2s*dot(view(a, i, :), view(Δ, i, :)) +
+            s^2*sum(abs2, view(Δ, i, :))) / (nn[i] + nr[i])
+        end
+        Fc = G + s * HΔ + (λ .* w[S] ./ nn) .* candidate
+        e = maximum(norm(view(Fc, j, :)) for j in axes(Fc, 1))
+        if dq <= T(1e-4)*s*slope && e < e0
+          A[S, :] .= candidate
+          accepted = true
+          steps += 1
+          break
+        end
+      end
+      s /= 2
+    end
+    accepted || break
+  end
+  steps
+end
+
+function _lr_block!(A, XX, C, λ, w, newton::Bool; block_solver, max_iter, tol, L)
+  T = eltype(A)
+  k1 = min(block_solver == :fista ? 1000 : 100, max_iter)
+  certified = block_solver == :fista ?
+    _lr_group_fista!(A, XX, C, λ, w; max_iter = k1, tol, L) :
+    _lr_group!(A, XX, C, λ, w; max_iter = k1, tol)
+  needed = !certified
+  if needed || newton
+    _lr_group_newton!(A, XX, C, λ, w)
+    certified = _lr_group_kkt(A, XX * A - C, λ, w) <= tol * max(one(T), norm(C))
+    if !certified && max_iter > k1
+      # Resuming FISTA restarts its momentum at the polished block.
+      certified = block_solver == :fista ?
+        _lr_group_fista!(A, XX, C, λ, w; max_iter = max_iter - k1, tol, L) :
+        _lr_group!(A, XX, C, λ, w; max_iter = max_iter - k1, tol)
+      if !certified
+        _lr_group_newton!(A, XX, C, λ, w)
+        certified = _lr_group_kkt(A, XX * A - C, λ, w) <= tol * max(one(T), norm(C))
+      end
+    end
+  end
+  certified, needed
+end
+
 function _lr_factor_rank(B, L, R)
   iszero(L) && return 0
   p, q = size(B)
@@ -352,11 +443,12 @@ function _lr_sparse_setup(d, f)
   L = isempty(f.s) ? zero(T) :
       (one(T) + sqrt(eps(T))) * abs2(first(f.s) / sqrt(T(n)))
   isfinite(L) || (L = eigmax(Symmetric(XX)))
-  (; XX, XY, L, design_rank = f.diagnostic_xrank)
+  gram_condition = isempty(f.s) ? one(T) : abs2(first(f.s) / last(f.s))
+  (; XX, XY, L, design_rank = f.diagnostic_xrank, gram_condition)
 end
 
 function _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol,
-                    block_solver = :cd, setup = nothing)
+                    block_solver = :cd, setup = nothing, warn::Bool = false)
   T = eltype(d.X)
   n, p = size(d.X)
   r == 0 && return _lr_solution(d, zeros(T, p, size(d.Y, 2)), λ, 0, true, sum(abs2, d.Y)/(2n), :sparse)
@@ -371,16 +463,19 @@ function _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_t
   end
   B = A * V'
   iteration, converged = 0, false
+  newton, inner = false, false
+  relative_change = T(Inf)
   for k in 1:max_iter
     iteration = k
     old = B
     C = XY * V
-    inner = block_solver == :fista ?
-      _lr_group_fista!(A, XX, C, λ, w; max_iter = inner_max_iter, tol = inner_tol, L) :
-      _lr_group!(A, XX, C, λ, w; max_iter = inner_max_iter, tol = inner_tol)
+    inner, needed = _lr_block!(A, XX, C, λ, w, newton;
+      block_solver, max_iter = inner_max_iter, tol = inner_tol, L)
+    newton |= needed
     S = svd(XY' * A; full = false)
     V = S.U * S.Vt
     B = A * V'
+    relative_change = norm(B - old) / max(one(T), norm(B))
     if inner && norm(B - old) <= tol * max(one(T), norm(B))
       # The response subspace just changed: certify the A block at this V,
       # not only at the previous subspace used by coordinate descent.
@@ -390,6 +485,17 @@ function _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_t
         break
       end
     end
+  end
+  if warn && !converged
+    C = XY * V
+    stationarity = _lr_group_kkt(A, XX * A - C, λ, w) / max(one(T), norm(C))
+    msg = "sparse_reduced_rank did not converge in $max_iter outer iterations."
+    if setup !== nothing && setup.gram_condition > inv(100eps(T))
+      κ = setup.gram_condition
+      msg *= " X'X/n has condition number ≈ $(round(κ; sigdigits = 2)); its rounding in $T can limit the attainable accuracy of the block solves."
+      T === Float32 && (msg *= " Refitting in Float64 may help.")
+    end
+    @warn msg relative_change tol stationarity inner_tol block_certified = inner
   end
   rows = _activerows(B)
   coefficient_rank = _lr_factor_rank(B, A, V')
@@ -415,8 +521,8 @@ end
 
 """
     sparse_reduced_rank(X, Y, rank, λ; intercept = true, weights = nothing,
-                        adaptive = false, gamma = 2, max_iter = 1000, tol = 1e-7,
-                        inner_max_iter = 10_000, inner_tol = 1e-9, block_solver = :cd)
+                        adaptive = false, gamma = 2, max_iter = 1000, tol = nothing,
+                        inner_max_iter = 10_000, inner_tol = nothing, block_solver = :cd)
 
 The row-sparse reduced-rank regression of Chen and Huang (2012): minimize
 `‖Y - 1β₀' - XB‖²_F/(2n) + λ ∑ⱼ weights[j] ‖B[j,:]‖₂`, with rank at most
@@ -428,21 +534,30 @@ Explicit positive `weights` override adaptive weights. No column rescaling is
 performed. For rrpack's unscaled loss use `λ_rrpack = n * λ`.
 `block_solver = :fista` replaces row coordinate descent with restarted block
 FISTA, using the same weighted group proximal map and KKT stopping rule.
+When a block needs more than 100 first-order KKT checks (100 CD sweeps or
+1000 FISTA iterations), that block and later blocks in the fit finish with
+guarded Newton steps on the nonzero rows.
+`inner_max_iter` bounds first-order iterations; Newton steps are additional.
+The defaults for `tol` and `inner_tol` are `max(1e-7, 100eps(T))` and
+`max(1e-9, 100eps(T))`, respectively (1e-7 and 1e-9 in Float64).
+Explicit tolerances are unchanged. A fit that does not converge emits a warning.
 """
 function sparse_reduced_rank(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real}, r::Integer, λ::Real;
                              intercept::Bool = true, weights = nothing, adaptive::Bool = false,
-                             gamma::Real = 2, max_iter::Integer = 1000, tol::Real = 1e-7,
-                             inner_max_iter::Integer = 10_000, inner_tol::Real = 1e-9,
+                             gamma::Real = 2, max_iter::Integer = 1000, tol = nothing,
+                             inner_max_iter::Integer = 10_000, inner_tol = nothing,
                              block_solver::Symbol = :cd)
   block_solver in (:cd, :fista) || throw(ArgumentError("block_solver must be :cd or :fista"))
-  _lr_options(λ, max_iter, tol); _lr_options(λ, inner_max_iter, inner_tol)
   d = _lr_data(X, Y, intercept)
+  T = eltype(d.X)
+  tol, inner_tol = _lr_tolerance(tol, 1e-7, T), _lr_tolerance(inner_tol, 1e-9, T)
+  _lr_options(λ, max_iter, tol); _lr_options(λ, inner_max_iter, inner_tol)
   f = _lr_svd(d)
   _lr_rank(r, min(f.xrank, size(Y, 2)))
   initial = _lr_rrcoef(d, f, r)
   w = _lr_weights(d, initial, weights, adaptive, gamma)
   setup = r == 0 ? nothing : _lr_sparse_setup(d, f)
-  _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol, block_solver, setup)
+  _lr_sparse(d, r, λ, w, initial; max_iter, tol, inner_max_iter, inner_tol, block_solver, setup, warn = true)
 end
 
 """
@@ -469,7 +584,8 @@ end
 
 """
     LowRankPath(X, Y; method = :nuclear, λpath = nothing, ranks = nothing,
-                rank = 1, nλ = 50, λminratio = 0.01, kwargs...)
+                rank = 1, nλ = 50, λminratio = 0.01, tol = nothing,
+                inner_tol = nothing, kwargs...)
 
 Fit a path with `method = :nuclear`, `:sparse`, `:rank`, or `:sparse_svd`. Nuclear and sparse
 paths use decreasing `λpath` (or an automatic log grid); `:sparse` holds `rank`
@@ -484,6 +600,14 @@ Sparse paths warm start nonzero fits, restarting at the RRR initialization
 after a zero fit to avoid an absorbing zero block. Adaptive weights are fixed
 from the training-data RRR fit over the whole path. Select using
 `argmin(lowrank_ic(path))`, or [`CVLowRankPath`](@ref).
+For sparse paths, `tol` and `inner_tol` default to `max(1e-7, 100eps(T))`
+and `max(1e-9, 100eps(T))` (1e-7 and 1e-9 in Float64); other methods use
+1e-7 and 1e-9. Explicit tolerances are unchanged. Each sparse block finishes
+with guarded Newton steps on its nonzero rows when the first-order solver
+needs more than 100 first-order KKT checks (100 CD sweeps or 1000 FISTA
+iterations), and thereafter in that fit. `inner_max_iter` bounds first-order
+iterations; Newton steps are additional. Paths do not warn on non-convergence;
+[`sparse_reduced_rank`](@ref) does.
 """
 struct LowRankPath{T<:AbstractFloat}
   solutions::Vector{LowRankSolution{T}}
@@ -495,9 +619,9 @@ end
 function LowRankPath(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real};
                      method::Symbol = :nuclear, λpath = nothing, ranks = nothing, rank::Integer = 1,
                      nλ::Integer = 50, λminratio::Real = 0.01, intercept::Bool = true,
-                     max_iter::Integer = 10_000, tol::Real = 1e-7, weights = nothing,
+                     max_iter::Integer = 10_000, tol = nothing, weights = nothing,
                      adaptive::Union{Nothing, Bool} = nothing, gamma::Real = 2, criterion::Symbol = :bic,
-                     inner_max_iter::Integer = 10_000, inner_tol::Real = 1e-9,
+                     inner_max_iter::Integer = 10_000, inner_tol = nothing,
                      solver::Symbol = :apg, block_solver::Symbol = :cd)
   method in (:nuclear, :sparse, :rank, :sparse_svd) || throw(ArgumentError("method must be :nuclear, :sparse, :rank or :sparse_svd"))
   solver in (:apg, :panoc) || throw(ArgumentError("solver must be :apg or :panoc"))
@@ -505,9 +629,15 @@ function LowRankPath(X::AbstractMatrix{<:Real}, Y::AbstractMatrix{<:Real};
   method == :nuclear || solver == :apg || throw(ArgumentError("solver applies only to method = :nuclear"))
   method == :sparse || block_solver == :cd || throw(ArgumentError("block_solver applies only to method = :sparse"))
   adaptive = adaptive === nothing ? method == :sparse_svd : adaptive
-  _lr_options(0, max_iter, tol); _lr_options(0, inner_max_iter, inner_tol)
   d = _lr_data(X, Y, intercept)
   T = eltype(d.X)
+  if method == :sparse
+    tol, inner_tol = _lr_tolerance(tol, 1e-7, T), _lr_tolerance(inner_tol, 1e-9, T)
+  else
+    tol = tol === nothing ? 1e-7 : tol
+    inner_tol = inner_tol === nothing ? 1e-9 : inner_tol
+  end
+  _lr_options(0, max_iter, tol); _lr_options(0, inner_max_iter, inner_tol)
   sols = LowRankSolution{T}[]
   if method in (:rank, :sparse_svd)
     λpath === nothing || throw(ArgumentError("a rank path takes ranks, not λpath"))
