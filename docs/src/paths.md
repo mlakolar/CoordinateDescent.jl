@@ -110,7 +110,7 @@ memory to form ``A``. The loss, the stopping rule and so the solution are the
 same, to the tolerance.
 
 Forming ``A`` pays off over the many passes of a path when ``n \ge p``, and
-almost never at one ``\lambda``. On one core of an AMD EPYC 7513, these were the
+almost never at one ``\lambda``. On one core of an x86-64 server CPU, these were the
 ratios of the time on the Gram matrix to the time on the residuals for paths of
 100 levels with an intercept, over independent and AR(1) columns, for ``n``
 observations (rows) and ``p`` predictors (columns):

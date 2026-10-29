@@ -16,6 +16,9 @@ integration dependency to an explicit commit.
   that reports its residuals and penalties. CV uses target-only folds and
   selects the correction level from each fold's own fused fit.
 
+- Signal trend-filtering iterations are faster with banded LDLᵀ solves and
+  fewer vector passes. Results agree up to rounding; options are unchanged.
+
 - Add `dirty_multitask`, `DirtyMultitaskPath` and `CVDirtyMultitaskPath` for
   separate shared and task-specific coefficient components. The default is
   Jalali et al.'s shared ℓ∞ norm; `shared_norm = :l2` is a variant. Fits return

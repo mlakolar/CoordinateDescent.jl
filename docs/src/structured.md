@@ -52,7 +52,7 @@ For positive order, the specialized ADMM of
 divided differences, then applies exact TV denoising at each iteration.
 The signal solver stores sparse banded matrices and vectors, with linear
 storage in signal length at fixed order. Signal fits do not allocate a dense
-identity. Orders one through three use a compact banded Cholesky factor and
+identity. Orders one through three use a compact banded LDLᵀ factor and
 in-place triangular solves; other systems use the general factorization.
 The default augmented parameter follows the input-spacing rule;
 `rho` overrides it on the unnormalized-loss scale. Convergence checks both
