@@ -148,6 +148,10 @@ end
 same_bits(x::AbstractVector, y::AbstractVector) = reinterpret(UInt8, x) == reinterpret(UInt8, y)
 same_bits(x::T, y::T) where {T<:Union{Float32, Float64}} =
   T === Float64 ? reinterpret(UInt64, x) == reinterpret(UInt64, y) : reinterpret(UInt32, x) == reinterpret(UInt32, y)
+# BigFloat has no fixed bit layout; equal values, signed zeros and precision stand in.
+same_bits(x::BigFloat, y::BigFloat) = isequal(x, y) && precision(x) == precision(y)
+same_bits(x::AbstractVector{BigFloat}, y::AbstractVector{BigFloat}) =
+  length(x) == length(y) && all(same_bits(a, b) for (a, b) in zip(x, y))
 
 function check_split(A, b, K, g, rho, products; max_iter = 5, abstol = 0, reltol = 0,
                      start = nothing, relative_gap = nothing, bandwidth = nothing)
@@ -243,6 +247,65 @@ end
       check_split(A, b, K, TotalVariation1D(T(.2)), T(.7), products;
         max_iter = 2, bandwidth = order)
     end
+  end
+end
+
+@testset "width-one stencils equal the unfused passes" begin
+  rng = Xoshiro(98107)
+  for T in (Float32, Float64), n in (1, 2, 8, 9, 263, 264), irregular in (false, true)
+    K = irregular ? spdiagm(0 => T.(.5 .+ rand(rng, n))) : T.(difference_matrix(n, 0))
+    A, P, rho = HM._SignalDesign{T}(n), HM._trend_products(K, 0), T(.7)
+    @test P isa HM._TrendProducts{T, 1}
+    xy, z, zold, u, β = (randn(rng, T, n) for _ in 1:5)
+    rhs, v = zeros(T, n), zeros(T, n)
+    @. v = z - u
+    HM._split_tproduct!(rhs, P, v)
+    @. rhs = xy + rho * rhs
+    @test same_bits(HM._split_rhs!(fill(T(NaN), n), P, xy, rho, z, u, fill(T(NaN), n)), rhs)
+    kb = HM._split_product!(zeros(T, n), P, β)
+    @. v = kb + u
+    fused_kb, fused_v = fill(T(NaN), n), fill(T(NaN), n)
+    HM._split_primal!(fused_kb, fused_v, P, β, u)
+    @test same_bits(fused_kb, kb)
+    @test same_bits(fused_v, v)
+    dual, ktu = zeros(T, n), zeros(T, n)
+    @. v = z - zold
+    HM._split_tproduct!(dual, P, v)
+    HM._split_tproduct!(ktu, P, u)
+    sums = HM._split_dual_sums!(fill(T(NaN), n), fill(T(NaN), n), fill(T(NaN), n), P, z, zold, u)
+    @test same_bits(sums[1], HM._structured_sumsq(dual))
+    @test same_bits(sums[2], HM._structured_sumsq(ktu))
+    for g in (NormL1(T(.2)), TotalVariation1D(T(.2)))
+      start = check_split(A, xy, K, g, rho, P; bandwidth = 0)[6]
+      check_split(A, xy, K, g, T(1.4), P; start, bandwidth = 0)
+    end
+    result = check_split(A, xy, K, TotalVariation1D(T(.2)), rho, P;
+      max_iter = 1000, abstol = 1e-5, reltol = 1e-4, bandwidth = 0)
+    @test result[3]
+  end
+end
+
+@testset "BigFloat trend fits use materialized norms" begin
+  rng = Xoshiro(98108)
+  n, abstol, reltol = 20, 1e-9, 1e-8
+  K64, b64 = difference_matrix(n, 1), randn(rng, n)
+  fits = map((Float64, BigFloat)) do T
+    K, b, rho = T.(K64), T.(b64), T(.7)
+    A, P = HM._SignalDesign{T}(n), HM._trend_products(K, 1)
+    @test P isa HM._TrendProducts{T, 2}
+    @test HM._split_factor(HM._structured_gram(A), K, rho; bandwidth = 1) isa HM._StructuredBandFactor{T, 1}
+    options = (; max_iter = 2000, abstol, reltol, bandwidth = 1)
+    cold = check_split(A, b, K, TotalVariation1D(T(1)), rho, P; options...)
+    warm = check_split(A, b, K, TotalVariation1D(T(.4)), 2rho, P; options..., start = cold[6])
+    @test cold[3] && warm[3]
+    cold, warm
+  end
+  # Fused sums of other element types are zero, so every norm is materialized.
+  big = BigFloat.(b64)
+  @test HM._split_residuals!(zero(big), big, reverse(big)) === (0.0, 0.0, 0.0)
+  # Allow the Float64 stopping tolerance in case the two runs stop at different iterations.
+  for (single, extended) in zip(fits...)
+    @test norm(Float64.(extended[1]) - single[1]) <= sqrt(n) * abstol + reltol * norm(single[1])
   end
 end
 

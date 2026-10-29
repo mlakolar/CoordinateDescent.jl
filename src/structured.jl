@@ -104,6 +104,7 @@ _trend_products(K, order) = K
 _split_product!(y, K, x) = mul!(y, K, x)
 _split_tproduct!(y, K, x) = mul!(y, transpose(K), x)
 
+# Coverage reports the end of every @simd loop as unexecuted; those ends are excluded.
 function _split_product!(y, K::_TrendProducts{T, W}, x) where {T, W}
   length(y) == K.m && length(x) == K.n || throw(DimensionMismatch("trend product dimensions"))
   @inbounds @simd for i in 1:K.m
@@ -112,7 +113,7 @@ function _split_product!(y, K::_TrendProducts{T, W}, x) where {T, W}
       value += _trend_coefficient(K.coefficients[offset], i) * x[i+offset-1]
     end
     y[i] = value
-  end
+  end # COV_EXCL_LINE
   y
 end
 
@@ -124,7 +125,7 @@ function _split_tproduct!(y, K::_TrendProducts{T, W}, x) where {T, W}
       value += _trend_coefficient(K.coefficients[j-i+1], i) * x[i]
     end
     y[j] = value
-  end
+  end # COV_EXCL_LINE
   y
 end
 
@@ -137,7 +138,7 @@ function _split_tproduct!(y, K::_TrendProducts{T, 2}, x) where {T}
     y[1] = zero(T) + _trend_coefficient(a, 1) * x[1]
     @simd for j in 2:K.m
       y[j] = (zero(T) + _trend_coefficient(b, j-1) * x[j-1]) + _trend_coefficient(a, j) * x[j]
-    end
+    end # COV_EXCL_LINE
     y[K.n] = zero(T) + _trend_coefficient(b, K.m) * x[K.m]
   end
   y
@@ -155,7 +156,7 @@ function _split_tproduct!(y, K::_TrendProducts{T, 3}, x) where {T}
       @simd for j in 3:K.m
         y[j] = ((zero(T) + _trend_coefficient(c, j-2) * x[j-2]) +
           _trend_coefficient(b, j-1) * x[j-1]) + _trend_coefficient(a, j) * x[j]
-      end
+      end # COV_EXCL_LINE
       y[K.m+1] = (zero(T) + _trend_coefficient(c, K.m-1) * x[K.m-1]) +
         _trend_coefficient(b, K.m) * x[K.m]
     end
@@ -465,7 +466,7 @@ _structured_solve!(x, F::_StructuredBandFactor{T, W}, b) where {T, W} =
 function _structured_band_solve!(x, L, d, b, ::Val{0})
   @inbounds @simd for j in eachindex(x)
     x[j] = b[j] / d[j]
-  end
+  end # COV_EXCL_LINE
   x
 end
 
@@ -655,7 +656,7 @@ function _split_rhs!(rhs, products::_TrendProducts{T, W}, xy, ρ, z, u, v) where
   end
   @inbounds @simd for j in W:products.m
     rhs[j] = xy[j] + ρ * _trend_tinterior(products, (z, u), j)
-  end
+  end # COV_EXCL_LINE
   @inbounds for j in max(W, products.m+1):products.n
     rhs[j] = xy[j] + ρ * _trend_tvalue(products, (z, u), j)
   end
@@ -675,7 +676,7 @@ function _split_primal!(kb, v, products::_TrendProducts{T, W}, β, u) where {T, 
     end
     kb[i] = value
     v[i] = value + u[i]
-  end
+  end # COV_EXCL_LINE
   kb
 end
 
