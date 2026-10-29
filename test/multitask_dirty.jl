@@ -176,6 +176,8 @@ end
       @test norm(z) <= c + 1e-14 && norm(z, Inf) <= d + 1e-14
       (iszero(c) || iszero(d)) && @test v == u
     end
+    # a nonfinite row fails every interval of the l2 threshold search
+    @test_throws ErrorException HDM._dirty_threshold([NaN, 1.0], 1.2, :l2)
   end
 
   @testset "Clarabel references and certified paths" begin
