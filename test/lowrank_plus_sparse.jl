@@ -373,6 +373,10 @@ end
   @test !short.converged && short.gap > 1e-14
   @test short.objective ≈ objective(X, Y, short.L, short.S, short.intercept,
     short.λ_rank, short.λ_sparse, short.weights, short.sparsity)
+  # a nonfinite iterate is never certified
+  problem = HDM._grid_problem(lowrank_plus_sparse, X, Y)
+  cert = HDM._lps_certificate(problem, fill(NaN, 4, 3), zeros(4, 3), 0.1, 0.1)
+  @test cert.objective == cert.gap == Inf
   for bad in (-1.0, Inf, NaN)
     @test_throws ArgumentError lowrank_plus_sparse(X, Y, bad, 0.1)
     @test_throws ArgumentError lowrank_plus_sparse(X, Y, 0.1, bad)
