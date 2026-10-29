@@ -206,6 +206,91 @@ end
 _multitask_options(d::_MultitaskData, o::CDOptions) =
   d.Z !== nothing && o.momentum === nothing && o.order === :random ? CDOptions(o; momentum = true) : o
 
+# the rows and the columns of Z of each task: the nₜ rows of task t follow those
+# of the tasks before it, and so do its fitted columns, since d.fitted is sorted
+function _task_blocks(d::_MultitaskData)
+  p = size(d.S, 1)
+  off = cumsum([0; d.nobs])
+  rows = [off[t]+1:off[t+1] for t in eachindex(d.nobs)]
+  cols = [searchsortedfirst(d.fitted, (t - 1) * p + 1):searchsortedlast(d.fitted, t * p) for t in eachindex(d.nobs)]
+  rows, cols
+end
+
+# Whether a path replaces the block Zₜ of task t (nₜ × pₜ, its rows and fitted
+# columns in Z) by its R factor: when nₜ > pₜ, so that R has fewer rows, with
+# pₜ ≤ _GRAM_PMAX, the bound of the Gram form of LassoPath, since the QR costs
+# about 2nₜpₜ² operations before the first level, and with at least half of the
+# entries of Zₜ stored, so that the dense copy the QR takes is no larger than Zₜ
+# (a sparse design is dense in Z with an intercept, and stays sparse without).
+# A task without fitted columns (pₜ = 0) only moves ‖ỹₜ‖ into the extra row.
+function _compressed_tasks(d::_MultitaskData)
+  rows, cols = _task_blocks(d)
+  map(rows, cols) do r, c
+    n, k = length(r), length(c)
+    stored = isempty(c) ? 0 : d.Z.colptr[last(c) + 1] - d.Z.colptr[first(c)]
+    n > k && k <= _GRAM_PMAX && 2 * stored >= n * k
+  end
+end
+
+# The least-squares model of a path on Z, with the block Zₜ of each task in
+# `which` replaced by its R factor. With the Householder QR Zₜ = QₜRₜ,
+# Qₜ'ỹₜ = (uₜ, vₜ) with uₜ the first pₜ entries, and
+#
+#     ‖ỹₜ - Zₜθₜ‖² = ‖Qₜ'(ỹₜ - Zₜθₜ)‖² = ‖uₜ - Rₜθₜ‖² + ‖vₜ‖²,
+#
+# so the design Zc with Rₜ in place of Zₜ, and the response ỹc with uₜ in place
+# of ỹₜ and one extra row, with a zero design and the value √(∑ₜ ‖vₜ‖²), give
+# ‖ỹc - Zcθ‖² = ‖ỹ - Zθ‖² for every θ. The residuals rc of Zc keep ‖r‖², Z'r
+# (Rₜ'(uₜ - Rₜθₜ) = Zₜ'(ỹₜ - Zₜθₜ)) and ỹ'r, ‖ỹc‖ = ‖ỹ‖, and Rₜ'Rₜ = Zₜ'Zₜ
+# keeps the Gram blocks of the groups and the norms of the columns. The solver
+# so sees the same loss, gradient, λmax, group curvatures, coordinate and
+# response scales and duality gap, up to rounding, while a full pass reads at
+# most pₜ(pₜ + 1)/2 entries of Rₜ against at least nₜpₜ/2 of Zₜ. The columns
+# and the groups are those of Z, in the same order, and the model is that of
+# CDLeastSquaresLoss on Z, with the scale 1/N of the original N rows. Each
+# block is copied to a dense matrix for its QR in turn; d.Z and d.ỹ are not
+# changed.
+function _compressed_model(d::_MultitaskData{T}, which::AbstractVector{Bool}) where {T}
+  Z, ỹ = d.Z, d.ỹ
+  rows, cols = _task_blocks(d)
+  rv, nv = rowvals(Z), nonzeros(Z)
+  colptr = Vector{Int}(undef, size(Z, 2) + 1)
+  colptr[1] = 1
+  rowval, nzval, yc, e = Int[], T[], T[], T[]
+  for t in eachindex(rows)
+    r0 = length(yc)
+    if which[t]
+      k = length(cols[t])
+      if k == 0
+        push!(e, norm(view(ỹ, rows[t])))
+        continue
+      end
+      F = qr!(Matrix(Z[rows[t], cols[t]]))
+      u = F.Q' * ỹ[rows[t]]
+      append!(yc, view(u, 1:k))
+      push!(e, norm(view(u, k+1:length(u))))
+      R = F.R
+      for (j, c) in enumerate(cols[t])
+        for i in 1:j
+          iszero(R[i, j]) && continue
+          push!(rowval, r0 + i); push!(nzval, R[i, j])
+        end
+        colptr[c + 1] = length(rowval) + 1
+      end
+    else
+      append!(yc, view(ỹ, rows[t]))
+      for c in cols[t]
+        for i in nzrange(Z, c)
+          push!(rowval, r0 + rv[i] - first(rows[t]) + 1); push!(nzval, nv[i])
+        end
+        colptr[c + 1] = length(rowval) + 1
+      end
+    end
+  end
+  push!(yc, norm(e))
+  cdmodel((1 / d.N) * LeastSquaresLoss(yc, SparseMatrixCSC(length(yc), size(Z, 2), colptr, rowval, nzval)), nothing)
+end
+
 # B (p × q, sparse) from the solution θ of the model of d: the coefficients of
 # the columns of Z divided by their scales, or vec(B) for a shared design
 function _task_coefficients(d::_MultitaskData{T}, θ::AbstractVector) where {T}
@@ -405,7 +490,10 @@ Solutions `β0path[k]` and `Bpath[k]` of the multitask lasso of
 ProximalSolvers' `solve_path`, with momentum on the stacked problem unless
 `momentum = false` or `order = :cyclic`, and the options unchanged on a shared
 design, as in `multitask_lasso`; the row ℓ1/ℓ∞ and sparse-group penalties use
-row coordinate descent on the tasks' own designs.
+row coordinate descent on the tasks' own designs. On the stacked problem, the
+block of a task with more rows than fitted columns (at most 2000 columns, with
+at least half of the block stored) is replaced by the R factor of its QR
+decomposition, which keeps the problem and makes the passes cheaper.
 
 Without `λpath`, the path has `nλ` values spaced evenly on the log scale from
 `λmax`, the smallest value whose solution is zero, down to `λminratio ⋅ λmax`;
@@ -491,13 +579,14 @@ function MultitaskLassoPath(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVe
 end
 
 # A path at λpath, or an automatic grid for nothing. With the default penalty
-# and shared = false, shared designs are stacked too.
+# and shared = false, shared designs are stacked too. On Z, the tall blocks of
+# _compressed_tasks are solved on their R factors, unless compress = false.
 function _multitask_path(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector{<:AbstractVector},
                          λpath::Union{Nothing, AbstractVector{<:Real}}, options::CDOptions = CDOptions();
                          nλ::Integer = 100, λminratio::Union{Nothing, Real} = nothing, intercept::Bool = true,
                          standardize_x::Bool = true, task_weights = :equal, penalty_factors = nothing,
                          rng::AbstractRNG = default_rng(), screening::Bool = true, max_rows = Inf,
-                         shared::Bool = true, row_norm::Symbol = :l2, alpha::Real = 0)
+                         shared::Bool = true, row_norm::Symbol = :l2, alpha::Real = 0, compress::Bool = true)
   _check_row_penalty(row_norm, alpha)
   if λpath === nothing
     nλ >= 1 || throw(ArgumentError("nλ must be positive"))
@@ -522,6 +611,11 @@ function _multitask_path(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVecto
     nλ == 1 ? [λmax] : [λmax * ratio^(T(k) / (nλ - 1)) for k in 0:nλ-1]
   else
     convert(Vector{T}, λpath)
+  end
+  # the levels come from Z, so that they do not depend on compress
+  if compress && d.Z !== nothing
+    which = _compressed_tasks(d)
+    any(which) && (m = _compressed_model(d, which))
   end
   path = solve_path(m, g, λs, _solver(_multitask_options(d, options); rng); x, screening, maxnnz = max_rows,
                     _gapkw(options)...)
