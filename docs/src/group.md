@@ -162,18 +162,7 @@ Jordan, 2010). The coefficients are returned on the original scale.
   extrapolated from the last two, which saves passes at small penalties.
   `momentum = false` or `order = :cyclic` turns it off (see
   [`CDOptions`](@ref)). A dense shared design keeps the options as
-  `multi_lasso` takes them, without momentum unless `momentum = true`. In
-  [`MultitaskLassoPath`](@ref), and so in cross-validation, the block of a
-  task with more rows ``n_t`` than fitted columns ``p_t``, with ``p_t`` at
-  most 2000 and at least half of the block stored, is replaced by the
-  ``p_t \times p_t`` triangular factor ``R_t`` of its QR decomposition
-  ``Q_t R_t``, and its rows of the response by the first ``p_t`` entries of
-  ``Q_t^\top \tilde y_t``; the norm of the other entries goes to one extra
-  row. The least-squares loss is the same for every ``B``, so the solutions,
-  the duality gaps and the stopping rule are unchanged up to rounding, while a
-  pass reads at most ``p_t(p_t + 1)/2`` entries of the block instead of up to
-  ``n_t p_t``. The QR costs about ``2 n_t p_t^2`` operations before the first
-  level; a single fit keeps the stacked design.
+  `multi_lasso` takes them, without momentum unless `momentum = true`.
 - **Sparse designs.** A sparse ``X_t`` stays sparse without an intercept. With
   an intercept, centering fills it in: its block in the stacked design is
   dense, about ``n_t p`` stored entries.

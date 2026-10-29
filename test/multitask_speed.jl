@@ -1,9 +1,7 @@
 module MultitaskSpeedTest
 
 using HighDimensionalModels
-using LinearAlgebra, Random, SparseArrays, Test
-using ProximalBase: GroupNormL2
-import ProximalSolvers as PS
+using Random, Test
 
 const HDM = HighDimensionalModels
 
@@ -117,78 +115,6 @@ end
     end
     @test MultitaskLassoPath(fill(X, q), ysh; nλ, rng = Xoshiro(5)).iterations ==
           MultitaskLassoPath(fill(X, q), ysh, CDOptions(; momentum = false); nλ, rng = Xoshiro(5)).iterations
-  end
-end
-
-# The R factors of the tall blocks of the stacked design in paths: the model of
-# _compressed_model is that of Z up to rounding, and so are the paths.
-@testset "multitask R factors" begin
-  @testset "the same model" begin
-    # tasks with nₜ < p, nₜ = p, nₜ = p + 1 and nₜ > p with a duplicated
-    # column (a rank-deficient block), a constant design, which has no fitted
-    # column with an intercept, and a sparse design with 30% nonzeros, dense
-    # in Z with an intercept only
-    rng = Xoshiro(1434)
-    p = 6
-    Xs = Any[centered_rand(rng, n, p) .* (1 .+ 2 .* rand(rng, p))' for n in (4, 6, 7, 20)]
-    Xs[4][:, 3] = Xs[4][:, 2]
-    push!(Xs, ones(9, p))
-    push!(Xs, sparse(centered_rand(rng, 30, p) .* (rand(rng, 30, p) .< 0.3)))
-    ys = [centered_rand(rng, size(X, 1)) for X in Xs]
-    θ = centered_rand(Xoshiro(1435), length(Xs) * p)
-    for T in (Float64, Float32), intercept in (true, false), standardize_x in (true, false),
-        task_weights in (:equal, :observations)
-      d = HDM._MultitaskData([T.(X) for X in Xs], [T.(y) for y in ys]; intercept, standardize_x, task_weights)
-      _, cols = HDM._task_blocks(d)
-      @test length.(cols) == [p, p, p, p, intercept ? 0 : p, p]
-      which = HDM._compressed_tasks(d)
-      @test which == [false, false, true, true, true, intercept]
-      m0, x, groups, w = HDM._multitask_problem(d, ones(T, p))
-      m1 = HDM._compressed_model(d, which)
-      # the model of Z, with pₜ rows for a compressed task, nₜ for the others,
-      # and the extra row, without entries
-      @test typeof(m1) == typeof(m0) && m1.s == m0.s && !m1.intercept
-      @test size(m1.X) == (sum(which[t] ? length(cols[t]) : d.nobs[t] for t in eachindex(cols)) + 1, size(d.Z, 2))
-      @test iszero(m1.X[end, :]) && !iszero(m1.y[end])
-      rtol = T === Float64 ? 1e-12 : 1e-5
-      same(a, b) = norm(a - b) <= rtol * norm(b)
-      g = GroupNormL2(one(T), groups, w)
-      λmax = PS.lambda_max(m0, g, x)
-      @test same(PS.lambda_max(m1, g, x), λmax)
-      # at a point with every row nonzero
-      for k in eachindex(x)
-        x[k] = T(θ[k])
-      end
-      PS.initialize!(m0, x)
-      PS.initialize!(m1, x)
-      @test same(PS.loss_value(m1, x), PS.loss_value(m0, x))
-      @test same(PS.gradient!(zeros(T, length(x)), m1, x), PS.gradient!(zeros(T, length(x)), m0, x))
-      @test same(PS.response_scale(m1, x), PS.response_scale(m0, x))
-      @test same([PS.coordinate_scale(m1, x, k) for k in eachindex(x)],
-                 [PS.coordinate_scale(m0, x, k) for k in eachindex(x)])
-      @test same([PS._groupcurvature!(m1, x, k) for k in eachindex(groups)],
-                 [PS._groupcurvature!(m0, x, k) for k in eachindex(groups)])
-      h = GroupNormL2(T(0.3) * λmax, groups, w)
-      gap0, gap1 = PS.duality_gap(m0, h, x), PS.duality_gap(m1, h, x)
-      @test same(gap1.primal, gap0.primal) && same(gap1.dual, gap0.dual) && same(gap1.gap, gap0.gap)
-    end
-  end
-
-  @testset "the same paths" begin
-    # one task with fewer observations than predictors, left alone, and one
-    # with more, replaced by its R factor; the cyclic order without momentum
-    # makes the passes deterministic
-    ns, p, nλ = (15, 60), 20, 20
-    Xs, ys = make_tasks(Xoshiro(1436), ns, p)
-    d = HDM._MultitaskData(Xs, ys; intercept = true, standardize_x = true, task_weights = :equal)
-    @test HDM._compressed_tasks(d) == [false, true]
-    o = CDOptions(; order = :cyclic, momentum = false, gaptol = 1e-10)
-    a = HDM._multitask_path(Xs, ys, nothing, o; nλ)
-    b = HDM._multitask_path(Xs, ys, nothing, o; nλ, compress = false)
-    @test a.λpath == b.λpath && all(a.converged) && all(b.converged)
-    @test all(abs.(a.iterations .- b.iterations) .<= 1)
-    objective(P, k) = HDM._task_objective(d, P.Bpath[k], P.β0path[k], P.λpath[k], ones(p))
-    @test all(k -> isapprox(objective(a, k), objective(b, k); rtol = 1e-10), eachindex(a.λpath))
   end
 end
 
