@@ -30,6 +30,7 @@ tests = [
   "multitask",
   "multitask_penalties",
   "multitask_dirty",
+  "transfer",
   "lowrank",
   "hdm",
   "hdm_golden",

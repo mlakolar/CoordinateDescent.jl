@@ -30,6 +30,10 @@ steps, proximal gradient or specialized ADMM rather than coordinate descent.
 The dirty multitask model [`dirty_multitask`](@ref) decomposes coefficients
 into shared and task-specific components, with [`DirtyMultitaskPath`](@ref)
 and [`CVDirtyMultitaskPath`](@ref) for tuning their two penalty levels.
+Joint-sparse transfer from source domains to a target, TMTL(Fused) and
+TMTL(Debiased) of Lim and Kolar, is fitted by [`transfer_multitask`](@ref) and
+[`debias`](@ref), with [`TransferMultitaskPath`](@ref) and
+[`CVTransferMultitaskPath`](@ref) for paths and target-only tuning.
 """
 module HighDimensionalModels
 
@@ -94,6 +98,9 @@ export
   # the dirty multitask model
   dirty_multitask, DirtyMultitaskSolution, DirtyMultitaskPath, CVDirtyMultitaskPath,
 
+  # joint-sparse transfer multitask learning
+  transfer_multitask, debias, TransferMultitaskSolution, TransferMultitaskPath, CVTransferMultitaskPath,
+
   # penalties on ordered coefficients and graphs
   fused_lasso, generalized_lasso, trend_filter,
   difference_matrix, graph_difference,
@@ -133,6 +140,7 @@ include("cv.jl")
 include("multitask.jl")
 include("multitask_rows.jl")
 include("multitask_dirty.jl")
+include("transfer.jl")
 include("quantile_tuning.jl")
 include("structured.jl")
 include("structured_cv.jl")

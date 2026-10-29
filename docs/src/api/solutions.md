@@ -4,6 +4,9 @@
 [`DirtyMultitaskSolution`](@ref) returns total coefficients and a canonical
 component split, with a recomputed `kkt` residual and a relative duality `gap`.
 Dirty CV uses its minimum-error `(ratio, λ_specific)` fit; it has no 1se rule.
+[`TransferMultitaskSolution`](@ref) reports the fused or corrected target
+slopes with separate fused and correction certificates; `domain = ℓ` selects a
+domain block in `coef` and `predict`.
 
 ```@autodocs
 Modules = [HighDimensionalModels]
@@ -14,4 +17,9 @@ Private = false
 ```@docs
 DirtyMultitaskSolution
 coef(::DirtyMultitaskSolution)
+```
+
+```@docs
+TransferMultitaskSolution
+coef(::TransferMultitaskSolution)
 ```

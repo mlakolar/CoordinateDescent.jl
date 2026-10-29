@@ -39,6 +39,7 @@ makedocs(
         "The lasso and its tuning-free variants" => "lasso.md",
         "Paths, screening and solver options" => "paths.md",
         "The group lasso" => "group.md",
+        "Joint-sparse transfer multitask learning" => "transfer.md",
         "Primal–dual quantile regression" => "quantile.md",
         "Variable selection with error control" => "selection.md",
         "Fused regression, trend filtering and graphs" => "structured.md",
