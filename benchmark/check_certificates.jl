@@ -557,9 +557,10 @@ end
 @testset "Multitask lasso with task-specific designs" begin
   rng = scenario_rng("certificate-controls-tasks", 1)
   # the weights and scales: population standard deviations within the tasks,
-  # zero for a zero column and, with an intercept, for a constant one. The
-  # constant 0.1 has an inexact mean in floating point, so that its rounded
-  # standard deviation is positive and only the test of constancy zeroes it.
+  # zero for a zero column and, with an intercept, for a constant one. Three
+  # entries 0.1 have an inexact mean in floating point in any order of the sum,
+  # so that their rounded standard deviation is positive and only the test of
+  # constancy zeroes it.
   X1, X2 = [1.0 0.0 0.1; 3.0 0.0 0.1; 5.0 0.0 0.1], [1.0 1.0 0.0; 2.0 3.0 1.0]
   a = tasks_scales([X1, X2]; task_weights = :observations, standardize_x = true, intercept = true)
   @test a.c ≈ [6 / 5, 4 / 5] && a.S ≈ [sqrt(8 / 3) 0.5; 0.0 1.0; 0.0 0.5] && a.S[2:3, 1] == [0, 0]
@@ -628,14 +629,14 @@ end
   end
 
   # a nonzero coefficient of a column that is zero in its task, or with an
-  # intercept constant there, is uncertifiable under both standardizations;
-  # the constant 0.1 again has a positive rounded standard deviation
+  # intercept constant there, is uncertifiable under both standardizations; the
+  # rounded standard deviation of the constant 0.1 here is positive or zero,
+  # depending on the order in which the platform sums the column
   d = designed_tasks(rng)
   Xs = copy(d.Xs)
   Xs[1] = copy(d.Xs[1])
   Xs[1][:, 3] .= 0
   Xs[1][:, 4] .= 0.1
-  @test column_loadings(Xs[1]; intercept = true)[4] > 0
   for standardize_x in (true, false), intercept in (true, false)
     kw = (; task_weights = :equal, standardize_x, intercept)
     β0 = intercept ? d.β0 : zeros(q)
