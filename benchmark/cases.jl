@@ -554,21 +554,24 @@ function multitask_cases!(catalog)
   end
   tasks_gap_of(s, β0, B, λ) = tasks_gap(s.Xs, s.ys, β0, Matrix(B), λ, s.ω; s.task_weights, standardize_x = true,
                                         intercept = true)
-  # The default stopping rule, on the changes, leaves relative gaps near 2e-7.
+  # The default stopping rule, on the changes, left relative gaps up to about
+  # 6e-7 over repetitions 1–10, too close to the target of 1e-6, so these fits
+  # stop at a gap of 1e-8 instead.
   for task_weights in (:equal, :observations)
     add_case!(catalog, "multitask", "multitask_lasso", string(task_weights); scenario = "tasks-40-80-120x60",
       measure = MEASURE.gap, target = 1e-6,
-      build = p -> tasks_inputs(p; task_weights),
-      call = s -> multitask_lasso(s.Xs, s.ys, s.λ; intercept = true, standardize_x = true,
+      build = p -> merge(tasks_inputs(p; task_weights), (; options = CDOptions(gaptol = 1e-8))),
+      call = s -> multitask_lasso(s.Xs, s.ys, s.λ, s.options; intercept = true, standardize_x = true,
                                   task_weights = s.task_weights, rng = s.rng),
       certify = (p, s, out) -> tasks_gap_of(s, out.intercept, out.B, s.λ))
   end
   # The levels of the automatic grid at nλ = 50, as in the study of #137: from
-  # λmax(1 + √eps) down to ratio λmax, ratio = 1e-4 when ∑nₜ ≥ pq and 0.01
-  # otherwise. They are passed as λpath, so that the revisions compared solve
-  # the same levels, down to the small ones where #137 found the cost. The
-  # default path gap of 1e-4 is replaced by 1e-8, as in the other paths with a
-  # target of 1e-6, and max_rows is left infinite.
+  # the first level λmax(1 + √eps) down to ratio times that level, as the
+  # estimator computes them, ratio = 1e-4 when ∑nₜ ≥ pq and 0.01 otherwise.
+  # They are passed as λpath, so that the revisions compared solve the same
+  # levels, down to the small ones where #137 found the cost. The default path
+  # gap of 1e-4 is replaced by 1e-8, as in the other paths with a target of
+  # 1e-6, and max_rows is left infinite.
   function tasks_path(p)
     s = tasks_inputs(p; ratio = 1)
     N, pq = sum(length, s.ys), size(s.Xs[1], 2) * length(s.Xs)
