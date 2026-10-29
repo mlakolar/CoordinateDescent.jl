@@ -62,8 +62,10 @@ values. Tall designs use a quadratic value with a direct residual fallback near
 cancellation; wide designs share one residual between value and gradient.
 Float32 keeps its original loss/gradient arithmetic. The internal step remains
 `.95/L` and the certificate is checked every ten iterations, plus termination.
-The [replicated study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/4c506aa8be5f2c485ca0f146255c0b1f4f01179e/benchmark/lowrank/panoc_ablation)
-compares complete fits and paths with independent accuracy checks. PANOC helps
+The replicated study (archive
+[`pr114-nuclear-panoc-20261026`](https://github.com/mlakolar/HighDimensionalModels.jl/releases/download/benchmark-evidence/pr114-nuclear-panoc-20261026.tar.gz),
+report `results/cluster-20261026/RESULTS.md`) compares complete fits and paths
+with independent accuracy checks. PANOC helps
 the tested middle-penalty fits and paths, but APG is faster for the weak
 many-response cold fit. APG remains the default; no automatic solver-selection
 rule or general memory improvement is implied by those measurements.
@@ -444,11 +446,12 @@ existing design SVD. Coefficient rank, degrees of freedom and residuals are
 computed from thin factors with conservative dense fallbacks. The objective,
 weights, support/DF semantics and stopping rules in that study were unchanged.
 CD results were unchanged and FISTA results agreed within the stopping
-tolerance. CD remains the default block solver. The
-[replicated optimization study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/09da5020ffe8aa1c3bd812629794c08fa4a93464/benchmark/lowrank/sparse_setup)
-used 20 shared independent inputs per design on an earlier dependency stack
-and was not rerun at this revision. Its final report is in the snapshot's
-`results` directory. At the middle penalty, paired public-fit candidate/baseline
+tolerance. CD remains the default block solver. The replicated optimization
+study (archive
+[`pr112-sparse-setup-20261026`](https://github.com/mlakolar/HighDimensionalModels.jl/releases/download/benchmark-evidence/pr112-sparse-setup-20261026.tar.gz),
+report `results/cluster-20261026/FINAL.md`) used 20 shared independent inputs
+per design on an earlier dependency stack and was not rerun at this revision.
+At the middle penalty, paired public-fit candidate/baseline
 ratios were 0.854 (CD) and 0.860 (FISTA) for many responses, and 0.854 for wide
 FISTA. Wide CD was inconclusive at 0.962, with an interval reaching 1.003;
 small CD regressed at 1.016. Complete paths improved in every retained

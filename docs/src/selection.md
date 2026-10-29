@@ -109,8 +109,10 @@ solver agreement; exact native-weight identity is not an acceptance condition.
 
 ### Evidence and settings
 
-The [replicated study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/dbcad2b4a084b4dcecc7d160c496f4cb9166b370/benchmark/selection/gaussian_calibration)
-provides historical evidence measured on an earlier dependency stack; it was
+The replicated study (archive
+[`pr115-gaussian-slope-20261026`](https://github.com/mlakolar/HighDimensionalModels.jl/releases/download/benchmark-evidence/pr115-gaussian-slope-20261026.tar.gz),
+report `results/cluster-20261026/RESULTS.md`) provides historical evidence
+measured on an earlier dependency stack; it was
 not rerun at this revision. The study compared 1,008 independent datasets per
 scenario, with separate estimated-noise and covariance stress cases. Its summary
 tables reported that, at known sigma=1/q=0.1 in the iid alternating-sign example,
@@ -209,9 +211,10 @@ An optimized diagonal does not repair a misspecified covariance, a statistic
 without swap antisymmetry, or a fixed-X procedure without sufficiency. The
 population-model assumptions and fixed-X restrictions above still apply.
 
-The [replicated construction study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/0de5d94ebb4c463b3d17babdac268439fb9a52f6/benchmark/selection/knockoff_strategies)
-records historical evidence; its final report is in the snapshot's `results`
-directory. It was measured on an earlier dependency stack and was not rerun at
+The replicated construction study (archive
+[`pr117-knockoff-strategies-20261026`](https://github.com/mlakolar/HighDimensionalModels.jl/releases/download/benchmark-evidence/pr117-knockoff-strategies-20261026.tar.gz),
+report `results/cluster-20261026/RESULTS.md`) records historical evidence.
+It was measured on an earlier dependency stack and was not rerun at
 this revision. The study uses 1,008 independent datasets per scenario and common
 innovations, lasso statistic and penalty across constructions. For the recorded
 AR(.4) design with alternating signals, power rises from 0.64% with
