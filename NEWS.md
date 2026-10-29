@@ -22,6 +22,16 @@ integration dependency to an explicit commit.
   a canonical split, a recomputed two-component KKT residual and a relative
   duality gap. CV tunes ratio and level with common folds across ratios.
 
+- Add `lowrank_plus_sparse` for the additive coefficient model `B = L + S`,
+  with nuclear and weighted entrywise/row penalties on separate components,
+  intersection-dual gap certificates, component diagnostics, and two-penalty
+  tuning through `PenaltyGrid` and `CVPenaltyGrid`.
+
+- Add `sparse_nuclear_regression` for nuclear and entrywise/row sparsity
+  penalties on the same coefficient matrix, with duality-gap certificates and
+  `SparseNuclearSolution`. `PenaltyGrid` and `CVPenaltyGrid` tune both levels
+  with copied primal/dual warm starts and independent training-fold fits.
+
 - Add row ℓ1/ℓ∞ (`row_norm = :linf`) and multitask sparse group (`alpha > 0`)
   fits and paths for `multitask_lasso` and `multi_lasso`, with verified
   screening and a row solver on the tasks' own designs. Add `CVMultiLassoPath`
@@ -81,6 +91,11 @@ residuals once, preserving numerical rank and degrees-of-freedom definitions.
 - Sparse reduced-rank fits and paths reuse sufficient statistics across penalties
   and compute rank/residual diagnostics from thin factors. CD results and all
   defaults are unchanged; FISTA results agree within the stopping tolerance.
+
+- Sparse reduced-rank fits finish difficult group-lasso blocks with guarded
+  Newton steps, improving convergence of ill-conditioned adaptive fits. Float32
+  sparse defaults use a `100eps(T)` tolerance floor, and single fits warn on
+  non-convergence with a conditioning diagnostic when applicable.
 
 ## Quantile primal–dual API
 
