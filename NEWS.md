@@ -7,6 +7,11 @@ ProximalSolvers 0.3 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- Add `lowrank_plus_sparse` for the additive coefficient model `B = L + S`,
+  with nuclear and weighted entrywise/row penalties on separate components,
+  intersection-dual gap certificates, component diagnostics, and two-penalty
+  tuning through `PenaltyGrid` and `CVPenaltyGrid`.
+
 - Add `sparse_nuclear_regression` for nuclear and entrywise/row sparsity
   penalties on the same coefficient matrix, with duality-gap certificates and
   `SparseNuclearSolution`. `PenaltyGrid` and `CVPenaltyGrid` tune both levels
