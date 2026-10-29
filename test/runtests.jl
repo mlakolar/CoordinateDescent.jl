@@ -31,6 +31,7 @@ tests = [
   "multitask",
   "multitask_penalties",
   "multitask_dirty",
+  "transfer",
   "lowrank",
   "lowrank_sparse",
   "lowrank_plus_sparse",

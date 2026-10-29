@@ -5,6 +5,9 @@ shared by all responses.
 [`dirty_multitask`](@ref), [`DirtyMultitaskPath`](@ref) and
 [`CVDirtyMultitaskPath`](@ref) fit and tune separate shared and task-specific
 coefficient components, with shared or task-specific designs.
+[`transfer_multitask`](@ref), [`debias`](@ref), [`TransferMultitaskPath`](@ref)
+and [`CVTransferMultitaskPath`](@ref) fit, correct and tune joint-sparse
+transfer from source domains to a target.
 
 ```@docs
 HighDimensionalModels
@@ -24,4 +27,11 @@ sparse_nuclear_regression
 lowrank_plus_sparse
 PenaltyGrid
 CVPenaltyGrid
+```
+
+```@docs
+transfer_multitask
+debias
+TransferMultitaskPath
+CVTransferMultitaskPath
 ```

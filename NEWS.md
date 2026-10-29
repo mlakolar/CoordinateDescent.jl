@@ -7,6 +7,15 @@ ProximalSolvers 0.3 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- Add `transfer_multitask`, `debias`, `TransferMultitaskPath` and
+  `CVTransferMultitaskPath` for joint-sparse transfer multitask learning,
+  TMTL(Fused) and TMTL(Debiased) of Lim and Kolar, with unequal domain sizes
+  and task-specific designs. Coordinate descent in the contrast coordinates is
+  certified by a global relative duality gap, with an exact `λmax` and
+  per-component screening; the paper's two-block ADMM is an optional backend
+  that reports its residuals and penalties. CV uses target-only folds and
+  selects the correction level from each fold's own fused fit.
+
 - Signal trend-filtering iterations are faster with banded LDLᵀ solves and
   fewer vector passes. Results agree up to rounding; options are unchanged.
 
