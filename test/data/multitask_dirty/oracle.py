@@ -25,8 +25,8 @@ import cvxpy as cp
 import numpy as np
 
 # The split into A and S is not unique, which makes the tightest interior-point tolerances
-# unreachable on some levels; 1e-10, then 1e-9, are tried in turn.
-TOLERANCES = (1e-10, 1e-9)
+# unreachable on some levels; 1e-12, 1e-11 and 1e-10 are tried in turn.
+TOLERANCES = (1e-12, 1e-11, 1e-10)
 
 
 def scales(X, intercept, standardize):

@@ -14,8 +14,8 @@ a column is constant within a task. `‖·‖` is the row ℓ∞ norm (`shared_n
 or the row ℓ2 norm (`l2`). The column scales `sₜⱼ`, the task weights `cₜ` and the
 objective follow their definitions in the documentation; the script does not use
 HighDimensionalModels. Every level reached Clarabel's optimal status; `level<k>.csv`
-records the tolerance used (1e-10, with 1e-9 as a fallback, since the split into `A`
-and `S` is not unique).
+records the tolerance used: 1e-12, or 1e-11 where the solver could not certify
+1e-12 (two ℓ2 levels), since the split into `A` and `S` is not unique.
 
 Each case directory holds the designs (`X.csv` for a shared design, or `X1.csv`, …),
 the responses `y1.csv`, …, `penalty_factors.csv`, `settings.csv` (`tasks`, `shared`,
