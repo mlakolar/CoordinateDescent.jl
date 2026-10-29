@@ -13,6 +13,7 @@ tests = [
   "lasso",
   "cv",
   "structured",
+  "structured_kernels",
   "structured_golden",
   "structured_cv_masked",
   "cv_glm",

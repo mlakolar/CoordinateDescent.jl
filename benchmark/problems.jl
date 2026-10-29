@@ -224,6 +224,12 @@ function piecewise_linear(rng, n; knots = 4)
   (; x, y = θ .+ 0.25 * sample_sd(θ) .* gaussian(rng, n), truth = θ)
 end
 
+function trend_sine(rng, n; irregular = false)
+  t = range(0, 1; length = n)
+  y = sin.(4π .* t) .+ 0.6 .* (t .> 0.55) .+ 0.2 .* gaussian(rng, n)
+  irregular ? (; y, x = cumsum(0.8 .+ 0.4 .* uniform(rng, n))) : (; y)
+end
+
 # regression whose coefficients are piecewise constant in the column index;
 # n > p, so X has full column rank
 function fused_regression(rng, n, p)
@@ -291,6 +297,11 @@ const SCENARIO_BUILDERS = [
   "logistic-2000x500" => rng -> logistic(rng, 2000, 500; k = 10),
   "quantile-1000x100" => rng -> quantile_regression(rng, 1000, 100; k = 6),
   "signal-5000" => rng -> piecewise_constant(rng, 5000; segments = 12),
+  "trend-sine-1000" => rng -> trend_sine(rng, 1000),
+  "trend-sine-10000" => rng -> trend_sine(rng, 10000),
+  "trend-sine-10000-irregular" => rng -> trend_sine(rng, 10000; irregular = true),
+  "trend-sine-100000" => rng -> trend_sine(rng, 100000),
+  "trend-sine-1000000" => rng -> trend_sine(rng, 1000000),
 ]
 
 const SCENARIOS = String[first(b) for b in SCENARIO_BUILDERS]
