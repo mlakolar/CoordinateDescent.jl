@@ -943,7 +943,7 @@ end
 # uncertifiable), evaluated as f(z) + u'Dz. u solves the box-constrained least
 # squares min ‖D'u - X̃'r_c/n‖ (box_lsq), which is tight at the optimum, where
 # D'u* = X̃'r_c/n = -∇f(β*).
-function genlasso_parts(X, y, β0, β, D, λrows; intercept::Bool)
+function genlasso_parts(X, y, β0, β, D, λrows; intercept::Bool, maxiter::Integer = 500)
   d = cert_regression(X, y, β0, β)
   d isa String && return d
   (; y, β, n, p) = d
@@ -960,7 +960,7 @@ function genlasso_parts(X, y, β0, β, D, λrows; intercept::Bool)
   rc = intercept ? r .- mean(r) : r
   if X === nothing
     intercept && return "a signal with an intercept is not identifiable: the centered identity is singular"
-    u = box_lsq(Dm, rc ./ n, λr)
+    u = box_lsq(Dm, rc ./ n, λr; maxiter)
     z = yc .- n .* (transpose(Dm) * u)
     fitz = z
   else
@@ -970,7 +970,7 @@ function genlasso_parts(X, y, β0, β, D, λrows; intercept::Bool)
     pivots = diag(factor.U)
     issuccess(factor) && minimum(pivots)^2 > p * eps() * maximum(pivots)^2 ||
       return "X̃ does not have full column rank"
-    u = box_lsq(Dm, transpose(Xc) * rc ./ n, λr)
+    u = box_lsq(Dm, transpose(Xc) * rc ./ n, λr; maxiter)
     z = factor \ (transpose(Xc) * yc ./ n .- transpose(Dm) * u)
     fitz = Xc * z
   end
@@ -981,8 +981,8 @@ function genlasso_parts(X, y, β0, β, D, λrows; intercept::Bool)
   (; P, D = bound, u, scale, terms = max(n, p, size(Dm, 1)))
 end
 
-function genlasso_gap(X, y, β0, β, D, λrows; intercept::Bool)
-  a = genlasso_parts(X, y, β0, β, D, λrows; intercept)
+function genlasso_gap(X, y, β0, β, D, λrows; intercept::Bool, maxiter::Integer = 500)
+  a = genlasso_parts(X, y, β0, β, D, λrows; intercept, maxiter)
   a isa String && return uncertifiable(a)
   relative_gap(a.P, a.D; a.scale, a.terms)
 end

@@ -685,6 +685,8 @@ function structured_cases!(catalog)
         difference_operator(length(s.y), order + 1; x = s.x),
         fill(s.λ, length(s.y) - order - 1)))
   end
+  # At the strongest level, the default dual limit leaves a loose certificate:
+  # measured gap 6.5e-4, versus 7e-8 with a converged dual. Solver tolerances are unchanged.
   add_case!(catalog, "structured", "trend_filter_path", "signal-quadratic-10k";
     scenario = "trend-sine-10000", suite = "extended", measure = MEASURE.gap, target = 1e-5,
     build = p -> begin
@@ -694,8 +696,8 @@ function structured_cases!(catalog)
     end,
     call = s -> trend_filter_path(s.y, s.λpath; order = 2),
     certify = (p, s, out) -> path_certificate(out.solutions, length(s.λpath)) do k
-      signal_gap(s, out.solutions[k], difference_operator(length(s.y), 3),
-                 fill(s.λpath[k], length(s.y) - 3))
+      genlasso_gap(nothing, s.y, 0.0, out.solutions[k].x, difference_operator(length(s.y), 3),
+                   fill(s.λpath[k], length(s.y) - 3); intercept = false, maxiter = 2000)
     end)
 
   # Regression with n > p, an intercept and levels relative to max|x̃ⱼ'ỹ|/n
