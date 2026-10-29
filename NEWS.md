@@ -10,8 +10,9 @@ integration dependency to an explicit commit.
 - `multitask_lasso`, `MultitaskLassoPath` and `CVMultitaskLassoPath` are faster
   on task-specific designs: group coordinate descent on the stacked design now
   uses momentum by default (`momentum = false` or `order = :cyclic` turns it
-  off), which needs ProximalSolvers 0.3.1. A dense shared design keeps the
-  model and options of `multi_lasso`. Results agree up to the solver tolerance.
+  off), which needs ProximalSolvers 0.3.1. A dense design shared by tasks with
+  equal weights keeps the model and options of `multi_lasso`. Results agree up
+  to the solver tolerance.
 
 - Add `transfer_multitask`, `debias`, `TransferMultitaskPath` and
   `CVTransferMultitaskPath` for joint-sparse transfer multitask learning,
