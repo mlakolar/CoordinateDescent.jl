@@ -7,6 +7,12 @@ ProximalSolvers 0.3 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- `multitask_lasso`, `MultitaskLassoPath` and `CVMultitaskLassoPath` are faster
+  on task-specific designs: group coordinate descent on the stacked design now
+  uses momentum by default (`momentum = false` or `order = :cyclic` turns it
+  off), which needs ProximalSolvers 0.3.1. A dense shared design keeps the
+  model and options of `multi_lasso`. Results agree up to the solver tolerance.
+
 - Add `transfer_multitask`, `debias`, `TransferMultitaskPath` and
   `CVTransferMultitaskPath` for joint-sparse transfer multitask learning,
   TMTL(Fused) and TMTL(Debiased) of Lim and Kolar, with unequal domain sizes

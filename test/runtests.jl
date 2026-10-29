@@ -29,6 +29,7 @@ tests = [
   "sparsegroup",
   "multiresponse",
   "multitask",
+  "multitask_speed",
   "multitask_penalties",
   "multitask_dirty",
   "transfer",

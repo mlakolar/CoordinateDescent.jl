@@ -157,7 +157,12 @@ Jordan, 2010). The coefficients are returned on the original scale.
   orders drawn from `rng`. The columns of different tasks are orthogonal, so
   the curvature over a row is diagonal. With standardization and equal weights
   it is a multiple of the identity and each block step is exact; otherwise a
-  step minimizes a majorization, and convergence takes more passes.
+  step minimizes a majorization, and convergence takes more passes. Momentum
+  is on by default here: each pass over the active rows starts from a point
+  extrapolated from the last two, which saves passes at small penalties.
+  `momentum = false` or `order = :cyclic` turns it off (see
+  [`CDOptions`](@ref)). A dense shared design keeps the options as
+  `multi_lasso` takes them, without momentum unless `momentum = true`.
 - **Sparse designs.** A sparse ``X_t`` stays sparse without an intercept. With
   an intercept, centering fills it in: its block in the stacked design is
   dense, about ``n_t p`` stored entries.

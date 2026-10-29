@@ -72,9 +72,11 @@ options passed to them.
   [`coordinate_descent!`](@ref)); it needs `order = :cyclic`
 - `momentum`: Nesterov momentum on the passes over the active set (see
   [`coordinate_descent!`](@ref)). The default, `nothing`, uses it where it is
-  known to help: with `order = :random`, a `SparseIterate` and a built-in loss.
-  `true` asks for it with any loss, and needs `order = :random`; `false` turns
-  it off
+  known to help: with `order = :random`, a `SparseIterate` and a built-in loss,
+  and on the stacked design of [`multitask_lasso`](@ref) and
+  [`MultitaskLassoPath`](@ref), which ask for it on an `AtomIterate`. `true`
+  asks for it with any loss and on an `AtomIterate` (ProximalSolvers 0.3.1),
+  and needs `order = :random`; `false` turns it off
 - `gaptol`: the relative duality gap at which each level of a path stops, and
   the last level of the path of `warm_start = false` (see ProximalSolvers'
   `solve_path`), for the losses and penalties that have a gap (least squares
