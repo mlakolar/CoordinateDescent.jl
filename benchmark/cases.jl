@@ -124,6 +124,19 @@ standardized_score(X, y) = maximum(abs.(case_centered(X)' * (case64(y) .- mean(y
 multi_lambda_max(X, Y, ω) =
   maximum(norm.(eachrow(case_centered(X)' * case_centered(Y))) ./ (size(X, 1) .* ω))
 
+# λmax of the multitask lasso with a design per task,
+# maxⱼ ‖(cₜx̃ₜⱼ'ỹₜ/(nₜsₜⱼ))ₜ‖/ωⱼ over the entries with sₜⱼ > 0, the task weights
+# cₜ and scales sₜⱼ those of the certificate (tasks_scales); with an intercept,
+# x̃ₜⱼ'ỹₜ = xₜⱼ'ỹₜ
+function tasks_lambda_max(Xs, ys, ω; task_weights, standardize_x = true, intercept = true)
+  a = tasks_scales(Xs; task_weights, standardize_x, intercept)
+  a isa String && error(a)
+  ỹ = [intercept ? case64(y) .- mean(y) : case64(y) for y in ys]
+  scores = reduce(hcat, [ifelse.(a.S[:, t] .> 0, a.c[t] .* (case64(Xs[t])' * ỹ[t]) ./ (a.n[t] .* a.S[:, t]), 0.0)
+                         for t in 1:a.q])
+  maximum(norm.(eachrow(scores)) ./ ω)
+end
+
 # The smallest factor a with a zero SLOPE solution at a * base, on columns
 # centered and scaled to mean square one: maxₖ ∑_{i≤k} |g|₍ᵢ₎ / ∑_{i≤k} baseᵢ
 function slope_factor_max(X, y, base)
@@ -524,6 +537,70 @@ function multitask_cases!(catalog)
     certify = (p, s, out) -> path_certificate(out.Bpath, length(s.λpath)) do k
       multi_gap(s.X, s.Y, out.β0path[k], Matrix(out.Bpath[k]), s.λpath[k], s.ω; intercept = true)
     end)
+
+  # ∑ₜcₜ‖yₜ - β₀ₜ - Xₜbₜ‖²/(2nₜ) + λ∑ⱼωⱼ‖(s₁ⱼb₁ⱼ, …, s_qⱼb_qⱼ)‖₂ with a design per
+  # task (src/multitask.jl), the scales sₜⱼ of standardize_x within the tasks
+  # and the default penalty factors ωⱼ = 1, at λ = ratio λmax for the task
+  # weights. With shared, every task gets the same matrix object, as the
+  # scenario stores it, so that the call takes the path of a shared design
+  # without converting or comparing copies (the runner's deepcopy keeps that
+  # identity).
+  function tasks_inputs(p; task_weights = :equal, ratio = 0.1, shared = false)
+    Xs = shared ? fill(case64(p.Xs[1]), length(p.Xs)) : [case64(X) for X in p.Xs]
+    ys = [case64(y) for y in p.ys]
+    ω = ones(size(Xs[1], 2))
+    top = tasks_lambda_max(Xs, ys, ω; task_weights)
+    (; Xs, ys, ω, task_weights, top, λ = ratio * top, rng = solver_rng(), levels = [ratio * top])
+  end
+  tasks_gap_of(s, β0, B, λ) = tasks_gap(s.Xs, s.ys, β0, Matrix(B), λ, s.ω; s.task_weights, standardize_x = true,
+                                        intercept = true)
+  # The default stopping rule, on the changes, leaves relative gaps near 2e-7.
+  for task_weights in (:equal, :observations)
+    add_case!(catalog, "multitask", "multitask_lasso", string(task_weights); scenario = "tasks-40-80-120x60",
+      measure = MEASURE.gap, target = 1e-6,
+      build = p -> tasks_inputs(p; task_weights),
+      call = s -> multitask_lasso(s.Xs, s.ys, s.λ; intercept = true, standardize_x = true,
+                                  task_weights = s.task_weights, rng = s.rng),
+      certify = (p, s, out) -> tasks_gap_of(s, out.intercept, out.B, s.λ))
+  end
+  # The levels of the automatic grid at nλ = 50, as in the study of #137: from
+  # λmax(1 + √eps) down to ratio λmax, ratio = 1e-4 when ∑nₜ ≥ pq and 0.01
+  # otherwise. They are passed as λpath, so that the revisions compared solve
+  # the same levels, down to the small ones where #137 found the cost. The
+  # default path gap of 1e-4 is replaced by 1e-8, as in the other paths with a
+  # target of 1e-6, and max_rows is left infinite.
+  function tasks_path(p)
+    s = tasks_inputs(p; ratio = 1)
+    N, pq = sum(length, s.ys), size(s.Xs[1], 2) * length(s.Xs)
+    λpath = level_grid(s.top * (1 + sqrt(eps())), N >= pq ? 1e-4 : 0.01, 50)
+    merge(s, (; λpath, options = CDOptions(gaptol = 1e-8), levels = λpath))
+  end
+  tasks_path_gap(s, out) = path_certificate(out.Bpath, length(s.λpath)) do k
+    tasks_gap_of(s, out.β0path[k], out.Bpath[k], s.λpath[k])
+  end
+  for (variant, scenario) in (("tasks-2x200", "tasks-100-400x200"), ("tasks-5x100", "tasks-50-to-200x100"),
+                              ("wide-2x1000", "tasks-wide-100-400x1000"))
+    add_case!(catalog, "multitask", "MultitaskLassoPath", variant; scenario, suite = "extended",
+      measure = MEASURE.gap, target = 1e-6,
+      build = p -> tasks_path(p),
+      call = s -> MultitaskLassoPath(s.Xs, s.ys, s.λpath, s.options; intercept = true, standardize_x = true,
+                                     task_weights = s.task_weights, rng = s.rng),
+      certify = (p, s, out) -> tasks_path_gap(s, out))
+  end
+  # One design for five tasks with equal weights, which the estimator solves
+  # with the model of multi_lasso: eight levels from λmax to λmax/20, as for
+  # MultiLassoPath, since that model has no duality gap and each level stops on
+  # opt_tol whatever gaptol.
+  add_case!(catalog, "multitask", "MultitaskLassoPath", "shared"; scenario = "tasks-shared-300x200x5",
+    suite = "extended", measure = MEASURE.gap, target = 1e-6,
+    build = p -> begin
+      s = tasks_inputs(p; ratio = 1, shared = true)
+      λpath = level_grid(s.top, 0.05, 8)
+      merge(s, (; λpath, levels = λpath))
+    end,
+    call = s -> MultitaskLassoPath(s.Xs, s.ys, s.λpath; intercept = true, standardize_x = true,
+                                   task_weights = s.task_weights, rng = s.rng),
+    certify = (p, s, out) -> tasks_path_gap(s, out))
 end
 
 function lowrank_cases!(catalog)

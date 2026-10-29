@@ -38,6 +38,8 @@ cert_finite(::Nothing) = true
 cert_finite(x::Number) = isfinite(x)
 cert_finite(x::SparseMatrixCSC) = all(isfinite, nonzeros(x))
 cert_finite(x::AbstractArray) = all(isfinite, x)
+# arrays of arrays, such as a design or a response per task
+cert_finite(x::AbstractArray{<:AbstractArray}) = all(cert_finite, x)
 cert_finite(xs...) = all(cert_finite, xs)
 
 f64(::Nothing) = nothing
@@ -608,6 +610,117 @@ end
 
 function multi_gap(X, Y, β0, B, λ, ω; intercept::Bool)
   a = multi_parts(X, Y, β0, B, λ, ω; intercept)
+  a isa String && return uncertifiable(a)
+  a.kkt === nothing || return relative_residual(a.kkt, a.g0, :kkt_residual)
+  relative_gap(a.P, a.D; a.scale, a.terms)
+end
+
+"""
+    tasks_scales(Xs; task_weights, standardize_x, intercept)
+
+The task weights `cₜ` and the scales `sₜⱼ` (a `p × q` matrix `S`) of the
+multitask lasso with a design `Xs[t]` of `nₜ` rows per task (src/multitask.jl),
+from the designs and the settings only: `cₜ = 1` for `:equal`, `q nₜ / N` for
+`:observations` (`N = ∑ₜ nₜ`), or the positive weights given; with
+`standardize_x`, `sₜⱼ` is the population standard deviation of column `j`
+within task `t` (`column_loadings`, centered with an intercept), and otherwise
+one. Under both settings `sₜⱼ = 0` for a column that is zero in task `t`, or
+with an intercept constant there; the estimator fixes `bₜⱼ` at zero. Returns
+a note instead when the designs or the weights are not valid.
+"""
+function tasks_scales(Xs; task_weights, standardize_x::Bool, intercept::Bool)
+  q = length(Xs)
+  q >= 1 || return "there must be at least one task"
+  n, p = [size(X, 1) for X in Xs], size(Xs[1], 2)
+  all(X -> size(X, 2) == p, Xs) && all(>=(1), n) || return "the designs must have rows and the same columns"
+  c = if task_weights === :equal
+    ones(q)
+  elseif task_weights === :observations
+    q .* n ./ sum(n)
+  elseif task_weights isa AbstractVector{<:Real} && length(task_weights) == q &&
+         all(w -> isfinite(w) && w > 0, task_weights)
+    f64(task_weights)
+  else
+    return "task_weights must be :equal, :observations or a positive weight per task"
+  end
+  S = zeros(p, q)
+  for t in 1:q
+    A = f64(Xs[t])
+    s = column_loadings(A; intercept)
+    for j in 1:p
+      x = Vector(A[:, j])
+      absent = intercept ? all(==(x[1]), x) : all(iszero, x)
+      S[j, t] = absent ? 0.0 : standardize_x ? s[j] : 1.0
+    end
+  end
+  (; c, S, n, N = sum(n), p, q)
+end
+
+# the inputs of a multitask certificate in Float64, with the weights and scales
+# of tasks_scales, or a note
+function cert_tasks(Xs, ys, β0, B; task_weights, standardize_x::Bool, intercept::Bool)
+  q, p = length(Xs), size(B, 1)
+  q >= 1 && length(ys) == q && length(β0) == q && size(B, 2) == q &&
+    all(t -> size(Xs[t]) == (length(ys[t]), p), 1:q) ||
+    return "the dimensions of the designs, the responses, β₀ and B disagree"
+  cert_finite(Xs, ys, β0, B) || return "nonfinite input"
+  a = tasks_scales(Xs; task_weights, standardize_x, intercept)
+  a isa String && return a
+  merge(a, (; X = [f64(X) for X in Xs], y = [f64(y) for y in ys], b0 = f64(β0), B = Matrix{Float64}(B)))
+end
+
+# ∑ₜ cₜ‖yₜ - β₀ₜ - Xₜbₜ‖²/(2nₜ) + λ∑ⱼωⱼ‖(s₁ⱼb₁ⱼ, …, s_qⱼb_qⱼ)‖₂, the multitask
+# lasso of src/multitask.jl with the default penalty, cₜ and sₜⱼ those of
+# tasks_scales and ωⱼ the penalty factors. Its dual is to maximize
+# ∑ₜ[θₜ'ỹₜ - nₜ‖θₜ‖²/(2cₜ)] subject to 1'θₜ = 0 (intercept) and
+# ‖(x̃ₜⱼ'θₜ/sₜⱼ)ₜ‖₂ ≤ λωⱼ over the entries with sₜⱼ > 0, ỹₜ and x̃ₜⱼ centered
+# with an intercept. The point is θₜ = τcₜr̃ₜ/nₜ, r̃ₜ the residuals of task t
+# centered likewise (so that x̃ₜⱼ'θₜ = xₜⱼ'θₜ), with
+# τ = min(1, minⱼ λωⱼ/‖(xₜⱼ'cₜr̃ₜ/(nₜsₜⱼ))ₜ‖); the dual value is
+# ∑ₜ[τcₜỹₜ'r̃ₜ/nₜ - τ²cₜ‖r̃ₜ‖²/(2nₜ)]. For one task this is ls_l1_parts, and for
+# one design with cₜ = 1 multi_parts, both with the loadings ωⱼsⱼ. A nonzero
+# bₜⱼ with sₜⱼ = 0, which the estimator fixes at zero, is uncertifiable; λ = 0,
+# or a zero factor of a row with sₜⱼ > 0 in some task, gives the KKT residual
+# in the coordinates sₜⱼbₜⱼ and the intercepts.
+function tasks_parts(Xs, ys, β0, B, λ, ω; task_weights, standardize_x::Bool, intercept::Bool)
+  d = cert_tasks(Xs, ys, β0, B; task_weights, standardize_x, intercept)
+  d isa String && return d
+  cert_levels(λ, ω, d.p) || return "λ and the penalty factors must be finite and nonnegative, one factor per row"
+  (; X, y, b0, B, c, S, n, N, p, q) = d
+  fitted = S .> 0
+  all(fitted .| (B .== 0)) ||
+    return "a nonzero coefficient of a column that is zero in its task, or constant there with an intercept"
+  cw = λ .* f64(ω)
+  fit = [X[t] * B[:, t] for t in 1:q]
+  r = [y[t] .- b0[t] .- fit[t] for t in 1:q]
+  penalty = sum(cw[j] * norm(S[j, :] .* B[j, :]) for j in 1:p)
+  P = sum(c[t] * sum(abs2, r[t]) / (2n[t]) for t in 1:q) + penalty
+  yc = [intercept ? y[t] .- mean(y[t]) : y[t] for t in 1:q]
+  # (xₜⱼ'vₜ/sₜⱼ) on the fitted entries, zero elsewhere
+  scores(v) = reduce(hcat, [ifelse.(fitted[:, t], (transpose(X[t]) * v[t]) ./ S[:, t], 0.0) for t in 1:q])
+  if λ == 0 || any(j -> cw[j] == 0 && any(fitted[j, :]), 1:p)
+    G = -scores([c[t] .* r[t] ./ n[t] for t in 1:q])
+    U = S .* B
+    kkt = maximum(block_kkt(G[j, fitted[j, :]], U[j, fitted[j, :]], cw[j]) for j in 1:p)
+    kkt = max(kkt, intercept ? norm([c[t] * sum(r[t]) / n[t] for t in 1:q]) : 0.0)
+    return (; P, kkt, g0 = maximum(norm, eachrow(scores([c[t] .* yc[t] ./ n[t] for t in 1:q]))), c, S)
+  end
+  rc = [intercept ? r[t] .- mean(r[t]) : r[t] for t in 1:q]
+  θ = [c[t] .* rc[t] ./ n[t] for t in 1:q]
+  Z = scores(θ)
+  τ = 1.0
+  for j in 1:p
+    a = norm(Z[j, :])
+    a > 0 && (τ = min(τ, cw[j] / a))
+  end
+  D = sum(τ * dot(yc[t], θ[t]) - τ^2 * c[t] * sum(abs2, rc[t]) / (2n[t]) for t in 1:q)
+  scale = sum(c[t] * sum(abs2, abs.(y[t]) .+ abs(b0[t]) .+ abs.(fit[t])) / (2n[t]) for t in 1:q) + penalty +
+          sum(τ * dot(abs.(yc[t]), abs.(θ[t])) + τ^2 * c[t] * sum(abs2, rc[t]) / (2n[t]) for t in 1:q)
+  (; P, D, θ = [τ .* θt for θt in θ], t = τ, c, S, scale, terms = max(N, p, q), kkt = nothing)
+end
+
+function tasks_gap(Xs, ys, β0, B, λ, ω; task_weights, standardize_x::Bool, intercept::Bool)
+  a = tasks_parts(Xs, ys, β0, B, λ, ω; task_weights, standardize_x, intercept)
   a isa String && return uncertifiable(a)
   a.kkt === nothing || return relative_residual(a.kkt, a.g0, :kkt_residual)
   relative_gap(a.P, a.D; a.scale, a.terms)
