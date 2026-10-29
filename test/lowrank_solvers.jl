@@ -71,7 +71,7 @@ import ProximalBase
   @test all(isfinite, CVLowRankPath(X, Y; solver = :panoc, λpath = [0.3, 0.1], folds).cvm)
   @test all(isfinite, CVLowRankPath(X, Y; method = :sparse, rank = 2,
     block_solver = :fista, λpath = [0.3, 0.1], folds, adaptive = true).cvm)
-  @test !sparse_reduced_rank(X, Y, 2, 0.5; block_solver = :fista,
+  @test_logs (:warn, r"did not converge") @test !sparse_reduced_rank(X, Y, 2, 0.5; block_solver = :fista,
     max_iter = 1, inner_max_iter = 1, tol = 1e-14, inner_tol = 1e-14).converged
 
   for T in (Float32, Float64)

@@ -217,6 +217,14 @@ that a global optimum was found.
 block, retaining the same response update and KKT stopping conditions.
 `block_solver = :cd` remains the default. Either choice applies to paths
 and cross-validation.
+After 100 unsuccessful first-order KKT checks (100 CD sweeps or 1000 FISTA
+iterations), each block solve finishes with guarded Newton steps on the
+nonzero rows, including later blocks in that fit;
+`inner_max_iter` bounds first-order iterations only. The defaults for `tol` and
+`inner_tol` are 1e-7 and 1e-9 in Float64, each with a `100eps(T)` floor;
+explicit tolerances are unchanged. `sparse_reduced_rank` warns when it does not
+converge and reports when rounding of an ill-conditioned Gram matrix can limit
+accuracy; paths retain their convergence flags without warnings.
 
 ```julia
 s = sparse_reduced_rank(X, Y, 3, 0.1; adaptive = true)
@@ -295,9 +303,9 @@ The sparse-fit setup optimization reuses `X'X/n` and `X'Y/n` within each
 fit and across penalty levels in a path. The FISTA step scale comes from the
 existing design SVD. Coefficient rank, degrees of freedom and residuals are
 computed from thin factors with conservative dense fallbacks. The objective,
-weights, support/DF semantics and stopping rules are unchanged. CD results are
-unchanged and FISTA results agree within the stopping tolerance. CD remains
-the default block solver. The
+weights, support/DF semantics and stopping rules in that study were unchanged.
+CD results were unchanged and FISTA results agreed within the stopping
+tolerance. CD remains the default block solver. The
 [replicated optimization study (snapshot)](https://github.com/mlakolar/HighDimensionalModels.jl/tree/09da5020ffe8aa1c3bd812629794c08fa4a93464/benchmark/lowrank/sparse_setup)
 used 20 shared independent inputs per design on an earlier dependency stack
 and was not rerun at this revision. Its final report is in the snapshot's
