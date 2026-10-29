@@ -349,3 +349,147 @@ folds; `λmin` and `λ1se` compare levels that converged in every fold.
 Fold generators are seeded separately from `rng`, so threading does not change
 the results. See `examples/13_multitask_penalties.jl` for a comparison of the
 three penalties on shared and task-specific supports.
+
+## The dirty multitask model
+
+[`dirty_multitask`](@ref) fits the model of
+[Jalali, Ravikumar, Sanghavi and Ruan (2010)](https://users.ece.utexas.edu/~sanghavi/mtdm_final.pdf).
+It estimates a total coefficient matrix ``B=A+S`` with separate penalties on
+its components:
+
+```math
+\min_{A,S,\beta_0}\;
+\sum_t\frac{c_t}{2n_t}\|y_t-\beta_{0t}-X_t(a_t+s_t)\|^2
++\sum_j\omega_j\bigl(\lambda_b\|\widetilde A_{j\cdot}\|_\infty
+                         +\lambda_s\|\widetilde S_{j\cdot}\|_1\bigr).
+```
+
+The arguments `λ_shared` and `λ_specific` are the positional levels
+``\lambda_b`` and ``\lambda_s``. The default `shared_norm = :linf` is the
+paper's shared norm; `shared_norm = :l2` is a variant. Designs may be shared
+(`dirty_multitask(X, Y, λb, λs)`) or task-specific (`Xs, ys`). The intercepts,
+scales and task weights follow `multitask_lasso`. Write
+``E_j=\{t:s_{tj}>0\}``, ``q_j=|E_j|`` and
+``v=(s_{tj}B_{jt})_{t\in E_j}``. Both components stay zero outside ``E_j``.
+With `task_weights = :equal`, each task has loss ``\|r_t\|^2/(2n_t)``.
+
+### Reduction and computation
+
+The loss depends on the total ``B``. Minimizing over its split gives the row
+penalty and its dual ball
+
+```math
+h_j(v)=\omega_j\min_{a+s=v}
+       \{\lambda_b\|a\|+\lambda_s\|s\|_1\},\qquad
+C_j=\omega_j\{z:\|z\|_*\le\lambda_b,\ \|z\|_\infty\le\lambda_s\},
+```
+
+where the dual norm ``\|\cdot\|_*`` is ℓ1 for the shared ℓ∞ norm and ℓ2 for
+the shared ℓ2 norm. Equivalently, ``h_j(v)=\sup_{z\in C_j}\langle z,v\rangle``.
+For ℓ∞, this is the sorted ℓ1 penalty
+
+```math
+h_j(v)=\omega_j\sum_{i=1}^{q_j}
+\min\{\lambda_s,\max(\lambda_b-(i-1)\lambda_s,0)\}\,|v|_{(i)},
+\qquad |v|_{(1)}\ge\cdots\ge|v|_{(q_j)}.
+```
+
+ProximalBase's `SLOPE` computes its value and proximal step, with buffers
+owned by each fit. The ℓ2 variant uses the proximal step ``u-\Pi_{C_j}(u)``.
+Projection onto the intersection of the ℓ2 ball of radius ``c`` and the ℓ∞
+ball of radius ``d`` has entries
+``z_i=\operatorname{clip}(u_i/(1+\mu),-d,d)``. Here ``\mu=0`` if clipping is
+feasible, otherwise its positive root enforces ``\|z\|_2=c``. Zero radii are
+handled directly. Both variants use the row solver on the tasks' designs,
+including sparse designs with intercepts, without a stacked design.
+
+The penalty factors multiply the **whole** row penalty. Thus ``\omega_j=0``
+leaves the row unpenalized. In the multitask sparse group above, a zero factor
+leaves its entrywise penalty in place. The dirty model also differs from
+`sparse_group_lasso`, which has one response and groups of predictors, and
+from multitask sparse group, which applies both penalties to a single ``B``.
+With one task, applying levels ``a,b`` to the same coefficient gives
+``(a+b)|B|``; the dirty model gives ``\min(a,b)|B|``.
+
+### Regimes and the returned components
+
+For positive levels, let ``r=\lambda_b/\lambda_s``. On each row's fitted
+coordinates the ℓ∞ estimator reduces to row ℓ1/ℓ∞ when ``r\le1`` and to the
+entrywise lasso when ``r\ge q_j``. For ℓ2 the corresponding regimes are the
+group lasso when ``r\le1`` and the entrywise lasso when ``r\ge\sqrt{q_j}``.
+Factors do not change these regimes. Interior ratios allow both components;
+they need not both be nonzero.
+
+The returned split is computed in standardized coordinates and then divided
+by the scales. It follows these conventions, in order:
+
+- If ``\lambda_b=0``, return ``A=B``. If only ``\lambda_s=0``, return ``S=B``.
+  Both zero gives ``A=B``. A zero level makes the row penalty zero.
+- For ℓ∞, return ``A=0`` when ``r\ge q_j``. For ℓ2, return ``A=0`` when
+  ``r\ge\sqrt{m_v}``, where ``m_v`` counts the nonzero entries of ``v``.
+- Otherwise, return ``S=0`` when ``r\le1``.
+- In the interior, return ``a_i=\operatorname{clip}(v_i,-\tau,\tau)`` and
+  ``s=v-a``. For ℓ∞, ``\tau=|v|_{(\lceil r\rceil)}``. At an integer
+  ``r=k``, every threshold in ``[|v|_{(k+1)},|v|_{(k)}]`` minimizes the row
+  penalty; this rule takes ``|v|_{(k)}``, the most shared choice.
+  For ℓ2, ``\tau`` is the unique positive root of
+  ``\sum_i\min(|v_i|/\tau,1)^2=r^2``. Sorted intervals give
+  ``\tau^2=\sum_{i>k}|v|_{(i)}^2/(r^2-k)`` on
+  ``[|v|_{(k+1)},|v|_{(k)}]`` (upper endpoint infinite for ``k=0``).
+
+An estimator's reduction, the existence of a pure optimal split, and the split
+returned by this convention are different statements. For example, the ℓ2
+rule can return a pure specific split for a particular row before the global
+lasso regime. Components need not be unique even when total coefficients
+are unique. `sharedrows` counts the nonzero rows of this canonical ``A``;
+it does not identify shared features or a latent decomposition from the data.
+
+### Paths, tuning and diagnostics
+
+[`DirtyMultitaskPath`](@ref)`(Xs, ys; ratio = r)` holds ``r`` fixed and varies
+``\lambda=\lambda_s``, with ``\lambda_b=r\lambda``. Its automatic grid starts
+at ``\lambda_{\max}(1+\sqrt{\mathrm{eps}})``, where
+
+```math
+d_j(g)=\frac{\max\{\|g\|_*/r,\|g\|_\infty\}}{\omega_j},\qquad
+\lambda_{\max}(r)=\max_j d_j(g_j(0)).
+```
+
+The gradient is on the fitted standardized coordinates, with intercepts
+profiled. An unpenalized row with a nonzero gradient has infinite threshold
+and needs explicit levels. Screening compares ``d_j`` with
+``2\lambda_k-\lambda_{k-1}``, then checks every excluded row and repairs any
+violations. Total coefficients warm start the next level; components are
+split anew. `coef(path, λ)` requires a fitted level.
+
+[`CVDirtyMultitaskPath`](@ref) compares ratios and levels by the held-out
+score of `CVMultitaskLassoPath`. Defaults are five geometric ratios on
+``[1,q]`` for ℓ∞ or ``[1,\sqrt q]`` for ℓ2. Per-task folds are common across
+ratios; with a shared design, whole observation rows are held out across
+responses. Each training fit refits centering, scales and task weights.
+`cvm` is a `nratios × nλ` matrix, with `NaN` padding for shorter paths.
+Selection requires convergence on the full data and every fold, minimizes
+`cvm`, and breaks ties by larger ratio, then larger specific level. There is
+no two-dimensional one-standard-error rule. `coef(cv)` and `predict(cv, Xnew)`
+use the selected full-data fit.
+
+A fit's `kkt` recomputes the two-component conditions at the returned point.
+Writing ``z_j=-\nabla_j f(B)``, these are membership in ``C_j`` and
+
+```math
+\langle z_j,\widetilde A_{j\cdot}\rangle
+ =\omega_j\lambda_b\|\widetilde A_{j\cdot}\|,\qquad
+\langle z_j,\widetilde S_{j\cdot}\rangle
+ =\omega_j\lambda_s\|\widetilde S_{j\cdot}\|_1,
+```
+
+together with intercept stationarity, zero dropped coordinates and ``B=A+S``.
+`kkt` is the largest violation divided by the maximum of one and the
+magnitudes of the terms being compared. `gap` is the **relative** duality gap,
+using residual scaling ``\min(1,\lambda/\max_j d_j)``; it is `NaN` when
+unavailable, including zero levels, unpenalized rows and zero objective.
+Convergence requires the row solver's change rule and any requested available
+gap target. `nobs` is ``\sum_t n_t``. `dof` counts nonzero entries in total
+``B`` plus fitted intercepts; it is not effective degrees of freedom.
+See `examples/15_multitask_dirty.jl` for a small comparison with row penalties
+and separate lasso fits on shared and task-specific supports.

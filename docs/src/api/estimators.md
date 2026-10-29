@@ -2,6 +2,9 @@
 
 [`CVMultiLassoPath`](@ref) tunes the multi-response row penalties with folds
 shared by all responses.
+[`dirty_multitask`](@ref), [`DirtyMultitaskPath`](@ref) and
+[`CVDirtyMultitaskPath`](@ref) fit and tune separate shared and task-specific
+coefficient components, with shared or task-specific designs.
 
 ```@docs
 HighDimensionalModels
@@ -14,6 +17,9 @@ Private = true
 ```
 
 ```@docs
+dirty_multitask
+DirtyMultitaskPath
+CVDirtyMultitaskPath
 sparse_nuclear_regression
 lowrank_plus_sparse
 PenaltyGrid
