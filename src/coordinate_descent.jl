@@ -101,16 +101,20 @@ set starts from the extrapolated point `xₖ + βₖ (xₖ - xₖ₋₁)`, with 
 against it (O'Donoghue and Candès, 2015), after a full pass, and when the
 active set shrinks. The cache of a built-in loss moves with the point, at the
 cost of a few vector operations per pass; a user-defined loss is initialized
-at the extrapolated point. It needs a `SparseIterate` or a
-`SymmetricSparseIterate`. Unlike Anderson acceleration, it works with the
-random order, so it also helps when the columns share a common factor; with
-the cyclic order it can stall.
+at the extrapolated point. It needs a `SparseIterate`, a
+`SymmetricSparseIterate` or, with ProximalSolvers 0.3.1, an `AtomIterate`,
+whose active groups are extrapolated entry by entry while the curvatures of
+the groups are kept. Unlike Anderson acceleration, it works with the random
+order, so it also helps when the columns share a common factor; with the
+cyclic order it can stall.
 
 By default (`momentum = nothing`) it is used with `order = :random`, a
 `SparseIterate` and a built-in loss other than `KronQuadratic`, and not
-otherwise. `momentum = true` asks for it with a user-defined loss as well,
-which can pay off when initializing the loss costs less than a pass;
-`momentum = false` turns it off.
+otherwise; on an `AtomIterate` it stays off, except that
+[`multitask_lasso`](@ref) and [`MultitaskLassoPath`](@ref) ask for it on their
+stacked design. `momentum = true` asks for it with a user-defined loss or an
+`AtomIterate` as well; with a user-defined loss it can pay off when
+initializing the loss costs less than a pass. `momentum = false` turns it off.
 """
 function coordinate_descent!(
   x::Union{SparseIterate, SymmetricSparseIterate, AtomIterate, Vector{<:AbstractFloat}},

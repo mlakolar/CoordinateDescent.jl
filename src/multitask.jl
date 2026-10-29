@@ -194,6 +194,18 @@ function _multitask_problem(d::_MultitaskData{T}, ω::Vector{T}) where {T}
   CDLeastSquaresLoss(d.ỹ, d.Z; intercept = false), AtomIterate(T, size(d.Z, 2), d.groups), d.groups, ω[d.rows]
 end
 
+# The options of coordinate descent on the model of d. On Z, group coordinate
+# descent takes many passes at small penalties near interpolation, and more
+# where a block step minimizes a majorization (unequal weights or scales);
+# Nesterov momentum on the passes over the active rows cuts them, by several
+# times along small paths of that kind. ProximalSolvers leaves momentum off on
+# an AtomIterate unless asked (momentum = true, from its version 0.3.1), so it
+# is asked for when the options leave it to the default with the random order;
+# momentum = false and the cyclic order (which anderson needs) keep it off. The
+# model of a shared design keeps the options as multi_lasso takes them.
+_multitask_options(d::_MultitaskData, o::CDOptions) =
+  d.Z !== nothing && o.momentum === nothing && o.order === :random ? CDOptions(o; momentum = true) : o
+
 # B (p × q, sparse) from the solution θ of the model of d: the coefficients of
 # the columns of Z divided by their scales, or vec(B) for a shared design
 function _task_coefficients(d::_MultitaskData{T}, θ::AbstractVector) where {T}
@@ -329,11 +341,15 @@ and with an intercept its centered columns are dense. It is solved by block
 coordinate descent on the rows of `B` (ProximalSolvers' group coordinate
 descent), with `options`; with `options.warm_start` false the solution is
 computed along `options.num_steps` levels from λmax. The random order of
-coordinate descent is drawn from `rng`. When the tasks share one dense design
-(the same matrix, or equal ones) and have equal weights, the model of
-[`multi_lasso`](@ref) is used instead, on that design. Real data of any types
-are converted to a common floating point type, and options are passed as
-[`CDOptions`](@ref).
+coordinate descent is drawn from `rng`. On this problem momentum is on by
+default (see [`CDOptions`](@ref)): each pass over the active rows starts from a
+point extrapolated from the last two, which saves passes at small penalties;
+`momentum = false` or `order = :cyclic` turns it off. When the tasks share one
+dense design (the same matrix, or equal ones) and have equal weights, the model
+of [`multi_lasso`](@ref) is used instead, on that design and with the options
+as `multi_lasso` takes them, without momentum unless `momentum = true`. Real
+data of any types are converted to a common floating point type, and options
+are passed as [`CDOptions`](@ref).
 
 The row ℓ1/ℓ∞ and sparse-group penalties use row coordinate descent on the
 tasks' own designs, without stacking or copying a shared design. Sparse columns are centered on
@@ -371,7 +387,7 @@ function _multitask_fit(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVector
   ω = _penalty_factors(T, penalty_factors, size(d.S, 1))
   row_norm === :l2 && iszero(alpha) || return _row_fit(d, ω, T(λ), options; row_norm, alpha, rng)
   m, x, groups, w = _multitask_problem(d, ω)
-  r = _solve!(x, m, GroupNormL2(T(λ), groups, w), options; rng)
+  r = _solve!(x, m, GroupNormL2(T(λ), groups, w), _multitask_options(d, options); rng)
   B = _task_coefficients(d, x)
   MultitaskLassoSolution{T}(B, _task_intercepts(d, B), T(λ), _activerows(B), r.passes, r.converged, intercept, d.N,
                             d.nobs, d.c, ω)
@@ -386,8 +402,10 @@ end
 Solutions `β0path[k]` and `Bpath[k]` of the multitask lasso of
 [`multitask_lasso`](@ref) (with the same keywords) along a decreasing sequence
 `λpath`, each one warm started from the previous solution. The default uses
-ProximalSolvers' `solve_path`; the row ℓ1/ℓ∞ and sparse-group penalties use row
-coordinate descent on the tasks' own designs.
+ProximalSolvers' `solve_path`, with momentum on the stacked problem unless
+`momentum = false` or `order = :cyclic`, and the options unchanged on a shared
+design, as in `multitask_lasso`; the row ℓ1/ℓ∞ and sparse-group penalties use
+row coordinate descent on the tasks' own designs.
 
 Without `λpath`, the path has `nλ` values spaced evenly on the log scale from
 `λmax`, the smallest value whose solution is zero, down to `λminratio ⋅ λmax`;
@@ -505,7 +523,8 @@ function _multitask_path(Xs::AbstractVector{<:AbstractMatrix}, ys::AbstractVecto
   else
     convert(Vector{T}, λpath)
   end
-  path = solve_path(m, g, λs, _solver(options; rng); x, screening, maxnnz = max_rows, _gapkw(options)...)
+  path = solve_path(m, g, λs, _solver(_multitask_options(d, options); rng); x, screening, maxnnz = max_rows,
+                    _gapkw(options)...)
   Bpath = [_task_coefficients(d, θ) for θ in path.solutions]
   MultitaskLassoPath{T}(path.λ, Bpath, [_task_intercepts(d, B) for B in Bpath], _activerows.(Bpath), path.passes,
                         path.converged, path.kkt_checks, intercept, d.N, d.nobs, d.c, ω)

@@ -85,8 +85,10 @@ options of their lasso fits.
   the designs of [`order_anderson_bench.jl`](https://github.com/mlakolar/HighDimensionalModels.jl/blob/abddaf56a790b86178de376b175a1185020c8381/benchmark/order_anderson_bench.jl)
   in the benchmark snapshot it computes 50-level paths 2.7 to 6.5 times faster
   than the plain random order, including designs whose columns share a common
-  factor; short solves take about as long either way.
-  `momentum = false` turns it off.
+  factor; short solves take about as long either way. The group estimators
+  solve on an `AtomIterate`, where it is on by default only for the stacked
+  design of [`multitask_lasso`](@ref) and [`MultitaskLassoPath`](@ref) with
+  task-specific designs. `momentum = false` turns it off.
 - **Anderson acceleration.** `anderson = 5`, with `order = :cyclic`,
   extrapolates from the last passes. It is faster than momentum when few passes
   are needed and when ``n \gg p``, and much slower when the columns share a
