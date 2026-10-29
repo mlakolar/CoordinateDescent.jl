@@ -27,6 +27,9 @@ iterate passed to `scaled_lasso!` and `feasible_lasso!`.
 Penalties on ordered coefficients and graphs are fitted by [`fused_lasso`](@ref),
 [`trend_filter`](@ref) and [`generalized_lasso`](@ref), using exact proximal
 steps, proximal gradient or specialized ADMM rather than coordinate descent.
+The dirty multitask model [`dirty_multitask`](@ref) decomposes coefficients
+into shared and task-specific components, with [`DirtyMultitaskPath`](@ref)
+and [`CVDirtyMultitaskPath`](@ref) for tuning their two penalty levels.
 """
 module HighDimensionalModels
 
@@ -66,6 +69,7 @@ export
 
   # primal–dual quantile regression
   quantile_lasso, QuantileLassoSolution, QuantileLassoPath, dual_scores,
+  quantile_refit, QuantileRefit, refit_quantile_path,
   quantile_lambda, CVQuantileLassoPath,
 
   # generalized linear models
@@ -86,6 +90,9 @@ export
 
   # the multitask lasso with task-specific designs
   multitask_lasso, MultitaskLassoSolution, MultitaskLassoPath, CVMultitaskLassoPath,
+
+  # the dirty multitask model
+  dirty_multitask, DirtyMultitaskSolution, DirtyMultitaskPath, CVDirtyMultitaskPath,
 
   # penalties on ordered coefficients and graphs
   fused_lasso, generalized_lasso, trend_filter,
@@ -125,6 +132,7 @@ include("multiresponse.jl")
 include("cv.jl")
 include("multitask.jl")
 include("multitask_rows.jl")
+include("multitask_dirty.jl")
 include("quantile_tuning.jl")
 include("structured.jl")
 include("structured_cv.jl")

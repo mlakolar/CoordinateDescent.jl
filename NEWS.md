@@ -7,6 +7,12 @@ ProximalSolvers 0.3 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- Add `dirty_multitask`, `DirtyMultitaskPath` and `CVDirtyMultitaskPath` for
+  separate shared and task-specific coefficient components. The default is
+  Jalali et al.'s shared ℓ∞ norm; `shared_norm = :l2` is a variant. Fits return
+  a canonical split, a recomputed two-component KKT residual and a relative
+  duality gap. CV tunes ratio and level with common folds across ratios.
+
 - Add row ℓ1/ℓ∞ (`row_norm = :linf`) and multitask sparse group (`alpha > 0`)
   fits and paths for `multitask_lasso` and `multi_lasso`, with verified
   screening and a row solver on the tasks' own designs. Add `CVMultiLassoPath`
@@ -20,6 +26,14 @@ integration dependency to an explicit commit.
   `CVMultitaskLassoPath` are chosen among the levels that every fold reaches,
   so a level that only some fold paths reached is no longer selected. `cvm` is
   unchanged.
+
+- Add `quantile_refit`, `QuantileRefit` and `refit_quantile_path` for unpenalized
+  refits on selected supports, preserving raw dual scores and restricted-fit
+  diagnostics. Exact refits reuse one model across requested quantiles.
+
+- Add `max_hat_s` to exact and smoothed quantile paths and their cross-validation.
+  Paths retain the first fit exceeding the nonzero-slope limit and skip later
+  levels with `status=:max_hat_s`; unreached fold levels are ineligible.
 
 - Add `slope_gaussian` and `calibration = :bh | :gaussian | :user` for `slope`
   and `SLOPEPath`, with recorded calibration metadata. Explicit weights take

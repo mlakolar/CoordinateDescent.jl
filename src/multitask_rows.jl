@@ -28,9 +28,9 @@ struct _RowPenalty{T}
   weights::Vector{T}
 end
 
-struct _RowComponent{T}
+struct _RowComponent{T, P}
   U::Matrix{T}
-  penalty::_RowPenalty{T}
+  penalty::P
 end
 
 function _RowLoss(d::_MultitaskData{T}) where {T}
@@ -163,7 +163,8 @@ function _row_root(g::AbstractVector{T}, a::T, c::T) where {T}
   iszero(a) && return iszero(c) ? T(Inf) : norm(u) / c
   iszero(c) && return first(u) / a
   s, s2, avg, m2 = zero(T), zero(T), zero(T), zero(T)
-  for k in eachindex(u)
+  n = length(u)
+  for k in 1:n-1
     s += u[k]; s2 += u[k]^2
     delta = u[k] - avg
     avg += delta / k
@@ -171,9 +172,15 @@ function _row_root(g::AbstractVector{T}, a::T, c::T) where {T}
     disc = c^2 * s2 - a^2 * k * max(m2, zero(T))
     disc < 0 && continue
     λ = s2 / (a * s + sqrt(disc))
-    (k == length(u) || a * λ >= u[k + 1]) && return λ
+    a * λ >= u[k + 1] && return λ
   end
-  T(Inf)
+  s += u[n]; s2 += u[n]^2
+  delta = u[n] - avg
+  avg += delta / n
+  m2 += delta * (u[n] - avg)
+  disc = c^2 * s2 - a^2 * n * max(m2, zero(T))
+  # Rounding can leave the final discriminant slightly negative.
+  s2 / (a * s + sqrt(max(disc, zero(T))))
 end
 
 # The dual norm of a row's gradient; Inf for a nonzero unpenalized row.
@@ -189,12 +196,15 @@ end
 _row_value(u, pen::_RowPenalty, j) = pen.row_norm === :linf ? pen.weights[j] * norm(u, Inf) :
   pen.alpha * sum(abs, u) + (1 - pen.alpha) * pen.weights[j] * norm(u)
 
+_row_gap_available(pen::_RowPenalty, candidates) =
+  !any(j -> iszero(pen.weights[j]) && iszero(pen.alpha), candidates)
+
 # The relative duality gap on the candidate rows. Excluded rows are fixed at
 # zero here; paths check their optimality before accepting the solution.
 function _row_gap(loss::_RowLoss{T}, comp::_RowComponent{T}, λ, candidates) where {T}
   pen, d = comp.penalty, loss.data
   iszero(λ) && return nothing
-  any(j -> iszero(pen.weights[j]) && iszero(pen.alpha), candidates) && return nothing
+  _row_gap_available(pen, candidates) || return nothing
   P = sum(d.c[t] * sum(abs2, loss.residuals[t]) / (2 * d.nobs[t]) for t in eachindex(d.y))
   P += λ * sum(j -> _row_value(view(comp.U, j, :), pen, j), candidates; init = zero(T))
   iszero(P) && return nothing
@@ -282,11 +292,19 @@ function _row_fit(d::_MultitaskData{T}, ω, λ::T, options; row_norm, alpha, rng
   isfinite(λ) || throw(ArgumentError("λ must be finite."))
   loss = _RowLoss(d)
   comp = _RowComponent(zeros(T, size(d.S)), _RowPenalty(row_norm, T(alpha), ω))
+  r = _row_fit!(loss, comp, λ, options; rng)
+  B = _row_coefficients(d, comp)
+  MultitaskLassoSolution{T}(B, _task_intercepts(d, B), λ, _activerows(B), r.passes, r.converged,
+                            d.intercept, d.N, d.nobs, d.c, ω, row_norm, T(alpha))
+end
+
+# Continuation and the final fit on an estimator's row state.
+function _row_fit!(loss::_RowLoss{T}, comp::_RowComponent{T}, λ::T, options; rng) where {T}
   passes = 0
   continuation = !options.warm_start && options.num_steps > 0
   G = continuation ? _row_gradients(loss) : nothing
   λmax = continuation ? maximum(j -> _row_dual(view(G, j, :), comp.penalty, j),
-                                axes(d.S, 1); init = zero(T)) : zero(T)
+                                axes(comp.U, 1); init = zero(T)) : zero(T)
   if continuation && 0 < λ < λmax < Inf
     for k in 0:options.num_steps-1
       level = exp(log(λmax) + k * (log(λ) - log(λmax)) / options.num_steps)
@@ -295,15 +313,27 @@ function _row_fit(d::_MultitaskData{T}, ω, λ::T, options; row_norm, alpha, rng
     end
   end
   r = _row_solve!(loss, comp, λ, options; rng, gaptol = _row_gaptol(T, options, continuation))
-  B = _row_coefficients(d, comp)
-  MultitaskLassoSolution{T}(B, _task_intercepts(d, B), λ, _activerows(B), passes + r.passes, r.converged,
-                            d.intercept, d.N, d.nobs, d.c, ω, row_norm, T(alpha))
+  (; passes = passes + r.passes, converged = r.converged)
 end
 
 function _row_path(d::_MultitaskData{T}, ω, λpath, options; nλ = 100, λminratio = nothing,
                     row_norm = :l2, alpha = 0, rng = default_rng(), screening = true, max_rows = Inf) where {T}
   loss = _RowLoss(d)
   comp = _RowComponent(zeros(T, size(d.S)), _RowPenalty(row_norm, T(alpha), ω))
+  Bpath, β0path = SparseMatrixCSC{T, Int}[], Vector{T}[]
+  function record(B, λ, passes, done)
+    push!(Bpath, B); push!(β0path, _task_intercepts(d, B))
+  end
+  r = _row_path!(record, loss, comp, λpath, options; nλ, λminratio, rng, screening, max_rows)
+  MultitaskLassoPath{T}(r.levels, Bpath, β0path, _activerows.(Bpath), r.iterations, r.converged, r.checks,
+                        d.intercept, d.N, d.nobs, d.c, ω, row_norm, T(alpha))
+end
+
+# A warm path on a row state, recording each accepted level for its estimator.
+function _row_path!(record, loss::_RowLoss{T}, comp::_RowComponent{T}, λpath, options;
+                     nλ = 100, λminratio = nothing, rng = default_rng(), screening = true,
+                     max_rows = Inf) where {T}
+  d = loss.data
   G = _row_gradients(loss)
   p, q = size(G)
   λs = if λpath === nothing
@@ -317,7 +347,7 @@ function _row_path(d::_MultitaskData{T}, ω, λpath, options; nλ = 100, λminra
   end
   all(λ -> isfinite(λ) && λ >= 0, λs) || throw(ArgumentError("The penalty levels must be finite and nonnegative."))
   issorted(λs; rev = true) || throw(ArgumentError("The penalty levels must be decreasing."))
-  levels, Bpath, β0path = T[], SparseMatrixCSC{T, Int}[], Vector{T}[]
+  levels = T[]
   iterations, converged, checks = Int[], Bool[], Int[]
   previous = isempty(λs) ? zero(T) : first(λs)
   for (k, λ) in enumerate(λs)
@@ -339,11 +369,10 @@ function _row_path(d::_MultitaskData{T}, ω, λpath, options; nλ = 100, λminra
       append!(candidates, violators)
     end
     B = _row_coefficients(d, comp)
-    push!(levels, λ); push!(Bpath, B); push!(β0path, _task_intercepts(d, B))
+    push!(levels, λ); record(B, λ, passes, done)
     push!(iterations, passes); push!(converged, done); push!(checks, rounds)
     previous = λ
     length(_activerows(B)) > max_rows && break
   end
-  MultitaskLassoPath{T}(levels, Bpath, β0path, _activerows.(Bpath), iterations, converged, checks, d.intercept,
-                        d.N, d.nobs, d.c, ω, row_norm, T(alpha))
+  (; levels, iterations, converged, checks)
 end

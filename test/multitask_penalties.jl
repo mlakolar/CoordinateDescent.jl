@@ -96,7 +96,71 @@ end
 # The weighted RMS norm across tasks, in the units of the responses.
 response_norm(ys, c) = sqrt(sum(c[t] * sum(abs2, ys[t]) / length(ys[t]) for t in eachindex(ys)))
 
+# The sparse-group root from its monotone defining equation.
+function bisect_row_root(g, a, c)
+  lo, hi = zero(eltype(g)), maximum(abs, g) / a
+  for _ in 1:100
+    mid = (lo + hi) / 2
+    if norm(max.(abs.(g) .- a * mid, 0)) > c * mid
+      lo = mid
+    else
+      hi = mid
+    end
+  end
+  (lo + hi) / 2
+end
+
+# A correlated uniform design whose path can violate the strong rule.
+function strong_rule_case(seed)
+  rng = Xoshiro(seed)
+  n, p, q = 25, 40, 4
+  F = rand(rng, n, 3) .- 0.5
+  Z = F * (rand(rng, 3, p) .- 0.5) .+ 0.15 .* (rand(rng, n, p) .- 0.5)
+  B = zeros(p, q)
+  B[1:4, :] .= rand(rng, 4, q) .- 0.5
+  B[7, 1] = 2.0; B[9, 3] = -2.0
+  Y = Z * B .+ 0.2 .* (rand(rng, n, q) .- 0.5)
+  path = MultiLassoPath(Z, Y; nλ = 25, λminratio = 0.01, row_norm = :linf, standardize_x = false, rng)
+  Z, Y, path
+end
+
 @testset "Multitask row penalties" begin
+  @testset "Sparse-group breakpoint roots" begin
+    cases = (([2.0, 1.5], 0.2, 0.8), ([-3.0, 0.1, 0.0], 0.7, 0.3),
+             ([2.0, -2.0, 2.0], 0.4, 0.6), ([2.0, -2.0, 0.1, 0.0], 0.4, 0.6),
+             ([1.0], 0.3, 0.7))
+    for T in (Float32, Float64), (g, a, c) in cases
+      root = @inferred HDM._row_root(T.(g), T(a), T(c))
+      @test root isa T
+      @test root ≈ bisect_row_root(g, a, c) rtol = 16eps(T)
+    end
+  end
+
+  @testset "Strong-rule repair" begin
+    found = nothing
+    for seed in 100:140
+      Z, Y, path = strong_rule_case(seed)
+      if any(>(1), path.kkt_checks)
+        found = (Z, Y, path)
+        break
+      end
+    end
+    @test found !== nothing
+    if found !== nothing
+      Z, Y, path = found
+      kw = (; row_norm = :linf, standardize_x = false)
+      screened = MultiLassoPath(Z, Y, path.λpath, TIGHT; kw..., rng = Xoshiro(1))
+      unscreened = MultiLassoPath(Z, Y, path.λpath, TIGHT; kw..., screening = false, rng = Xoshiro(1))
+      @test any(>(1), screened.kkt_checks)
+      @test all(maximum(abs, Matrix(a - b)) <= 1e-7 for (a, b) in zip(screened.Bpath, unscreened.Bpath))
+      @test all(maximum(abs, a - b) <= 1e-7 for (a, b) in zip(screened.β0path, unscreened.β0path))
+      Xs, ys = fill(Z, size(Y, 2)), collect(eachcol(Y))
+      S, c, ω = scales(Xs, true, false), ones(size(Y, 2)), ones(size(Z, 2))
+      check_path(screened, Xs, ys, S, c, ω)
+      check_path(unscreened, Xs, ys, S, c, ω)
+    end
+  end
+
   @testset "Clarabel reference and screening" begin
     root = joinpath(@__DIR__, "data", "multitask")
     cases = sort(filter(d -> isdir(joinpath(root, d)), readdir(root)))
