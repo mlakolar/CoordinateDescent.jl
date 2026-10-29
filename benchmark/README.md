@@ -49,7 +49,7 @@ paths, standardization), run the quick suite of every group.
 | `lasso` | `lasso` (dense, sparse CSC, Gram, weights and offset, wide, correlated, large, Float32), `sqrt_lasso`, `scaled_lasso`, `LassoPath` with and without screening, `refit_lasso_path` | `src/lasso.jl`, `src/losses.jl`, `src/coordinate_descent.jl`, the coordinate descent and paths of ProximalSolvers |
 | `glm` | `glm_lasso` (logistic and Poisson; logistic with weights and offset, elastic net, MCP, SCAD, a large shape, Float32), `GLMLassoPath` | `src/glm.jl`, `src/penalties.jl`, proximal Newton |
 | `group` | `group_lasso` (`:orthonormal`, `:none`), `GroupLassoPath`, `sparse_group_lasso`, `SparseGroupLassoPath` | `src/group.jl`, `src/sparsegroup.jl` |
-| `multitask` | `multi_lasso`, `MultiLassoPath` | `src/multiresponse.jl` |
+| `multitask` | `multi_lasso`, `MultiLassoPath`, `multitask_lasso` (`:equal` and `:observations` task weights), `MultitaskLassoPath` (task-specific designs, a shared design) | `src/multiresponse.jl`, `src/multitask.jl` |
 | `lowrank` | `reduced_rank` (also wide and Float32), `nuclear_regression`, `sparse_reduced_rank`, `LowRankPath` | `src/lowrank.jl` |
 | `quantile` | `quantile_lasso` (exact with HiGHS, with an offset, a large shape; smoothed), `QuantileLassoPath` | `src/quantile.jl`, `ext/HighDimensionalModelsHiGHSExt.jl` |
 | `structured` | `fused_lasso` (signals, regression), `trend_filter` (signal, regression), `generalized_lasso`, `fused_lasso_path`, `trend_filter_path` | `src/structured.jl` |

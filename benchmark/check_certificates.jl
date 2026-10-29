@@ -520,6 +520,146 @@ end
   @test ok(c) && c.value ≤ 1e-6
 end
 
+# A multitask lasso whose solution is (β₀, B) by construction, with a design
+# per task of its own column means and scales, and nₜ = 20, 45, 70 rows for
+# p = 30 columns. B has two nonzero rows S; for each task, θₜ solves only the
+# support equations [1'; X̃ₜ[:, S]']θₜ = [0; (λωⱼsₜⱼuⱼₜ)ⱼ∈S], uⱼ = (sₜⱼbₜⱼ)ₜ/‖(sₜⱼbₜⱼ)ₜ‖
+# (without the first row when there is no intercept), which needs nₜ ≥ |S| + 1
+# but not nₜ > p as dual_with does. The factors of the zero rows are
+# ωⱼ = 2‖(x̃ₜⱼ'θₜ/sₜⱼ)ₜ‖/λ, so that their subgradients have norm 1/2, and
+# yₜ = β₀ₜ + Xₜbₜ + nₜθₜ/cₜ. zero_factor sets the factor of the first support
+# row to zero, so that its condition is x̃ₜⱼ'θₜ = 0.
+function designed_tasks(rng; ns = (20, 45, 70), p = 30, λ = 0.1, intercept = true, standardize_x = true,
+                        task_weights = :equal, zero_factor = false)
+  q = length(ns)
+  Xs = [randn(rng, n, p) .* transpose(0.5 .+ 1.5 .* rand(rng, p)) .+ transpose(randn(rng, p)) for n in ns]
+  a = tasks_scales(Xs; task_weights, standardize_x, intercept)
+  S = [2, 5]
+  B = zeros(p, q)
+  B[S, :] .= randn(rng, length(S), q)
+  ω = ones(p)
+  zero_factor && (ω[S[1]] = 0)
+  β0 = intercept ? randn(rng, q) : zeros(q)
+  centered(X) = intercept ? X .- mean(X; dims = 1) : X
+  θ = map(1:q) do t
+    v = [λ * ω[j] * a.S[j, t]^2 * B[j, t] / norm(a.S[j, :] .* B[j, :]) for j in S]
+    A = transpose(centered(Xs[t])[:, S])
+    intercept ? pinv([transpose(ones(ns[t])); A]) * [0.0; v] : pinv(A) * v
+  end
+  dual_norm(j) = norm([dot(centered(Xs[t])[:, j], θ[t]) / a.S[j, t] for t in 1:q])
+  for j in setdiff(1:p, S)
+    ω[j] = 2 * dual_norm(j) / λ
+  end
+  ys = [β0[t] .+ Xs[t] * B[:, t] .+ ns[t] .* θ[t] ./ a.c[t] for t in 1:q]
+  (; Xs, ys, β0, B, λ, ω, θ, c = a.c, S = a.S, support = S, centered)
+end
+
+@testset "Multitask lasso with task-specific designs" begin
+  rng = scenario_rng("certificate-controls-tasks", 1)
+  # the weights and scales: population standard deviations within the tasks,
+  # zero for a zero column and, with an intercept, for a constant one. Three
+  # entries 0.1 have an inexact mean in floating point in any order of the sum,
+  # so that their rounded standard deviation is positive and only the test of
+  # constancy zeroes it.
+  X1, X2 = [1.0 0.0 0.1; 3.0 0.0 0.1; 5.0 0.0 0.1], [1.0 1.0 0.0; 2.0 3.0 1.0]
+  a = tasks_scales([X1, X2]; task_weights = :observations, standardize_x = true, intercept = true)
+  @test a.c ≈ [6 / 5, 4 / 5] && a.S ≈ [sqrt(8 / 3) 0.5; 0.0 1.0; 0.0 0.5] && a.S[2:3, 1] == [0, 0]
+  @test column_loadings(X1; intercept = true)[3] > 0 && a.S[3, 1] == 0
+  a = tasks_scales([X1, X2]; task_weights = :equal, standardize_x = true, intercept = false)
+  @test a.c == [1, 1] && a.S ≈ [sqrt(35 / 3) sqrt(5 / 2); 0.0 sqrt(5); 0.1 sqrt(1 / 2)]
+  @test tasks_scales([X1, X2]; task_weights = :equal, standardize_x = false, intercept = true).S == [1 1; 0 1; 0 1]
+  @test tasks_scales([X1, X2]; task_weights = :equal, standardize_x = false, intercept = false).S == [1 1; 0 1; 1 1]
+  @test tasks_scales([X1, X2]; task_weights = [2.0, 0.5], standardize_x = true, intercept = true).c == [2.0, 0.5]
+  for task_weights in ([1.0, 0.0], [1.0], :pooled)
+    @test tasks_scales([X1, X2]; task_weights, standardize_x = true, intercept = true) isa String
+  end
+
+  q, p = 3, 30
+  for intercept in (true, false), standardize_x in (true, false), task_weights in (:equal, :observations)
+    kw = (; task_weights, standardize_x, intercept)
+    d = designed_tasks(rng; intercept, standardize_x, task_weights)
+    c = tasks_gap(d.Xs, d.ys, d.β0, d.B, d.λ, d.ω; kw...)
+    @test ok(c) && c.measure === :relative_gap && c.value ≤ TIGHT
+    a = tasks_parts(d.Xs, d.ys, d.β0, d.B, d.λ, d.ω; kw...)
+    @test all(isapprox(a.θ[t], d.θ[t]; atol = 1e-12) for t in 1:q)
+    Pstar = a.P
+    # weak duality and dual feasibility at perturbed points
+    for _ in 1:3
+      B = d.B .+ 0.2 .* randn(rng, p, q)
+      β0 = intercept ? d.β0 .+ randn(rng, q) : d.β0
+      a = tasks_parts(d.Xs, d.ys, β0, B, d.λ, d.ω; kw...)
+      @test ok(tasks_gap(d.Xs, d.ys, β0, B, d.λ, d.ω; kw...))
+      z = [norm([dot(d.centered(d.Xs[t])[:, j], a.θ[t]) / d.S[j, t] for t in 1:q]) for j in 1:p]
+      @test all(z .<= d.λ .* d.ω .* (1 + 1e-12))
+      @test !intercept || all(abs(sum(θt)) ≤ 1e-14 for θt in a.θ)
+      @test a.D ≤ Pstar + 1e-13
+    end
+    # one coefficient off by 0.2, or one intercept off by 0.5, misses 1e-6
+    B = copy(d.B)
+    B[d.support[1], 2] += 0.2
+    @test tasks_gap(d.Xs, d.ys, d.β0, B, d.λ, d.ω; kw...).value > 1e-6
+    if intercept
+      β0 = copy(d.β0)
+      β0[2] += 0.5
+      @test tasks_gap(d.Xs, d.ys, β0, d.B, d.λ, d.ω; kw...).value > 1e-6
+    end
+    # a zero factor of a row, or λ = 0, gives the KKT residual
+    z = designed_tasks(rng; intercept, standardize_x, task_weights, zero_factor = true)
+    c = tasks_gap(z.Xs, z.ys, z.β0, z.B, z.λ, z.ω; kw...)
+    @test ok(c) && c.measure === :kkt_residual && c.value ≤ TIGHT
+    @test tasks_gap(z.Xs, z.ys, z.β0, 0.5 .* z.B, z.λ, z.ω; kw...).value > 1e-3
+    @test tasks_gap(d.Xs, d.ys, d.β0, d.B, 0.0, d.ω; kw...).measure === :kkt_residual
+  end
+
+  # one task is the lasso, and one design for all the tasks with unit weights
+  # the multi-response lasso, both with the loadings ωⱼsⱼ
+  for intercept in (true, false), standardize_x in (true, false)
+    X = randn(rng, 40, 6) .* transpose(0.5 .+ rand(rng, 6)) .+ transpose(randn(rng, 6))
+    s = standardize_x ? column_loadings(X; intercept) : ones(6)
+    y, ω = randn(rng, 40), 0.5 .+ rand(rng, 6)
+    β, β0 = sparse_vector(rng, 6, 3), intercept ? randn(rng) : 0.0
+    for task_weights in (:equal, :observations)
+      @test tasks_gap([X], [y], [β0], reshape(β, 6, 1), 0.1, ω; task_weights, standardize_x, intercept).value ≈
+            ls_l1_gap(X, y, β0, β, 0.1, ω .* s; intercept).value rtol = 1e-10
+    end
+    Y, B = randn(rng, 40, 3), randn(rng, 6, 3) .* [1, 0, 1, 0, 0, 1]
+    b0 = intercept ? randn(rng, 3) : zeros(3)
+    @test tasks_gap(fill(X, 3), [Y[:, t] for t in 1:3], b0, B, 0.1, ω; task_weights = :equal, standardize_x,
+                    intercept).value ≈ multi_gap(X, Y, b0, B, 0.1, ω .* s; intercept).value rtol = 1e-10
+  end
+
+  # a nonzero coefficient of a column that is zero in its task, or with an
+  # intercept constant there, is uncertifiable under both standardizations; the
+  # rounded standard deviation of the constant 0.1 here is positive or zero,
+  # depending on the order in which the platform sums the column
+  d = designed_tasks(rng)
+  Xs = copy(d.Xs)
+  Xs[1] = copy(d.Xs[1])
+  Xs[1][:, 3] .= 0
+  Xs[1][:, 4] .= 0.1
+  for standardize_x in (true, false), intercept in (true, false)
+    kw = (; task_weights = :equal, standardize_x, intercept)
+    β0 = intercept ? d.β0 : zeros(q)
+    @test ok(tasks_gap(Xs, d.ys, β0, d.B, d.λ, d.ω; kw...))
+    B = copy(d.B)
+    B[3, 1] = 0.1
+    @test bad(tasks_gap(Xs, d.ys, β0, B, d.λ, d.ω; kw...))
+    B = copy(d.B)
+    B[4, 1] = 0.1
+    c = tasks_gap(Xs, d.ys, β0, B, d.λ, d.ω; kw...)
+    @test intercept ? bad(c) && occursin("constant", c.note) : ok(c)
+  end
+  # mismatched sizes and invalid levels or weights
+  kw = (; task_weights = :equal, standardize_x = true, intercept = true)
+  @test bad(tasks_gap(d.Xs, d.ys[1:2], d.β0, d.B, d.λ, d.ω; kw...))
+  @test bad(tasks_gap(d.Xs, [d.ys[1][2:end], d.ys[2], d.ys[3]], d.β0, d.B, d.λ, d.ω; kw...))
+  @test bad(tasks_gap(d.Xs, d.ys, d.β0[1:2], d.B, d.λ, d.ω; kw...))
+  @test bad(tasks_gap(d.Xs, d.ys, d.β0, d.B[1:end-1, :], d.λ, d.ω; kw...))
+  @test bad(tasks_gap(d.Xs, d.ys, d.β0, d.B, d.λ, d.ω[1:end-1]; kw...))
+  @test bad(tasks_gap(d.Xs, d.ys, d.β0, d.B, -d.λ, d.ω; kw...))
+  @test bad(tasks_gap(d.Xs, d.ys, d.β0, d.B, d.λ, d.ω; kw..., task_weights = [1.0, 0.0, 1.0]))
+end
+
 # The primal LP of quantile regression, solved by HiGHS: variables β⁺, β⁻ ≥ 0,
 # β₀ free, r⁺, r⁻ ≥ 0, with β₀ + X(β⁺ - β⁻) + r⁺ - r⁻ = y.
 function quantile_primal(X, y, λ, w, τ; intercept)
@@ -793,6 +933,17 @@ end
     @test bad(multi_gap(X, Y, zeros(2), B, 0.1, ones(4); intercept = true))
     @test bad(nuclear_gap(X, Y, zeros(2), B, 0.1; intercept = true))
     @test bad(rrr_excess(X, Y, zeros(2), B, 1; intercept = true))
+    # a design and a response per task, with entries checked inside them
+    kw = (; task_weights = :observations, standardize_x = true, intercept = true)
+    Xs, ys = [X, X[1:15, :]], [y, y[1:15]]
+    @test ok(tasks_gap(Xs, ys, zeros(2), zeros(4, 2), 0.1, ones(4); kw...))
+    @test bad(tasks_gap(Xs, ys, zeros(2), B, 0.1, ones(4); kw...))
+    @test bad(tasks_gap([X, Xv[1:15, :]], ys, zeros(2), zeros(4, 2), 0.1, ones(4); kw...))
+    @test bad(tasks_gap(Xs, [y, [v; y[2:15]]], zeros(2), zeros(4, 2), 0.1, ones(4); kw...))
+    @test bad(tasks_gap(Xs, ys, [0.0, v], zeros(4, 2), 0.1, ones(4); kw...))
+    @test bad(tasks_gap(Xs, ys, zeros(2), zeros(4, 2), v, ones(4); kw...))
+    @test bad(tasks_gap(Xs, ys, zeros(2), zeros(4, 2), 0.1, [1.0, v, 1.0, 1.0]; kw...))
+    @test !cert_finite([[1.0, 2.0], [v]]) && cert_finite([[1.0, 2.0], [3.0]])
     @test bad(knockoff_feasibility([1.0 v; v 1.0], [0.1, 0.1]))
     @test bad(equicorrelated_check([1.0 v; v 1.0], [0.1, 0.1]))
     @test bad(equicorrelated_check([1.0 0.5; 0.5 1.0], [v, 0.1]))
@@ -802,28 +953,35 @@ end
 
 @testset "Scenarios" begin
   @test rand(scenario_rng("ls-200x50", 1), UInt64) == rand(Xoshiro(0x91bae84adbad28da), UInt64)
-  # the same hashes on Julia 1.10 and 1.13, aarch64 and x86_64
+  # the same hashes on Julia 1.10 and 1.13, aarch64 and x86_64; the arrays of
+  # arrays of the tasks too
   pinned = ("ls-200x50" => "ad8f0a23c3dd3989b99e6c74233b1aaafec8720b647d2099b9bb20de96aa2a38",
             "logistic-weighted-300x60" => "3d8bfd57eeb6e53fde9a315177c9f9e05bdce0e1773b9baadeba90ec546bea71",
             "poisson-300x40" => "8cc187c2b38451acd49fa8f61b57bff7f9a8f51cd0f01697fc9451a543e7b14f",
             "signal-200" => "f03e0a44af6c7b91e4089a52b790d9d65f7cb5886d8ae530be4f4002c7026d34",
-            "knockoff-300x50" => "cbe952518fb416ac30317c8df0941a643262a2bc98c32999c847c30578a0c002")
+            "knockoff-300x50" => "cbe952518fb416ac30317c8df0941a643262a2bc98c32999c847c30578a0c002",
+            "tasks-40-80-120x60" => "83aa291369acbc646d234539b53805f60bc7a978dcf9685eaa9769136110572f",
+            "tasks-shared-300x200x5" => "647a5eac65d227d0673d8346598fb56c7745696a4ecc9fc05db6a3aecf3177bb")
   for (key, hash) in pinned
     @test data_hash(scenario(key, 1)) == hash
   end
   required = ["ls-200x50", "ls-sparse-500x200", "ls-tall-5000x40", "ls-wide-100x400", "ls-corr-300x100",
               "ls-weighted-200x50", "logistic-300x60", "poisson-300x40", "groups-200x60", "multi-200x40x5",
-              "lowrank-150x30x10", "lowrank-wide-60x100x10", "quantile-200x30", "signal-200", "fusedreg-150x60",
-              "trend-200", "slope-150x60", "knockoff-300x50", "hdm-200x80"]
+              "tasks-40-80-120x60", "tasks-100-400x200", "tasks-50-to-200x100", "tasks-wide-100-400x1000",
+              "tasks-shared-300x200x5", "lowrank-150x30x10", "lowrank-wide-60x100x10", "quantile-200x30",
+              "signal-200", "fusedreg-150x60", "trend-200", "slope-150x60", "knockoff-300x50", "hdm-200x80"]
   @test all(in(SCENARIOS), required) && allunique(SCENARIOS)
+  # Float64 storage, also inside arrays of arrays
+  float64_storage(v) = v isa AbstractArray{<:AbstractArray} ? all(float64_storage, v) :
+                       !(v isa AbstractArray{<:AbstractFloat}) || eltype(v) === Float64
   for key in SCENARIOS
     a, b, c = scenario(key, 1), scenario(key, 1), scenario(key, 2)
     @test keys(a) == keys(b) && all(getproperty(a, k) == getproperty(b, k) for k in keys(a))
     @test data_hash(a) == data_hash(b) && occursin(r"^[0-9a-f]{64}$", data_hash(a))
-    response(t) = haskey(t, :y) ? t.y : t.Y
+    response(t) = haskey(t, :y) ? t.y : haskey(t, :Y) ? t.Y : t.ys
     @test data_hash(a) != data_hash(c) && response(a) != response(c)
-    @test all(v -> !(v isa AbstractArray{<:AbstractFloat}) || eltype(v) === Float64, values(a))
-    @test all(v -> cert_finite(v), (v for v in values(a) if !(v isa Vector{Vector{Int}})))
+    @test all(float64_storage, values(a))
+    @test all(cert_finite, values(a))
   end
   @test_throws ArgumentError scenario("ls-1x1", 1)
   @test_throws ArgumentError scenario("ls-200x50", 0)
@@ -841,6 +999,15 @@ end
   a = scenario("fusedreg-150x60", 1)
   @test rank(a.X) == 60
   @test issorted(scenario("trend-200", 1).x; lt = <=) && haskey(scenario("hdm-200x80", 1), :d)
+  # a design per task, with column means that differ between the tasks, and
+  # one design object for all the tasks in the shared variant
+  a = scenario("tasks-40-80-120x60", 1)
+  @test size.(a.Xs) == [(40, 60), (80, 60), (120, 60)] && length.(a.ys) == [40, 80, 120] && size(a.truth) == (60, 3)
+  @test count(!iszero, eachrow(a.truth)) == 5 && mean(a.Xs[1]; dims = 1) != mean(a.Xs[2]; dims = 1)
+  a = scenario("tasks-wide-100-400x1000", 1)
+  @test sum(length, a.ys) < 1000 * length(a.ys)
+  a = scenario("tasks-shared-300x200x5", 1)
+  @test length(a.Xs) == 5 && all(X -> X === a.Xs[1], a.Xs) && size(a.Xs[1]) == (300, 200) && length(a.ys) == 5
   # hashes cover element types, sizes, sparsity and field names
   @test data_hash((; x = [1.0, 2.0])) != data_hash((; x = Float32[1.0, 2.0]))
   @test data_hash((; x = [1.0, 2.0])) != data_hash((; x = reshape([1.0, 2.0], 1, 2)))
@@ -925,5 +1092,20 @@ if Base.find_package("HighDimensionalModels") !== nothing && get(ENV, "HDM_CERTI
     a = scenario("knockoff-300x50", 1)
     @test equicorrelated_check(a.Sigma, HDM.equicorrelated_s(a.Sigma)).value ≤ 1e-12
     @test knockoff_feasibility(a.Sigma, HDM.equicorrelated_s(a.Sigma)).value == 0
+    # the multitask lasso with a design per task, near a tenth of λmax: a
+    # mismatch in the task weights, the scales or the zero-column rule shows
+    # here before any timed run. One design object for all the tasks takes the
+    # model of multi_lasso, which has no duality gap, so that fit is tightened
+    # by opt_tol instead.
+    a = scenario("tasks-40-80-120x60", 1)
+    for task_weights in (:equal, :observations)
+      s = HDM.multitask_lasso(a.Xs, a.ys, 0.25, HDM.CDOptions(gaptol = 1e-12); task_weights, rng = Xoshiro(1))
+      @test tasks_gap(a.Xs, a.ys, s.intercept, Matrix(s.B), 0.25, ones(60); task_weights, standardize_x = true,
+                      intercept = true).value ≤ 1e-9
+    end
+    a = scenario("tasks-shared-300x200x5", 1)
+    s = HDM.multitask_lasso(a.Xs, a.ys, 0.4, HDM.CDOptions(opt_tol = 1e-12); rng = Xoshiro(1))
+    @test tasks_gap(a.Xs, a.ys, s.intercept, Matrix(s.B), 0.4, ones(200); task_weights = :equal, standardize_x = true,
+                    intercept = true).value ≤ 1e-9
   end
 end

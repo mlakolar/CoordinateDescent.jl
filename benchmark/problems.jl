@@ -2,10 +2,12 @@
 # scenario(key, rep) returns a NamedTuple of raw Float64 arrays, drawn with the
 # standard library only. Keys are family-[variant-]shape, as ls-sparse-500x200;
 # SCENARIOS lists them. Fields by family: X and y; weights and offset (weighted
-# variants); groups; Y (multitask and low rank); x, the locations of a signal;
-# Sigma and mu (knockoffs); d, the treatment (inference); truth, the
-# coefficients that generated the data, and effect, the treatment effect.
-# Float32 copies are made by the caller.
+# variants); groups; Y (multitask and low rank); Xs and ys, vectors of a
+# design and a response per task (tasks; the shared variant stores one design
+# object for every task); x, the locations of a signal; Sigma and mu
+# (knockoffs); d, the treatment (inference); truth, the coefficients that
+# generated the data, and effect, the treatment effect. Float32 copies are made
+# by the caller.
 
 using LinearAlgebra, Random, SparseArrays, Statistics, SHA
 
@@ -186,6 +188,25 @@ function multitask(rng, n, p, q; k = 5)
   (; X, Y, truth = B)
 end
 
+# Tasks with nₜ = ns[t] rows and the same p columns, each with its own design,
+# whose column means and scales differ between the tasks, so that centering
+# and scaling within the tasks matter; or, with shared, one design object of
+# ns[1] rows for all the tasks. k nonzero rows of B, with entries 0.7 times
+# normal draws, are shared by the tasks, and each response has its own
+# intercept and noise at a signal-to-noise ratio of four.
+function tasks(rng, ns, p; k = 5, shared = false)
+  q = length(ns)
+  Xs = shared ? fill(gaussian_design(rng, ns[1], p), q) : [gaussian_design(rng, n, p) for n in ns]
+  B = zeros(p, q)
+  B[draw_indices(rng, p, k), :] .= 0.7 .* gaussian(rng, k, q)
+  β0 = gaussian(rng, q)
+  ys = map(1:q) do t
+    signal = product(Xs[t], B[:, t])
+    β0[t] .+ signal .+ noise_sd(signal, 4.0) .* gaussian(rng, size(Xs[t], 1))
+  end
+  (; Xs, ys, truth = B)
+end
+
 # a coefficient matrix of rank two
 function lowrank(rng, n, p, q; rank = 2)
   X = gaussian_design(rng, n, p)
@@ -283,6 +304,7 @@ const SCENARIO_BUILDERS = [
   "poisson-300x40" => rng -> poisson(rng, 300, 40),
   "groups-200x60" => rng -> grouped(rng, 200, 12, 5),
   "multi-200x40x5" => rng -> multitask(rng, 200, 40, 5),
+  "tasks-40-80-120x60" => rng -> tasks(rng, [40, 80, 120], 60),
   "lowrank-150x30x10" => rng -> lowrank(rng, 150, 30, 10),
   "lowrank-wide-60x100x10" => rng -> lowrank(rng, 60, 100, 10),
   "quantile-200x30" => rng -> quantile_regression(rng, 200, 30),
@@ -296,6 +318,10 @@ const SCENARIO_BUILDERS = [
   "ls-2000x1000" => rng -> least_squares(rng, 2000, 1000; k = 10),
   "logistic-2000x500" => rng -> logistic(rng, 2000, 500; k = 10),
   "quantile-1000x100" => rng -> quantile_regression(rng, 1000, 100; k = 6),
+  "tasks-100-400x200" => rng -> tasks(rng, [100, 400], 200),
+  "tasks-50-to-200x100" => rng -> tasks(rng, [50, 90, 130, 170, 200], 100),
+  "tasks-wide-100-400x1000" => rng -> tasks(rng, [100, 400], 1000),
+  "tasks-shared-300x200x5" => rng -> tasks(rng, fill(300, 5), 200; shared = true),
   "signal-5000" => rng -> piecewise_constant(rng, 5000; segments = 12),
   "trend-sine-1000" => rng -> trend_sine(rng, 1000),
   "trend-sine-10000" => rng -> trend_sine(rng, 10000),
