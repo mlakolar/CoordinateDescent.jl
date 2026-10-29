@@ -17,9 +17,10 @@ ProximalBase.jl, as does [`coordinate_descent!`](@ref), which minimizes
 `f(x) + g(x)` for a loss `f` (a [`CoordinateDifferentiableFunction`](@ref) or a
 loss that ProximalSolvers knows) and a penalty `g` that separates across
 coordinates, such as the weighted ℓ1 norm `NormL1`. Low-rank multivariate fits use [`reduced_rank`](@ref),
-[`nuclear_regression`](@ref), [`sparse_reduced_rank`](@ref), and
-[`sparse_svd_regression`](@ref), with [`LowRankPath`](@ref) and
-[`CVLowRankPath`](@ref) for tuning. The lasso solvers accept
+[`nuclear_regression`](@ref), [`sparse_reduced_rank`](@ref),
+[`sparse_svd_regression`](@ref), and [`sparse_nuclear_regression`](@ref), with
+[`LowRankPath`](@ref), [`CVLowRankPath`](@ref), [`PenaltyGrid`](@ref) and
+[`CVPenaltyGrid`](@ref) for tuning. The lasso solvers accept
 real data and penalties of any type and convert them to a common floating point
 type: the element type of `X` and `y` promoted to a float, or that of the
 iterate passed to `scaled_lasso!` and `feasible_lasso!`.
@@ -35,7 +36,7 @@ using ProximalSolvers
 using ProximalSolvers: CDModel, CDResults, ReweightResults, SqrtQuadModel
 using StatsAPI: StatsAPI, aic, bic, coef, coefnames, confint, deviance, dof, fit, fitted, nobs, nulldeviance, predict,
   residuals, responsename, stderror, vcov
-using Random: AbstractRNG, Xoshiro, default_rng, randperm, randn
+using Random: AbstractRNG, Xoshiro, default_rng, randperm, randn, shuffle!
 using SparseArrays
 using SpecialFunctions: erfc, erfcinv
 using Statistics
@@ -83,6 +84,7 @@ export
   # the multi-response lasso
   multi_lasso,
   MultiLassoPath,
+  CVMultiLassoPath,
 
   # the multitask lasso with task-specific designs
   multitask_lasso, MultitaskLassoSolution, MultitaskLassoPath, CVMultitaskLassoPath,
@@ -95,6 +97,7 @@ export
   # low-rank multivariate regression
   reduced_rank, select_rank, nuclear_regression, sparse_reduced_rank,
   sparse_svd_regression, LowRankSolution, LowRankPath, CVLowRankPath, lowrank_ic,
+  sparse_nuclear_regression, SparseNuclearSolution, PenaltyGrid, CVPenaltyGrid,
 
   # inference after selection, as in R's hdm
   theory_lambda,
@@ -124,11 +127,14 @@ include("sparsegroup.jl")
 include("multiresponse.jl")
 include("cv.jl")
 include("multitask.jl")
+include("multitask_rows.jl")
 include("quantile_tuning.jl")
 include("structured.jl")
 include("structured_cv.jl")
 include("lowrank.jl")
 include("sparse_svd.jl")
+include("lowrank_sparse.jl")
+include("penalty_grid.jl")
 include("hdm.jl")
 include("statsapi.jl")
 include("formula.jl")
