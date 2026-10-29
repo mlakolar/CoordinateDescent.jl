@@ -182,10 +182,40 @@ end
     @test maximum(abs, continuation.W - grid.solutions[4].W) <= 1e-7
     sp = transfer_multitask(target, [(sparse(X[2]), Y[2]), sources[2]], grid.λpath[4], TIGHT)
     @test maximum(abs, sp.W - grid.solutions[4].W) <= 1e-9
+    # Strongly correlated columns from a shared uniform factor. At one level of
+    # this fine grid the strong rule excludes a target row that is active there;
+    # the check after convergence finds it (its dual norm exceeds λ by about 7%
+    # at the restricted solution) and the level is solved again with it.
+    let rng = Xoshiro(130), p = 6, n = [16, 24, 24]
+      Xc = [0.95 .* centered_rand(rng, m, 1) .+ 0.6 .* centered_rand(rng, m, p) for m in n]
+      Bc = centered_rand(rng, p, K)
+      Yc = [Xc[l] * (Bc .+ 0.8 .* centered_rand(rng, p, K)) .+ 0.5 .* centered_rand(rng, n[l], K) for l in 1:3]
+      dc = collect(zip(Xc, Yc))
+      repaired = TransferMultitaskPath(dc[1], dc[2:3], TIGHT; nλ = 60, λminratio = 0.05)
+      plain = TransferMultitaskPath(dc[1], dc[2:3], repaired.λpath, TIGHT; screening = false)
+      @test any(>(1), repaired.kkt_checks)
+      @test all(s -> s.converged, repaired.solutions) && all(s -> s.converged, plain.solutions)
+      for k in eachindex(repaired.λpath)
+        @test maximum(maximum(abs, f - g) for (f, g) in zip(fitted(dc, repaired.solutions[k]), fitted(dc, plain.solutions[k]))) <= 1e-7
+        @test maximum(abs, repaired.solutions[k].W - plain.solutions[k].W) <= 1e-7
+      end
+      k = findfirst(>(1), repaired.kkt_checks)
+      @test certificate(dc, repaired.solutions[k]; intercept = true).kkt <= 1e-6
+    end
   end
 
   @testset "Limits" begin
     λ0 = 0.05
+    # Constant responses in every domain: the centered responses are zero, so
+    # the blocks are zero at once, and the gap is unavailable at zero objective.
+    flat = [(X[l], fill(1.0, n[l]) * [l -2l]) for l in 1:3]
+    still = transfer_multitask(flat[1], flat[2:3], λ0, TIGHT)
+    @test still.converged && all(B -> all(iszero, B), still.B) && all(iszero, still.W)
+    @test iszero(still.objective) && isnan(still.gap)
+    @test still.intercept == [1.0, -2.0] && still.domain_intercepts[3] == [3.0, -6.0]
+    flatpath = TransferMultitaskPath(flat[1], flat[2:3], [0.1, λ0], TIGHT)
+    @test iszero(flatpath.λmax)
+    @test all(s -> s.converged && iszero(s.objective) && isnan(s.gap) && all(iszero, s.W), flatpath.solutions)
     # No sources: the target group lasso at K λ₀, with the same preprocessing.
     for intercept in (true, false)
       alone = transfer_multitask(target, [], λ0, TIGHT; intercept)
@@ -288,6 +318,12 @@ end
     @test cv.folds == folds && size(cv.cvm) == (2, 4) && all(isfinite, cv.cvse)
     single = CVTransferMultitaskPath(target, sources, TIGHT; folds, families = :sqrt, nλ = 3, λ̃path = [0.1, 0.01])
     @test single.families == [:sqrt] && single.λ̃path == [0.1, 0.01]
+    fitted_cv = fit(CVTransferMultitaskPath, target, sources, TIGHT; folds, families = :sqrt, nλ = 3,
+                    λ̃path = [0.1, 0.01], rng = Xoshiro(4))
+    direct = CVTransferMultitaskPath(target, sources, TIGHT; folds, families = :sqrt, nλ = 3, λ̃path = [0.1, 0.01],
+                                     rng = Xoshiro(4))
+    @test fitted_cv.cvm == direct.cvm && fitted_cv.cvm_correction == direct.cvm_correction
+    @test fitted_cv.selected == direct.selected && fitted_cv.λ̃ == direct.λ̃ && fitted_cv.solution.W == direct.solution.W
     @test_throws ArgumentError CVTransferMultitaskPath(target, sources, CDOptions(; max_iter = 0); folds, nλ = 2)
   end
 
