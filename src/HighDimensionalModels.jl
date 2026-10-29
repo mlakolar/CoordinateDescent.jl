@@ -18,7 +18,8 @@ ProximalBase.jl, as does [`coordinate_descent!`](@ref), which minimizes
 loss that ProximalSolvers knows) and a penalty `g` that separates across
 coordinates, such as the weighted ℓ1 norm `NormL1`. Low-rank multivariate fits use [`reduced_rank`](@ref),
 [`nuclear_regression`](@ref), [`sparse_reduced_rank`](@ref),
-[`sparse_svd_regression`](@ref), and [`sparse_nuclear_regression`](@ref), with
+[`sparse_svd_regression`](@ref), [`sparse_nuclear_regression`](@ref), and
+the additive [`lowrank_plus_sparse`](@ref), with
 [`LowRankPath`](@ref), [`CVLowRankPath`](@ref), [`PenaltyGrid`](@ref) and
 [`CVPenaltyGrid`](@ref) for tuning. The lasso solvers accept
 real data and penalties of any type and convert them to a common floating point
@@ -98,6 +99,7 @@ export
   reduced_rank, select_rank, nuclear_regression, sparse_reduced_rank,
   sparse_svd_regression, LowRankSolution, LowRankPath, CVLowRankPath, lowrank_ic,
   sparse_nuclear_regression, SparseNuclearSolution, PenaltyGrid, CVPenaltyGrid,
+  lowrank_plus_sparse, LowRankPlusSparseSolution,
 
   # inference after selection, as in R's hdm
   theory_lambda,
@@ -135,6 +137,7 @@ include("lowrank.jl")
 include("sparse_svd.jl")
 include("lowrank_sparse.jl")
 include("penalty_grid.jl")
+include("lowrank_plus_sparse.jl")
 include("hdm.jl")
 include("statsapi.jl")
 include("formula.jl")

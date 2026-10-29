@@ -180,9 +180,9 @@ and the corresponding `fit(CVPenaltyGrid, ...)` are also available.
 This combination is useful when a shared response subspace and sparse
 coefficients are plausible, with prediction used to assess the tradeoff.
 It has no fixed rank bound. In contrast, `sparse_reduced_rank` imposes a rank
-constraint and solves a nonconvex problem. An additive model `B = L + S`
-allows separate low-rank and sparse components; it imposes different structure
-and is outside this estimator. Task-specific designs are not supported by
+constraint and solves a nonconvex problem. The additive model
+[`lowrank_plus_sparse`](@ref) fits `B = L + S` with separate low-rank and sparse
+components. Task-specific designs are not supported by
 this estimator. An entry invisible to a task's loss still enters the nuclear
 norm, so removing zero or constant columns within tasks, as the multitask
 data layer does, would change the problem.
@@ -197,6 +197,145 @@ shared-design regression operator here. The result cautions against a
 universal recovery claim; this implementation makes none. See
 [`examples/14_sparse_nuclear.jl`](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/examples/14_sparse_nuclear.jl)
 for a small prediction comparison with nuclear regression and row lasso.
+
+## Low-rank-plus-sparse regression
+
+[`lowrank_plus_sparse`](@ref) fits a shared low-rank component and sparse
+departures in the coefficient matrix:
+
+```math
+\min_{L,S,\beta_0}\ \frac{\|Y-1\beta_0^T-X(L+S)\|_F^2}{2n}
++\lambda_{\mathrm{rank}}\|L\|_*+\lambda_{\mathrm{sparse}}P(S).
+```
+
+The nuclear penalty acts on `L`; the sparsity penalty acts on `S`.
+With `sparsity = :entry`, `P(S) = ∑ⱼ wⱼ ∑ₜ |S[j,t]|`. With `:row`,
+`P(S) = ∑ⱼ wⱼ ‖S[j,:]‖₂`. `weights` contains one positive finite
+predictor weight per row of `S`, defaulting to ones. Observation, task and
+domain weights are not supported. The loss sums over responses and divides
+by `n`, without dividing by the number of responses `q`.
+
+Centering removes the unpenalized intercepts. Columns retain their original
+scales, and `intercept = ȳ - (L + S)'x̄`. Sparse inputs are converted to dense
+matrices. A design that is zero after centering gives the intercept-only fit.
+
+```julia
+s = lowrank_plus_sparse(X, Y, 0.1, 0.05; sparsity = :entry)
+s.L, s.S, s.B                  # B = L + S
+s.gap, s.lowrank_residual, s.sparse_residual
+predict(s, Xnew)               # uses the total B
+```
+
+[`LowRankPlusSparseSolution`](@ref) stores independent component and total
+matrices, intercepts, residuals, the objective and convergence diagnostics.
+`rank` counts singular values of `B` above the reported
+`rank_tol = √eps(T) σ₁(B)`. `lowrank_rank` records the rank retained by the last
+nuclear proximal step. `sparse_nnz` and `sparse_rows` describe the exact nonzero
+entries and rows of `S`. `coef`, `predict`, `residuals`, `nobs` and `deviance`
+use the total fit. No `dof`, `aic`, `bic` or `lowrank_ic` is supplied.
+
+This objective differs from [`sparse_nuclear_regression`](@ref), where both
+penalties act on one matrix. It also differs from `sparse_reduced_rank`,
+which imposes a rank bound and solves a nonconvex problem. Here neither
+component has a fixed rank or support constraint, and the total `B` can be
+dense and full rank.
+
+### Solver and certificate
+
+Restarted accelerated proximal gradient operates on the product `(L, S)`.
+Its step is `1/(2‖Xc‖²_op/n)`: both components see the same loss gradient.
+ProximalBase's `NuclearNorm` updates `L`; `NormL1` or `GroupNormL2`, with
+explicit predictor weights, updates `S`. Momentum resets at each new pair
+of penalty levels.
+
+For `R = Yc - Xc*(L+S)` and `C_R = Xc'R/n`, the dual feasible set is the
+intersection `‖C_R‖_op ≤ λ_rank` and `d_w(C_R) ≤ λ_sparse`, where
+`d_w(C) = maxⱼₜ |C[j,t]|/wⱼ` for entry sparsity and
+`d_w(C) = maxⱼ ‖C[j,:]‖₂/wⱼ` for row sparsity. Set
+
+```math
+t=\min\left(1,\frac{\lambda_{\mathrm{rank}}}{\|C_R\|_{\mathrm{op}}},
+\frac{\lambda_{\mathrm{sparse}}}{d_w(C_R)}\right),\qquad
+D=\frac{t\langle R,Y_c\rangle}{n}-\frac{t^2\|R\|_F^2}{2n},
+```
+
+omitting a ratio with a zero denominator. Then `tR/n` is dual feasible.
+The reported `gap = (objective-D)/max(objective, floatmin(T))` bounds
+relative objective error up to floating-point accuracy. Nonfinite values or
+material violations of weak duality give `Inf`; negative roundoff is clipped
+to zero. The solver checks this gap every few iterations and at return.
+For positive levels, `converged` requires `gap ≤ tol`. The objective and
+gap are recomputed at the returned components. `lowrank_residual` and `sparse_residual`
+are the Frobenius norms of their proximal-gradient mappings at that same
+point, using the product-space step above. A small gap does not bound
+coefficient or component error.
+
+On a zero-penalty axis, the unpenalized component absorbs the minimum-norm
+least-squares coefficient, computed by the design SVD. If `λ_rank = 0`,
+`L` receives that coefficient and `S = 0`, including when both levels are
+zero. If only `λ_sparse = 0`, `L = 0` and `S` receives it. These fits report
+`gap = NaN` and check the least-squares normal equations instead. `lowrank_rank`
+uses a numerical singular-value cutoff on these axes.
+
+### Zero pair, reductions and tuning
+
+Let `C₀ = Xc'Yc/n`. The zero pair is optimal exactly when **both**
+`λ_rank ≥ ‖C₀‖_op` and `λ_sparse ≥ d_w(C₀)`. Exceeding just one reference
+does not suffice. Automatic axes start just above these two references;
+only their upper-right corner is guaranteed to be zero. Neither upper edge
+is a pure-component path.
+
+For a nuclear-only optimum `N`, a strict inequality
+`λ_sparse > d_w(Xc'*(Yc-Xc*N)/n)` forces `S = 0` in an additive optimum.
+For a sparse-only optimum `A`,
+`λ_rank > ‖Xc'*(Yc-Xc*A)/n‖_op` forces `L = 0`.
+Conservative sufficient scales for a pure-component optimum are
+`λ_sparse ≥ λ_rank/minimum(w)` and
+`λ_rank ≥ λ_sparse*sqrt(q)*norm(w)` (entry) or
+`λ_rank ≥ λ_sparse*norm(w)` (row), respectively. Use strict margins to
+force the absent component; equality can permit multiple splits.
+
+```julia
+grid = PenaltyGrid(lowrank_plus_sparse, X, Y;
+  sparsity = :entry, nλ = (5, 5), λminratio = (0.03, 0.03))
+cv = CVPenaltyGrid(lowrank_plus_sparse, X, Y;
+  λ1 = grid.λ1, λ2 = grid.λ2, sparsity = :entry, nfolds = 5)
+s = cv.grid.solutions[cv.index]
+cv.λmin, s.lowrank_rank, s.sparse_nnz
+predict(cv, Xnew)
+```
+
+`λ1` is the rank penalty and `λ2` the sparsity penalty. Both component warm
+starts are copied at each grid branch, and returned fits do not share their
+arrays. Each CV training fold recomputes centering from its own rows and has
+separate proximal workspaces. The numerical axes, including automatic axes,
+come from the full data. `cvm` is prediction MSE per response, weighted by
+held-out row counts, with the `cvse` convention of [`CVPenaltyGrid`](@ref).
+A pair is eligible only if its full-data and every training-fold fit converge.
+Nonconverged pairs have `NaN` scores; an empty eligible set raises an error.
+
+### Identifiability
+
+Training fitted values are unique. The total `B` is unique when the centered
+design has full column rank. The components require a separate identification
+argument: even for a scalar coefficient with equal penalty levels, every
+split `L = αB`, `S = (1-α)B`, `0 ≤ α ≤ 1`, of an optimal total is optimal.
+Agreement between solver starts does not prove component uniqueness.
+Prediction accuracy does not imply recovery of the two components.
+
+The estimator imposes no incoherence, orthogonality, support or size
+constraints. [Chandrasekaran, Sanghavi, Parrilo and Willsky (2011)](https://doi.org/10.1137/090761793)
+and [Hsu, Kakade and Zhang (2011)](https://arxiv.org/abs/1011.1518)
+give conditions for identification and recovery in the related problem of
+decomposing an observed matrix into low-rank and sparse parts. Those
+matrix-decomposition guarantees do not establish recovery for this regression
+operator or its row penalty.
+
+Task-specific designs are not supported. Coefficients invisible to one
+task's loss still enter the coupled nuclear penalty. Dropping each task's
+zero or constant predictors would change the objective. See
+[`examples/16_lowrank_plus_sparse.jl`](https://github.com/mlakolar/HighDimensionalModels.jl/blob/master/examples/16_lowrank_plus_sparse.jl)
+for a small prediction comparison on one low-rank-plus-sparse draw.
 
 ## Row-sparse reduced-rank regression
 

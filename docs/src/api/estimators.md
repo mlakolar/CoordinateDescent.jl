@@ -15,6 +15,7 @@ Private = true
 
 ```@docs
 sparse_nuclear_regression
+lowrank_plus_sparse
 PenaltyGrid
 CVPenaltyGrid
 ```
