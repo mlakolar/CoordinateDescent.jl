@@ -15,4 +15,5 @@ Private = false
 DirtyMultitaskSolution
 coef(::DirtyMultitaskSolution)
 SparseNuclearSolution
+LowRankPlusSparseSolution
 ```

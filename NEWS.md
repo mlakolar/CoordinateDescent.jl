@@ -13,6 +13,11 @@ integration dependency to an explicit commit.
   a canonical split, a recomputed two-component KKT residual and a relative
   duality gap. CV tunes ratio and level with common folds across ratios.
 
+- Add `lowrank_plus_sparse` for the additive coefficient model `B = L + S`,
+  with nuclear and weighted entrywise/row penalties on separate components,
+  intersection-dual gap certificates, component diagnostics, and two-penalty
+  tuning through `PenaltyGrid` and `CVPenaltyGrid`.
+
 - Add `sparse_nuclear_regression` for nuclear and entrywise/row sparsity
   penalties on the same coefficient matrix, with duality-gap certificates and
   `SparseNuclearSolution`. `PenaltyGrid` and `CVPenaltyGrid` tune both levels
