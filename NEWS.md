@@ -7,6 +7,18 @@ ProximalSolvers 0.3 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- Add `sparse_nuclear_regression` for nuclear and entrywise/row sparsity
+  penalties on the same coefficient matrix, with duality-gap certificates and
+  `SparseNuclearSolution`. `PenaltyGrid` and `CVPenaltyGrid` tune both levels
+  with copied primal/dual warm starts and independent training-fold fits.
+
+- Add row ℓ1/ℓ∞ (`row_norm = :linf`) and multitask sparse group (`alpha > 0`)
+  fits and paths for `multitask_lasso` and `multi_lasso`, with verified
+  screening and a row solver on the tasks' own designs. Add `CVMultiLassoPath`
+  with observation folds shared across responses. The default row ℓ1/ℓ2 solver
+  is unchanged. Both `CVMultitaskLassoPath` and `CVMultiLassoPath` now treat a
+  nonconverged fold level as unreached (`NaN`); it cannot be selected.
+
 - `CVLassoPath` and `CVGLMLassoPath` no longer throw when every fold path stops
   early (`max_hat_s`, `devmax`) before the last levels of the full path; those
   levels have `NaN` in `cvm` and `cvse`. `λmin` and `λ1se` of these and of
@@ -59,6 +71,11 @@ residuals once, preserving numerical rank and degrees-of-freedom definitions.
 - Sparse reduced-rank fits and paths reuse sufficient statistics across penalties
   and compute rank/residual diagnostics from thin factors. CD results and all
   defaults are unchanged; FISTA results agree within the stopping tolerance.
+
+- Sparse reduced-rank fits finish difficult group-lasso blocks with guarded
+  Newton steps, improving convergence of ill-conditioned adaptive fits. Float32
+  sparse defaults use a `100eps(T)` tolerance floor, and single fits warn on
+  non-convergence with a conditioning diagnostic when applicable.
 
 ## Quantile primal–dual API
 

@@ -89,7 +89,8 @@ and [`MultiLassoPath`](@ref)`(X, Y)` fit
 ```
 
 the group lasso on the rows of the ``p \times q`` coefficient matrix ``B``,
-which selects the same predictors for every response (glmnet's `mgaussian`).
+which selects rows across responses (glmnet's `mgaussian`). Entries within a
+selected row can still be zero.
 The curvature of the loss over a row is a multiple of the identity, so each
 block step on a row is exact. The solutions report ``B`` as a sparse matrix,
 the intercepts of the responses and the active rows.
@@ -108,9 +109,9 @@ task ``t``, they minimize
 \sum_{t=1}^q \frac{c_t}{2n_t}\,\|y_t - \beta_{0t} - X_t b_t\|^2 + \lambda\sum_{j=1}^p \omega_j\,\big\|(s_{1j}b_{1j}, \dots, s_{qj}b_{qj})\big\|_2,
 ```
 
-the row penalty of the multi-response lasso, which selects a predictor for all
-the tasks or for none while its coefficients differ across tasks (Obozinski,
-Taskar and Jordan, 2010). The coefficients are returned on the original scale.
+the row penalty of the multi-response lasso, which selects predictors across
+tasks while allowing zero entries within selected rows (Obozinski, Taskar and
+Jordan, 2010). The coefficients are returned on the original scale.
 
 - **Task weights.** `task_weights = :equal` (the default) takes ``c_t = 1``,
   so that the mean squared error of each task counts once, whatever its size.
@@ -209,7 +210,8 @@ w_k = \sum_{t=1}^q \frac{c_t\, m_{tk}}{n_t},
 with ``m_{tk}`` the number of observations of task ``t`` in fold ``k``, and
 ``c_t``, ``n_t`` those of the full data. `cvm` averages the ``e_k`` with the
 weights ``w_k``, and `cvse`, `λmin` and `λ1se` follow as for `CVLassoPath`. A
-fold path that stops early leaves the remaining levels out of the averages,
+fold path that stops early leaves the remaining levels out of the averages;
+nonconverged fold levels are also left out and cannot be selected,
 and the levels that no fold reaches have `NaN` in `cvm`, `cvse` and
 `cvm_task` and are not candidates for `λmin` and `λ1se`. At the levels
 every fold reaches, `cvm` is ``\sum_t c_t \mathrm{MSE}_t / \sum_t c_t``, the
@@ -223,3 +225,127 @@ the available threads, each with a generator seeded from `rng`, and the result
 does not depend on the number of threads. The example on multitask regression
 fits three tasks of different sizes and compares the selection with separate
 lasso fits.
+
+## Other multitask row penalties
+
+`multitask_lasso`, `MultitaskLassoPath`, `CVMultitaskLassoPath`, `multi_lasso`
+and `MultiLassoPath` accept `row_norm = :l2` and `alpha = 0` by default. They
+penalize one coefficient matrix. Write ``U_{jt} = s_{tj} B_{jt}``, with the
+scales and task weights defined above. The objective is
+
+```math
+\sum_t \frac{c_t}{2n_t}\|y_t-\beta_{0t}-X_tb_t\|^2 + \lambda\sum_j h_j(U_{j\cdot}),
+\qquad
+h_j(u)=\begin{cases}
+\omega_j\|u\|_\infty, & \texttt{row\_norm = :linf},\\
+\alpha\|u\|_1+(1-\alpha)\omega_j\|u\|_2, & \texttt{row\_norm = :l2}.
+\end{cases}
+```
+
+`alpha` must lie in ``[0,1]``; `row_norm = :linf` requires `alpha = 0`.
+The default is the row ℓ1/ℓ2 penalty. `row_norm = :linf` gives row ℓ1/ℓ∞,
+which often has several entries tied at the largest absolute value in a row.
+With `row_norm = :l2, alpha > 0`, the sparse group penalty combines row
+selection with entrywise sparsity. At `alpha = 1` the tasks are separate
+lassos at ``\lambda/c_t``. Row selection allows zero entries within a selected
+row for all three penalties; it does not force each selected predictor to
+have a nonzero coefficient in every task.
+
+The factors ``\omega_j`` weight the row term only. A zero factor under the
+sparse group leaves the entrywise term ``\alpha\lambda\|u\|_1`` in place.
+The automatic grid needs finite ``\lambda_{\max}``; unpenalized rows that
+have a nonzero gradient at zero require explicit levels. The `multi_lasso`
+family has no penalty factors or task weights: it uses one shared design,
+``c_t=1``, and loss ``\|Y-1\beta_0^\top-XB\|_F^2/(2n)``. Its `nobs` is ``n``.
+
+Let ``g_j`` be the gradient of the loss with respect to row ``U_{j\cdot}``,
+restricted to coordinates with ``s_{tj}>0``. At zero coefficients, with the
+intercepts profiled, the thresholds are
+
+```math
+\lambda_{\max}^{(\infty)}=\max_j\frac{\|g_j(0)\|_1}{\omega_j},\qquad
+\lambda_{\max}^{(\mathrm{sg})}=\max_j\rho_j,
+\quad \|\operatorname{soft}(g_j(0),\alpha\rho_j)\|_2=(1-\alpha)\omega_j\rho_j.
+```
+
+The first maximum uses positive factors; a zero-factor row with a nonzero
+correlation has no finite threshold. For sparse group with ``\omega_j=0``
+and ``\alpha>0``, ``\rho_j=\|g_j(0)\|_\infty/\alpha``. The roots are computed
+exactly between the breakpoints of soft thresholding.
+
+A zero row is optimal when ``\|g_j\|_1\le\lambda\omega_j`` for ℓ∞, or
+``\|\operatorname{soft}(g_j,\alpha\lambda)\|_2\le(1-\alpha)\lambda\omega_j``
+for sparse group. On a nonzero ℓ∞ row, ``\|g_j\|_1=\lambda\omega_j``; the
+gradient is supported on entries of maximal absolute coefficient, with
+opposite signs. On a nonzero sparse group row,
+
+```math
+0\in g_j+(1-\alpha)\lambda\omega_j\frac{U_{j\cdot}}{\|U_{j\cdot}\|_2}
+       +\alpha\lambda\,\partial\|U_{j\cdot}\|_1.
+```
+
+Each task's residuals sum to zero when intercepts are fitted. Screening uses
+the sequential strong rule: a row is kept if its gradient's dual norm at the
+previous solution is at least ``2\lambda_k-\lambda_{k-1}``. For sparse group
+that norm is the root above. Every excluded row is checked against its zero-row
+optimality condition after solving; violators are added and the level is
+solved again. `kkt_checks` records these rounds.
+
+The row ℓ1/ℓ∞ and sparse-group penalties use row coordinate descent on the
+tasks' own designs.
+No stacked design is built, and a shared design is stored once. The solver
+keeps per-task residuals and centered column squared norms. A row uses the
+majorizing curvature
+``L_j=\max_{t:s_{tj}>0} c_t\|\tilde x_{tj}\|^2/(n_t s_{tj}^2)`` and a proximal
+step of size ``1/L_j``. With standardized columns and equal weights, this
+step is exact. A full pass costs ``O(p\sum_t n_t)`` for dense designs, plus
+``O(pq\log q)`` for the ℓ∞ proximal steps (``O(pq)`` for sparse group).
+The residual cache costs ``O(\sum_t n_t)`` and column/coefficient caches
+``O(pq)``. Sparse designs are centered on the fly, including with intercepts,
+without densifying them.
+
+Full passes alternate with passes on active rows, in cyclic order or random
+order from `rng`. A full pass confirms convergence. With `relative_tol`,
+each change ``\Delta U_{jt}`` is measured in fitted-value units as
+``|\Delta U_{jt}|\sqrt{a_{tj}}``, where
+``a_{tj}=c_t\|\tilde x_{tj}\|^2/(n_t s_{tj}^2)``. The largest such change is
+compared with ``\texttt{opt\_tol}\,r``, with response scale
+``r=\sqrt{\sum_t c_t\|\tilde y_t\|^2/n_t}``. Columns and responses are centered
+with an intercept. The scale has a positive numerical floor; when ``r=0``,
+zero coefficients solve the problem exactly. Without `relative_tol`,
+`opt_tol` bounds the absolute change of ``U``.
+A positive `gaptol` also requires a relative duality gap below that target.
+Paths default to `max(ProximalSolvers.PATH_GAPTOL, 64eps(T))`; single fits
+require the gap only with an explicit positive `gaptol`, except continuation
+with `warm_start = false`, which uses the path default. `gaptol = 0` uses the
+change rule alone. The dual point scales the weighted residuals into all row
+dual balls. No gap is used at ``\lambda=0``, with a completely unpenalized
+row, or when the primal objective is zero. Reaching `max_iter` passes gives
+`converged = false`. The default ℓ1/ℓ2 solver keeps its existing behavior.
+
+[`sparse_group_lasso`](@ref) has one response and user-defined groups of
+predictors. Here a group is one predictor across tasks, with a common entrywise
+penalty. A dirty model decomposes ``B = A + S`` with different penalties on the
+two components; it is not one of these penalties.
+
+### Cross-validation with a shared design
+
+[`CVMultiLassoPath`](@ref)`(X, Y)` uses the same observation folds for all
+responses. It accepts positional `CDOptions`, `nfolds = 10`, explicit `folds`,
+`rng`, `threads`, `nλ`, `λminratio`, and the keywords of `MultiLassoPath`.
+Every training fold refits centering, scales and coefficients on its own rows
+at the full-data grid. If fold ``k`` has ``m_k`` observations, its error is
+``e_k=\sum_{i\in k,t}(Y_{it}-\hat Y_{it})^2/(m_kq)``. `cvm` averages these
+errors with weights ``m_k``; `cvse` is their standard error, as for
+`CVLassoPath`. `cvm_response` holds the held-out MSE for each response.
+With one response and the same folds, fits and standardization, these summaries
+and selected levels agree with `CVLassoPath(X, y; intercept = true,
+standardize_x = true)`.
+
+Both multitask CV types treat a nonconverged fold level as an unreached level:
+its fold error is `NaN`, and it is never selected. Means use the available
+folds; `λmin` and `λ1se` compare levels that converged in every fold.
+`coef(cv)` and `predict(cv, Xnew)` use `λ1se`, or `λmin` with `λ = :λmin`.
+Fold generators are seeded separately from `rng`, so threading does not change
+the results. See `examples/13_multitask_penalties.jl` for a comparison of the
+three penalties on shared and task-specific supports.
