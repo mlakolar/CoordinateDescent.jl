@@ -29,6 +29,7 @@ tests = [
   "multiresponse",
   "multitask",
   "multitask_penalties",
+  "multitask_dirty",
   "lowrank",
   "lowrank_sparse",
   "lowrank_plus_sparse",

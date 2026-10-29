@@ -7,6 +7,12 @@ ProximalSolvers 0.3 as the minimum supported releases. Unit tests use only
 registered dependencies; examples and docs pin the unregistered KernelSmoothing
 integration dependency to an explicit commit.
 
+- Add `dirty_multitask`, `DirtyMultitaskPath` and `CVDirtyMultitaskPath` for
+  separate shared and task-specific coefficient components. The default is
+  Jalali et al.'s shared ℓ∞ norm; `shared_norm = :l2` is a variant. Fits return
+  a canonical split, a recomputed two-component KKT residual and a relative
+  duality gap. CV tunes ratio and level with common folds across ratios.
+
 - Add `lowrank_plus_sparse` for the additive coefficient model `B = L + S`,
   with nuclear and weighted entrywise/row penalties on separate components,
   intersection-dual gap certificates, component diagnostics, and two-penalty
